@@ -11,6 +11,8 @@
 #include <memory>
 #include <thread>
 #include <type_traits>
+#include <optional>
+#include <unordered_map>
 
 #include "common/common_types.h"
 
@@ -178,6 +180,25 @@ public:
     /// Returns whether any of it was still queued.
     bool WaitForWriters();
 
+    /// A 32-bit semaphore release of `value` at `address` was just sent (EDEN_NX2_SEM_TRACK).
+    void NoteRelease(u64 address, u32 value) {
+        pending_releases[address] = PendingRelease{value, write_position};
+    }
+    /// The value the newest release sent to `address` that the back hasn't run yet writes: what
+    /// the semaphore holds for everything sent after it, which the back runs after that release.
+    std::optional<u32> PendingReleaseValue(u64 address) {
+        const auto it = pending_releases.find(address);
+        if (it == pending_releases.end()) {
+            return std::nullopt;
+        }
+        consumed_cache = consumed.load(std::memory_order_acquire);
+        if (consumed_cache >= it->second.position) {
+            pending_releases.erase(it);
+            return std::nullopt;
+        }
+        return it->second.value;
+    }
+
     /// A host-level wait was just sent (a syncpoint acquire, a host WFI, a GP entry with its sync
     /// bit; semaphore acquires drain): the guest's GPU work before it is complete before the
     /// commands after it are fetched.
@@ -261,6 +282,11 @@ private:
     u64 last_writer_position{};
     u64 last_memory_writer_position{};
     u64 last_sync_position{};
+    struct PendingRelease {
+        u32 value;
+        u64 position;
+    };
+    std::unordered_map<u64, PendingRelease> pending_releases;
     u64 published_local{};
     u64 consumed_cache{};
     /// Words between publishes: small right after a drain, while the back has nothing to do.

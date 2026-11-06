@@ -1201,6 +1201,18 @@ void Maxwell3D::FrontNoteMemoryWrite(VideoCommon::GpuSplit& split, FrontState& f
             fs.regs[MAXWELL3D_REG_INDEX(report_semaphore.address_low)];
         fs.written_pages.insert(address >> 12);
         fs.written_pages.insert((address + 15) >> 12);
+        // A plain 32-bit payload release (no reduction, no counter): an acquire may wait on it.
+        static const bool sem_track = [] {
+            const char* env = std::getenv("EDEN_NX2_SEM_TRACK");
+            return env != nullptr && env[0] == '1';
+        }();
+        if (sem_track && (argument & 3) == 0 && ((argument >> 23) & 0x1f) == 0 &&
+            (argument & (1U << 3)) == 0) {
+            if (const auto device = memory_manager.GpuToCpuAddress(address)) {
+                split.NoteRelease(*device,
+                                  fs.regs[MAXWELL3D_REG_INDEX(report_semaphore.payload)]);
+            }
+        }
     } else if (method == MAXWELL3D_REG_INDEX(launch_dma)) {
         // An inline upload writes guest memory on the back (the CPU path, not the buffer cache).
         const GPUVAddr address =
