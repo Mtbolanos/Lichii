@@ -89,10 +89,12 @@ struct SemTrackStats {
     std::chrono::steady_clock::time_point last{std::chrono::steady_clock::now()};
 };
 
-bool AcquireMetByPendingRelease(DmaPusher& dma_pusher, GPUVAddr address, const auto& matches) {
+// 1: met by the newest queued release. -1: a queued release doesn't meet it (guest memory holds an
+// older value, so the fast path must not look there). 0: no queued release on the address.
+int AcquireMetByPendingRelease(DmaPusher& dma_pusher, GPUVAddr address, const auto& matches) {
     auto& split = VideoCommon::GpuSplit::Get();
     if (!SemTrackEnabled() || !split.Active()) {
-        return false;
+        return 0;
     }
     static SemTrackStats stats;
     stats.checks.fetch_add(1, std::memory_order_relaxed);
@@ -105,11 +107,14 @@ bool AcquireMetByPendingRelease(DmaPusher& dma_pusher, GPUVAddr address, const a
     }
     const auto device = dma_pusher.memory_manager.GpuToCpuAddress(address);
     const auto value = device ? split.PendingReleaseValue(*device) : std::nullopt;
-    if (!value || !matches(*value)) {
-        return false;
+    if (!value) {
+        return 0;
+    }
+    if (!matches(*value)) {
+        return -1;
     }
     stats.met.fetch_add(1, std::memory_order_relaxed);
-    return true;
+    return 1;
 }
 
 void DrainBack() {
@@ -213,12 +218,14 @@ bool Puller::CanResumeAcquire(DmaPusher& dma_pusher) {
     if (!pending_acquire) {
         return true;
     }
-    if (AcquireMetByPendingRelease(dma_pusher, pending_acquire->address, [this](u32 value) {
-            return pending_acquire->Matches(value);
-        })) {
+    const int tracked = AcquireMetByPendingRelease(
+        dma_pusher, pending_acquire->address,
+        [this](u32 value) { return pending_acquire->Matches(value); });
+    if (tracked > 0) {
         return true;
     }
-    if (AcquireMetWithoutDrain(dma_pusher, pending_acquire->address, pending_acquire->value,
+    if (tracked == 0 &&
+        AcquireMetWithoutDrain(dma_pusher, pending_acquire->address, pending_acquire->value,
                                pending_acquire->operation)) {
         return true;
     }
@@ -407,11 +414,13 @@ void Puller::ProcessSemaphoreTriggerMethod(DmaPusher& dma_pusher) {
             return;
         }
         VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::AcquireChecks, 1);
-        if (AcquireMetByPendingRelease(dma_pusher, acquire.address,
-                                       [&acquire](u32 value) { return acquire.Matches(value); })) {
+        const int tracked = AcquireMetByPendingRelease(
+            dma_pusher, acquire.address, [&acquire](u32 value) { return acquire.Matches(value); });
+        if (tracked > 0) {
             return;
         }
-        if (AcquireMetWithoutDrain(dma_pusher, acquire.address, acquire.value, acquire.operation)) {
+        if (tracked == 0 &&
+            AcquireMetWithoutDrain(dma_pusher, acquire.address, acquire.value, acquire.operation)) {
             return;
         }
         DrainBack();
