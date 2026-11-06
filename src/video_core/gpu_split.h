@@ -13,6 +13,7 @@
 #include <type_traits>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "common/common_types.h"
 
@@ -183,6 +184,11 @@ public:
     /// A 32-bit semaphore release of `value` at `address` was just sent (EDEN_NX2_SEM_TRACK).
     void NoteRelease(u64 address, u32 value) {
         pending_releases[address] = PendingRelease{value, write_position};
+        released_addresses.insert(address);
+    }
+    /// Whether a release to `address` was ever noted (diagnostics).
+    bool EverReleased(u64 address) const {
+        return released_addresses.contains(address);
     }
     /// The value the newest release sent to `address` that the back hasn't run yet writes: what
     /// the semaphore holds for everything sent after it, which the back runs after that release.
@@ -287,6 +293,7 @@ private:
         u64 position;
     };
     std::unordered_map<u64, PendingRelease> pending_releases;
+    std::unordered_set<u64> released_addresses;
     u64 published_local{};
     u64 consumed_cache{};
     /// Words between publishes: small right after a drain, while the back has nothing to do.

@@ -416,6 +416,34 @@ void Puller::ProcessSemaphoreTriggerMethod(DmaPusher& dma_pusher) {
         }
         DrainBack();
         if (acquire.Matches(ReadSemaphoreWord(dma_pusher, acquire.address))) {
+            // EDEN_NX2_SEM_TRACK diagnostics: what released the semaphores met only after the
+            // wait (an address no tracked release ever wrote: compute QMDs, copies, the CPU).
+            if (SemTrackEnabled()) {
+                static std::atomic<u64> met_after_wait{};
+                static std::atomic<u64> untracked{};
+                static std::atomic<u32> logged{};
+                met_after_wait.fetch_add(1, std::memory_order_relaxed);
+                const auto device = dma_pusher.memory_manager.GpuToCpuAddress(acquire.address);
+                if (device && !VideoCommon::GpuSplit::Get().EverReleased(*device)) {
+                    untracked.fetch_add(1, std::memory_order_relaxed);
+                    if (logged.fetch_add(1, std::memory_order_relaxed) < 24) {
+                        VideoCommon::Nx2Profile::WriteProfileFile(fmt::format(
+                            "Acquire met after the wait at untracked {:#x} (device {:#x}) op {} value "
+                            "{:#x}, channel {}",
+                            acquire.address, *device, acquire.operation, acquire.value,
+                            dma_pusher.channel_state.bind_id));
+                    }
+                }
+                static std::atomic<u64> last_log{};
+                const u64 now = static_cast<u64>(
+                    std::chrono::steady_clock::now().time_since_epoch().count());
+                if (u64 seen = last_log.load(); now - seen > 10'000'000'000ULL &&
+                                                 last_log.compare_exchange_strong(seen, now)) {
+                    VideoCommon::Nx2Profile::WriteProfileFile(fmt::format(
+                        "Acquires met after the wait in 10 s: {} ({} at untracked addresses)",
+                        met_after_wait.exchange(0), untracked.exchange(0)));
+                }
+            }
             return;
         }
         // Registered before the fences run, so a release among them that meets the value counts

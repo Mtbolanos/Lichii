@@ -1199,6 +1199,27 @@ void KeplerCompute::FrontCallMethod(Core::System& system, VideoCommon::GpuSplit&
     }
     FrontApply(fs, method, argument);
     split.Method(this, method, argument, is_last_call, segment);
+    FrontNoteRelease(split, fs, method);
+}
+
+void KeplerCompute::FrontNoteRelease(VideoCommon::GpuSplit& split, FrontState& fs, u32 method) {
+    if (method != 0x6c3) {
+        return;
+    }
+    static const bool sem_track = [] {
+        const char* env = std::getenv("EDEN_NX2_SEM_TRACK");
+        return env != nullptr && env[0] == '1';
+    }();
+    const u32 control = fs.registers[0x6c3];
+    // A plain release (operation 0, no reduction), as ProcessNativeReportSemaphore runs it.
+    if (!sem_track || (control & 3) != 0 || ((control >> 3) & 1) != 0) {
+        return;
+    }
+    const GPUVAddr address =
+        (GPUVAddr{fs.registers[0x6c0] & 0x1ffffff} << 32) | fs.registers[0x6c1];
+    if (const auto device = memory_manager.GpuToCpuAddress(address)) {
+        split.NoteRelease(*device, fs.registers[0x6c2]);
+    }
 }
 
 void KeplerCompute::FrontCallMultiMethod(Core::System& system, VideoCommon::GpuSplit& split,
@@ -1217,6 +1238,9 @@ void KeplerCompute::FrontCallMultiMethod(Core::System& system, VideoCommon::GpuS
         }
     }
     split.MultiMethod(this, method, base_start, amount, methods_pending, segment);
+    if (amount != 0 && method < fs.registers.size()) {
+        FrontNoteRelease(split, fs, method);
+    }
 }
 
 void KeplerCompute::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split,
@@ -1238,6 +1262,7 @@ void KeplerCompute::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& s
         }
         FrontApply(fs, address, value);
         split.MacroWrite(this, address, value);
+        FrontNoteRelease(split, fs, address);
         return true;
     };
 #ifdef ARCHITECTURE_x86_64
