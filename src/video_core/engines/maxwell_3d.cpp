@@ -1446,25 +1446,6 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
     } else {
         split.Drain(VideoCommon::DrainSite::MacroDmaRead);
     }
-    if (!skip_before.empty()) {
-        std::vector<u32> after(words);
-        memory_manager.ReadBlockUnsafe(source, after.data(), read_bytes);
-        if (after != skip_before) {
-            VideoCommon::Nx2Profile::Add(
-                gpu_pages ? VideoCommon::Nx2Profile::Counter::DmaReadsChangedGpu
-                          : VideoCommon::Nx2Profile::Counter::DmaReadsChanged,
-                1);
-            static u32 logged{};
-            if (logged++ < 32) {
-                const std::string text = fmt::format(
-                    "DMA skip check: macro {:#x} read {} words at {:#x} ({}GPU pages) changed by "
-                    "the wait: {:#x} -> {:#x}",
-                    macro, words, source, gpu_pages ? "" : "not ", skip_before[0], after[0]);
-                LOG_INFO(HW_GPU, "{}", text);
-                VideoCommon::Nx2Profile::WriteProfileFile(text);
-            }
-        }
-    }
     if (VideoCommon::QueryDma::TraceEnabled()) {
         split.Run(
             [this, macro, method, source, read_bytes] {
@@ -1487,6 +1468,7 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
             VideoCommon::DrainSite::MacroDmaFlush);
     }
     u32 changed{};
+    u32 skip_changed_at = words;
     for (u32 i = 0; i < words; ++i) {
         const u32 word = memory_manager.Read<u32>(source + u64{i} * sizeof(u32));
         if (method == 0x158) {
@@ -1496,6 +1478,26 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         }
         if (!diag_before.empty() && diag_before[i] != word) {
             ++changed;
+        }
+        if (!skip_before.empty() && skip_before[i] != word && skip_changed_at == words) {
+            skip_changed_at = i;
+        }
+    }
+    if (skip_changed_at != words) {
+        VideoCommon::Nx2Profile::Add(gpu_pages
+                                         ? VideoCommon::Nx2Profile::Counter::DmaReadsChangedGpu
+                                         : VideoCommon::Nx2Profile::Counter::DmaReadsChanged,
+                                     1);
+        static u32 logged{};
+        if (logged++ < 32) {
+            const std::string text = fmt::format(
+                "DMA skip check: macro {:#x} read {} words at {:#x} ({}GPU pages): word {} "
+                "changed by the wait and flush, {:#x} -> {:#x}",
+                macro, words, source, gpu_pages ? "" : "not ", skip_changed_at,
+                skip_before[skip_changed_at],
+                memory_manager.Read<u32>(source + u64{skip_changed_at} * sizeof(u32)));
+            LOG_INFO(HW_GPU, "{}", text);
+            VideoCommon::Nx2Profile::WriteProfileFile(text);
         }
     }
     if (Tegra::Nx2CmdPageDiag::g_enabled) {
