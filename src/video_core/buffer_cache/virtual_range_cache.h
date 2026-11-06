@@ -14,6 +14,7 @@
 #include "common/common_types.h"
 #include "common/container/unordered_map.h"
 #include "video_core/memory_manager.h"
+#include "video_core/nx2_profile.h"
 
 namespace VideoCommon {
 
@@ -39,11 +40,37 @@ public:
         }
         const size_t as_id = memory.GetID();
         const u64 key = MakeKey(as_id, gpu_addr);
+        Nx2Profile::Add(Nx2Profile::Counter::RangeQueries, 1);
         const auto it = entries.find(key);
-        if (it != entries.end() && it->second.as_id == as_id &&
-            it->second.gpu_addr == gpu_addr && it->second.size == size) {
-            return &it->second.segments;
+        if (it != entries.end() && it->second.as_id == as_id && it->second.gpu_addr == gpu_addr) {
+            if (it->second.size == size) {
+                return &it->second.segments;
+            }
+            // Bindings of one address come with different sizes (a storage buffer bound to the
+            // end of its mapping, then a smaller view of it): a contiguous answer for a larger
+            // size holds for this one cut to `size`, without walking the page table again.
+            if (it->second.size > size && !it->second.segments.empty()) {
+                trimmed.clear();
+                u64 remaining = size;
+                for (const VirtualSegment& segment : it->second.segments) {
+                    const u32 piece = static_cast<u32>((std::min<u64>)(segment.size, remaining));
+                    trimmed.push_back(VirtualSegment{
+                        .gpu_addr = segment.gpu_addr,
+                        .device_addr = segment.device_addr,
+                        .size = piece,
+                    });
+                    remaining -= piece;
+                    if (remaining == 0) {
+                        break;
+                    }
+                }
+                return &trimmed;
+            }
+            if (it->second.size < size) {
+                Nx2Profile::Add(Nx2Profile::Counter::RangeSizeMiss, 1);
+            }
         }
+        Nx2Profile::Add(Nx2Profile::Counter::RangeWalks, 1);
         Entry entry{};
         entry.as_id = as_id;
         entry.gpu_addr = gpu_addr;
@@ -74,6 +101,13 @@ public:
         }
         if (!contiguous || expected != gpu_addr + size) {
             entry.segments.clear();
+        }
+        // Keep the answer for the larger size cached: smaller sizes of a split mapping would
+        // otherwise replace it and the two sizes would walk the page table in turn.
+        if (it != entries.end() && it->second.as_id == as_id && it->second.gpu_addr == gpu_addr &&
+            it->second.size > size) {
+            trimmed = std::move(entry.segments);
+            return &trimmed;
         }
         const auto result = entries.insert_or_assign(key, std::move(entry));
         return &result.first->second.segments;
@@ -164,6 +198,8 @@ private:
     }
 
     ::Common::unordered_map<u64, Entry> entries;
+    /// Query's answer for a smaller size than the cached one; valid until the next Query.
+    VirtualSegments trimmed;
     std::vector<DeferredUnmap> deferred;
     std::mutex deferred_mutex;
     std::atomic<bool> has_deferred{false};
