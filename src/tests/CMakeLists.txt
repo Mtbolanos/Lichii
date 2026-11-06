@@ -188,6 +188,15 @@ add_executable(update_checker_tests
 target_link_libraries(update_checker_tests PRIVATE common Catch2::Catch2WithMain)
 add_test(NAME update_checker_tests COMMAND update_checker_tests)
 
+if (NOT ANDROID)
+    add_executable(config_tests
+        common/first_run_config.cpp
+        ../frontend_common/config.cpp)
+    target_link_libraries(config_tests PRIVATE common SimpleIni::SimpleIni Catch2::Catch2WithMain
+        ${PLATFORM_LIBRARIES})
+    add_test(NAME config_tests COMMAND config_tests)
+endif()
+
 # needed for vma
 if (NOT MSVC)
     target_compile_options(tests PRIVATE
