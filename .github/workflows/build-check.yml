@@ -96,3 +96,8 @@ jobs:
 
       - name: Test debug adapter
         run: python3 tools/nx2/test_debug_mcp.py
+
+      - name: Test ThreadWorker wake-ups
+        run: |
+          python3 tools/nx2/test_thread_worker_wake.py
+          python3 -I tools/nx2/thread_worker_wake.py --cxx g++-13
