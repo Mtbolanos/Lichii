@@ -77,6 +77,7 @@ public:
 
     void PopulateAsync(QVector<UISettings::GameDir>& game_dirs);
     void SetScanEnabled(bool enabled);
+    void SetReportableProgramId(u64 program_id);
 
     void SaveInterfaceLayout();
     void LoadInterfaceLayout();
@@ -96,6 +97,7 @@ public slots:
     void OnPopulate();
 
 signals:
+    void ReportCompatibilityRequested(u64 program_id);
     void BootGame(const QString& game_path, StartGameType type);
     void GameChosen(const QString& game_path, const u64 title_id = 0);
     void OpenFolderRequested(u64 program_id, GameListOpenTarget target,
@@ -171,6 +173,7 @@ private:
 
     bool m_isTreeMode = true;
     bool nup_conversion_running{};
+    u64 reportable_program_id{};
     QAbstractItemView* m_currentView = nullptr;
 };
 
