@@ -286,9 +286,11 @@ std::optional<VideoCore::RasterizerDownloadArea> BufferCache<P>::GetFlushArea(DA
     // EDEN_NX2_NATIVE_PREFLUSH=1 (experiment): mark native titles' read pages too. Ocarina reads
     // the same few GPU-written pages every frame (~100 traps a second, each a full GPU wait on
     // the back thread); marked, later writes there are copied back at fences instead.
-    // =2: only pages the CPU keeps reading are marked: a page is marked on its Nth trap
-    // (EDEN_NX2_PREFLUSH_HOT, default 32). A page read once in a while keeps exact flushes, so
-    // the CPU never sees a fence-old copy of it; =1 let it, and leaves flickered in Ocarina.
+    // =2: only pages the CPU reads every frame are marked: a page is marked once it traps
+    // EDEN_NX2_PREFLUSH_HOT times (default 20) within one second. Pages read now and then keep
+    // exact flushes; =1 marked them too, and in Ocarina the CPU then read fence-old copies of them
+    // (leaves flickering black, cutscene exposure). A count over the whole session marked ~740
+    // pages in 14 minutes, so the window matters.
     static const int native_preflush = [] {
         const char* value = std::getenv("EDEN_NX2_NATIVE_PREFLUSH");
         return value != nullptr ? std::atoi(value) : 0;
@@ -296,18 +298,31 @@ std::optional<VideoCore::RasterizerDownloadArea> BufferCache<P>::GetFlushArea(DA
     static const u32 preflush_hot = [] {
         const char* value = std::getenv("EDEN_NX2_PREFLUSH_HOT");
         const int parsed = value != nullptr ? std::atoi(value) : 0;
-        return parsed > 0 ? static_cast<u32>(parsed) : 32U;
+        return parsed > 0 ? static_cast<u32>(parsed) : 20U;
     }();
     bool native_mark = native_preflush == 1;
     if (native_preflush == 2 && !area->preemtive) {
-        static std::mutex trap_counts_mutex;
-        static std::unordered_map<DAddr, u32> trap_counts;
-        std::scoped_lock trap_lock{trap_counts_mutex};
-        u32& count = trap_counts[device_addr_start_aligned];
-        native_mark = ++count >= preflush_hot;
-        if (count == preflush_hot) {
-            LOG_INFO(HW_GPU, "Preflush: marking hot page [{:#x}, {:#x}) after {} reads",
-                     device_addr_start_aligned, device_addr_end_aligned, count);
+        struct Window {
+            std::chrono::steady_clock::time_point start;
+            u32 count;
+        };
+        static std::mutex trap_mutex;
+        static std::unordered_map<DAddr, Window> trap_windows;
+        static u32 marked_pages{};
+        const auto now = std::chrono::steady_clock::now();
+        std::scoped_lock trap_lock{trap_mutex};
+        auto [it, inserted] = trap_windows.try_emplace(device_addr_start_aligned, Window{now, 0});
+        if (now - it->second.start > std::chrono::seconds{1}) {
+            it->second = Window{now, 0};
+        }
+        native_mark = ++it->second.count >= preflush_hot;
+        if (native_mark) {
+            trap_windows.erase(it);
+            ++marked_pages;
+            LOG_INFO(HW_GPU, "Preflush: marking page [{:#x}, {:#x}), read {} times in a second "
+                     "({} marked so far)",
+                     device_addr_start_aligned, device_addr_end_aligned, preflush_hot,
+                     marked_pages);
         }
     }
     const bool preflush = !Tegra::g_nx2_ampere.load(std::memory_order_relaxed) || native_mark;
