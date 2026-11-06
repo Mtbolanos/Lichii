@@ -5,6 +5,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <atomic>
+#include <chrono>
 #include <cstdlib>
 
 #include "common/assert.h"
@@ -70,25 +71,49 @@ void DrainBack() {
 constexpr u32 AcquireGequalOperation = 0x4; // Puller::GpuSemaphoreOperation::AcquireGequal
 
 bool AcquireMetWithoutDrain(DmaPusher& dma_pusher, GPUVAddr address, u32 value, u32 operation) {
-    static const bool enabled = [] {
+    // 1: >= acquires only. 2: also == acquires (a semaphore that cycles through a value it held
+    // before, with the release that resets it still queued, would pass early).
+    static const int mode = [] {
         const char* env = std::getenv("EDEN_NX2_SEM_FASTPATH");
-        return env != nullptr && env[0] == '1';
+        return env == nullptr ? 0 : env[0] - '0';
     }();
-    if (!enabled || !VideoCommon::GpuSplit::Get().Active() ||
-        operation != AcquireGequalOperation) {
+    // Why acquires still drain, by operation (EDEN_NX2_SEM_FASTPATH set): logged every 10 s.
+    struct Stats {
+        std::atomic<u64> checks[3]{};
+        std::atomic<u64> met[3]{};
+        std::atomic<u64> dirty{};
+        std::chrono::steady_clock::time_point last{std::chrono::steady_clock::now()};
+    };
+    static Stats stats;
+    if (mode <= 0 || !VideoCommon::GpuSplit::Get().Active()) {
+        return false;
+    }
+    const int kind = operation == AcquireGequalOperation ? 0 : operation == 0x1 ? 1 : 2;
+    stats.checks[kind].fetch_add(1, std::memory_order_relaxed);
+    if (const auto now = std::chrono::steady_clock::now(); now - stats.last > std::chrono::seconds{10}) {
+        stats.last = now;
+        LOG_INFO(HW_GPU, "Semaphore fast path in 10 s: >= {}/{} met, == {}/{} met, mask {}/{} met, {} with GPU data",
+                 stats.met[0].exchange(0), stats.checks[0].exchange(0), stats.met[1].exchange(0),
+                 stats.checks[1].exchange(0), stats.met[2].exchange(0), stats.checks[2].exchange(0),
+                 stats.dirty.exchange(0));
+    }
+    if (kind == 2 || (kind == 1 && mode < 2)) {
         return false;
     }
     const auto device = dma_pusher.memory_manager.GpuToCpuAddress(address);
-    if (!device || dma_pusher.rasterizer->MustFlushRegion(*device, sizeof(u32),
-                                                          VideoCommon::CacheType::BufferCache)) {
+    if (!device) {
         return false;
     }
-    if (dma_pusher.memory_manager.Read<u32>(address) < value) {
+    if (dma_pusher.rasterizer->MustFlushRegion(*device, sizeof(u32),
+                                               VideoCommon::CacheType::BufferCache)) {
+        stats.dirty.fetch_add(1, std::memory_order_relaxed);
         return false;
     }
-    if (static std::atomic<u64> hits{}; (hits.fetch_add(1, std::memory_order_relaxed) & 0xffff) == 0) {
-        LOG_INFO(HW_GPU, "Semaphore fast path: {} acquires met without a drain", hits.load());
+    const u32 current = dma_pusher.memory_manager.Read<u32>(address);
+    if (kind == 0 ? current < value : current != value) {
+        return false;
     }
+    stats.met[kind].fetch_add(1, std::memory_order_relaxed);
     return true;
 }
 
