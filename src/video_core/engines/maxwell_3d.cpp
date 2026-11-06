@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cstdlib>
 #include <cstring>
 #include <limits>
 #include <optional>
@@ -1183,6 +1184,10 @@ void Maxwell3D::FrontWrite(VideoCommon::GpuSplit& split, FrontState& fs, u32 met
     } else {
         split.Method(this, method, argument, is_last_call, nullptr);
     }
+    if (method == MAXWELL3D_REG_INDEX(report_semaphore.query)) {
+        // A report writes guest memory (query results, semaphores) an MME DMA read may read.
+        split.NoteMemoryWriter();
+    }
 }
 
 void Maxwell3D::FrontCallMethod(Core::System& system, VideoCommon::GpuSplit& split, u32 method,
@@ -1288,6 +1293,10 @@ void Maxwell3D::FrontCallMultiMethod(Core::System& system, VideoCommon::GpuSplit
         }
     }
     split.MultiMethod(this, method, base_start, amount, methods_pending, nullptr);
+    if (constexpr u32 report = MAXWELL3D_REG_INDEX(report_semaphore.query);
+        method <= report && report < method + amount) {
+        split.NoteMemoryWriter();
+    }
 }
 
 void Maxwell3D::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split,
@@ -1357,7 +1366,17 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         memory_manager.ReadBlockUnsafe(source, diag_before.data(), read_bytes);
     }
     VideoCommon::Nx2Profile::CountDmaRead(macro);
-    split.Drain(VideoCommon::DrainSite::MacroDmaRead);
+    // EDEN_NX2_DMA_WRITERS=1 (experiment): wait only for the queued work that can write guest
+    // memory (compute dispatches, copies, semaphore and query reports), not for every draw.
+    static const bool writers_only = [] {
+        const char* env = std::getenv("EDEN_NX2_DMA_WRITERS");
+        return env != nullptr && env[0] == '1';
+    }();
+    if (writers_only) {
+        split.WaitForMemoryWriters(VideoCommon::DrainSite::MacroDmaRead);
+    } else {
+        split.Drain(VideoCommon::DrainSite::MacroDmaRead);
+    }
     if (VideoCommon::QueryDma::TraceEnabled()) {
         split.Run(
             [this, macro, method, source, read_bytes] {

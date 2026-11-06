@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstring>
@@ -161,10 +162,22 @@ public:
     /// Compute or copy work was just sent: what can write GPU-written command lists.
     void NoteWriter() {
         last_writer_position = write_position;
+        last_memory_writer_position = write_position;
+    }
+    /// A semaphore or query report was just sent: guest memory MME DMA reads may read (not the
+    /// command lists WaitForWriters guards).
+    void NoteMemoryWriter() {
+        last_memory_writer_position = write_position;
+    }
+    /// Waits until the back executed the work sent so far that can write guest memory (compute,
+    /// copies, reports). Counted as `site`.
+    bool WaitForMemoryWriters(DrainSite site) {
+        return WaitFor(std::min(last_memory_writer_position, write_position), site);
     }
     /// Waits until the back executed the compute and copy work sent so far (not what came after).
     /// Returns whether any of it was still queued.
     bool WaitForWriters();
+
     /// A host-level wait was just sent (a syncpoint acquire, a host WFI, a GP entry with its sync
     /// bit; semaphore acquires drain): the guest's GPU work before it is complete before the
     /// commands after it are fetched.
@@ -246,6 +259,7 @@ private:
     // Front side.
     u64 write_position{};
     u64 last_writer_position{};
+    u64 last_memory_writer_position{};
     u64 last_sync_position{};
     u64 published_local{};
     u64 consumed_cache{};

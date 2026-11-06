@@ -140,6 +140,7 @@ void GpuSplit::Stop() {
     ring.reset();
     write_position = 0;
     last_writer_position = 0;
+    last_memory_writer_position = 0;
     last_sync_position = 0;
     published_local = 0;
     consumed_cache = 0;
