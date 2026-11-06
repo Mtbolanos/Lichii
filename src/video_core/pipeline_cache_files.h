@@ -14,7 +14,7 @@
 namespace VideoCommon {
 
 inline constexpr u32 OpenGLPipelineCacheVersion = 48;
-inline constexpr u32 VulkanPipelineCacheVersion = 52;
+inline constexpr u32 VulkanPipelineCacheVersion = 53;
 
 // Official Eglantine (cache version 18 at c0cb3325) and this fork (a different version) both
 // used <shader dir>/<title>/vulkan.bin and vulkan_pipelines.bin. Each build deletes a file
@@ -56,6 +56,40 @@ inline bool AdoptLegacyPipelineCache(const std::filesystem::path& legacy,
     }
     std::filesystem::rename(legacy, versioned, error);
     return !error;
+}
+
+inline bool CopyCompatiblePipelineCache(const std::filesystem::path& source,
+                                        const std::filesystem::path& destination,
+                                        const std::array<char, 8>& magic, u32 source_version,
+                                        u32 destination_version) {
+    std::error_code error;
+    if (std::filesystem::exists(destination, error) || error ||
+        !PipelineCacheHeaderMatches(source, magic, source_version)) {
+        return false;
+    }
+    auto temporary = destination;
+    temporary += ".migrating";
+    if (!std::filesystem::copy_file(source, temporary,
+                                    std::filesystem::copy_options::overwrite_existing, error)) {
+        return false;
+    }
+    {
+        std::fstream stream(temporary, std::ios::binary | std::ios::in | std::ios::out);
+        stream.seekp(static_cast<std::streamoff>(magic.size()));
+        stream.write(reinterpret_cast<const char*>(&destination_version),
+                     sizeof(destination_version));
+        stream.close();
+        if (stream.fail()) {
+            std::filesystem::remove(temporary, error);
+            return false;
+        }
+    }
+    std::filesystem::rename(temporary, destination, error);
+    if (error) {
+        std::filesystem::remove(temporary, error);
+        return false;
+    }
+    return true;
 }
 
 } // namespace VideoCommon

@@ -132,6 +132,8 @@ public:
 
     void Finish();
 
+    void FinishForHostRead();
+
     u64 GetDeviceLocalMemory() const;
 
     u64 GetDeviceMemoryUsage() const;
