@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <algorithm>
 #include <cstdlib>
 
 #include "common/assert.h"
@@ -163,6 +164,21 @@ bool Puller::CanResumeAcquire(DmaPusher& dma_pusher) {
     if (AcquireMetWithoutDrain(dma_pusher, pending_acquire->address, pending_acquire->value,
                                pending_acquire->operation)) {
         return true;
+    }
+    // EDEN_NX2_SEM_RECHECK=N (experiment): a suspended channel is re-checked thousands of times
+    // a second (resume pending), and each check waited for the back's queued writers. A release
+    // the back has run latches its waiters, so between full checks look at that and at guest
+    // memory only, and wait for the back on every Nth check (progress if nothing else wakes us).
+    static const u32 recheck_every = [] {
+        const char* env = std::getenv("EDEN_NX2_SEM_RECHECK");
+        return env != nullptr ? static_cast<u32>(std::max(std::atoi(env), 0)) : 0U;
+    }();
+    if (recheck_every > 1 && VideoCommon::GpuSplit::Get().Active() &&
+        (++pending_acquire->checks % recheck_every) != 0) {
+        if (Nx2SemaphoreWaiters::Get().Latched(this)) {
+            return true;
+        }
+        return false;
     }
     // The release may still be queued for the split GPU thread's back half (and the caches
     // ReadSemaphoreWord asks are its state).

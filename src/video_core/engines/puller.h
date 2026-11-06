@@ -79,6 +79,7 @@ public:
         u32 operation;
         std::chrono::steady_clock::time_point since;
         bool reported;
+        u32 checks{}; ///< Re-checks so far (EDEN_NX2_SEM_RECHECK)
 
         [[nodiscard]] bool Matches(u32 current) const;
     };
