@@ -36,3 +36,20 @@ EDEN_NX2_FENCE_BATCH=1
 #EDEN_NX2_SPLIT_SKIP=1
 #EDEN_NX2_AUTO_STUB=1
 #EDEN_NX2_KEEP_ASTC=1
+
+# --- Ocarina of Time remake (perf/split-sync experiments, tested in Kokiri Forest) ---
+# Together these took the forest from ~30 to ~36-43 FPS on a Ryzen 7 5800XT + RTX 4060.
+# CPU reads of the pages the game reads back every frame (auto exposure among them) are served
+# from copies made at fences instead of a full GPU wait each time.
+EDEN_NX2_NATIVE_PREFLUSH=1
+# Semaphore acquires: equal acquires met in guest memory, and acquires met by a release the front
+# already queued, go on without waiting for the back.
+EDEN_NX2_SEM_FASTPATH=2
+EDEN_NX2_SEM_TRACK=1
+EDEN_NX2_SEM_WRITERS=1
+# MME DMA reads: wait only for the work that writes guest memory, and not at all on GPU pages
+# (waiting never changed those words).
+EDEN_NX2_DMA_WRITERS=1
+EDEN_NX2_DMA_SKIP=4
+# Command list entries on pages no GPU work wrote don't wait for queued compute and copies.
+EDEN_NX2_LIST_SKIP=1
