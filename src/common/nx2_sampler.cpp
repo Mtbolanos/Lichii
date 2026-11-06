@@ -301,6 +301,43 @@ std::string Report(const std::vector<Target>& targets, const std::vector<Sample>
         }
         std::fclose(out);
     }
+    // <out>.addr: the same stacks as module+offset frames, for offline symbolization with the
+    // build's .pdb (llvm-symbolizer --relative-address) when dbghelp finds no symbols.
+    std::unordered_map<DWORD64, std::string> module_names;
+    const auto address_name = [&module_names](DWORD64 address) -> const std::string& {
+        auto [it, is_new] = module_names.try_emplace(address);
+        if (!is_new) {
+            return it->second;
+        }
+        HMODULE module{};
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                   GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                               reinterpret_cast<LPCSTR>(address), &module)) {
+            char module_path[MAX_PATH] = "?";
+            GetModuleFileNameA(module, module_path, sizeof(module_path));
+            const char* base = std::strrchr(module_path, '\\');
+            it->second = fmt::format("{}+{:#x}", base != nullptr ? base + 1 : module_path,
+                                     address - reinterpret_cast<DWORD64>(module));
+        } else {
+            it->second = "(jit)";
+        }
+        return it->second;
+    };
+    std::map<std::string, unsigned> addressed;
+    for (const Sample& sample : samples) {
+        std::string line = targets[sample.thread].name;
+        for (unsigned i = sample.depth; i-- > 0;) {
+            line += ';';
+            line += address_name(sample.frames[i]);
+        }
+        ++addressed[line];
+    }
+    if (std::FILE* const out = std::fopen((std::string{path} + ".addr").c_str(), "w")) {
+        for (const auto& [line, count] : addressed) {
+            std::fprintf(out, "%s %u\n", line.c_str(), count);
+        }
+        std::fclose(out);
+    }
     return text;
 }
 
