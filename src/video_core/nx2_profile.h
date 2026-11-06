@@ -11,7 +11,9 @@
 #include <x86intrin.h>
 #endif
 #include <chrono>
+#include <cstdio>
 #include <cstdlib>
+#include <mutex>
 #include <string>
 #include <unordered_set>
 
@@ -148,6 +150,30 @@ private:
 };
 
 /// Amounts counted on the GPU thread, logged per second with the zones.
+/// The reports also go to %APPDATA%/eden/log/nx2_profile.txt, written directly: they reach it
+/// even when the log file stops taking lines.
+inline void WriteProfileFile(const std::string& text) {
+    static std::mutex mutex;
+    static std::FILE* file = [] {
+        std::string path;
+        if (const char* appdata = std::getenv("APPDATA")) {
+            path = std::string{appdata} + "/eden/log/nx2_profile.txt";
+        } else if (const char* home = std::getenv("HOME")) {
+            path = std::string{home} + "/.local/share/eden/log/nx2_profile.txt";
+        }
+        return path.empty() ? nullptr : std::fopen(path.c_str(), "w");
+    }();
+    if (file == nullptr) {
+        return;
+    }
+    static const auto origin = std::chrono::steady_clock::now();
+    const double seconds =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - origin).count();
+    std::scoped_lock lock{mutex};
+    std::fprintf(file, "[%9.3f] %s\n", seconds, text.c_str());
+    std::fflush(file);
+}
+
 enum class Counter : u32 {
     DownloadBytes,  ///< Buffer data copied back from the host GPU at fences
     DownloadCopies, ///< Buffer ranges copied back
@@ -314,8 +340,10 @@ inline void Report(const char* thread_name = "GPU thread") {
                             static_cast<double>(window) / 1e6);
     }
     LOG_INFO(HW_GPU, "{} per second:{}", thread_name, line);
+    WriteProfileFile(fmt::format("{} per second:{}", thread_name, line));
     if (const std::string methods = TopMethods(t_method_count, &t_method_same, window); !methods.empty()) {
         LOG_INFO(HW_GPU, "{} methods per second:{}", thread_name, methods);
+        WriteProfileFile(fmt::format("{} methods per second:{}", thread_name, methods));
     }
     if (const std::string reads = TopMethods(t_dma_reads, nullptr, window); !reads.empty()) {
         LOG_INFO(HW_GPU, "{} MME DMA reads per second by macro:{}", thread_name, reads);

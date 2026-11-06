@@ -70,13 +70,15 @@ void ReportSubmitCounts() {
         return;
     }
     const double seconds = static_cast<double>(now - start) / 1e9;
-    LOG_INFO(Render_Vulkan,
-             "Scheduler per second: {:.0f} submits, {:.0f} render passes, {:.0f} finishes "
-             "waiting {:.1f} ms",
-             static_cast<double>(g_profile_submits.exchange(0)) / seconds,
-             static_cast<double>(g_profile_renderpasses.exchange(0)) / seconds,
-             static_cast<double>(g_profile_finishes.exchange(0)) / seconds,
-             static_cast<double>(g_profile_finish_ns.exchange(0)) / 1e6 / seconds);
+    const std::string text = fmt::format(
+        "Scheduler per second: {:.0f} submits, {:.0f} render passes, {:.0f} finishes waiting "
+        "{:.1f} ms",
+        static_cast<double>(g_profile_submits.exchange(0)) / seconds,
+        static_cast<double>(g_profile_renderpasses.exchange(0)) / seconds,
+        static_cast<double>(g_profile_finishes.exchange(0)) / seconds,
+        static_cast<double>(g_profile_finish_ns.exchange(0)) / 1e6 / seconds);
+    LOG_INFO(Render_Vulkan, "{}", text);
+    VideoCommon::Nx2Profile::WriteProfileFile(text);
     std::vector<std::pair<u64, std::string>> ends;
     {
         std::scoped_lock lock{g_profile_end_mutex};

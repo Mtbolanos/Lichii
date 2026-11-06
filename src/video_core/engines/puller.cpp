@@ -109,10 +109,13 @@ bool AcquireMetWithoutDrain(DmaPusher& dma_pusher, GPUVAddr address, u32 value, 
     stats.checks[kind].fetch_add(1, std::memory_order_relaxed);
     if (const auto now = std::chrono::steady_clock::now(); now - stats.last > std::chrono::seconds{10}) {
         stats.last = now;
-        LOG_INFO(HW_GPU, "Semaphore fast path in 10 s: >= {}/{} met, == {}/{} met, mask {}/{} met, {} with GPU data",
-                 stats.met[0].exchange(0), stats.checks[0].exchange(0), stats.met[1].exchange(0),
-                 stats.checks[1].exchange(0), stats.met[2].exchange(0), stats.checks[2].exchange(0),
-                 stats.dirty.exchange(0));
+        const std::string text = fmt::format(
+            "Semaphore fast path in 10 s: >= {}/{} met, == {}/{} met, mask {}/{} met, {} with GPU data",
+            stats.met[0].exchange(0), stats.checks[0].exchange(0), stats.met[1].exchange(0),
+            stats.checks[1].exchange(0), stats.met[2].exchange(0), stats.checks[2].exchange(0),
+            stats.dirty.exchange(0));
+        LOG_INFO(HW_GPU, "{}", text);
+        VideoCommon::Nx2Profile::WriteProfileFile(text);
     }
     if (kind == 2 || (kind == 1 && mode < 2)) {
         return false;
