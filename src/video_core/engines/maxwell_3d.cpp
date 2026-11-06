@@ -1458,7 +1458,7 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         if (VideoCommon::Nx2Profile::Enabled()) {
             if (gpu_pages) {
                 VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsGpuPages, 1);
-            } else if (dma_skip != 3) {
+            } else if (dma_skip < 3) {
                 VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsSkipped, 1);
             }
         }
@@ -1468,9 +1468,13 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         skip_before.resize(words);
         memory_manager.ReadBlockUnsafe(source, skip_before.data(), read_bytes);
     }
-    if ((dma_skip == 1 && !gpu_pages) || (dma_skip == 3 && buffer_cache_only)) {
+    // =4: skip for every read =2 counts on GPU pages (buffer-cache writes, this engine's reports
+    // and inline uploads): none of their words changed by waiting in Ocarina's forest. Reports
+    // land when the host query completes, not when the back runs them.
+    if ((dma_skip == 1 && !gpu_pages) || (dma_skip == 3 && buffer_cache_only) ||
+        (dma_skip == 4 && gpu_pages)) {
         // No wait.
-        if (dma_skip == 3 && VideoCommon::Nx2Profile::Enabled()) {
+        if (dma_skip >= 3 && VideoCommon::Nx2Profile::Enabled()) {
             VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsSkipped, 1);
         }
     } else if (writers_only) {
