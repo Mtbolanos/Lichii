@@ -36,6 +36,13 @@ namespace Tegra {
 
 class MemoryManager final {
 public:
+    /// Changes on every map, sparse map and unmap: answers derived from the page table (the
+    /// buffer cache's VirtualRangeCache) are stale once it moved. A remap of mapped pages to
+    /// other device memory changes it without ModifyGPUMemory, which reports entry type changes.
+    [[nodiscard]] u64 MapSerial() const {
+        return map_serial.load(std::memory_order_acquire);
+    }
+
     explicit MemoryManager(Core::System& system_, u64 address_space_bits_ = 40,
                            GPUVAddr split_address = 1ULL << 34, u64 big_page_bits_ = 16,
                            u64 page_bits_ = 12);

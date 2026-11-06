@@ -41,8 +41,10 @@ public:
         const size_t as_id = memory.GetID();
         const u64 key = MakeKey(as_id, gpu_addr);
         Nx2Profile::Add(Nx2Profile::Counter::RangeQueries, 1);
+        const u64 serial = memory.MapSerial();
         const auto it = entries.find(key);
-        if (it != entries.end() && it->second.as_id == as_id && it->second.gpu_addr == gpu_addr) {
+        if (it != entries.end() && it->second.as_id == as_id && it->second.gpu_addr == gpu_addr &&
+            it->second.serial == serial) {
             if (it->second.size == size) {
                 return &it->second.segments;
             }
@@ -75,6 +77,7 @@ public:
         entry.as_id = as_id;
         entry.gpu_addr = gpu_addr;
         entry.size = size;
+        entry.serial = serial;
         const auto ranges = memory.GetSubmappedRange(gpu_addr, size);
         GPUVAddr expected = gpu_addr;
         bool contiguous = true;
@@ -105,7 +108,7 @@ public:
         // Keep the answer for the larger size cached: smaller sizes of a split mapping would
         // otherwise replace it and the two sizes would walk the page table in turn.
         if (it != entries.end() && it->second.as_id == as_id && it->second.gpu_addr == gpu_addr &&
-            it->second.size > size) {
+            it->second.serial == serial && it->second.size > size) {
             trimmed = std::move(entry.segments);
             return &trimmed;
         }
@@ -147,6 +150,7 @@ private:
         size_t as_id{};
         GPUVAddr gpu_addr{};
         u32 size{};
+        u64 serial{}; ///< MemoryManager::MapSerial when walked
     };
 
     struct DeferredUnmap {
