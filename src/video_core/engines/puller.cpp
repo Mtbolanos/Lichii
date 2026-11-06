@@ -54,13 +54,29 @@ template <typename Func>
 void OnBack(const Func& func) {
     if (auto& split = VideoCommon::GpuSplit::Get(); split.Active()) {
         split.Defer(func);
+        // What the puller defers (releases, fences) writes guest memory acquires and MME DMA
+        // reads may read.
+        split.NoteMemoryWriter();
     } else {
         func();
     }
 }
 
 void DrainBack() {
-    VideoCommon::GpuSplit::Get().Drain(VideoCommon::DrainSite::Acquire);
+    // EDEN_NX2_SEM_WRITERS=1 (experiment): an acquire waits only for the queued work that can
+    // release a semaphore (compute and copies, releases, 3D reports), not for every draw. Channels
+    // suspended on semaphores the guest CPU releases re-checked them ~20,000 times a second in
+    // Ocarina's forest, and each check drained the back for nothing.
+    static const bool writers_only = [] {
+        const char* env = std::getenv("EDEN_NX2_SEM_WRITERS");
+        return env != nullptr && env[0] == '1';
+    }();
+    auto& split = VideoCommon::GpuSplit::Get();
+    if (writers_only && split.Active()) {
+        split.WaitForMemoryWriters(VideoCommon::DrainSite::Acquire);
+    } else {
+        split.Drain(VideoCommon::DrainSite::Acquire);
+    }
 }
 
 // EDEN_NX2_SEM_FASTPATH=1 (experiment): a greater-or-equal acquire whose value guest memory
