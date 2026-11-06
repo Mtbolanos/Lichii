@@ -1435,7 +1435,7 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         }
     }
     std::vector<u32> skip_before;
-    if (dma_skip == 2 && !gpu_pages) {
+    if (dma_skip == 2) {
         skip_before.resize(words);
         memory_manager.ReadBlockUnsafe(source, skip_before.data(), read_bytes);
     }
@@ -1450,11 +1450,18 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         std::vector<u32> after(words);
         memory_manager.ReadBlockUnsafe(source, after.data(), read_bytes);
         if (after != skip_before) {
-            VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsChanged, 1);
+            VideoCommon::Nx2Profile::Add(
+                gpu_pages ? VideoCommon::Nx2Profile::Counter::DmaReadsChangedGpu
+                          : VideoCommon::Nx2Profile::Counter::DmaReadsChanged,
+                1);
             static u32 logged{};
-            if (logged++ < 16) {
-                LOG_INFO(HW_GPU, "DMA skip check: macro {:#x} read {} words at {:#x} changed by the wait",
-                         macro, words, source);
+            if (logged++ < 32) {
+                const std::string text = fmt::format(
+                    "DMA skip check: macro {:#x} read {} words at {:#x} ({}GPU pages) changed by "
+                    "the wait: {:#x} -> {:#x}",
+                    macro, words, source, gpu_pages ? "" : "not ", skip_before[0], after[0]);
+                LOG_INFO(HW_GPU, "{}", text);
+                VideoCommon::Nx2Profile::WriteProfileFile(text);
             }
         }
     }

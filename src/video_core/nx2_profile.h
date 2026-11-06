@@ -105,7 +105,7 @@ inline u64 Ticks() {
 struct ThreadData {
     std::array<u64, static_cast<size_t>(Zone::Count)> exclusive_ns{};
     std::array<u64, static_cast<size_t>(Zone::Count)> count{};
-    std::array<u64, 14> counters{}; ///< See Counter
+    std::array<u64, 15> counters{}; ///< See Counter
     std::array<u64, static_cast<size_t>(DrainSite::Count)> drain_ns{};
     std::array<u64, static_cast<size_t>(DrainSite::Count)> drain_count{};
     u64 child_ns{};    ///< Time of the zones nested in the current one
@@ -189,6 +189,7 @@ enum class Counter : u32 {
     DmaReadsGpuPages,   ///< MME DMA reads touching GPU-written or reported pages (they wait)
     DmaReadsSkipped,    ///< MME DMA reads that skipped the wait (EDEN_NX2_DMA_SKIP=1)
     DmaReadsChanged,    ///< EDEN_NX2_DMA_SKIP=2: reads on other pages whose words the wait changed
+    DmaReadsChangedGpu, ///< EDEN_NX2_DMA_SKIP=2: reads on GPU pages whose words the wait changed
 };
 
 /// Method calls on this thread by method (3D registers on the back, macros on the front), and
@@ -314,10 +315,11 @@ inline void Report(const char* thread_name = "GPU thread") {
                         static_cast<double>(data.counters[10]) * 1e9 / window);
     if (data.counters[11] + data.counters[12] + data.counters[13] != 0) {
         line += fmt::format(" | MME DMA reads on GPU pages {:.0f}/s, skipped {:.0f}/s, changed "
-                            "on other pages {:.0f}/s",
+                            "by the wait: on other pages {:.0f}/s, on GPU pages {:.0f}/s",
                             static_cast<double>(data.counters[11]) * 1e9 / window,
                             static_cast<double>(data.counters[12]) * 1e9 / window,
-                            static_cast<double>(data.counters[13]) * 1e9 / window);
+                            static_cast<double>(data.counters[13]) * 1e9 / window,
+                            static_cast<double>(data.counters[14]) * 1e9 / window);
     }
     std::string drains;
     for (size_t i = 0; i < data.drain_count.size(); ++i) {
