@@ -314,6 +314,12 @@ inline LoweredProgram LowerToMaxwellWith(std::span<const Instruction> code, u32 
                 requires_shadow = true;
         }
         if (requires_shadow) {
+            if (uses_uniform_bank && (high_uniform_base & 3)) {
+                // Shadowing works in aligned groups of four: lower again with the high uniform
+                // base rounded down to a multiple of four (LowerToMaxwell retries).
+                result.high_uniform_registers =
+                    (std::max)(result.high_uniform_registers, (high_uniforms + 3) & ~3U);
+            }
             if (!uses_uniform_bank || (high_uniform_base & 3))
                 return fail(index, "native program uses lowering scratch registers");
             pressure = PrepareRegisterPressure(insn, high_uniform_base);
