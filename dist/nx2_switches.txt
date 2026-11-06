@@ -53,3 +53,5 @@ EDEN_NX2_DMA_WRITERS=1
 EDEN_NX2_DMA_SKIP=4
 # Command list entries on pages no GPU work wrote don't wait for queued compute and copies.
 EDEN_NX2_LIST_SKIP=1
+# Build every cached pipeline at boot: a slower start, fewer shader stutters in places already seen.
+EDEN_NX2_PRELOAD_ALL_PIPELINES=1
