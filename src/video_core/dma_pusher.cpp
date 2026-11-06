@@ -185,7 +185,18 @@ bool DmaPusher::Step() {
         // (the split only starts with unsafe reads; the settings can change mid-game).
         const bool use_safe = !VideoCommon::GpuSplit::Get().Active() &&
                               (Settings::IsDMALevelDefault() ? Settings::IsGPULevelHigh() : Settings::IsDMALevelSafe());
-        if (!gpu_written && VideoCommon::GpuSplit::Get().Active() &&
+        // EDEN_NX2_LIST_SKIP=1 (experiment): once the session has found its GPU-written command
+        // list pages, an entry on pages no GPU work has written yet is taken as CPU-written
+        // without waiting for the queued compute and copies (25% of the front thread in
+        // Ocarina's forest went to that wait, for every CPU-written entry). A page the GPU
+        // writes commands to for the first time after that would be read stale once.
+        static const bool skip_list_wait = [] {
+            const char* env = std::getenv("EDEN_NX2_LIST_SKIP");
+            return env != nullptr && env[0] == '1';
+        }();
+        const bool skip_wait = skip_list_wait && !gpu_written &&
+                               Tegra::g_nx2_has_command_list_pages.load(std::memory_order_relaxed);
+        if (!gpu_written && !skip_wait && VideoCommon::GpuSplit::Get().Active() &&
             VideoCommon::GpuSplit::Get().WaitForWriters()) {
             gpu_written =
                 IsGpuWrittenCommands(dma_state.dma_get, size_t{header.size} * sizeof(u32));
