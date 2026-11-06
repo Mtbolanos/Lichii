@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 # Clang major the Linux PGO build uses, from apt.llvm.org. A profile is written by a current clang
 # and an older reader refuses it, so this has to stay at or above whatever produced
@@ -518,6 +518,39 @@ jobs:
           path: build/release/bin/
           if-no-files-found: error
           retention-days: 7
+
+      # Artifact downloads go through blob storage the test machine's agent can't reach, so the
+      # build is also pushed as a git ref (drop/<branch>): build.zip without the PDB, split under
+      # GitHub's 100 MB file limit, and the PDB on its own ref for symbolizing samples.
+      - name: Publish build as a git ref
+        if: matrix.platform == 'windows-x86_64'
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          bin="$PWD/build/release/bin"
+          remote="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          publish() {  # <dir> <ref>
+            ( cd "$1"
+              git init -q
+              git checkout -q -b drop
+              git add .
+              git -c user.name=ci -c user.email=ci@localhost commit -qm "${GITHUB_SHA}"
+              git push -qf "$remote" "HEAD:refs/heads/$2" )
+          }
+          drop="$RUNNER_TEMP/drop"; pdb="$RUNNER_TEMP/drop-pdb"
+          mkdir -p "$drop" "$pdb"
+          ( cd "$bin" && 7z a -tzip -mx=5 '-xr!*.pdb' "$drop/build.zip" . > /dev/null )
+          ( cd "$bin" && 7z a -t7z -mx=7 "$pdb/pdb.7z" lichii.pdb > /dev/null )
+          echo "${GITHUB_SHA}" > "$drop/sha.txt"
+          echo "${GITHUB_SHA}" > "$pdb/sha.txt"
+          for f in "$drop/build.zip" "$pdb/pdb.7z"; do
+            split -b 90m -d "$f" "$f.part" && rm "$f"
+          done
+          ls -la "$drop" "$pdb"
+          publish "$drop" "drop/${GITHUB_REF_NAME}"
+          publish "$pdb" "drop-pdb/${GITHUB_REF_NAME}"
 
       - name: Upload MinGW binary
         if: matrix.mingw
