@@ -3400,6 +3400,9 @@ private:
     void FrontWrite(VideoCommon::GpuSplit& split, FrontState& state, u32 method, u32 argument,
                     bool is_last_call, bool from_macro);
     void FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split, FrontState& state);
+    /// Reports and inline uploads write guest memory on the back: notes the writer and its pages.
+    void FrontNoteMemoryWrite(VideoCommon::GpuSplit& split, FrontState& state, u32 method,
+                              u32 argument);
     void FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& state, u32 macro, u32 method,
                       u32 count);
     void FrontVerify(VideoCommon::GpuSplit& split, FrontState& state);

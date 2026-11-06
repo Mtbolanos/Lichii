@@ -8,6 +8,7 @@
 #include <array>
 #include <atomic>
 #include <cstdlib>
+#include <unordered_set>
 #include <cstring>
 #include <limits>
 #include <optional>
@@ -1035,6 +1036,9 @@ struct Maxwell3D::FrontState {
     /// then can it have a deferred instanced draw to issue at the end of a macro.
     bool draw_pending{true};
     bool skip_same{}; ///< SkipSameValueWrites() && FrontSkipSame(), read once
+    /// GPU pages (>> 12) this engine's reports and inline uploads have written: an MME DMA read
+    /// of them waits for the back even with EDEN_NX2_DMA_SKIP (they aren't marked GPU-written).
+    std::unordered_set<u64> written_pages;
 };
 
 namespace {
@@ -1184,9 +1188,33 @@ void Maxwell3D::FrontWrite(VideoCommon::GpuSplit& split, FrontState& fs, u32 met
     } else {
         split.Method(this, method, argument, is_last_call, nullptr);
     }
+    FrontNoteMemoryWrite(split, fs, method, argument);
+}
+
+void Maxwell3D::FrontNoteMemoryWrite(VideoCommon::GpuSplit& split, FrontState& fs, u32 method,
+                                     u32 argument) {
     if (method == MAXWELL3D_REG_INDEX(report_semaphore.query)) {
         // A report writes guest memory (query results, semaphores) an MME DMA read may read.
         split.NoteMemoryWriter();
+        const GPUVAddr address =
+            (GPUVAddr{fs.regs[MAXWELL3D_REG_INDEX(report_semaphore.address_high)]} << 32) |
+            fs.regs[MAXWELL3D_REG_INDEX(report_semaphore.address_low)];
+        fs.written_pages.insert(address >> 12);
+        fs.written_pages.insert((address + 15) >> 12);
+    } else if (method == MAXWELL3D_REG_INDEX(launch_dma)) {
+        // An inline upload writes guest memory on the back (the CPU path, not the buffer cache).
+        const GPUVAddr address =
+            (GPUVAddr{fs.regs[MAXWELL3D_REG_INDEX(upload.dest.address_high)]} << 32) |
+            fs.regs[MAXWELL3D_REG_INDEX(upload.dest.address_low)];
+        const bool linear = (argument & 1) != 0;
+        const u64 bytes =
+            linear ? u64{fs.regs[MAXWELL3D_REG_INDEX(upload.line_length_in)]} *
+                         std::max<u32>(fs.regs[MAXWELL3D_REG_INDEX(upload.line_count)], 1)
+                   : u64{1} << 16;
+        const u64 last = (address + std::min<u64>(std::max<u64>(bytes, 1), u64{1} << 20) - 1) >> 12;
+        for (u64 page = address >> 12; page <= last; ++page) {
+            fs.written_pages.insert(page);
+        }
     }
 }
 
@@ -1293,8 +1321,11 @@ void Maxwell3D::FrontCallMultiMethod(Core::System& system, VideoCommon::GpuSplit
         }
     }
     split.MultiMethod(this, method, base_start, amount, methods_pending, nullptr);
-    if (constexpr u32 report = MAXWELL3D_REG_INDEX(report_semaphore.query);
-        method <= report && report < method + amount) {
+    if (amount != 0 && (method == MAXWELL3D_REG_INDEX(report_semaphore.query) ||
+                        method == MAXWELL3D_REG_INDEX(launch_dma))) {
+        FrontNoteMemoryWrite(split, fs, method, base_start[amount - 1]);
+    } else if (constexpr u32 report = MAXWELL3D_REG_INDEX(report_semaphore.query);
+               method <= report && report < method + amount) {
         split.NoteMemoryWriter();
     }
 }
@@ -1372,10 +1403,60 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         const char* env = std::getenv("EDEN_NX2_DMA_WRITERS");
         return env != nullptr && env[0] == '1';
     }();
-    if (writers_only) {
+    // EDEN_NX2_DMA_SKIP=1 (experiment): a read of pages no GPU work has written (no storage or
+    // copy writes marked by the buffer cache, no report or inline upload from this engine) takes
+    // the words as they are instead of waiting. A page written for the first time by work still
+    // queued would be read stale once, as with EDEN_NX2_LIST_SKIP. =2 still waits and counts the
+    // reads on such pages whose words the wait changed (what =1 would have gotten wrong).
+    static const int dma_skip = [] {
+        const char* env = std::getenv("EDEN_NX2_DMA_SKIP");
+        return env != nullptr ? std::atoi(env) : 0;
+    }();
+    bool gpu_pages = true;
+    if (dma_skip != 0 && read_bytes != 0) {
+        gpu_pages = false;
+        const u64 last = (source + read_bytes - 1) >> 12;
+        for (u64 page = source >> 12; page <= last; ++page) {
+            if (fs.written_pages.contains(page)) {
+                gpu_pages = true;
+                break;
+            }
+            const auto device = memory_manager.GpuToCpuAddress(page << 12);
+            if (!device || Tegra::Nx2IsGpuWritten(*device)) {
+                gpu_pages = true;
+                break;
+            }
+        }
+        if (VideoCommon::Nx2Profile::Enabled()) {
+            VideoCommon::Nx2Profile::Add(gpu_pages
+                                             ? VideoCommon::Nx2Profile::Counter::DmaReadsGpuPages
+                                             : VideoCommon::Nx2Profile::Counter::DmaReadsSkipped,
+                                         1);
+        }
+    }
+    std::vector<u32> skip_before;
+    if (dma_skip == 2 && !gpu_pages) {
+        skip_before.resize(words);
+        memory_manager.ReadBlockUnsafe(source, skip_before.data(), read_bytes);
+    }
+    if (dma_skip == 1 && !gpu_pages) {
+        // No wait.
+    } else if (writers_only) {
         split.WaitForMemoryWriters(VideoCommon::DrainSite::MacroDmaRead);
     } else {
         split.Drain(VideoCommon::DrainSite::MacroDmaRead);
+    }
+    if (!skip_before.empty()) {
+        std::vector<u32> after(words);
+        memory_manager.ReadBlockUnsafe(source, after.data(), read_bytes);
+        if (after != skip_before) {
+            VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsChanged, 1);
+            static u32 logged{};
+            if (logged++ < 16) {
+                LOG_INFO(HW_GPU, "DMA skip check: macro {:#x} read {} words at {:#x} changed by the wait",
+                         macro, words, source);
+            }
+        }
     }
     if (VideoCommon::QueryDma::TraceEnabled()) {
         split.Run(
