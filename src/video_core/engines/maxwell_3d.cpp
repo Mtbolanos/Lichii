@@ -1425,25 +1425,42 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         return env != nullptr ? std::atoi(env) : 0;
     }();
     bool gpu_pages = true;
+    // =3: the reverse. Measured with =2 in Ocarina's forest, waiting never changed the words of
+    // a read on pages the buffer cache holds GPU writes for (~22,000 reads a second): those writes
+    // stay in host buffers and never reach guest memory, wait or not. Reads there skip the wait
+    // unless this engine reported or inline-uploaded to the pages (written on the back).
+    bool buffer_cache_only = false;
     if (dma_skip != 0 && read_bytes != 0) {
         gpu_pages = false;
+        buffer_cache_only = true;
+        bool front_written = false;
         const u64 last = (source + read_bytes - 1) >> 12;
         for (u64 page = source >> 12; page <= last; ++page) {
             if (fs.written_pages.contains(page)) {
                 gpu_pages = true;
+                front_written = true;
+                buffer_cache_only = false;
                 break;
             }
             const auto device = memory_manager.GpuToCpuAddress(page << 12);
-            if (!device || Tegra::Nx2IsGpuWritten(*device)) {
+            if (!device) {
                 gpu_pages = true;
+                buffer_cache_only = false;
                 break;
             }
+            if (Tegra::Nx2IsGpuWritten(*device)) {
+                gpu_pages = true;
+            } else {
+                buffer_cache_only = false;
+            }
         }
+        buffer_cache_only = buffer_cache_only && !front_written;
         if (VideoCommon::Nx2Profile::Enabled()) {
-            VideoCommon::Nx2Profile::Add(gpu_pages
-                                             ? VideoCommon::Nx2Profile::Counter::DmaReadsGpuPages
-                                             : VideoCommon::Nx2Profile::Counter::DmaReadsSkipped,
-                                         1);
+            if (gpu_pages) {
+                VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsGpuPages, 1);
+            } else if (dma_skip != 3) {
+                VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsSkipped, 1);
+            }
         }
     }
     std::vector<u32> skip_before;
@@ -1451,8 +1468,11 @@ void Maxwell3D::FrontDmaRead(VideoCommon::GpuSplit& split, FrontState& fs, u32 m
         skip_before.resize(words);
         memory_manager.ReadBlockUnsafe(source, skip_before.data(), read_bytes);
     }
-    if (dma_skip == 1 && !gpu_pages) {
+    if ((dma_skip == 1 && !gpu_pages) || (dma_skip == 3 && buffer_cache_only)) {
         // No wait.
+        if (dma_skip == 3 && VideoCommon::Nx2Profile::Enabled()) {
+            VideoCommon::Nx2Profile::Add(VideoCommon::Nx2Profile::Counter::DmaReadsSkipped, 1);
+        }
     } else if (writers_only) {
         split.WaitForMemoryWriters(VideoCommon::DrainSite::MacroDmaRead);
     } else {
