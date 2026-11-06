@@ -386,3 +386,47 @@ TEST_CASE("Ampere array depth comparisons support nonlegacy descriptor bindings"
     REQUIRE(std::equal(alternate.begin(), alternate.end(), begin));
     REQUIRE(begin + alternate.size() + 1 == mixed.instructions.end());
 }
+
+TEST_CASE("Ampere gathers from a second descriptor buffer lower to Maxwell TLD4.B",
+          "[video_core][ampere][gather]") {
+    // The depth gather binds descriptor buffer 2; the gathers after it read buffer 14, whose
+    // handle at c[14][0x10] is loaded with MOV and passed as the first TLD4.B meta register.
+    const Instruction depth{{0x180c7b63, 0x30800e1c, 0x001e4f0e, 0x000f4200}};
+    const u64 pred = 7ULL << 16;
+    const u64 handle = 0x4c98000000070000ULL | (15ULL << 39) | (4ULL << 20) | (14ULL << 34);
+    const auto tld4b = [&](u32 meta, u32 offset_type) -> u64 {
+        return 0xdec0000000000000ULL | pred | 250 | (250ULL << 8) | (u64{meta} << 20) |
+               (2ULL << 28) | (15ULL << 31) | (u64{offset_type} << 36) | (1ULL << 49) |
+               (7ULL << 51);
+    };
+    const std::array<u64, 4> results{Copy(pred, 10, 250), Copy(pred, 11, 251), Copy(pred, 8, 252),
+                                     Copy(pred, 9, 253)};
+    const auto check = [&](const auto& lowered, u32 index, const auto& expected) {
+        INFO(lowered.error);
+        REQUIRE(lowered);
+        REQUIRE(lowered.required_texture_buffer == 2);
+        const auto begin = lowered.instructions.begin() + lowered.source_instruction_offsets[index];
+        REQUIRE(std::equal(expected.begin(), expected.end(), begin));
+        REQUIRE(std::equal(results.begin(), results.end(), begin + expected.size()));
+    };
+    // Plain and AOFFI: the handle in R246, the offset register after it.
+    const Instruction plain{{0x040a7b63, 0x33800408, 0x041e0f08, 0x100fc200}};
+    check(LowerToMaxwell(std::array{depth, plain, Exit}), 1,
+          std::array<u64, 4>{Copy(pred, 250, 4), Copy(pred, 251, 8), handle | 246, tld4b(246, 0)});
+    auto aoffi = plain;
+    aoffi.words[2] |= 1U << 12;
+    check(LowerToMaxwell(std::array{depth, aoffi, Exit}), 1,
+          std::array<u64, 5>{Copy(pred, 250, 4), Copy(pred, 251, 5), handle | 246, Copy(pred, 247, 8),
+                     tld4b(246, 1)});
+    // PTP: the handle in R247, so the packed offsets stay in R248 and R249.
+    const auto per_tap = PerTapProgram();
+    check(LowerToMaxwell(std::array{depth, per_tap[0], per_tap[1], per_tap[2], Exit}), 3,
+          std::array<u64, 6>{MoveImmediate(7ULL << 16, 248, 0xff00ff00),
+                     MoveImmediate(7ULL << 16, 249, 0x01000001), Copy(pred, 250, 4),
+                     Copy(pred, 251, 5), handle | 247, tld4b(247, 2)});
+    // Gathers from the bound buffer keep the bound TLD4.
+    const auto same = LowerToMaxwell(std::array{plain, plain, Exit});
+    INFO(same.error);
+    REQUIRE(same);
+    REQUIRE((same.instructions[same.source_instruction_offsets[1] + 2] >> 56) == 0xc8);
+}
