@@ -283,7 +283,14 @@ std::optional<VideoCore::RasterizerDownloadArea> BufferCache<P>::GetFlushArea(DA
                                            device_addr_end_aligned - device_addr_start_aligned);
     // A preflushable mark persists and downloads later GPU writes at every fence. Native titles
     // instead keep read traps and flush on demand.
-    const bool preflush = !Tegra::g_nx2_ampere.load(std::memory_order_relaxed);
+    // EDEN_NX2_NATIVE_PREFLUSH=1 (experiment): mark native titles' read pages too. Ocarina reads
+    // the same few GPU-written pages every frame (~100 traps a second, each a full GPU wait on
+    // the back thread); marked, later writes there are copied back at fences instead.
+    static const bool native_preflush = [] {
+        const char* value = std::getenv("EDEN_NX2_NATIVE_PREFLUSH");
+        return value != nullptr && value[0] == '1';
+    }();
+    const bool preflush = !Tegra::g_nx2_ampere.load(std::memory_order_relaxed) || native_preflush;
     if (!area->preemtive) {
         if (Nx2DownloadTrace::g_enabled) [[unlikely]] {
             Nx2DownloadTrace::Marked(device_addr_start_aligned,
