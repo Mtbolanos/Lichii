@@ -41,7 +41,7 @@ EDEN_NX2_FENCE_BATCH=1
 # Together these took the forest from ~30 to ~36-43 FPS on a Ryzen 7 5800XT + RTX 4060.
 # CPU reads of the pages the game reads back every frame (auto exposure among them) are served
 # from copies made at fences instead of a full GPU wait each time.
-EDEN_NX2_NATIVE_PREFLUSH=1
+EDEN_NX2_NATIVE_PREFLUSH=2
 # Semaphore acquires: equal acquires met in guest memory, and acquires met by a release the front
 # already queued, go on without waiting for the back.
 EDEN_NX2_SEM_FASTPATH=2

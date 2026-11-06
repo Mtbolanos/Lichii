@@ -286,11 +286,31 @@ std::optional<VideoCore::RasterizerDownloadArea> BufferCache<P>::GetFlushArea(DA
     // EDEN_NX2_NATIVE_PREFLUSH=1 (experiment): mark native titles' read pages too. Ocarina reads
     // the same few GPU-written pages every frame (~100 traps a second, each a full GPU wait on
     // the back thread); marked, later writes there are copied back at fences instead.
-    static const bool native_preflush = [] {
+    // =2: only pages the CPU keeps reading are marked: a page is marked on its Nth trap
+    // (EDEN_NX2_PREFLUSH_HOT, default 32). A page read once in a while keeps exact flushes, so
+    // the CPU never sees a fence-old copy of it; =1 let it, and leaves flickered in Ocarina.
+    static const int native_preflush = [] {
         const char* value = std::getenv("EDEN_NX2_NATIVE_PREFLUSH");
-        return value != nullptr && value[0] == '1';
+        return value != nullptr ? std::atoi(value) : 0;
     }();
-    const bool preflush = !Tegra::g_nx2_ampere.load(std::memory_order_relaxed) || native_preflush;
+    static const u32 preflush_hot = [] {
+        const char* value = std::getenv("EDEN_NX2_PREFLUSH_HOT");
+        const int parsed = value != nullptr ? std::atoi(value) : 0;
+        return parsed > 0 ? static_cast<u32>(parsed) : 32U;
+    }();
+    bool native_mark = native_preflush == 1;
+    if (native_preflush == 2 && !area->preemtive) {
+        static std::mutex trap_counts_mutex;
+        static std::unordered_map<DAddr, u32> trap_counts;
+        std::scoped_lock trap_lock{trap_counts_mutex};
+        u32& count = trap_counts[device_addr_start_aligned];
+        native_mark = ++count >= preflush_hot;
+        if (count == preflush_hot) {
+            LOG_INFO(HW_GPU, "Preflush: marking hot page [{:#x}, {:#x}) after {} reads",
+                     device_addr_start_aligned, device_addr_end_aligned, count);
+        }
+    }
+    const bool preflush = !Tegra::g_nx2_ampere.load(std::memory_order_relaxed) || native_mark;
     if (!area->preemtive) {
         if (Nx2DownloadTrace::g_enabled) [[unlikely]] {
             Nx2DownloadTrace::Marked(device_addr_start_aligned,
