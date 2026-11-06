@@ -435,7 +435,8 @@ void Puller::ProcessSemaphoreTriggerMethod(DmaPusher& dma_pusher) {
                 const auto device = dma_pusher.memory_manager.GpuToCpuAddress(acquire.address);
                 if (device && !VideoCommon::GpuSplit::Get().EverReleased(*device)) {
                     untracked.fetch_add(1, std::memory_order_relaxed);
-                    if (logged.fetch_add(1, std::memory_order_relaxed) < 24) {
+                    if (const u32 n = logged.fetch_add(1, std::memory_order_relaxed);
+                        n < 24 || (n & 1023) == 0) {
                         VideoCommon::Nx2Profile::WriteProfileFile(fmt::format(
                             "Acquire met after the wait at untracked {:#x} (device {:#x}) op {} value "
                             "{:#x}, channel {}",
