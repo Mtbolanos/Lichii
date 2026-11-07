@@ -675,6 +675,7 @@ private:
     bool accumulation_since_last_sync{};
     VideoCommon::HostQueryBase* current_query;
     bool has_started{};
+    u64 bank_bound_resets{}; ///< Counts CloseCounter dropped once a query outgrew a bank.
     std::mutex flush_guard;
     std::optional<QueriesPrefixScanPass> queries_prefix_scan_pass;
 };
