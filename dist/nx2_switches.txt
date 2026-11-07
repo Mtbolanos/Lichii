@@ -16,6 +16,8 @@ EDEN_NX2_SPLIT=2
 
 # Batch GPU fence syncpoints to reduce host driver overhead and smooth frametimes.
 EDEN_NX2_FENCE_BATCH=1
+# Build every cached pipeline at boot (longer load, no shader stutter in places already visited).
+EDEN_NX2_PRELOAD_ALL_PIPELINES=1
 
 # Leave buffer downloads disabled on Switch 2 (default): forcing downloads (=1) copies back
 # 90-220 MB/s of buffers CPU never touches, causing heavy mutex contention and dropping FPS by ~38-63%.
