@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include <sirit/sirit.h>
 
 #include "common/common_types.h"
@@ -23,6 +25,7 @@ namespace Shader::Backend::SPIRV {
 using Sirit::Id;
 
 class EmitContext;
+struct CooperativeHmmaTypes;
 
 // Microinstruction emitters
 Id EmitPhi(EmitContext& ctx, IR::Inst* inst);
@@ -644,5 +647,6 @@ Id EmitDPdyCoarse(EmitContext& ctx, Id op_a);
 
 Id EmitTensorMulAdd(EmitContext& ctx, IR::Inst* inst, Id a, Id b, Id c);
 void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program);
+void PatchCooperativeHmma(std::vector<u32>& code, const CooperativeHmmaTypes& types);
 
 } // namespace Shader::Backend::SPIRV
