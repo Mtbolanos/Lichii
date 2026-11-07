@@ -617,3 +617,66 @@ TEST_CASE("Half per-tap gathers prove offsets across an unrelated LEA.HI",
     CHECK(Shader::Ampere::LowerToMaxwell(code).error ==
           "native per-tap gather nonconstant offsets");
 }
+
+TEST_CASE("Per-tap gathers with runtime offsets gather each tap at its own offset",
+          "[video_core][ampere][gather][logged_textures]") {
+    // The guarded per-tap gather above, with its packed offsets read from a constant buffer
+    // instead of immediates: SPIR-V's ConstOffsets must be constant, so each tap is its own gather.
+    const std::array native{
+        Instruction{{0x000e7919, 0, 0x2100, 0}},
+        Instruction{{0x0e00720c, 0xff, 0x03f25070, 0}},
+        Instruction{{0xff107424U, 0xfffeffff, 0x078e00ff, 0}},
+        Instruction{{0xff117424U, 0xfffcfffd, 0x078e00ff, 0}},
+        Instruction{{0x06187b63U, 0x30007c10, 0x001e2f0eU, 0}},
+        Exit,
+    };
+    const auto lowered = Shader::Ampere::LowerToMaxwell(native);
+    INFO(lowered.error);
+    REQUIRE(lowered);
+    auto code = lowered.instructions;
+    // The lowering moves the offsets into R248 and R249 for Maxwell's TLD4.PTP: overwrite them
+    // with MOV R248, c[0x0][0x100] and MOV R249, c[0x0][0x104].
+    const auto offsets_end = code.begin() + lowered.source_instruction_offsets[4] + 2;
+    REQUIRE((*(offsets_end - 1) & 0xff) == 249);
+    code.insert(offsets_end, {0x4c980780010000f8ULL, 0x4c980780010400f9ULL});
+    for (const u32 reg : {14U, 24U})
+        code.insert(code.end() - 1, 0xef58000000070000ULL | reg | (255ULL << 8) |
+            (u64{reg * 4} << 20) | (4ULL << 48));
+    TextureEnvironment env;
+    env.code = code;
+    env.binding = lowered.required_texture_buffer;
+    Shader::ObjectPool<Shader::Maxwell::Flow::Block> flow_pool;
+    Shader::Maxwell::Flow::CFG cfg{env, flow_pool, Shader::Maxwell::Location{0x50}};
+    Shader::ObjectPool<IR::Inst> inst_pool;
+    Shader::ObjectPool<IR::Block> block_pool;
+    Shader::HostTranslateInfo host;
+    host.ApplyDescriptorLimitPolicy();
+    auto program = Shader::Maxwell::TranslateProgram(inst_pool, block_pool, env, cfg, host);
+    u32 gathers = 0;
+    for (const auto* block : program.blocks) {
+        for (const auto& inst : *block) {
+            if (inst.GetOpcode() != IR::Opcode::ImageGather) continue;
+            ++gathers;
+            REQUIRE_FALSE(inst.Arg(2).InstRecursive()->AreAllArgsImmediates());
+        }
+    }
+    REQUIRE(gathers == 1);
+    Shader::Profile profile{};
+    profile.supported_spirv = 0x00010400;
+    const auto spirv = Shader::Backend::SPIRV::EmitSPIRV(profile, program);
+    REQUIRE(spirv.size() > 5);
+    constexpr u32 OpImageGather = 96;
+    constexpr u32 OffsetMask = 0x10, ConstOffsetsMask = 0x20;
+    u32 offset_gathers = 0;
+    for (size_t i = 5; i < spirv.size();) {
+        const u32 count = spirv[i] >> 16;
+        REQUIRE(count > 0);
+        if ((spirv[i] & 0xffff) == OpImageGather) {
+            REQUIRE(count > 6);
+            CHECK((spirv[i + 6] & ConstOffsetsMask) == 0);
+            if ((spirv[i + 6] & OffsetMask) != 0) ++offset_gathers;
+        }
+        i += count;
+    }
+    CHECK(offset_gathers == 4);
+}
