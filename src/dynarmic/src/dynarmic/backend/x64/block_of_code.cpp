@@ -236,12 +236,28 @@ void BlockOfCode::EnsureMemoryCommitted([[maybe_unused]] size_t codesize) {
     if (committed_size < size_ + codesize) {
         // The code space is only reserved (CodeAllocator), so everything up to the end of the next
         // emission has to be committed; in steps, as each VirtualAlloc call is a kernel call.
-        committed_size = std::min<size_t>(maxSize_, (std::max)(committed_size + COMMIT_STEP, size_ + codesize));
+        const size_t new_size = std::min<size_t>(maxSize_, (std::max)(committed_size + COMMIT_STEP, size_ + codesize));
 #    ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
-        VirtualAlloc(top_, committed_size, MEM_COMMIT, PAGE_READWRITE);
+        constexpr DWORD protection = PAGE_READWRITE;
 #    else
-        VirtualAlloc(top_, committed_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+        constexpr DWORD protection = PAGE_EXECUTE_READWRITE;
 #    endif
+        // Windows denies commits while the system is at its commit limit, including while it
+        // grows the paging file. Emitting into pages that aren't committed crashes, so wait for
+        // the commit, up to ~10 s.
+        for (int attempt = 0; !VirtualAlloc(top_, new_size, MEM_COMMIT, protection); ++attempt) {
+            const DWORD error = GetLastError();
+            if (attempt == 0) {
+                LOG_WARNING(Core, "Can't commit {} MiB of JIT code space yet (error {}), retrying",
+                            new_size >> 20, error);
+            }
+            if (attempt == 100) {
+                UNREACHABLE_MSG("Can't commit {} MiB of JIT code space, out of memory (error {})",
+                                new_size >> 20, error);
+            }
+            Sleep(attempt < 10 ? 10 : 100);
+        }
+        committed_size = new_size;
     }
 #endif
 }
