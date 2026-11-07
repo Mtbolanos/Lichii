@@ -1709,9 +1709,10 @@ PackResult UpdateMetadata(const fs::path& archive, const MetadataUpdate& update,
         const size_t pos = static_cast<size_t>(TocHeaderSize + u64{i} * PackageRecordSize);
         const u64 offset = read_le(toc, pos + 0x20, 8);
         const u64 size = read_le(toc, pos + 0x28, 4);
+        const u64 region_end = offset < blob_offset ? blob_offset : actual_size;
         if ((size == 0 && offset != 0) ||
-            (size != 0 && (offset < blob_offset || offset > actual_size ||
-                           size > actual_size - offset)) ||
+            (size != 0 && (offset < toc_offset + toc_size || offset > region_end ||
+                           size > region_end - offset)) ||
             size > MaxMetadataSize - total_metadata) {
             return fail(PackResult::InvalidSource, "invalid or oversized NUP metadata range");
         }
@@ -2346,9 +2347,13 @@ EditResult EditNupMetadata(const fs::path& archive, const MetadataEdit& edit,
             meta_start = std::min(meta_start, raw.meta_offset);
         }
     }
-    if (meta_start < blob_offset || meta_start > file_size) {
+    if (meta_start > file_size) {
         return fail(EditResult::InvalidSource, "bad meta start");
     }
+    // Metadata after the blob region is rewritten where it starts. Some packers put it between
+    // the TOC and the blob instead: then the whole blob is kept, the new metadata goes after it
+    // and the old blocks are zeroed with the rest of the gap.
+    const u64 blob_end = meta_start >= blob_offset ? meta_start : file_size;
 
     std::vector<std::vector<u8>> new_metas(raws.size());
     for (size_t i = 0; i < raws.size(); ++i) {
@@ -2387,7 +2392,7 @@ EditResult EditNupMetadata(const fs::path& archive, const MetadataEdit& edit,
         new_metas[i] = std::move(block);
     }
 
-    u64 cursor = meta_start;
+    u64 cursor = blob_end;
     std::vector<std::pair<u64, u32>> meta_addrs(raws.size());
     for (size_t i = 0; i < raws.size(); ++i) {
         if (new_metas[i].empty()) {
@@ -2472,7 +2477,7 @@ EditResult EditNupMetadata(const fs::path& archive, const MetadataEdit& edit,
             gap -= chunk;
         }
         std::vector<u8> buffer(ReadBufferSize);
-        u64 remaining = meta_start - blob_offset;
+        u64 remaining = blob_end - blob_offset;
         if (!in.Seek(static_cast<s64>(blob_offset))) {
             throw std::runtime_error("cannot seek to blob");
         }

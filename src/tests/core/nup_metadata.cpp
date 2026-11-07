@@ -247,6 +247,39 @@ std::string Fixture() {
     return bytes;
 }
 
+std::string PreBlobFixture(std::size_t count) {
+    auto bytes = Fixture();
+    const auto toc_end = Le(bytes, 8, 8) + Le(bytes, 16, 8);
+    const auto old_blob = Le(bytes, 0x38, 8);
+    std::vector<std::string> metadata;
+    std::size_t total = 0;
+    for (std::size_t i = 0; i < count; ++i) {
+        metadata.push_back(Meta(bytes, i));
+        total += metadata.back().size();
+    }
+    const auto new_blob = (toc_end + total + 8 + 15) & ~u64{15};
+    metadata.back() += Tlv(0xF00D, std::string(new_blob - toc_end - total - 8, '\0'));
+    const auto shift = new_blob - old_blob;
+    bytes.insert(old_blob, shift, '\0');
+    u64 cursor = toc_end;
+    for (std::size_t i = 0; i < PackageCount; ++i) {
+        SetLe(bytes, Files + i * 0x50 + 16, Le(bytes, Files + i * 0x50 + 16, 8) + shift, 8);
+        if (i < count) {
+            bytes.replace(cursor, metadata[i].size(), metadata[i]);
+            SetLe(bytes, Package(i) + 0x20, cursor, 8);
+            SetLe(bytes, Package(i) + 0x28, metadata[i].size(), 4);
+            cursor += metadata[i].size();
+        } else {
+            SetLe(bytes, Package(i) + 0x20, Le(bytes, Package(i) + 0x20, 8) + shift, 8);
+        }
+    }
+    REQUIRE(cursor == new_blob);
+    SetLe(bytes, 0x38, new_blob, 8);
+    SetLe(bytes, 0x40, bytes.size(), 8);
+    RefreshTocHash(bytes);
+    return bytes;
+}
+
 void CheckPreserved(std::string_view before, std::string_view after, std::size_t target,
                     const MetadataUpdate& update) {
     REQUIRE(after.size() >= before.size());
@@ -357,6 +390,65 @@ TEST_CASE("NUP metadata edits preserve every package and all original bytes", "[
     REQUIRE(Read(archive) == before);
 }
 
+TEST_CASE("NUP metadata editors accept metadata between the TOC and blob", "[nup][metadata]") {
+    TempDir temp;
+    const auto archive = temp.path / "archive.nup";
+    for (const std::size_t count : {std::size_t{1}, PackageCount}) {
+        for (const bool dialog_editor : {false, true}) {
+            DYNAMIC_SECTION(count << " pre-blob packages, dialog editor " << dialog_editor) {
+                CAPTURE(count, dialog_editor);
+                const auto before = PreBlobFixture(count);
+                const auto blob = Le(before, 0x38, 8);
+                Write(archive, before);
+                const std::string original_icon = "icon 0";
+                CheckContainer(archive, "title 0", {original_icon.begin(), original_icon.end()});
+                const MetadataUpdate update{.title_name = "Custom title",
+                                            .icon = std::vector<u8>{1, 2, 3}};
+                std::string error;
+                if (dialog_editor) {
+                    const FileSys::Nup::MetadataEdit edit{.title_name = update.title_name,
+                                                        .icon = update.icon};
+                    const auto result = FileSys::Nup::EditNupMetadata(archive, edit, &error);
+                    INFO(error);
+                    REQUIRE(result == FileSys::Nup::EditResult::Success);
+                    const auto after = Read(archive);
+                    REQUIRE(after.substr(blob, before.size() - blob) == before.substr(blob));
+                } else {
+                    const auto result = UpdateMetadata(archive, update, &error);
+                    INFO(error);
+                    REQUIRE(result == PackResult::Success);
+                    CheckPreserved(before, Read(archive), 0, update);
+                }
+                CheckContainer(archive, *update.title_name, *update.icon);
+                REQUIRE(UpdateMetadata(archive, {.icon = std::vector<u8>{4, 5}}, &error) ==
+                        PackResult::Success);
+                CheckContainer(archive, *update.title_name, {4, 5});
+            }
+        }
+    }
+}
+
+TEST_CASE("NUP metadata rejects ranges overlapping the TOC or crossing into the blob",
+          "[nup][metadata]") {
+    TempDir temp;
+    const auto archive = temp.path / "archive.nup";
+    const auto original = PreBlobFixture(PackageCount);
+    const auto toc_end = Le(original, 8, 8) + Le(original, 16, 8);
+    for (const u64 offset : {u64{0x40}, Toc + u64{0x30}, toc_end - 1}) {
+        auto bytes = original;
+        SetLe(bytes, Package(0) + 0x20, offset, 8);
+        RefreshTocHash(bytes);
+        Write(archive, bytes);
+        RejectUnchanged(archive, {.icon = std::vector<u8>{1}});
+    }
+    auto bytes = original;
+    const auto last = Package(PackageCount - 1);
+    SetLe(bytes, last + 0x28, Le(bytes, last + 0x28, 4) + 1, 4);
+    RefreshTocHash(bytes);
+    Write(archive, bytes);
+    RejectUnchanged(archive, {.icon = std::vector<u8>{1}});
+}
+
 TEST_CASE("NUP metadata selects the latest update without a base", "[nup][metadata]") {
     TempDir temp;
     const auto archive = temp.path / "archive.nup";
@@ -367,6 +459,28 @@ TEST_CASE("NUP metadata selects the latest update without a base", "[nup][metada
     REQUIRE(UpdateMetadata(archive, {.title_name = "Latest update"}) == PackResult::Success);
     CheckPreserved(before, Read(archive), 2, {.title_name = "Latest update"});
     CheckContainer(archive, "Latest update", {'i', 'c', 'o', 'n', ' ', '2'}, 2);
+}
+
+TEST_CASE("NUP metadata accepts an EOF boundary and absent package metadata", "[nup][metadata]") {
+    TempDir temp;
+    const auto archive = temp.path / "archive.nup";
+    auto bytes = PreBlobFixture(PackageCount);
+    SetLe(bytes, Package(1) + 0x20, 0, 8);
+    SetLe(bytes, Package(1) + 0x28, 0, 4);
+    AppendMeta(bytes, 0, Tlv(5, "At EOF"));
+    Write(archive, bytes);
+    const MetadataUpdate update{.icon = std::vector<u8>{9, 8, 7}};
+    std::string error;
+    const auto result = UpdateMetadata(archive, update, &error);
+    INFO(error);
+    REQUIRE(result == PackResult::Success);
+    CheckPreserved(bytes, Read(archive), 0, update);
+    FileSys::RealVfsFilesystem real;
+    NupContainer nup{real.OpenFile(archive.string(), FileSys::OpenMode::Read)};
+    REQUIRE(nup.GetStatus() == Loader::ResultStatus::Success);
+    REQUIRE(nup.VerifyIntegrity({}) == Loader::ResultStatus::Success);
+    REQUIRE(nup.GetPackages()[0].icon == *update.icon);
+    REQUIRE(nup.GetPackages()[1].title_name.empty());
 }
 
 TEST_CASE("NUP edited display title overrides the selected language without changing control data",
@@ -646,6 +760,30 @@ TEST_CASE("NUP metadata bounds aggregate metadata across packages", "[nup][metad
     RefreshTocHash(bytes);
     Write(archive, bytes);
     RejectUnchanged(archive, {.title_name = "rejected"});
+}
+
+TEST_CASE("NUP metadata accepts the aggregate limit but rejects a larger replacement",
+          "[nup][metadata]") {
+    TempDir temp;
+    const auto archive = temp.path / "archive.nup";
+    auto bytes = Fixture();
+    const auto offset = bytes.size();
+    const auto meta = Tlv(0xCAFE, std::string(MetadataLimit / PackageCount - 8, 'x'));
+    bytes += meta;
+    for (std::size_t i = 0; i < PackageCount; ++i) {
+        SetLe(bytes, Package(i) + 0x20, offset, 8);
+        SetLe(bytes, Package(i) + 0x28, meta.size(), 4);
+    }
+    SetLe(bytes, 0x40, bytes.size(), 8);
+    RefreshTocHash(bytes);
+    Write(archive, bytes);
+    RejectUnchanged(archive, {.icon = std::vector<u8>{1}});
+    const MetadataUpdate update{.icon = std::vector<u8>{}};
+    std::string error;
+    const auto result = UpdateMetadata(archive, update, &error);
+    INFO(error);
+    REQUIRE(result == PackResult::Success);
+    CheckPreserved(bytes, Read(archive), 0, update);
 }
 
 TEST_CASE("NUP metadata rejects an oversized valid sparse TOC", "[nup][metadata]") {

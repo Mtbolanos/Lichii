@@ -182,6 +182,63 @@ void SetLe(std::string& buf, size_t at, u64 value, size_t bytes) {
     }
 }
 
+std::string LoaderTlv(u16 type, std::string_view value) {
+    std::string bytes(8, '\0');
+    SetLe(bytes, 0, type, 2);
+    SetLe(bytes, 4, value.size(), 4);
+    bytes += value;
+    return bytes;
+}
+
+std::string LoaderLocalized(std::string_view language, std::string_view value) {
+    std::string bytes(1, static_cast<char>(language.size()));
+    bytes += language;
+    const auto length_offset = bytes.size();
+    bytes.resize(bytes.size() + 4);
+    SetLe(bytes, length_offset, value.size(), 4);
+    bytes += value;
+    return bytes;
+}
+
+FileSys::VirtualFile LoaderMetadataFixture(const fs::path& path,
+                                         const std::vector<std::string>& metadata) {
+    const auto root = path / "Game";
+    if (metadata.size() == 2) {
+        fs::create_directories(root / "base/exefs");
+        Put(root / "base/romfs/base.bin", "base");
+    }
+    Put(root / "updates/65536/exefs/main", "update main");
+    Put(root / "updates/65536/exefs/main.npdm", Npdm(TitleId));
+    Put(root / "updates/65536/romfs/update.bin", "update");
+    const auto archive = path / "Game.nup";
+    REQUIRE(FileSys::Nup::PackDump(root, archive) == FileSys::Nup::PackResult::Success);
+
+    auto bytes = ReadAll(archive);
+    const auto toc = Le(bytes, 8, 8);
+    REQUIRE(Le(bytes, toc + 4, 4) == metadata.size());
+    for (std::size_t i = 0; i < metadata.size(); ++i) {
+        const auto package = toc + 0x30 + i * 0x40;
+        SetLe(bytes, package + 0x20, bytes.size(), 8);
+        SetLe(bytes, package + 0x28, metadata[i].size(), 4);
+        bytes += metadata[i];
+    }
+    SetLe(bytes, 0x40, bytes.size(), 8);
+    const auto hash = Sha256(std::string_view{bytes}.substr(toc, Le(bytes, 0x10, 8)));
+    std::copy(hash.begin(), hash.end(), bytes.begin() + 0x18);
+    auto file = std::make_shared<FileSys::VectorVfsFile>(
+        std::vector<u8>(bytes.begin(), bytes.end()), "metadata.nup");
+    NupContainer nup{file};
+    REQUIRE(nup.GetStatus() == Loader::ResultStatus::Success);
+    if (metadata.size() == 2) {
+        REQUIRE(nup.FindBasePackage() == std::size_t{0});
+        REQUIRE(nup.GetExeFSDir(0) == nullptr);
+    } else {
+        REQUIRE_FALSE(nup.FindBasePackage());
+    }
+    REQUIRE(nup.GetExeFSDir(metadata.size() - 1) != nullptr);
+    return file;
+}
+
 // Applies `patch` to a valid archive, fixes up the TOC hash and opens the result.
 template <typename Patch>
 Loader::ResultStatus StatusAfterPatch(std::string nup, Patch&& patch) {
@@ -898,4 +955,144 @@ TEST_CASE("NUP UpdateMetadata updates title name and icon in metadata", "[nup]")
     REQUIRE(nup.GetPackages()[0].title_name == "Mario Kart World");
     REQUIRE(nup.GetPackages()[0].icon == fake_icon);
     REQUIRE(PackedTree(nup.GetRomFSDir(0)) == SourceTree(root / "Base/RomFS"));
+}
+
+TEST_CASE("NUP loader selects base metadata field by field with an empty base ExeFS",
+          "[nup][loader-metadata]") {
+    TempDir t;
+    auto base_title = LoaderTlv(5, "Custom base title");
+    auto base_localized = LoaderTlv(9, LoaderLocalized("nl", "Basistitel"));
+    auto base_source = LoaderTlv(8, "Base dump");
+    auto base_publisher = LoaderTlv(6, "Base publisher");
+    auto base_icon = LoaderTlv(3, "base icon");
+    auto update_title = LoaderTlv(5, "Update title");
+    std::string expected_title = "Custom base title";
+    std::string expected_localized = "Basistitel";
+    std::string expected_publisher = "Base publisher";
+    std::string expected_icon = "base icon";
+
+    SECTION("populated base fields override update metadata") {}
+    SECTION("missing base default title falls back independently") {
+        base_title.clear();
+        expected_title = "Update title";
+    }
+    SECTION("missing base localized titles fall back independently") {
+        base_localized.clear();
+        expected_localized = "Updatetitel";
+    }
+    SECTION("missing base publisher falls back independently") {
+        base_publisher.clear();
+        expected_publisher = "Update publisher";
+    }
+    SECTION("missing base icon set falls back independently") {
+        base_icon.clear();
+        expected_icon = "update icon";
+    }
+    SECTION("base source dump supplies the title when default titles are absent") {
+        base_title.clear();
+        update_title.clear();
+        expected_title = "Base dump";
+    }
+    SECTION("missing base source dump falls back independently") {
+        base_title.clear();
+        update_title.clear();
+        base_source.clear();
+        expected_title = "Update dump";
+    }
+
+    const auto base = base_title + base_localized + base_source + base_publisher + base_icon +
+                      LoaderTlv(4, "9.0.0");
+    const auto update = update_title +
+                        LoaderTlv(9, LoaderLocalized("nl", "Updatetitel") +
+                                         LoaderLocalized("de", "Update-Titel")) +
+                        LoaderTlv(8, "Update dump") + LoaderTlv(6, "Update publisher") +
+                        LoaderTlv(3, "update icon") + LoaderTlv(4, "1.2.3");
+    Loader::AppLoader_NUP loader{LoaderMetadataFixture(t.path, {base, update})};
+    std::string title;
+    REQUIRE(loader.ReadTitle(title) == Loader::ResultStatus::Success);
+    REQUIRE(title == expected_title);
+    std::vector<u8> icon;
+    REQUIRE(loader.ReadIcon(icon) == Loader::ResultStatus::Success);
+    REQUIRE(std::string(icon.begin(), icon.end()) == expected_icon);
+
+    FileSys::NACP control;
+    REQUIRE(loader.ReadControlData(control) == Loader::ResultStatus::Success);
+    REQUIRE(control.language_entries[0].GetApplicationName() == expected_title);
+    REQUIRE(control.language_entries[8].GetApplicationName() == expected_localized);
+    REQUIRE(control.language_entries[4].GetApplicationName() ==
+            (base_localized.empty() ? "Update-Titel" : ""));
+    for (const auto& entry : control.language_entries) {
+        REQUIRE(entry.GetDeveloperName() == expected_publisher);
+    }
+    REQUIRE(control.GetVersionString() == "1.2.3");
+    REQUIRE(control.raw.save_data_owner_id == TitleId);
+    u64 program_id{};
+    REQUIRE(loader.ReadProgramId(program_id) == Loader::ResultStatus::Success);
+    REQUIRE(program_id == TitleId);
+}
+
+TEST_CASE("NUP loader selects default and localized icons from one package",
+          "[nup][loader-metadata]") {
+    TempDir t;
+    auto base_default = LoaderTlv(3, "base default");
+    auto base_localized = LoaderTlv(10, LoaderLocalized("nl", "base Dutch") +
+                                          LoaderLocalized("en-us", "base English"));
+    auto update_default = LoaderTlv(3, "update default");
+    const auto update_localized = LoaderTlv(10, LoaderLocalized("nl", "update Dutch") +
+                                                  LoaderLocalized("en-us", "update English"));
+    std::string expected_icon = "base default";
+
+    SECTION("base default icon takes precedence over localized icons") {}
+    SECTION("base en-us icon takes precedence over the first localized icon and update default") {
+        base_default.clear();
+        expected_icon = "base English";
+    }
+    SECTION("base first localized icon is used without en-us rather than update default") {
+        base_default.clear();
+        base_localized = LoaderTlv(10, LoaderLocalized("nl", "base Dutch") +
+                                          LoaderLocalized("de", "base German"));
+        expected_icon = "base Dutch";
+    }
+    SECTION("empty base icon set falls back to update default") {
+        base_default.clear();
+        base_localized.clear();
+        expected_icon = "update default";
+    }
+    SECTION("empty base icon set falls back to update localized icons") {
+        base_default.clear();
+        base_localized.clear();
+        update_default.clear();
+        expected_icon = "update English";
+    }
+
+    Loader::AppLoader_NUP loader{LoaderMetadataFixture(
+        t.path, {base_default + base_localized, update_default + update_localized})};
+    std::vector<u8> icon;
+    REQUIRE(loader.ReadIcon(icon) == Loader::ResultStatus::Success);
+    REQUIRE(std::string(icon.begin(), icon.end()) == expected_icon);
+}
+
+TEST_CASE("NUP loader leaves standalone update metadata unchanged", "[nup][loader-metadata]") {
+    TempDir t;
+    const auto metadata = LoaderTlv(5, "Standalone title") + LoaderTlv(8, "Standalone dump") +
+                          LoaderTlv(6, "Standalone publisher") + LoaderTlv(4, "2.3.4") +
+                          LoaderTlv(9, LoaderLocalized("nl", "Zelfstandige titel")) +
+                          LoaderTlv(3, "standalone default") +
+                          LoaderTlv(10, LoaderLocalized("en-us", "standalone localized"));
+    Loader::AppLoader_NUP loader{LoaderMetadataFixture(t.path, {metadata})};
+    std::string title;
+    REQUIRE(loader.ReadTitle(title) == Loader::ResultStatus::Success);
+    REQUIRE(title == "Standalone title");
+    std::vector<u8> icon;
+    REQUIRE(loader.ReadIcon(icon) == Loader::ResultStatus::Success);
+    REQUIRE(std::string(icon.begin(), icon.end()) == "standalone default");
+    FileSys::NACP control;
+    REQUIRE(loader.ReadControlData(control) == Loader::ResultStatus::Success);
+    REQUIRE(control.language_entries[0].GetApplicationName() == "Standalone title");
+    REQUIRE(control.language_entries[8].GetApplicationName() == "Zelfstandige titel");
+    REQUIRE(control.GetDeveloperName() == "Standalone publisher");
+    REQUIRE(control.GetVersionString() == "2.3.4");
+    u64 program_id{};
+    REQUIRE(loader.ReadProgramId(program_id) == Loader::ResultStatus::Success);
+    REQUIRE(program_id == TitleId);
 }
