@@ -348,8 +348,11 @@ public:
     Id write_global_func_u32{};
     Id write_global_func_u32x2{};
     Id write_global_func_u32x4{};
-    Id atomic_add_global_func_u32{};
-    Id atomic_umax_global_func_u32{};
+    // 32-bit global atomics on untracked addresses, routed to the storage buffer holding them.
+    enum class GlobalAtomic : size_t {
+        IAdd, SMin, UMin, SMax, UMax, Inc, Dec, And, Or, Xor, Exchange, AddF32, Count,
+    };
+    std::array<Id, static_cast<size_t>(GlobalAtomic::Count)> global_atomic_funcs{};
     Id atomic_cas_global_func_u32{};
 
     bool need_input_position_indirect{};
