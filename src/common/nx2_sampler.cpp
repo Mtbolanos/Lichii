@@ -12,10 +12,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <mutex>
 #include <set>
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
@@ -38,7 +40,28 @@ struct Sample {
 struct Target {
     HANDLE handle;
     std::string name;
+    const NT_TIB* tib; ///< the thread's stack bounds, null if unknown
 };
+
+const NT_TIB* ThreadTib(HANDLE handle) {
+    struct BasicInformation {
+        LONG exit_status;
+        PVOID teb;
+        HANDLE client_id[2];
+        KAFFINITY affinity;
+        LONG priority;
+        LONG base_priority;
+    };
+    using QueryFn = LONG(NTAPI*)(HANDLE, ULONG, PVOID, ULONG, PULONG);
+    static const auto query = reinterpret_cast<QueryFn>(
+        GetProcAddress(GetModuleHandleA("ntdll.dll"), "NtQueryInformationThread"));
+    BasicInformation info{};
+    if (query == nullptr || query(handle, 0, &info, sizeof(info), nullptr) < 0) {
+        return nullptr;
+    }
+    // The TEB starts with the NT_TIB.
+    return static_cast<const NT_TIB*>(info.teb);
+}
 
 double EnvSeconds(const char* name, double fallback) {
     const char* text = std::getenv(name);
@@ -95,7 +118,7 @@ std::vector<Target> FindThreads(const std::vector<std::string>& patterns) {
             continue;
         }
         const HANDLE handle = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT |
-                                             THREAD_QUERY_LIMITED_INFORMATION,
+                                             THREAD_QUERY_INFORMATION | THREAD_QUERY_LIMITED_INFORMATION,
                                          FALSE, entry.th32ThreadID);
         if (handle == nullptr) {
             continue;
@@ -110,7 +133,7 @@ std::vector<Target> FindThreads(const std::vector<std::string>& patterns) {
             LocalFree(wide);
         }
         if (Matches(name, patterns)) {
-            targets.push_back({handle, name});
+            targets.push_back({handle, name, ThreadTib(handle)});
         } else {
             CloseHandle(handle);
         }
@@ -120,10 +143,19 @@ std::vector<Target> FindThreads(const std::vector<std::string>& patterns) {
 }
 
 // Walks a suspended thread's stack from its context. Nothing here may allocate: the thread
-// could be paused holding the heap lock.
-unsigned Walk(CONTEXT context, std::array<DWORD64, MaxDepth>& frames) {
+// could be paused holding the heap lock. A wrong unwind step (code with missing or wrong unwind
+// data) leaves a garbage stack pointer: reading through it crashed the process, so the walk
+// stops once the stack pointer leaves the thread's stack.
+unsigned Walk(CONTEXT context, std::array<DWORD64, MaxDepth>& frames, const NT_TIB* tib) {
+    if (tib == nullptr) {
+        return 0;
+    }
+    const auto on_stack = [tib](DWORD64 rsp) {
+        return rsp >= reinterpret_cast<DWORD64>(tib->StackLimit) &&
+               rsp + 8 <= reinterpret_cast<DWORD64>(tib->StackBase) && (rsp & 7) == 0;
+    };
     unsigned depth = 0;
-    while (depth < MaxDepth && context.Rip != 0) {
+    while (depth < MaxDepth && context.Rip != 0 && on_stack(context.Rsp)) {
         frames[depth++] = context.Rip;
         DWORD64 image_base{};
         const PRUNTIME_FUNCTION function = RtlLookupFunctionEntry(context.Rip, &image_base, nullptr);
@@ -149,24 +181,36 @@ struct Symbolizer {
     using SymInitializeFn = BOOL(WINAPI*)(HANDLE, PCSTR, BOOL);
     using SymSetOptionsFn = DWORD(WINAPI*)(DWORD);
     using SymFromAddrFn = BOOL(WINAPI*)(HANDLE, DWORD64, PDWORD64, PSYMBOL_INFO);
+    using SymRefreshModuleListFn = BOOL(WINAPI*)(HANDLE);
 
     Symbolizer() {
-        const HMODULE dbghelp = LoadLibraryA("dbghelp.dll");
-        if (dbghelp == nullptr) {
-            return;
-        }
-        const auto set_options =
-            reinterpret_cast<SymSetOptionsFn>(GetProcAddress(dbghelp, "SymSetOptions"));
-        const auto initialize =
-            reinterpret_cast<SymInitializeFn>(GetProcAddress(dbghelp, "SymInitialize"));
-        from_address = reinterpret_cast<SymFromAddrFn>(GetProcAddress(dbghelp, "SymFromAddr"));
-        if (set_options == nullptr || initialize == nullptr || from_address == nullptr) {
-            from_address = nullptr;
-            return;
-        }
-        set_options(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS);
-        if (!initialize(GetCurrentProcess(), nullptr, TRUE)) {
-            from_address = nullptr;
+        // SymInitialize fails once the process is initialized, which left every report after
+        // the first without names. Initialize once and pick up modules loaded since then.
+        static const auto functions = [] {
+            std::pair<SymFromAddrFn, SymRefreshModuleListFn> result{};
+            const HMODULE dbghelp = LoadLibraryA("dbghelp.dll");
+            if (dbghelp == nullptr) {
+                return result;
+            }
+            const auto set_options =
+                reinterpret_cast<SymSetOptionsFn>(GetProcAddress(dbghelp, "SymSetOptions"));
+            const auto initialize =
+                reinterpret_cast<SymInitializeFn>(GetProcAddress(dbghelp, "SymInitialize"));
+            const auto symbol =
+                reinterpret_cast<SymFromAddrFn>(GetProcAddress(dbghelp, "SymFromAddr"));
+            if (set_options == nullptr || initialize == nullptr || symbol == nullptr) {
+                return result;
+            }
+            set_options(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS);
+            if (initialize(GetCurrentProcess(), nullptr, TRUE)) {
+                result = {symbol, reinterpret_cast<SymRefreshModuleListFn>(
+                                      GetProcAddress(dbghelp, "SymRefreshModuleList"))};
+            }
+            return result;
+        }();
+        from_address = functions.first;
+        if (functions.second != nullptr) {
+            functions.second(GetCurrentProcess());
         }
     }
 
@@ -327,13 +371,18 @@ std::string SampleThreads(const std::vector<std::string>& patterns, double secon
             if (GetThreadContext(handle, &context)) {
                 Sample& sample = samples.emplace_back();
                 sample.thread = i;
-                sample.depth = Walk(context, sample.frames);
+                sample.depth = Walk(context, sample.frames, targets[i].tib);
             }
             ResumeThread(handle);
         }
         Sleep(1);
     }
+    // DbgHelp is single-threaded: the debug server's `sample` and EDEN_NX2_SAMPLE can report at
+    // the same time.
+    static std::mutex report_mutex;
+    std::unique_lock report_lock{report_mutex};
     std::string text = Report(targets, samples, out.c_str());
+    report_lock.unlock();
     std::fprintf(stderr, "nx2 sampler: %zu samples written to %s\n", samples.size(), out.c_str());
     for (const auto& target : targets) {
         CloseHandle(target.handle);
