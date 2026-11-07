@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <algorithm>
+#include <array>
+#include <optional>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -50,6 +52,7 @@ struct KernelProgram {
     IR::Block loop{pool};
     IR::Program program;
     TestEnvironment env;
+    bool int64{true};
 
     KernelProgram() {
         program.stage = Shader::Stage::Compute;
@@ -60,6 +63,7 @@ struct KernelProgram {
     std::vector<u32> TrackedOffsets() {
         Shader::HostTranslateInfo host{};
         host.min_ssbo_alignment = 16;
+        host.support_int64 = int64;
         Shader::Optimization::GlobalMemoryToStorageBufferPass(env, program, host);
         std::vector<u32> offsets;
         for (const auto& descriptor : program.info.storage_buffers_descriptors) {
@@ -332,6 +336,143 @@ TEST_CASE("Loaded global pointers do not inherit the source buffer descriptor",
         CHECK(loaded_descriptor->cbuf_offset == 0x110);
         CHECK(loaded_descriptor->indirect_offset == 0);
     }
+}
+
+/// A native record address that is c0[0x30] or the pointer loaded from *c0[0x30], through a
+/// select or a phi, plus a lane offset. Ocarina of Time's near-leaf pass 539ffb3f650a34ac reads
+/// its foliage unit placement records this way, from c0[12] or from *c0[12].
+struct DirectOrLoadedPointer {
+    KernelProgram fixture;
+    IR::Block taken{fixture.pool};
+    IR::Block merge{fixture.pool};
+
+    IR::U64 RecordAddress(bool phi) {
+        fixture.env.native = true;
+        IR::IREmitter ir{fixture.entry};
+        const IR::Value loaded{ir.LoadGlobal64(Address(ir, Word(ir, 0x30), Word(ir, 0x34)))};
+        const IR::U32 loaded_low{ir.CompositeExtract(loaded, 0)};
+        const IR::U32 loaded_high{ir.CompositeExtract(loaded, 1)};
+        IR::U32 low;
+        IR::U32 high;
+        IR::Block* access{&fixture.entry};
+        if (phi) {
+            fixture.entry.AddBranch(&taken);
+            fixture.entry.AddBranch(&merge);
+            taken.AddBranch(&merge);
+            fixture.program.blocks = {&fixture.entry, &taken, &merge};
+            fixture.program.post_order_blocks = {&merge, &taken, &fixture.entry};
+            for (u32 index = 0; index < fixture.program.blocks.size(); ++index) {
+                fixture.program.blocks[index]->SetOrder(index);
+            }
+            IR::IREmitter direct{taken};
+            const IR::U32 direct_low{Word(direct, 0x30)};
+            const IR::U32 direct_high{Word(direct, 0x34)};
+            merge.AppendNewInst(IR::Opcode::Phi, {});
+            IR::Inst* const low_phi{&merge.back()};
+            low_phi->SetFlags(IR::Type::U32);
+            merge.AppendNewInst(IR::Opcode::Phi, {});
+            IR::Inst* const high_phi{&merge.back()};
+            high_phi->SetFlags(IR::Type::U32);
+            low_phi->AddPhiOperand(&fixture.entry, loaded_low);
+            low_phi->AddPhiOperand(&taken, direct_low);
+            high_phi->AddPhiOperand(&fixture.entry, loaded_high);
+            high_phi->AddPhiOperand(&taken, direct_high);
+            low = IR::U32{IR::Value{low_phi}};
+            high = IR::U32{IR::Value{high_phi}};
+            access = &merge;
+        } else {
+            const IR::U1 direct{ir.ILessThan(ir.LocalInvocationIdX(), ir.Imm32(16), false)};
+            low = IR::U32{ir.Select(direct, Word(ir, 0x30), loaded_low)};
+            high = IR::U32{ir.Select(direct, Word(ir, 0x34), loaded_high)};
+        }
+        record.emplace(*access);
+        const IR::U32 offset{
+            record->ShiftLeftLogical(record->LocalInvocationIdX(), record->Imm32(4))};
+        return Address(*record, record->IAdd(low, offset), high);
+    }
+
+    std::ptrdiff_t Count(IR::Opcode opcode) const {
+        std::ptrdiff_t total{};
+        for (const IR::Block* const block : fixture.program.blocks) {
+            total += std::ranges::count_if(block->Instructions(), [=](const IR::Inst& inst) {
+                return inst.GetOpcode() == opcode;
+            });
+        }
+        return total;
+    }
+
+    std::size_t LoadedDescriptors() const {
+        return std::ranges::count_if(fixture.program.info.storage_buffers_descriptors,
+                                     [](const auto& desc) { return desc.indirect_offset == 0; });
+    }
+
+    std::optional<IR::IREmitter> record;
+};
+
+TEST_CASE("Native accesses through a cbuf pointer or a pointer loaded from it bind both",
+          "[shader][storage_buffer]") {
+    // Pairing the address with c0[0x30] alone rebased the loaded path on c0[0x30]'s binding,
+    // where its records read out of bounds as zeros.
+    const bool phi = GENERATE(false, true);
+    CAPTURE(phi);
+    DirectOrLoadedPointer program;
+    static_cast<void>(program.record->LoadGlobal128(program.RecordAddress(phi)));
+
+    CHECK(program.fixture.TrackedOffsets() == std::vector<u32>{0x30, 0x30});
+    CHECK(program.fixture.program.info.native_global_bounds);
+    CHECK(program.LoadedDescriptors() == 1);
+    CHECK(program.Count(IR::Opcode::LoadStorage64) == 1);
+    CHECK(program.Count(IR::Opcode::LoadGlobal128) == 1);
+    CHECK(program.Count(IR::Opcode::LoadStorage128) == 0);
+}
+
+TEST_CASE("Native accesses the backend cannot route keep their paired cbuf pointer",
+          "[shader][storage_buffer]") {
+    // The SPIR-V backend has no global subword accesses or global exchange atomics, and routes
+    // no global access without 64-bit integers, so these accesses are rebased on the pair rather
+    // than left global.
+    const bool phi = GENERATE(false, true);
+    const int access = GENERATE(0, 1, 2);
+    const bool atomic = access == 1;
+    CAPTURE(phi, access);
+    DirectOrLoadedPointer program;
+    program.fixture.int64 = access != 2;
+    const IR::U64 address{program.RecordAddress(phi)};
+    if (access == 2) {
+        static_cast<void>(program.record->LoadGlobal128(address));
+    } else if (atomic) {
+        static_cast<void>(program.record->GlobalAtomicExchange(address, program.record->Imm32(1)));
+    } else {
+        static_cast<void>(program.record->LoadGlobalU16(address));
+    }
+
+    CHECK(program.fixture.TrackedOffsets() == std::vector<u32>{0x30});
+    CHECK_FALSE(program.fixture.program.info.native_global_bounds);
+    CHECK(program.LoadedDescriptors() == 0);
+    const std::array storage{IR::Opcode::LoadStorageU16, IR::Opcode::StorageAtomicExchange32,
+                             IR::Opcode::LoadStorage128};
+    const std::array global{IR::Opcode::LoadGlobalU16, IR::Opcode::GlobalAtomicExchange32,
+                            IR::Opcode::LoadGlobal128};
+    CHECK(program.Count(storage[access]) == 1);
+    CHECK(program.Count(global[access]) == 0);
+}
+
+TEST_CASE("Loaded pointers that compete with a pair do not take the last storage buffer",
+          "[shader][storage_buffer]") {
+    // 31 more pointers fill every binding with c0[0x30]; the loaded pointer would be the 33rd.
+    DirectOrLoadedPointer program;
+    static_cast<void>(program.record->LoadGlobal128(program.RecordAddress(false)));
+    IR::IREmitter ir{program.fixture.entry};
+    for (u32 slot = 0; slot < Shader::Info::MAX_SSBOS - 1; ++slot) {
+        const u32 offset{0x100 + slot * 8};
+        static_cast<void>(ir.LoadGlobal32(Address(ir, Word(ir, offset), Word(ir, offset + 4))));
+    }
+
+    CHECK(program.fixture.TrackedOffsets().size() == Shader::Info::MAX_SSBOS);
+    CHECK_FALSE(program.fixture.program.info.native_global_bounds);
+    CHECK(program.LoadedDescriptors() == 0);
+    CHECK(program.Count(IR::Opcode::LoadStorage128) == 1);
+    CHECK(program.Count(IR::Opcode::LoadGlobal128) == 0);
 }
 
 TEST_CASE("NVN fallback descriptors use guest slots rather than compact binding indices",
