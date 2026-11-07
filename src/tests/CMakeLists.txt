@@ -94,6 +94,7 @@ add_executable(tests
     video_core/spirv_software_matrix.cpp
     video_core/spirv_builtin_capabilities.cpp
     video_core/spirv_nan_safe_min_max.cpp
+    video_core/virtual_range_cache.cpp
     common/bit_field.cpp
     common/cityhash.cpp
     common/container_hash.cpp
