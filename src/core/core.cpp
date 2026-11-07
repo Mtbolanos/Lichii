@@ -414,9 +414,11 @@ struct System::Impl {
         // The guest clocks derive from the host TSC calibration (or the OS clock). A wrong rate
         // there skews every guest timer by a constant factor (#105), so record what was measured:
         // tsc vs the CPUID base/max frequency is a sanity check at a glance.
+#ifdef ARCHITECTURE_x86_64
         LOG_INFO(Core, "Host clock: tsc {} Hz, cpu base {} MHz, max {} MHz, invariant {}",
                  Common::g_cpu_caps.tsc_frequency, Common::g_cpu_caps.base_frequency,
                  Common::g_cpu_caps.max_frequency, Common::g_cpu_caps.invariant_tsc);
+#endif
 
         const auto kernel_result = InitializeKernel(system);
         if (kernel_result != SystemResultStatus::Success) {
