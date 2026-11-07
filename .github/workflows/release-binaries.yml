@@ -675,6 +675,34 @@ jobs:
           tag="build-${GITHUB_RUN_NUMBER}"
           base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}"
 
+          link() { [[ -e "dist/$2" ]] && echo "[$1](${base}/$2)" || true; }
+          appimage_tar() {
+            local appimage tar
+            appimage=$(link AppImage "$1.AppImage")
+            tar=$(link tar.gz "$1.tar.gz")
+            echo "${appimage}${appimage:+${tar:+ · }}${tar}"
+          }
+          has_pgo=$(compgen -G 'dist/*-pgo.*' || true)
+          row() {
+            [[ -z "$2$3" ]] && return 0
+            if [[ -n "$has_pgo" ]]; then echo "| $1 | $2 | $3 | $4 |"; else echo "| $1 | $2 | $4 |"; fi
+          }
+          table() {
+            local rows
+            rows=$(cat)
+            [[ -z "$rows" ]] && return 0
+            if [[ -n "$has_pgo" ]]; then
+              printf '| Build Type | Standard | PGO (Recommended) | Notes |\n| --- | --- | --- | --- |\n'
+            else
+              printf '| Build Type | Standard | Notes |\n| --- | --- | --- |\n'
+            fi
+            echo "$rows"
+          }
+          pgo_note=""
+          if [[ -n "$has_pgo" ]]; then
+            pgo_note="The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's profile); prefer them when your CPU supports it."
+          fi
+
           cat > notes.md <<EOF
           Automatic build of \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}.
 
@@ -682,27 +710,25 @@ jobs:
 
           Linux packages come as an AppImage (self-contained, needs glibc 2.39 or newer: Ubuntu 24.04, Fedora 40, Debian 13, Arch) and a tar.gz (uses your system libraries, so Qt 6 and the usual libraries must be installed).
 
-          | Build Type | Standard | PGO (Recommended) | Notes |
-          | --- | --- | --- | --- |
-          | amd64 | [AppImage](${base}/lichii-linux-x86_64.AppImage) · [tar.gz](${base}/lichii-linux-x86_64.tar.gz) | [AppImage](${base}/lichii-linux-x86_64-pgo.AppImage) · [tar.gz](${base}/lichii-linux-x86_64-pgo.tar.gz) | Make the AppImage executable (\`chmod +x\`) and run it |
-          | ARM (aarch64) | [AppImage](${base}/lichii-linux-aarch64.AppImage) · [tar.gz](${base}/lichii-linux-aarch64.tar.gz) | [AppImage](${base}/lichii-linux-aarch64-pgo.AppImage) · [tar.gz](${base}/lichii-linux-aarch64-pgo.tar.gz) | |
+          $({
+            row amd64 "$(appimage_tar lichii-linux-x86_64)" "$(appimage_tar lichii-linux-x86_64-pgo)" "Make the AppImage executable (\`chmod +x\`) and run it"
+            row "ARM (aarch64)" "$(appimage_tar lichii-linux-aarch64)" "$(appimage_tar lichii-linux-aarch64-pgo)" ""
+          } | table)
 
           ## Windows
 
           Windows packages are in-place zip files: extract and run \`lichii.exe\`, or \`eden-cli.exe\` from a terminal.
 
-          | Build Type | Standard | PGO (Recommended) | Notes |
-          | --- | --- | --- | --- |
-          | amd64 / x86_64 (MSVC) | [MSVC zip](${base}/lichii-windows-x86_64.zip) | | Use if you run into graphical issues on other builds |
-          | amd64 / x86_64 (MinGW) | | [PGO zip](${base}/lichii-windows-x86_64-pgo.zip) | Built with MinGW clang; bundles its own DLLs, no Visual C++ redistributable needed |
+          $({
+            row "amd64 / x86_64 (MSVC)" "$(link "MSVC zip" lichii-windows-x86_64.zip)" "" "Use if you run into graphical issues on other builds"
+            row "amd64 / x86_64 (MinGW)" "" "$(link "PGO zip" lichii-windows-x86_64-pgo.zip)" "Built with MinGW clang; bundles its own DLLs, no Visual C++ redistributable needed"
+          } | table)
 
           ## macOS
 
-          | Build Type | Standard | PGO (Recommended) | Notes |
-          | --- | --- | --- | --- |
-          | arm64 (Apple Silicon) | [zip](${base}/lichii-macos-arm64.zip) | | macOS 15 or newer. Not notarized: right-click and choose Open the first time, or run \`xattr -dr com.apple.quarantine lichii.app\`. \`eden-cli\` is inside the app, in \`Contents/MacOS\` |
+          $(row "arm64 (Apple Silicon)" "$(link zip lichii-macos-arm64.zip)" "" "macOS 15 or newer. Not notarized: right-click and choose Open the first time, or run \`xattr -dr com.apple.quarantine lichii.app\`. \`eden-cli\` is inside the app, in \`Contents/MacOS\`" | table)
 
-          The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's profile); prefer them when your CPU supports it.
+          ${pgo_note}
           EOF
 
           gh release create "${tag}" dist/* \
