@@ -207,6 +207,13 @@ public:
         return static_cast<u32>(device.GetShaderStorageBufferAlignment());
     }
 
+    /// Largest range a storage buffer binding may have: the driver's storage block size. It
+    /// doesn't depend on the binding mode, since bindings are cached across pipelines; a bindless
+    /// (GLASM) binding's GLsizei length holds it, as the buffer cache stops at 1 GiB.
+    u64 GetMaxStorageBufferRange() const {
+        return device.GetMaxShaderStorageBlockSize();
+    }
+
 private:
     static constexpr std::array PABO_LUT{
         GL_VERTEX_PROGRAM_PARAMETER_BUFFER_NV,          GL_TESS_CONTROL_PROGRAM_PARAMETER_BUFFER_NV,

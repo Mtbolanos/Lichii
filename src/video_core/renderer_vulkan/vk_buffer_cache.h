@@ -143,6 +143,9 @@ public:
 
     u32 GetStorageBufferAlignment() const;
 
+    /// Largest range a storage buffer binding may have
+    u64 GetMaxStorageBufferRange() const;
+
     [[nodiscard]] StagingBufferRef UploadStagingBuffer(size_t size);
 
     [[nodiscard]] StagingBufferRef DownloadStagingBuffer(size_t size, bool deferred = false);
