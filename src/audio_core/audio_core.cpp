@@ -29,6 +29,7 @@ void AudioCore::CreateSinks() {
 
     output_sink = Sink::CreateSinkFromID(sink_id.GetValue(), audio_output_device_id.GetValue());
     input_sink = Sink::CreateSinkFromID(sink_id.GetValue(), audio_input_device_id.GetValue());
+    input_sink->SetDeviceVolume(Settings::values.microphone_volume.GetValue() / 100.0f);
 }
 
 void AudioCore::Shutdown() {
