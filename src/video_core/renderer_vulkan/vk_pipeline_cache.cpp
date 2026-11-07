@@ -1651,11 +1651,24 @@ void PipelineCache::EvictUnusedPipelines() {
     }
     const u64 cutoff = frame_count - EvictAfterFrames;
     const u64 tick = scheduler.CurrentTick();
+    // ~0.9 GB of driver memory at ~0.45 MB each.
+    constexpr size_t MaxUnusedPrebuiltPipelines = 2000;
+    size_t kept_prebuilt = 0;
     size_t evicted = 0;
     for (auto it = graphics_cache.begin(); it != graphics_cache.end();) {
         GraphicsPipeline* const pipeline = it->second.get();
         if (pipeline == nullptr || pipeline == current_pipeline || !pipeline->IsBuilt() ||
             pipeline->LastUse() >= cutoff) {
+            ++it;
+            continue;
+        }
+        // A pipeline built from the disk cache at boot that no draw has used yet stays, up to a
+        // budget: evicting it throws the prebuild away, and the game translates it again on the
+        // GPU thread when it reaches that content (OoT: 1174 of 1346 evicted on the title screen,
+        // 684 rebuilt in 10 s on entering the field). Past the budget they go like the rest, so a
+        // large cache can't hold their driver memory for the whole session.
+        if (!pipeline->WasUsed() && kept_prebuilt < MaxUnusedPrebuiltPipelines) {
+            ++kept_prebuilt;
             ++it;
             continue;
         }
