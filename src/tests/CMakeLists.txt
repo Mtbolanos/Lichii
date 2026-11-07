@@ -189,6 +189,9 @@ target_link_libraries(update_checker_tests PRIVATE common Catch2::Catch2WithMain
 add_test(NAME update_checker_tests COMMAND update_checker_tests)
 
 if (NOT ANDROID)
+    target_sources(tests PRIVATE input_common/joycon_subcommand_response.cpp)
+    target_link_libraries(tests PRIVATE SDL3::SDL3)
+
     add_executable(config_tests
         common/first_run_config.cpp
         ../frontend_common/config.cpp)

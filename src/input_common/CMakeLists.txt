@@ -65,6 +65,7 @@ else()
         helpers/joycon_protocol/calibration.h
         helpers/joycon_protocol/common_protocol.cpp
         helpers/joycon_protocol/common_protocol.h
+        helpers/joycon_protocol/subcommand_response.h
         helpers/joycon_protocol/generic_functions.cpp
         helpers/joycon_protocol/generic_functions.h
         helpers/joycon_protocol/joycon_types.h
