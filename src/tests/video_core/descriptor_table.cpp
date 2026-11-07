@@ -376,7 +376,7 @@ TEST_CASE("Descriptor ID lookup CPU benchmark", "[.][descriptor_lookup_bench]") 
             std::memcpy(output, GetPointer(address), size);
         }
     };
-    struct Result {
+    struct LookupBenchmarkResult {
         double ns_per_lookup;
         u64 checksum;
     };
@@ -426,7 +426,7 @@ TEST_CASE("Descriptor ID lookup CPU benchmark", "[.][descriptor_lookup_bench]") 
         const double ns =
             std::chrono::duration<double, std::nano>(std::chrono::steady_clock::now() - start)
                 .count();
-        return Result{ns / operations, checksum};
+        return LookupBenchmarkResult{ns / operations, checksum};
     };
     for (const u32 size : {128U, 4096U, 16384U}) {
         std::mt19937 random{0x256};
@@ -438,7 +438,7 @@ TEST_CASE("Descriptor ID lookup CPU benchmark", "[.][descriptor_lookup_bench]") 
             std::array<double, 7> before{};
             std::array<double, 7> after{};
             for (size_t trial = 0; trial < before.size(); ++trial) {
-                Result old_result{}, new_result{};
+                LookupBenchmarkResult old_result{}, new_result{};
                 if (trial % 2 == 0) {
                     old_result = measure.template operator()<false>(size, mutate, indices);
                     new_result = measure.template operator()<true>(size, mutate, indices);
