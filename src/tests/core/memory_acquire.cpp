@@ -80,3 +80,24 @@ TEST_CASE("Memory acquire reads and exclusive publication use mapped backing", "
         REQUIRE(observed == expected);
     }
 }
+
+TEST_CASE("Virtual address ranges that wrap past the address space end are invalid",
+          "[hwacod_memory]") {
+    ScopedSystemTestContext context;
+    Core::System system;
+    system.Initialize();
+    Kernel::KProcess process{system.Kernel()};
+    SCOPE_EXIT { system.Kernel().UnregisterKernelObject(&process); };
+    auto& table = process.GetPageTable().GetImpl();
+    table.Resize(20, 12);
+    auto* page = system.DeviceMemory().buffer.BackingBasePointer() + 0x10000;
+    table.entries.GetAndFault(4).Store(false, Common::PageType::Memory, 1,
+                                     reinterpret_cast<uintptr_t>(page) - 0x4000);
+    auto& memory = process.GetMemory();
+    memory.SetCurrentPageTable(process);
+    REQUIRE(memory.IsValidVirtualAddressRange(0x4000, 0x1000));
+    REQUIRE(memory.IsValidVirtualAddressRange(0x4ff8, 8));
+    REQUIRE_FALSE(memory.IsValidVirtualAddressRange(0x4ffc, 8));
+    REQUIRE_FALSE(memory.IsValidVirtualAddressRange(~u64{0} - 3, 8));
+    REQUIRE_FALSE(memory.IsValidVirtualAddressRange(0x4000, ~u64{0}));
+}
