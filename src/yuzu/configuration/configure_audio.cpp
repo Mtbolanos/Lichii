@@ -35,6 +35,7 @@ ConfigureAudio::ConfigureAudio(const Core::System& system_,
 
 ConfigureAudio::~ConfigureAudio() = default;
 
+/// Build audio settings, leaving global microphone selection to the Controls tab.
 void ConfigureAudio::Setup(const ConfigurationShared::Builder& builder) {
     auto& layout = *ui->audio_widget->layout();
 
@@ -59,6 +60,11 @@ void ConfigureAudio::Setup(const ConfigurationShared::Builder& builder) {
     push_ui_settings(Settings::Category::UiAudio);
 
     for (auto* setting : settings) {
+        // Global microphone selection lives in Controls.
+        if (Settings::IsConfiguringGlobal() &&
+            setting->Id() == Settings::values.audio_input_device_id.Id()) {
+            continue;
+        }
         auto* widget = builder.BuildWidget(setting, apply_funcs);
 
         if (widget == nullptr) {
@@ -220,7 +226,11 @@ void ConfigureAudio::SetOutputDevicesFromDeviceID() {
     output_device_combo_box->setCurrentIndex(new_device_index);
 }
 
+/// Restore the saved input selection when this configuration page owns an input selector.
 void ConfigureAudio::SetInputDevicesFromDeviceID() {
+    if (!input_device_combo_box) {
+        return;
+    }
     int new_device_index = 0;
     const QString input_device_id =
         QString::fromStdString(Settings::values.audio_input_device_id.GetValue());
@@ -234,6 +244,7 @@ void ConfigureAudio::SetInputDevicesFromDeviceID() {
     input_device_combo_box->setCurrentIndex(new_device_index);
 }
 
+/// Save this page's audio settings without overwriting the separate microphone selector.
 void ConfigureAudio::ApplyConfiguration() {
     const bool is_powered_on = system.IsPoweredOn();
     for (const auto& apply_func : apply_funcs) {
@@ -256,8 +267,10 @@ void ConfigureAudio::ApplyConfiguration() {
     Settings::values.sink_id.SetValue(Settings::AudioEngine(new_sink_id));
     Settings::values.audio_output_device_id.SetValue(
         output_device_combo_box->itemText(output_device_combo_box->currentIndex()).toStdString());
-    Settings::values.audio_input_device_id.SetValue(
-        input_device_combo_box->itemText(input_device_combo_box->currentIndex()).toStdString());
+    if (input_device_combo_box) {
+        Settings::values.audio_input_device_id.SetValue(
+            input_device_combo_box->itemText(input_device_combo_box->currentIndex()).toStdString());
+    }
 }
 
 void ConfigureAudio::changeEvent(QEvent* event) {
@@ -268,6 +281,7 @@ void ConfigureAudio::changeEvent(QEvent* event) {
     QWidget::changeEvent(event);
 }
 
+/// Refresh available devices for a backend, updating input choices only when present here.
 void ConfigureAudio::UpdateAudioDevices(int sink_index) {
     updating_devices = true;
     output_device_combo_box->clear();
@@ -279,10 +293,12 @@ void ConfigureAudio::UpdateAudioDevices(int sink_index) {
         output_device_combo_box->addItem(QString::fromStdString(device));
     }
 
-    input_device_combo_box->clear();
-    input_device_combo_box->addItem(QString::fromUtf8(AudioCore::Sink::auto_device_name));
-    for (const auto& device : AudioCore::Sink::GetDeviceListForSink(sink_id, true)) {
-        input_device_combo_box->addItem(QString::fromStdString(device));
+    if (input_device_combo_box) {
+        input_device_combo_box->clear();
+        input_device_combo_box->addItem(QString::fromUtf8(AudioCore::Sink::auto_device_name));
+        for (const auto& device : AudioCore::Sink::GetDeviceListForSink(sink_id, true)) {
+            input_device_combo_box->addItem(QString::fromStdString(device));
+        }
     }
     updating_devices = false;
 }

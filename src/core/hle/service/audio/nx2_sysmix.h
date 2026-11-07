@@ -13,7 +13,7 @@ class System;
 namespace Kernel {
 class KProcess;
 class KReadableEvent;
-}
+} // namespace Kernel
 namespace AudioCore::Sink {
 class Sink;
 }
@@ -34,11 +34,14 @@ struct SysmixOutputCounters {
 class SysmixOutput {
 public:
     SysmixOutput(Core::System& system, Kernel::KProcess& process, AudioCore::Sink::Sink& sink,
-                 u32 id, u64 buffer, u64 size, u32 creation_flags);
+                 u32 id, u64 buffer, u64 size, u32 creation_flags, bool input = false);
     ~SysmixOutput();
     static Result ValidateRegion(Kernel::KProcess& process, u64 buffer, u64 size,
-                                 u32 creation_flags);
+                                 u32 creation_flags, bool input = false);
     static bool IsFormatSupported(u32 sample_type, u32 channels, u32 rate);
+    static bool IsInputFormatSupported(u32 sample_type, u32 channels, u32 rate);
+    bool IsInput() const;
+    Result Purge(u32 frames, u32& purged);
     Result Open(u32 sample_type, u32 channels, u32 rate, u32 frames, u32 prefill, u32 flags);
     void Close();
     Result SetEngaged(bool engaged);

@@ -30,14 +30,14 @@ constexpr u32 BlockFrames = 240;
 u64 AlignUp(u64 value, u64 alignment) {
     return (value + alignment - 1) & ~(alignment - 1);
 }
-}
+} // namespace
 
 struct SysmixOutput::Impl {
-    Impl(Core::System& system_, Kernel::KProcess& process_, AudioCore::Sink::Sink& sink_,
-         u32 id_, u64 buffer_, u64 size_, u32 creation_flags_)
+    Impl(Core::System& system_, Kernel::KProcess& process_, AudioCore::Sink::Sink& sink_, u32 id_,
+         u64 buffer_, u64 size_, u32 creation_flags_, bool input_)
         : system{system_}, process{system.Kernel(), &process_}, sink{sink_},
           context{system, "sysmix"}, id{id_}, buffer{buffer_}, size{size_},
-          creation_flags{creation_flags_} {
+          creation_flags{creation_flags_}, input_stream{input_} {
         state_event = context.CreateEvent("sysmix state");
         data_event = context.CreateEvent("sysmix data");
     }
@@ -62,6 +62,7 @@ struct SysmixOutput::Impl {
         }
     }
 
+    /// Stop admission and notify the guest after invalid memory or a fatal host-stream failure.
     Result Fault(Result result = ResultInvalidAddressInfo) {
         faulted = true;
         engaged = false;
@@ -70,24 +71,28 @@ struct SysmixOutput::Impl {
             host->MarkFaulted();
         }
         state_event->Signal(system.Kernel());
-        LOG_ERROR(Service_Audio, "sysmix stream {} fault {:#x}: copied={} accepted={} blocks={}", id,
-                  result.raw, counters.copied_frames, counters.accepted_frames,
+        LOG_ERROR(Service_Audio, "sysmix stream {} fault {:#x}: copied={} accepted={} blocks={}",
+                  id, result.raw, counters.copied_frames, counters.accepted_frames,
                   counters.admitted_blocks);
         return result;
     }
 
+    /// Read valid ring cursors and verify that the guest has not changed our owned cursor.
     bool ReadOccupancy(u32& read, u32& write, u32& filled) {
         auto& memory = process->GetMemory();
-        if (!memory.Read32Acquire(buffer + ReadOffset, read) || read != consumer ||
-            !memory.Read32Acquire(buffer + WriteOffset, write) || read >= slots || write >= slots) {
+        if (!memory.Read32Acquire(buffer + ReadOffset, read) ||
+            !memory.Read32Acquire(buffer + WriteOffset, write) ||
+            (input_stream ? write : read) != consumer || read >= slots || write >= slots) {
             return false;
         }
         filled = static_cast<u32>((u64{write} + slots - read) % slots);
         return true;
     }
 
+    /// Signal when captured input or free output space reaches the notification threshold.
     void Notify(u32 filled) {
-        if (data_mode == 2 && slots - 1 - filled >= static_cast<u32>(threshold)) {
+        const auto available = input_stream ? filled : slots - 1 - filled;
+        if (data_mode == 2 && available >= static_cast<u32>(threshold)) {
             data_event->Signal(system.Kernel());
         }
     }
@@ -104,6 +109,8 @@ struct SysmixOutput::Impl {
     u64 buffer;
     u64 size;
     u32 creation_flags;
+    bool input_stream;
+    u32 channels{2};
     AudioCore::SampleFormat format{};
     u32 frame_bytes{};
     u32 slots{};
@@ -121,14 +128,16 @@ struct SysmixOutput::Impl {
 
 SysmixOutput::SysmixOutput(Core::System& system, Kernel::KProcess& process,
                            AudioCore::Sink::Sink& sink, u32 id, u64 buffer, u64 size,
-                           u32 creation_flags)
-    : impl{std::make_unique<Impl>(system, process, sink, id, buffer, size, creation_flags)} {}
+                           u32 creation_flags, bool input)
+    : impl{std::make_unique<Impl>(system, process, sink, id, buffer, size, creation_flags, input)} {
+}
 
 SysmixOutput::~SysmixOutput() = default;
 
+/// Validate direction-specific creation flags and an aligned, mapped guest ring allocation.
 Result SysmixOutput::ValidateRegion(Kernel::KProcess& process, u64 buffer, u64 size,
-                                    u32 creation_flags) {
-    R_UNLESS(creation_flags == 0x24, ResultNotSupported);
+                                    u32 creation_flags, bool input) {
+    R_UNLESS(creation_flags == (input ? 2U : 0x24U), ResultNotSupported);
     R_UNLESS(buffer != 0 && (buffer & 0xfff) == 0 && (size & 0xfff) == 0 && size >= 0x2000 &&
                  size <= std::numeric_limits<u64>::max() - buffer &&
                  process.GetMemory().IsValidVirtualAddressRange(buffer, size),
@@ -142,32 +151,48 @@ bool SysmixOutput::IsFormatSupported(u32 sample_type, u32 channels, u32 rate) {
            channels == 2 && rate == 48000;
 }
 
+/// Accept 48 kHz S16 or F32 microphone capture with one or two guest channels.
+bool SysmixOutput::IsInputFormatSupported(u32 sample_type, u32 channels, u32 rate) {
+    return (channels == 1 || channels == 2) && IsFormatSupported(sample_type, 2, rate);
+}
+
+bool SysmixOutput::IsInput() const {
+    return impl->input_stream;
+}
+
+/// Validate the ring layout and open the host stream, leaving it disengaged until requested.
 Result SysmixOutput::Open(u32 sample_type, u32 channels, u32 rate, u32 frames, u32 prefill,
                           u32 flags) {
     auto& p = *impl;
     std::scoped_lock lock{p.mutex};
     R_UNLESS(!p.open, ResultOperationFailed);
-    R_UNLESS(IsFormatSupported(sample_type, channels, rate) && prefill == 0 && flags == 0,
+    R_UNLESS((p.input_stream ? IsInputFormatSupported(sample_type, channels, rate)
+                             : IsFormatSupported(sample_type, channels, rate)) &&
+                 prefill == 0 && flags == 0,
              ResultNotSupported);
     R_UNLESS(frames > 0 && frames < static_cast<u32>(std::numeric_limits<s32>::max()),
              ResultInvalidArgument);
-    R_TRY(ValidateRegion(*p.process, p.buffer, p.size, p.creation_flags));
+    R_TRY(ValidateRegion(*p.process, p.buffer, p.size, p.creation_flags, p.input_stream));
     const u64 slots = u64{frames} + 1;
     const auto format = static_cast<AudioCore::SampleFormat>(sample_type);
-    const u32 frame_bytes = channels *
-        (format == AudioCore::SampleFormat::PcmInt16 ? sizeof(s16) : sizeof(f32));
-    const u64 minimum = AlignUp(0x1000 + AlignUp(0x40 + std::min<u64>(16, slots) * 8, 64) +
-                                   AlignUp(slots * frame_bytes, 64), 0x1000);
+    const u32 frame_bytes =
+        channels * (format == AudioCore::SampleFormat::PcmInt16 ? sizeof(s16) : sizeof(f32));
+    const u64 timestamp_bytes = p.input_stream ? 0 : std::min<u64>(16, slots) * 8;
+    const u64 minimum = AlignUp(0x1000 + AlignUp(0x40 + timestamp_bytes, 64) +
+                                    AlignUp(slots * frame_bytes, 64),
+                                0x1000);
     R_UNLESS(p.size >= minimum && PayloadOffset + slots * frame_bytes <= p.size,
              ResultInsufficientBuffer);
     R_UNLESS(p.state_event && p.data_event, ResultOutOfSessions);
     u32 read{}, write{};
     auto& memory = p.process->GetMemory();
     R_UNLESS(memory.Read32Acquire(p.buffer + ReadOffset, read) &&
-                 memory.Read32Acquire(p.buffer + WriteOffset, write) && read < slots && write < slots,
+                 memory.Read32Acquire(p.buffer + WriteOffset, write) && read < slots &&
+                 write < slots,
              ResultInvalidAddressInfo);
-    p.host = p.sink.AcquireSinkStream(p.system, 2, "sysmix-" + std::to_string(p.id),
-                                     AudioCore::Sink::StreamType::Sysmix);
+    p.host = p.sink.AcquireSinkStream(p.system, channels, "sysmix-" + std::to_string(p.id),
+                                      p.input_stream ? AudioCore::Sink::StreamType::In
+                                                     : AudioCore::Sink::StreamType::Sysmix);
     if (!p.host || !p.host->IsReady()) {
         if (p.host) {
             p.sink.CloseStream(p.host);
@@ -178,7 +203,8 @@ Result SysmixOutput::Open(u32 sample_type, u32 channels, u32 rate, u32 frames, u
     p.slots = static_cast<u32>(slots);
     p.format = format;
     p.frame_bytes = frame_bytes;
-    p.consumer = read;
+    p.consumer = p.input_stream ? write : read;
+    p.channels = channels;
     p.faulted = false;
     p.open = true;
     p.engaged = false;
@@ -187,8 +213,9 @@ Result SysmixOutput::Open(u32 sample_type, u32 channels, u32 rate, u32 frames, u
     p.state_event->Signal(p.system.Kernel());
     p.Notify(static_cast<u32>((write + slots - read) % slots));
     LOG_INFO(Service_Audio,
-             "sysmix stream {} host ready: sample type {} stereo 48000 slots={} payload={:#x}",
-             p.id, sample_type, p.slots, PayloadOffset);
+             "sysmix stream {} host ready: input={} sample type {} channels={} 48000 slots={} "
+             "payload={:#x}",
+             p.id, p.input_stream, sample_type, channels, p.slots, PayloadOffset);
     R_SUCCEED();
 }
 
@@ -229,6 +256,37 @@ Result SysmixOutput::SetDataNotification(u32 mode, s32 threshold) {
     R_SUCCEED();
 }
 
+/**
+ * Discard up to frames of buffered input; zero also drains pending host capture.
+ * Cursor contention is retried, then returns OperationFailed with purged zero while capture stays
+ * engaged. Invalid memory or cursor ownership still faults the stream.
+ */
+Result SysmixOutput::Purge(u32 frames, u32& purged) {
+    auto& p = *impl;
+    std::scoped_lock lock{p.mutex};
+    purged = 0;
+    R_UNLESS(p.input_stream && p.open && !p.faulted, ResultOperationFailed);
+    auto& memory = p.process->GetMemory();
+    u32 read{}, write{}, filled{};
+    // The guest owns the read cursor and may advance it while this call is in flight.
+    for (u32 attempt = 0; attempt < 8; ++attempt) {
+        R_UNLESS(p.ReadOccupancy(read, write, filled), p.Fault());
+        const auto count = frames == 0 ? filled : std::min(frames, filled);
+        if (!memory.WriteExclusive32(p.buffer + ReadOffset, (read + count) % p.slots, read)) {
+            continue;
+        }
+        R_UNLESS(p.ReadOccupancy(read, write, filled), p.Fault());
+        purged = count;
+        if (frames == 0) {
+            p.host->DrainInputSamples(0x10000);
+        }
+        p.Notify(filled);
+        R_SUCCEED();
+    }
+    R_UNLESS(p.ReadOccupancy(read, write, filled), p.Fault());
+    R_RETURN(ResultOperationFailed);
+}
+
 Result SysmixOutput::SetGain(f32 gain, s64 ramp_ns) {
     R_UNLESS(ramp_ns == 0, ResultNotSupported);
     R_UNLESS(std::isfinite(gain) && gain >= 0.0f && gain <= 128.0f, ResultInvalidArgument);
@@ -247,6 +305,7 @@ u32 SysmixOutput::GetState() const {
     return impl->open && !impl->faulted ? (impl->engaged ? 2 : 1) : 0;
 }
 
+/// Transfer a bounded PCM block between host audio and the guest ring, preserving cursor ownership.
 void SysmixOutput::Pump() {
     auto& p = *impl;
     std::unique_lock lock{p.mutex, std::try_to_lock};
@@ -267,6 +326,65 @@ void SysmixOutput::Pump() {
         p.Fault(ResultOperationFailed);
         return;
     }
+    if (p.input_stream) {
+        const auto available = std::min(p.slots - 1 - filled, BlockFrames);
+        if (!available) {
+            ++p.counters.backpressure;
+            p.Notify(filled);
+            return;
+        }
+        const auto captured = p.host->DrainInputSamples(available);
+        const auto taken = static_cast<u32>(captured.size() / p.channels);
+        if (!taken) {
+            p.Notify(filled);
+            return;
+        }
+        u32 nonzero{};
+        for (u32 frame = 0; frame < taken; ++frame) {
+            bool audible{};
+            for (u32 channel = 0; channel < p.channels; ++channel) {
+                const auto index = frame * p.channels + channel;
+                const auto value =
+                    std::clamp(static_cast<f32>(captured[index]) * p.gain, -32768.0f, 32767.0f);
+                audible |= value != 0;
+                if (p.format == AudioCore::SampleFormat::PcmInt16) {
+                    const auto sample = static_cast<s16>(value);
+                    std::memcpy(p.input.data() + index * sizeof(sample), &sample, sizeof(sample));
+                } else {
+                    const auto sample = value / 32768.0f;
+                    std::memcpy(p.input.data() + index * sizeof(sample), &sample, sizeof(sample));
+                }
+            }
+            nonzero += audible;
+        }
+        const auto first = std::min(taken, p.slots - write);
+        const auto second = taken - first;
+        auto& memory = p.process->GetMemory();
+        if (!memory.WriteBlock(p.buffer + PayloadOffset + u64{write} * p.frame_bytes,
+                               p.input.data(), first * p.frame_bytes) ||
+            (second &&
+             !memory.WriteBlock(p.buffer + PayloadOffset, p.input.data() + first * p.frame_bytes,
+                                second * p.frame_bytes)) ||
+            !memory.WriteExclusive32(p.buffer + WriteOffset, (write + taken) % p.slots, write)) {
+            p.Fault();
+            return;
+        }
+        p.consumer = (write + taken) % p.slots;
+        p.counters.copied_frames += taken;
+        p.counters.accepted_frames += taken;
+        p.counters.nonzero_frames += nonzero;
+        ++p.counters.admitted_blocks;
+        if (!p.ReadOccupancy(read, write, filled)) {
+            p.Fault();
+            return;
+        }
+        p.Notify(filled);
+        if (p.counters.admitted_blocks <= 3 || p.counters.ticks % 400 == 0) {
+            LOG_INFO(Service_Audio, "sysmix input {}: captured={} nonzero={} filled={}", p.id,
+                     p.counters.accepted_frames, p.counters.nonzero_frames, filled);
+        }
+        return;
+    }
     const u32 taken = std::min(filled, BlockFrames);
     // A short block is padded with silence. That is right for a real underrun, but while the host
     // still has audio to play the guest is only a little behind this tick, and padding would cut a
@@ -283,9 +401,9 @@ void SysmixOutput::Pump() {
     auto& memory = p.process->GetMemory();
     if ((first && !memory.ReadBlock(p.buffer + PayloadOffset + u64{read} * p.frame_bytes,
                                     p.input.data(), first * p.frame_bytes)) ||
-        (second && !memory.ReadBlock(p.buffer + PayloadOffset,
-                                     p.input.data() + first * p.frame_bytes,
-                                     second * p.frame_bytes))) {
+        (second &&
+         !memory.ReadBlock(p.buffer + PayloadOffset, p.input.data() + first * p.frame_bytes,
+                           second * p.frame_bytes))) {
         p.Fault();
         return;
     }
@@ -305,7 +423,8 @@ void SysmixOutput::Pump() {
                 std::memcpy(&value, p.input.data() + index * sizeof(value), sizeof(value));
             }
             if (std::isfinite(value)) {
-                const auto sample = static_cast<s32>(std::clamp(value * p.gain, -1.0f, 1.0f) * 32768.0f);
+                const auto sample =
+                    static_cast<s32>(std::clamp(value * p.gain, -1.0f, 1.0f) * 32768.0f);
                 p.output[index] = static_cast<s16>(std::clamp(sample, -32768, 32767));
                 audible |= p.output[index] != 0;
             }

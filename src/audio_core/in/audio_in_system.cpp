@@ -37,16 +37,17 @@ size_t System::GetSessionId() const {
     return session_id;
 }
 
-std::string_view System::GetDefaultDeviceName() const {
+std::string_view System::GetDefaultDeviceName() {
     return "BuiltInHeadset";
 }
 
-std::string_view System::GetDefaultUacDeviceName() const {
+std::string_view System::GetDefaultUacDeviceName() {
     return "Uac";
 }
 
+/// Validate the guest device name and sample rate without allocating a capture session.
 Result System::IsConfigValid(const std::string_view device_name,
-                             const AudioInParameter& in_params) const {
+                             const AudioInParameter& in_params) {
     if ((device_name.size() > 0) &&
         (device_name != GetDefaultDeviceName() && device_name != GetDefaultUacDeviceName())) {
         return Service::Audio::ResultNotFound;
@@ -82,15 +83,26 @@ Result System::Initialize(std::string device_name, const AudioInParameter& in_pa
     return ResultSuccess;
 }
 
+/// Initialize and start capture, retaining the stopped state if either step fails.
 Result System::Start() {
     if (state != State::Stopped) {
         return Service::Audio::ResultOperationFailed;
     }
 
-    session->Initialize(name, sample_format, channel_count, session_id, handle,
-                        applet_resource_user_id, Sink::StreamType::In);
+    if (!handle) {
+        return Service::Audio::ResultInvalidHandle;
+    }
+    const auto result = session->Initialize(name, sample_format, channel_count, session_id, handle,
+                                            applet_resource_user_id, Sink::StreamType::In);
+    if (result.IsError()) {
+        return result;
+    }
     session->SetVolume(volume);
-    session->Start();
+    const auto start_result = session->Start();
+    if (start_result.IsError()) {
+        session->Finalize();
+        return start_result;
+    }
     state = State::Started;
 
     boost::container::static_vector<AudioBuffer, BufferCount> buffers_to_flush{};
