@@ -839,6 +839,8 @@ void VisitFpModifiers(Info& info, IR::Inst& inst) {
     case IR::Opcode::FPAdd32:
     case IR::Opcode::FPFma32:
     case IR::Opcode::FPMul32:
+    case IR::Opcode::FPMin32:
+    case IR::Opcode::FPMax32:
     case IR::Opcode::FPRoundEven32:
     case IR::Opcode::FPFloor32:
     case IR::Opcode::FPCeil32:
