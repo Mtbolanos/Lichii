@@ -20,9 +20,13 @@ EDEN_NX2_PRELOAD_ALL_PIPELINES=1
 # 90-220 MB/s of buffers CPU never touches, causing heavy mutex contention and dropping FPS by ~38-63%.
 #EDEN_NX2_BUFFER_DOWNLOADS=1
 
-# Paces frame submission 2 frames ahead. Reduces frametime spikes, but adds ~1-2 frames of input latency.
-# Enable only if frame pacing stability is preferred over responsive controls.
-#EDEN_NX2_FRAMES_AHEAD=2
+# Which fence the game waits for when it presents. 1 = the previous frame's: the game prepares the
+# next frame while the GPU finishes this one, and waits for this one too while the GPU is behind.
+# 0 = this frame's: no overlap. Any value other than 1 means 0, so =2 does not run two frames ahead.
+# Unset: per title. Ocarina of Time uses 1, Donkey Kong Bananza 0, and other titles wait for this
+# frame unless a GPU channel waits on a semaphore the game releases after the present.
+# Ocarina of Time with =0 (or =2): 30.9 fps against 38.9 unset, same spot and settings.
+#EDEN_NX2_FRAMES_AHEAD=1
 
 # --- Workarounds / Debug ---
 # Terrain/indirect drawing fix for Donkey Kong Bananza: enabled by default. Set to 0 only to leave to GPU.
