@@ -469,6 +469,9 @@ private:
     /// Unregister image from the page table
     void UnregisterImage(ImageId image);
 
+    /// Logs where UnregisterImage's image was registered when one of its pages is missing.
+    void ReportMissingImagePage(ImageId image_id, const Image& image, u64 page);
+
     /// Track CPU reads and writes for image
     void TrackImage(ImageBase& image, ImageId image_id);
 

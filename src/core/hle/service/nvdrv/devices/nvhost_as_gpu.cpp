@@ -399,6 +399,8 @@ NvResult nvhost_as_gpu::AllocAsEx(IoctlAllocAsEx& params) {
     gmmu = std::make_unique<Tegra::MemoryManager>(system, max_big_page_bits, vm.va_range_split, vm.big_page_size_bits, VM::PAGE_SIZE_BITS);
     system.GPU().InitAddressSpace(*gmmu);
     vm.initialised = true;
+    LOG_INFO(Service_NVDRV, "GPU address space {} created: VA [{:#x}, {:#x}), big pages from {:#x}",
+             gmmu->GetID(), vm.va_range_start, vm.va_range_end, vm.va_range_split);
 
     return NvResult::Success;
 }
@@ -674,6 +676,8 @@ NvResult nvhost_as_gpu::BindChannel(IoctlBindChannel& params) {
 
     auto gpu_channel_device = module.GetDevice<nvhost_gpu>(params.fd);
     gpu_channel_device->channel_state->memory_manager = gmmu.get();
+    LOG_INFO(Service_NVDRV, "Channel fd {} bound to GPU address space {}", static_cast<s32>(params.fd),
+             gmmu ? static_cast<s64>(gmmu->GetID()) : s64{-1});
     return NvResult::Success;
 }
 

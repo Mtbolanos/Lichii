@@ -11,6 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <source_location>
 #include <vector>
 #include <boost/container/small_vector.hpp>
 
@@ -117,7 +118,8 @@ public:
      * in the Host Memory counterpart. Note: This functions cause Host GPU Memory
      * Flushes and Invalidations, respectively to each operation.
      */
-    void ReadBlock(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which = VideoCommon::CacheType::All) const;
+    void ReadBlock(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which = VideoCommon::CacheType::All,
+                   std::source_location caller = std::source_location::current()) const;
     void WriteBlock(GPUVAddr gpu_dest_addr, const void* src_buffer, std::size_t size, VideoCommon::CacheType which = VideoCommon::CacheType::All);
     void CopyBlock(GPUVAddr gpu_dest_addr, GPUVAddr gpu_src_addr, std::size_t size, VideoCommon::CacheType which = VideoCommon::CacheType::All);
 
@@ -131,12 +133,14 @@ public:
      * WriteBlockUnsafe instead of WriteBlock since it shouldn't invalidate the texture
      * being flushed.
      */
-    void ReadBlockUnsafe(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size) const;
+    void ReadBlockUnsafe(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size,
+                         std::source_location caller = std::source_location::current()) const;
     void WriteBlockUnsafe(GPUVAddr gpu_dest_addr, const void* src_buffer, std::size_t size);
 
     /// Reads `count` consecutive words as Read<u32> would (Switch 2 syncpoint shim included),
     /// without a translation per word.
-    void ReadWordsUnsafe(GPUVAddr gpu_src_addr, u32* dest, std::size_t count) const;
+    void ReadWordsUnsafe(GPUVAddr gpu_src_addr, u32* dest, std::size_t count,
+                         std::source_location caller = std::source_location::current()) const;
     void WriteBlockCached(GPUVAddr gpu_dest_addr, const void* src_buffer, std::size_t size);
     /// WriteBlockCached of `count` consecutive words within one device page, in a single write.
     void WriteWordsCached(GPUVAddr gpu_dest_addr, const u32* words, std::size_t count);
@@ -229,7 +233,8 @@ private:
     void UpdateContinuousRuns(GPUVAddr gpu_addr, size_t size);
     const MappingSnapshot& CurrentSnapshot() const;
 
-    void ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which, bool unsafe) const;
+    void ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which, bool unsafe,
+                       std::source_location caller) const;
     void WriteBlockImpl(GPUVAddr gpu_dest_addr, const void* src_buffer, std::size_t size, VideoCommon::CacheType which, bool unsafe);
 
     [[nodiscard]] std::size_t PageEntryIndex(GPUVAddr gpu_addr, bool is_big_page) const {

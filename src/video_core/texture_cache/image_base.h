@@ -118,7 +118,9 @@ struct ImageBase {
     u64 scale_tick = 0;
     bool has_scaled = false;
 
+    /// The channel and GPU address space whose page table RegisterImage put the image in.
     size_t channel = 0;
+    size_t address_space = 0;
 
     ImageFlagBits flags = ImageFlagBits::CpuModified;
 

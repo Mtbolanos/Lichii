@@ -1,9 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <algorithm>
 #include <exception>
 #include <limits>
 #include <random>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
@@ -226,4 +228,34 @@ TEST_CASE("MaxContinuousRange from the mapping runs matches the page walk", "[me
         check(address_space_end - back, back);
         check(address_space_end - back, back + 1);
     }
+}
+
+TEST_CASE("Reads of GPU pages over unmapped device memory return zeros", "[memory_manager]") {
+    ScopedSystemTestContext context;
+    Core::System system;
+    Core::DeviceMemory physical;
+    Tegra::MaxwellDeviceMemoryManager device_memory{physical};
+    NullRasterizer rasterizer;
+    constexpr u64 big_page_bits = 16;
+    constexpr u64 big_page = 1ULL << big_page_bits;
+    Tegra::MemoryManager memory{system, device_memory, 32, 1ULL << 31, big_page_bits};
+    memory.BindRasterizer(&rasterizer);
+
+    // Device addresses nothing backs, like a Switch 2 sparse block nobody wrote yet.
+    constexpr GPUVAddr window = 0x4000'0000;
+    memory.Map(window, 0x1000'0000, 3 * big_page, Tegra::PTEKind::PITCH, true);
+    memory.Map(window + 3 * big_page, 0x2000'0000, 2 * 0x1000, Tegra::PTEKind::PITCH, false);
+
+    const size_t size = 3 * big_page + 2 * 0x1000 - 0x40;
+    std::vector<u8> bytes(size, 0xcd);
+    memory.ReadBlockUnsafe(window + 0x40, bytes.data(), size);
+    REQUIRE(std::ranges::all_of(bytes, [](u8 value) { return value == 0; }));
+
+    std::vector<u32> words(0x400, 0xcdcdcdcd);
+    memory.ReadWordsUnsafe(window + big_page - 0x800, words.data(), words.size());
+    REQUIRE(std::ranges::all_of(words, [](u32 value) { return value == 0; }));
+
+    std::ranges::fill(bytes, u8{0xcd});
+    memory.ReadBlock(window, bytes.data(), size);
+    REQUIRE(std::ranges::all_of(bytes, [](u8 value) { return value == 0; }));
 }

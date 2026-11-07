@@ -522,7 +522,8 @@ inline void MemoryManager::MemoryOperation(GPUVAddr gpu_src_addr, std::size_t si
     }
 }
 
-void MemoryManager::ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, [[maybe_unused]] VideoCommon::CacheType which, bool unsafe) const {
+void MemoryManager::ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, [[maybe_unused]] VideoCommon::CacheType which, bool unsafe,
+                                  std::source_location caller) const {
     if (!IsWithinGPUAddressRange(gpu_src_addr) || size > address_space_size - gpu_src_addr) {
         std::memset(dest_buffer, 0, size);
         return;
@@ -556,7 +557,7 @@ void MemoryManager::ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std:
         if (physical != nullptr) [[likely]] {
             std::memcpy(dest_buffer, physical, copy_amount);
         } else {
-            memory.ReadBlockUnsafe(dev_addr_base, dest_buffer, copy_amount);
+            memory.ReadBlockUnsafe(dev_addr_base, dest_buffer, copy_amount, caller);
         }
         dest_buffer = static_cast<u8*>(dest_buffer) + copy_amount;
     };
@@ -567,11 +568,13 @@ void MemoryManager::ReadBlockImpl(GPUVAddr gpu_src_addr, void* dest_buffer, std:
     MemoryOperation(gpu_src_addr, size, true, mapped_big, set_to_zero, read_short_pages);
 }
 
-void MemoryManager::ReadBlock(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which) const {
-    ReadBlockImpl(gpu_src_addr, dest_buffer, size, which, false);
+void MemoryManager::ReadBlock(GPUVAddr gpu_src_addr, void* dest_buffer, std::size_t size, VideoCommon::CacheType which,
+                              std::source_location caller) const {
+    ReadBlockImpl(gpu_src_addr, dest_buffer, size, which, false, caller);
 }
 
-void MemoryManager::ReadBlockUnsafe(GPUVAddr gpu_src_addr, void* dest_buffer, const std::size_t size) const {
+void MemoryManager::ReadBlockUnsafe(GPUVAddr gpu_src_addr, void* dest_buffer, const std::size_t size,
+                                    std::source_location caller) const {
     // Small reads within one 4 KiB page (texture and sampler descriptors, several per draw): one
     // translation and a copy, as Read<T> does, instead of the page walk (~3% of the GPU thread
     // in title 1). Anything else, unmapped or sparse pages included, takes the full path.
@@ -582,10 +585,11 @@ void MemoryManager::ReadBlockUnsafe(GPUVAddr gpu_src_addr, void* dest_buffer, co
             return;
         }
     }
-    ReadBlockImpl(gpu_src_addr, dest_buffer, size, VideoCommon::CacheType::None, true);
+    ReadBlockImpl(gpu_src_addr, dest_buffer, size, VideoCommon::CacheType::None, true, caller);
 }
 
-void MemoryManager::ReadWordsUnsafe(GPUVAddr gpu_src_addr, u32* dest, std::size_t count) const {
+void MemoryManager::ReadWordsUnsafe(GPUVAddr gpu_src_addr, u32* dest, std::size_t count,
+                                    std::source_location caller) const {
     const std::size_t size = count * sizeof(u32);
     const auto shim = native_syncpoint_shim.load(std::memory_order_acquire);
     if (shim && gpu_src_addr < shim + NumShimSyncpoints * sizeof(u32) && gpu_src_addr + size > shim) {
@@ -594,7 +598,7 @@ void MemoryManager::ReadWordsUnsafe(GPUVAddr gpu_src_addr, u32* dest, std::size_
         }
         return;
     }
-    ReadBlockUnsafe(gpu_src_addr, dest, size);
+    ReadBlockUnsafe(gpu_src_addr, dest, size, caller);
 }
 
 void MemoryManager::WriteBlockImpl(GPUVAddr gpu_dest_addr, const void* src_buffer, std::size_t size, [[maybe_unused]] VideoCommon::CacheType which, bool unsafe) {

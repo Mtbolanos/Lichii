@@ -12,6 +12,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <source_location>
 #include <vector>
 #include <span>
 
@@ -129,8 +130,10 @@ public:
         return translation_generation.load(std::memory_order_acquire);
     }
 
-    void ReadBlock(DAddr address, void* dest_pointer, size_t size);
-    void ReadBlockUnsafe(DAddr address, void* dest_pointer, size_t size);
+    void ReadBlock(DAddr address, void* dest_pointer, size_t size,
+                   std::source_location caller = std::source_location::current());
+    void ReadBlockUnsafe(DAddr address, void* dest_pointer, size_t size,
+                         std::source_location caller = std::source_location::current());
     void WriteBlock(DAddr address, const void* src_pointer, size_t size);
     void WriteBlockUnsafe(DAddr address, const void* src_pointer, size_t size);
 
