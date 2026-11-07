@@ -363,6 +363,7 @@
         "min_version": "1.2",
         "options": [
             "ZLIB_BUILD_SHARED OFF",
+            "ZLIB_BUILD_TESTING OFF",
             "ZLIB_INSTALL OFF"
         ],
         "package": "ZLIB",

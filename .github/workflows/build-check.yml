@@ -101,3 +101,111 @@ jobs:
         run: |
           python3 tools/nx2/test_thread_worker_wake.py
           python3 -I tools/nx2/thread_worker_wake.py --cxx g++-13
+
+      - name: Test Linux switch discovery
+        run: CXX=g++-13 python3 tools/nx2/test_switches.py
+
+  windows-clang-cl:
+    name: Windows clang-cl production build and tests
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      SCCACHE_DIR: ${{ github.workspace }}/.sccache
+      SCCACHE_CACHE_SIZE: 3G
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
+
+      # The release job's compiler; ThinLTO is left to the release build to keep this job short.
+      - name: Install LLVM
+        shell: pwsh
+        run: ./tools/windows/install-llvm.ps1
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@b344308e4483fc892e0d27b3cd1b173ebdd95f06
+        with:
+          version: "6.8.3"
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: qtcharts
+          cache: true
+
+      - name: Install sccache
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP 'sccache.zip'
+          Invoke-WebRequest -OutFile $zip https://github.com/mozilla/sccache/releases/download/v0.19.0/sccache-v0.19.0-x86_64-pc-windows-msvc.zip
+          Expand-Archive $zip -DestinationPath (Join-Path $env:RUNNER_TEMP 'sccache')
+          $bin = (Get-ChildItem -Recurse -Filter sccache.exe (Join-Path $env:RUNNER_TEMP 'sccache')).DirectoryName
+          $bin | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: Install Vulkan SDK
+        shell: pwsh
+        run: ./tools/windows/install-vulkan-sdk.ps1
+
+      # Restore and save separately so a test failure still keeps the compiled objects.
+      - name: Restore dependencies and compiler objects
+        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: |
+            .cache/cpm
+            .sccache
+          key: clang-cl-qt683-${{ runner.os }}-${{ hashFiles('cpmfile.json') }}-${{ github.sha }}
+          restore-keys: |
+            clang-cl-qt683-${{ runner.os }}-${{ hashFiles('cpmfile.json') }}-
+
+      - name: Configure production and tests
+        run: >-
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=Release
+          "-DCMAKE_C_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
+          "-DCMAKE_CXX_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
+          "-DCMAKE_LINKER=$LLVM_ROOT/bin/lld-link.exe"
+          "-DCMAKE_AR=$LLVM_ROOT/bin/llvm-lib.exe"
+          "-DCMAKE_C_FLAGS=-DWIN32 -D_WINDOWS -DNOMINMAX"
+          "-DCMAKE_CXX_FLAGS=-DWIN32 -D_WINDOWS -EHsc -DNOMINMAX"
+          -DCMAKE_C_COMPILER_LAUNCHER=sccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          -DENABLE_WERROR=ON
+          -DBUILD_TESTING=ON
+          -DYUZU_TESTS=ON
+          -DENABLE_QT=ON
+          -DYUZU_CMD=ON
+          -DYUZU_ROOM=OFF
+          -DYUZU_ROOM_STANDALONE=OFF
+          -DYUZU_USE_BUNDLED_QT=OFF
+          -DYUZU_USE_BUNDLED_SDL3=ON
+          -DENABLE_UPDATE_CHECKER=ON
+          -DUSE_DISCORD_PRESENCE=OFF
+
+      - name: Build production and tests
+        run: |
+          sccache --zero-stats
+          cmake --build build --parallel
+          sccache --show-stats
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure --no-tests=error
+
+      # sccache keeps its cache files open; stop it before saving them.
+      - name: Stop sccache
+        if: always()
+        run: sccache --stop-server || true
+
+      - name: Save dependencies and compiler objects
+        if: always()
+        uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25
+        with:
+          path: |
+            .cache/cpm
+            .sccache
+          key: clang-cl-qt683-${{ runner.os }}-${{ hashFiles('cpmfile.json') }}-${{ github.sha }}

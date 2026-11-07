@@ -27,7 +27,10 @@ TEST_CASE("Capture uses the input sink gain instead of rereading configuration",
     SCOPE_EXIT {
         Settings::values.microphone_volume.SetValue(previous_gain);
     };
-    SysmixTests::Stream stream{context.system, AudioCore::Sink::StreamType::In, 2, true};
+    // SinkStream holds megabytes of inline queues, more than the 1 MiB Windows stack.
+    auto owned_stream = std::make_unique<SysmixTests::Stream>(
+        context.system, AudioCore::Sink::StreamType::In, 2, true);
+    auto& stream = *owned_stream;
     stream.SetSystemChannels(2);
     stream.SetDeviceVolume(0.5f);
     Settings::values.microphone_volume.SetValue(200);

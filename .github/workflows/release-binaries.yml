@@ -34,10 +34,6 @@ permissions:
 # eglantine.profdata; bump it when a refreshed profile needs a newer LLVM.
 env:
   PGO_LLVM_VERSION: "23"
-  # LLVM release the standard Windows build compiles with (clang-cl, lld-link and ThinLTO). The
-  # installer is pinned by checksum so a runner image update never changes the release compiler.
-  WINDOWS_LLVM_VERSION: "22.1.8"
-  WINDOWS_LLVM_SHA256: "16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c"
 
 # A running build is never cancelled: it finishes and publishes. A push meanwhile queues one build;
 # a later push replaces it, so the newest commit builds as soon as the running one is done.
@@ -199,20 +195,7 @@ jobs:
       - name: Install LLVM on Windows
         if: startsWith(matrix.platform, 'windows')
         shell: pwsh
-        run: |
-          $installer = Join-Path $env:RUNNER_TEMP 'llvm.exe'
-          Invoke-WebRequest -OutFile $installer "https://github.com/llvm/llvm-project/releases/download/llvmorg-$env:WINDOWS_LLVM_VERSION/LLVM-$env:WINDOWS_LLVM_VERSION-win64.exe"
-          if ((Get-FileHash -Algorithm SHA256 $installer).Hash -ne $env:WINDOWS_LLVM_SHA256) {
-            throw 'LLVM installer checksum mismatch'
-          }
-          $root = Join-Path $env:RUNNER_TEMP 'llvm'
-          Start-Process -Wait -FilePath $installer -ArgumentList '/S', "/D=$root"
-          $version = & "$root/bin/clang-cl.exe" --version
-          $version
-          if (-not ($version -match "clang version $([regex]::Escape($env:WINDOWS_LLVM_VERSION))")) {
-            throw "Unexpected clang-cl: $version"
-          }
-          "LLVM_ROOT=$($root.Replace('\', '/'))" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+        run: ./tools/windows/install-llvm.ps1
 
       - name: Install Qt on Windows
         if: startsWith(matrix.platform, 'windows')
