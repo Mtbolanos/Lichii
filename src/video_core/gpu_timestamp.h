@@ -20,19 +20,37 @@ namespace Tegra {
     }
 }
 
+/// The last present's CoreTiming time and the GPU clock latched with it, packed into one word so
+/// both change together: a GPU Clocks change takes effect at the next present, never mid-frame.
+struct AmpereAnchor {
+    u64 bits{};
+
+    [[nodiscard]] static constexpr AmpereAnchor At(u64 present_ns, Settings::GpuClock clock) {
+        return {present_ns << 2 | static_cast<u64>(clock)};
+    }
+    [[nodiscard]] constexpr u64 PresentNs() const {
+        return bits >> 2;
+    }
+    [[nodiscard]] constexpr Settings::GpuClock Clock() const {
+        return static_cast<Settings::GpuClock>(bits & 3);
+    }
+};
+
 /// Switch 2 titles read report timestamps as nanoseconds and calibrate them against CPU time, so
-/// Boost and Overclock shrink only the time since the last present (present_ns): GPU durations
-/// within a frame look shorter, while a timestamp never runs ahead of the CPU clock and trails it
-/// by less than the time since that present.
+/// Boost and Overclock shrink only the time since the last present: GPU durations within a frame
+/// look shorter, while a timestamp never runs ahead of the CPU clock and trails it by less than
+/// the time since that present. Before the first present the clock is exact. Maxwell scales its
+/// ticks by the current clock.
 template <typename Timing>
 [[nodiscard]] u64 ReadGpuTimestamp(const Timing& timing, bool ampere, Settings::GpuClock clock,
-                                   u64 present_ns) {
+                                   AmpereAnchor anchor) {
     if (ampere) {
         const u64 now = static_cast<u64>(timing.GetGlobalTimeNs().count());
-        if (now <= present_ns) {
+        const u64 present_ns = anchor.PresentNs();
+        if (present_ns == 0 || now <= present_ns) {
             return now;
         }
-        return present_ns + (now - present_ns) / AmpereClockDivisor(clock);
+        return present_ns + (now - present_ns) / AmpereClockDivisor(anchor.Clock());
     }
     const u64 ticks = timing.GetGPUTicks();
     switch (clock) {
