@@ -23,6 +23,7 @@ on:
       - "tools/**"
       - ".patch/**"
       - "cpmfile.json"
+      - "*.profdata"
       - ".github/workflows/release-binaries.yml"
 
 permissions:
@@ -85,11 +86,12 @@ jobs:
         include:
           - platform: linux-x86_64
             runner: ubuntu-24.04
-          # The two -pgo builds are the same programs compiled by clang against the repo's
+          # The Linux -pgo builds are the same programs compiled by clang against the repo's
           # eglantine.profdata. Eden's profile (Eden-CI/PGO) comes from Switch 1 games: with it Mario
           # Kart World ran at about half the speed of the normal build, with eglantine.profdata at
-          # about the same speed. Windows -pgo uses MSYS2's MinGW clang like Eden does. The standard
-          # Windows build is clang-cl with ThinLTO; MSVC still builds for development.
+          # about the same speed. Both Windows builds are clang-cl with ThinLTO; windows-x86_64-pgo
+          # adds lichii-windows.profdata, an MSVC-ABI profile trained on Ocarina of Time (see
+          # docs/CI.md). MSVC still builds for development.
           - platform: linux-x86_64-pgo
             runner: ubuntu-24.04
             pgo: true
@@ -98,7 +100,7 @@ jobs:
           - platform: windows-x86_64-pgo
             runner: windows-2022
             pgo: true
-            mingw: true
+            profile: lichii-windows.profdata
           - platform: linux-aarch64
             runner: ubuntu-24.04-arm
           - platform: linux-aarch64-pgo
@@ -180,22 +182,22 @@ jobs:
             "clang-$PGO_LLVM_VERSION" "lld-$PGO_LLVM_VERSION"
           "clang-$PGO_LLVM_VERSION" --version
 
-      # The profile is in the source tree, where both the Linux and MSYS2 configure steps read it.
+      # The profiles are in the source tree, where the Linux and Windows configure steps read them.
       - name: Check PGO profile
         if: matrix.pgo
         shell: bash
         run: |
           set -euo pipefail
-          test -s eglantine.profdata
+          test -s "${{ matrix.profile || 'eglantine.profdata' }}"
 
       - name: Set up MSVC
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         uses: ilammy/msvc-dev-cmd@v1
 
       # clang-cl compiles against the MSVC headers, libraries and SDK that the previous step put
       # on PATH; only the compiler, linker and archiver come from this LLVM.
       - name: Install LLVM on Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
           $installer = Join-Path $env:RUNNER_TEMP 'llvm.exe'
@@ -213,7 +215,7 @@ jobs:
           "LLVM_ROOT=$($root.Replace('\', '/'))" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
 
       - name: Install Qt on Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
@@ -227,7 +229,7 @@ jobs:
       # other jobs use ccache, which CMake enables through USE_CCACHE
       # (externals/cmake-modules/UseCcache.cmake).
       - name: Install sccache on Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
           $zip = Join-Path $env:RUNNER_TEMP 'sccache.zip'
@@ -237,33 +239,14 @@ jobs:
           $bin | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
 
       - name: Install Vulkan SDK on Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: ./tools/windows/install-vulkan-sdk.ps1
 
       - name: Verify Vulkan tools on Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: glslangValidator --version
-
-      # Eden builds its Windows PGO binaries with MSYS2's clang toolchain, so we do the same. The
-      # package list is docs/Deps.md (MSYS2) plus what the bundled FFmpeg needs to compile.
-      - name: Set up MSYS2
-        if: matrix.mingw
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          cache: true
-          install: >-
-            git make autoconf libtool automake-wrapper patch jq pactoys ninja
-          pacboy: >-
-            toolchain:p clang:p lld:p cmake:p python-pip:p
-            qt6-base:p qt6-charts:p qt6-tools:p qt6-translations:p qt6-svg:p
-            openssl:p boost:p fmt:p lz4:p nlohmann-json:p zlib:p zstd:p libiconv:p
-            vulkan-memory-allocator:p vulkan-devel:p glslang:p enet:p opus:p
-            libusb:p unordered_dense:p jbigkit:p xz:p libdeflate:p bzip2:p
-            lerc:p graphite2:p libwebp:p libtiff:p brotli:p ccache:p
 
       - name: Restore CPM downloads
         id: cpm-cache
@@ -282,10 +265,12 @@ jobs:
           path: |
             .ccache
             .sccache
-          key: objects-${{ matrix.platform }}-v2-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          # The profile's hash is part of the key, so objects built against an older profile are
+          # never restored.
+          key: objects-${{ matrix.platform }}${{ matrix.profile && format('-{0}', hashFiles(matrix.profile)) || '' }}-v2-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            objects-${{ matrix.platform }}-v2-${{ github.sha }}-
-            objects-${{ matrix.platform }}-v2-
+            objects-${{ matrix.platform }}${{ matrix.profile && format('-{0}', hashFiles(matrix.profile)) || '' }}-v2-${{ github.sha }}-
+            objects-${{ matrix.platform }}${{ matrix.profile && format('-{0}', hashFiles(matrix.profile)) || '' }}-v2-
 
       - name: Configure Linux
         if: startsWith(matrix.platform, 'linux')
@@ -324,31 +309,41 @@ jobs:
           fi
           cmake -S . -B build/release -G Ninja "${flags[@]}"
 
+      # A profile older than the source only warns: functions changed since training lose their
+      # profile data and are optimized as in the ThinLTO build. clang-cl 22 reads LLVM's indexed
+      # profile format 13, so the profile must come from the LLVM that tools/windows installs.
       - name: Configure Windows
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: bash
-        run: >-
-          cmake -S . -B build/release -G Ninja
-          -DCMAKE_BUILD_TYPE=Release
-          -DBUILD_TESTING=OFF
-          -DYUZU_TESTS=OFF
-          -DYUZU_CMD=ON
-          -DYUZU_ROOM=OFF
-          -DYUZU_ROOM_STANDALONE=OFF
-          -DYUZU_USE_BUNDLED_QT=OFF
-          -DYUZU_USE_BUNDLED_SDL3=ON
-          -DENABLE_UPDATE_CHECKER=ON
-          -DLICHII_BUILD_TAG=build-${{ github.run_number }}
-          -DLICHII_BUILD_PLATFORM=${{ matrix.platform }}
-          -DUSE_DISCORD_PRESENCE=OFF
-          -DCMAKE_C_COMPILER_LAUNCHER=sccache
-          -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
-          "-DCMAKE_C_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
-          "-DCMAKE_CXX_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
-          "-DCMAKE_LINKER=$LLVM_ROOT/bin/lld-link.exe"
-          "-DCMAKE_AR=$LLVM_ROOT/bin/llvm-lib.exe"
-          "-DCMAKE_C_FLAGS=-DWIN32 -D_WINDOWS -DNOMINMAX -flto=thin"
-          "-DCMAKE_CXX_FLAGS=-DWIN32 -D_WINDOWS -EHsc -DNOMINMAX -flto=thin"
+        run: |
+          set -euo pipefail
+          flags="-DWIN32 -D_WINDOWS -DNOMINMAX -flto=thin"
+          if [ -n '${{ matrix.profile }}' ]; then
+            flags+=" -fprofile-use=$(cygpath -m "$PWD/${{ matrix.profile }}")"
+            flags+=" -Wno-error=profile-instr-out-of-date -Wno-error=profile-instr-unprofiled"
+            flags+=" -Wno-error=backend-plugin"
+          fi
+          cmake -S . -B build/release -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=OFF \
+            -DYUZU_TESTS=OFF \
+            -DYUZU_CMD=ON \
+            -DYUZU_ROOM=OFF \
+            -DYUZU_ROOM_STANDALONE=OFF \
+            -DYUZU_USE_BUNDLED_QT=OFF \
+            -DYUZU_USE_BUNDLED_SDL3=ON \
+            -DENABLE_UPDATE_CHECKER=ON \
+            -DLICHII_BUILD_TAG=build-${{ github.run_number }} \
+            -DLICHII_BUILD_PLATFORM=${{ matrix.platform }} \
+            -DUSE_DISCORD_PRESENCE=OFF \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache \
+            "-DCMAKE_C_COMPILER=$LLVM_ROOT/bin/clang-cl.exe" \
+            "-DCMAKE_CXX_COMPILER=$LLVM_ROOT/bin/clang-cl.exe" \
+            "-DCMAKE_LINKER=$LLVM_ROOT/bin/lld-link.exe" \
+            "-DCMAKE_AR=$LLVM_ROOT/bin/llvm-lib.exe" \
+            "-DCMAKE_C_FLAGS=$flags" \
+            "-DCMAKE_CXX_FLAGS=-EHsc $flags"
 
       - name: Configure macOS
         if: startsWith(matrix.platform, 'macos')
@@ -373,38 +368,6 @@ jobs:
             -DUSE_DISCORD_PRESENCE=OFF \
             -DUSE_CCACHE=ON
 
-      # MinGW build: system Qt and libraries from MSYS2, clang plus the repo's PGO profile. The profile
-      # path is converted to its Windows form because clang runs with the MSYS mount underneath.
-      - name: Configure MinGW PGO
-        if: matrix.mingw
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          profile="-fprofile-use=$(cygpath -m "$PWD/eglantine.profdata") -Wno-backend-plugin \
-            -Wno-profile-instr-unprofiled -Wno-profile-instr-out-of-date"
-          cmake -S . -B build/release -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_TESTING=OFF \
-            -DYUZU_TESTS=OFF \
-            -DYUZU_CMD=ON \
-            -DYUZU_ROOM=OFF \
-            -DYUZU_ROOM_STANDALONE=OFF \
-            -DYUZU_USE_BUNDLED_QT=OFF \
-            -DYUZU_USE_BUNDLED_SDL3=ON \
-            -DYUZU_USE_BUNDLED_FFMPEG=ON \
-            -DVulkanHeaders_FORCE_BUNDLED=ON \
-            -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
-            -DENABLE_UPDATE_CHECKER=ON \
-            -DLICHII_BUILD_TAG=build-${{ github.run_number }} \
-            -DLICHII_BUILD_PLATFORM=${{ matrix.platform }} \
-            -DUSE_DISCORD_PRESENCE=OFF \
-            -DUSE_CCACHE=ON \
-            -DCMAKE_C_COMPILER=clang \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld \
-            "-DCMAKE_C_FLAGS=$profile" \
-            "-DCMAKE_CXX_FLAGS=$profile"
-
       - name: Save CPM downloads
         if: steps.cpm-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
@@ -413,23 +376,14 @@ jobs:
           key: ${{ steps.cpm-cache.outputs.cache-primary-key }}
 
       - name: Build
-        if: ${{ ! matrix.mingw }}
         shell: bash
         run: |
           if command -v ccache > /dev/null; then ccache --zero-stats; else sccache --zero-stats; fi
           cmake --build build/release --target yuzu yuzu-cmd --parallel
           if command -v ccache > /dev/null; then ccache --show-stats; else sccache --show-stats; fi
 
-      - name: Build MinGW PGO
-        if: matrix.mingw
-        shell: msys2 {0}
-        run: |
-          ccache --zero-stats
-          cmake --build build/release --target yuzu yuzu-cmd --parallel
-          ccache --show-stats
-
       - name: Stop sccache on Windows
-        if: always() && matrix.platform == 'windows-x86_64' && steps.compiler-cache.outcome == 'success'
+        if: always() && startsWith(matrix.platform, 'windows') && steps.compiler-cache.outcome == 'success'
         shell: pwsh
         run: sccache --stop-server
 
@@ -499,7 +453,7 @@ jobs:
           ls -la "$LDAI_OUTPUT"
 
       - name: Package Windows binary
-        if: matrix.platform == 'windows-x86_64'
+        if: startsWith(matrix.platform, 'windows')
         shell: pwsh
         run: |
           foreach ($exe in 'lichii.exe', 'eden-cli.exe') {
@@ -508,42 +462,6 @@ jobs:
             }
           }
           windeployqt --release --no-translations build/release/bin/lichii.exe
-
-      # A dynamic MinGW build is not portable on its own: windeployqt6 brings the Qt libraries and
-      # plugins, then every non-system DLL the binaries and those plugins pull in gets copied next to
-      # them (docs/Caveats.md#msys2).
-      - name: Package MinGW binary
-        if: matrix.mingw
-        shell: msys2 {0}
-        run: |
-          set -euo pipefail
-          export PATH="/ucrt64/bin:$PATH"
-          cd build/release/bin
-          test -f lichii.exe
-          test -f eden-cli.exe
-          windeployqt6 --no-translations --no-compiler-runtime --no-opengl-sw \
-            --no-system-dxc-compiler --no-system-d3d-compiler lichii.exe
-          deps() {
-            objdump -p "$1" | awk '/DLL Name:/ {print $3}' | while read -r dll; do
-              [ -z "$dll" ] && continue
-              source=$(command -v "$dll" 2>/dev/null || true)
-              [ -z "$source" ] && continue
-              # The system DLLs ship with Windows, so they never need bundling.
-              case "$source" in
-                *System32* | *SysWOW64*) continue ;;
-              esac
-              if [ ! -f "$dll" ]; then
-                cp "$source" "$dll"
-                deps "$source"
-              fi
-            done
-          }
-          for exe in lichii.exe eden-cli.exe; do
-            deps "$exe"
-          done
-          find . -name '*.dll' | while read -r dll; do
-            deps "$dll"
-          done
 
       # A self-contained app bundle: macdeployqt copies Qt and every other Homebrew library both
       # programs load into the bundle, then the leftover Homebrew search paths are removed so a
@@ -607,16 +525,7 @@ jobs:
       # The artifact is the bin folder itself: GitHub zips artifacts on download, and uploading a
       # zip gave a zip inside a zip. The release job zips it once for the release.
       - name: Upload Windows binary
-        if: matrix.platform == 'windows-x86_64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: lichii-${{ matrix.platform }}-${{ github.sha }}
-          path: build/release/bin/
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Upload MinGW binary
-        if: matrix.mingw
+        if: startsWith(matrix.platform, 'windows')
         uses: actions/upload-artifact@v7
         with:
           name: lichii-${{ matrix.platform }}-${{ github.sha }}
@@ -731,7 +640,7 @@ jobs:
           }
           pgo_note=""
           if [[ -n "$has_pgo" ]]; then
-            pgo_note="The PGO builds are the same programs compiled with profile-guided optimization (clang plus Eglantine's profile); prefer them when your CPU supports it."
+            pgo_note="The PGO builds are the same programs compiled with profile-guided optimization. Linux uses clang with Eglantine's profile; Windows uses clang-cl and ThinLTO with a profile trained in Lichii on Ocarina of Time, so other games gain less. Prefer them when your CPU supports it."
           fi
 
           cat > notes.md <<EOF
@@ -751,8 +660,7 @@ jobs:
           Windows packages are in-place zip files: extract and run \`lichii.exe\`, or \`eden-cli.exe\` from a terminal.
 
           $({
-            row "amd64 / x86_64 (clang-cl)" "$(link zip lichii-windows-x86_64.zip)" "" "Built with clang-cl and ThinLTO"
-            row "amd64 / x86_64 (MinGW)" "" "$(link "PGO zip" lichii-windows-x86_64-pgo.zip)" "Built with MinGW clang; bundles its own DLLs, no Visual C++ redistributable needed"
+            row "amd64 / x86_64" "$(link zip lichii-windows-x86_64.zip)" "$(link "PGO zip" lichii-windows-x86_64-pgo.zip)" "Both built with clang-cl and ThinLTO; the PGO zip adds a profile trained on Ocarina of Time"
           } | table)
 
           ## macOS
