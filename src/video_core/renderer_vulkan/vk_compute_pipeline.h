@@ -85,6 +85,11 @@ public:
     /// Advances the frame window of EDEN_NX2_UPSCALER_TRACE
     static void TickUpscalerTrace();
 
+    /// Whether no build of this pipeline is left queued on a worker thread, which holds it
+    [[nodiscard]] bool IsBuildTaskDone() const noexcept {
+        return build_task_done.load(std::memory_order::acquire);
+    }
+
 private:
     /// Builds the pipeline once, on whichever thread gets here first.
     void RunBuild();
@@ -113,6 +118,7 @@ private:
 
     std::function<void()> build_task;
     std::atomic_bool build_claimed{false};
+    std::atomic_bool build_task_done{true};
     std::condition_variable build_condvar;
     std::mutex build_mutex;
     std::atomic_bool is_built{false};

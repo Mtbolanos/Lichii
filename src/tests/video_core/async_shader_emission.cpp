@@ -15,6 +15,7 @@
 #include "shader_recompiler/frontend/ir/ir_emitter.h"
 #include "shader_recompiler/frontend/ir/program.h"
 #include "shader_recompiler/frontend/maxwell/translate_program.h"
+#include "shader_recompiler/host_translate_info.h"
 #include "shader_recompiler/object_pool.h"
 #include "video_core/renderer_vulkan/pipeline_build.h"
 #include "video_core/renderer_vulkan/pipeline_shader_emission.h"
@@ -140,7 +141,8 @@ struct GraphicsPrograms {
             {{}, IR::AbstractSyntaxNode::Type::Return},
         };
         VertexEnvironment env;
-        programs[0] = Shader::Maxwell::MergeDualVertexPrograms(vertex_a, vertex_b, env);
+        programs[0] = Shader::Maxwell::MergeDualVertexPrograms(vertex_a, vertex_b, env,
+                                                               Shader::HostTranslateInfo{});
         for (size_t index = 0; index < programs[0].blocks.size(); ++index) {
             programs[0].blocks[index]->SetOrder(index);
         }

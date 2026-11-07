@@ -9,8 +9,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
-#include "shader_recompiler/environment.h"
 #include "shader_recompiler/backend/nvn_storage_descriptor.h"
+#include "shader_recompiler/environment.h"
+#include "shader_recompiler/exception.h"
 #include "shader_recompiler/frontend/ir/ir_emitter.h"
 #include "shader_recompiler/host_translate_info.h"
 #include "shader_recompiler/ir_opt/passes.h"
@@ -53,6 +54,8 @@ struct KernelProgram {
     IR::Program program;
     TestEnvironment env;
     bool int64{true};
+    u32 storage_buffer_limit{};     ///< The stage's storage buffer limit, none when 0
+    u32 set_storage_buffer_limit{}; ///< The descriptor set's storage buffer limit, none when 0
 
     KernelProgram() {
         program.stage = Shader::Stage::Compute;
@@ -64,6 +67,8 @@ struct KernelProgram {
         Shader::HostTranslateInfo host{};
         host.min_ssbo_alignment = 16;
         host.support_int64 = int64;
+        host.max_per_stage_descriptor_storage_buffers = storage_buffer_limit;
+        host.max_descriptor_set_storage_buffers = set_storage_buffer_limit;
         Shader::Optimization::GlobalMemoryToStorageBufferPass(env, program, host);
         std::vector<u32> offsets;
         for (const auto& descriptor : program.info.storage_buffers_descriptors) {
@@ -473,6 +478,124 @@ TEST_CASE("Loaded pointers that compete with a pair do not take the last storage
     CHECK(program.LoadedDescriptors() == 0);
     CHECK(program.Count(IR::Opcode::LoadStorage128) == 1);
     CHECK(program.Count(IR::Opcode::LoadGlobal128) == 0);
+}
+
+// The loop reads its records through the table entry at *c0[0x30] or *c0[0x38], loaded before
+// it. That load binds c0[0x30] and c0[0x38] in the first pass, with `pointers` more pointers.
+static void EmitTableLoop(KernelProgram& fixture, u32 pointers) {
+    fixture.env.native = true;
+    fixture.entry.AddBranch(&fixture.loop);
+    fixture.loop.AddBranch(&fixture.loop);
+    fixture.program.blocks = {&fixture.entry, &fixture.loop};
+    fixture.program.post_order_blocks = {&fixture.loop, &fixture.entry};
+    IR::IREmitter entry{fixture.entry};
+    const IR::U32 lane{entry.LocalInvocationIdX()};
+    const IR::U1 first{entry.ILessThan(lane, entry.Imm32(16), false)};
+    const IR::U32 holder_low{entry.Select(first, Word(entry, 0x30), Word(entry, 0x38))};
+    const IR::U32 holder_high{entry.Select(first, Word(entry, 0x34), Word(entry, 0x3c))};
+    const IR::Value table{entry.LoadGlobal64(Address(entry, holder_low, holder_high))};
+    for (u32 slot = 0; slot < pointers; ++slot) {
+        const u32 offset{0x100 + slot * 8};
+        static_cast<void>(
+            entry.LoadGlobal32(Address(entry, Word(entry, offset), Word(entry, offset + 4))));
+    }
+    IR::IREmitter body{fixture.loop};
+    const IR::U32 record{body.IAdd(IR::U32{body.CompositeExtract(table, 0)},
+                                   body.ShiftLeftLogical(lane, body.Imm32(4)))};
+    static_cast<void>(
+        body.LoadGlobal128(Address(body, record, IR::U32{body.CompositeExtract(table, 1)})));
+}
+
+TEST_CASE("Pointer table entries are charged only for bindings the first pass left free",
+          "[shader][storage_buffer]") {
+    // The first pass leaves a binding for each entry. The loop is collected first: charged for its
+    // holder as well, the first entry shut out the second, as Ocarina of Time's foliage culling
+    // compute 331e607152ce78d5 bound 4 of its 8 per-type instance tables.
+    KernelProgram fixture;
+    EmitTableLoop(fixture, Shader::Info::MAX_SSBOS - 4);
+
+    CHECK(fixture.TrackedOffsets().size() == Shader::Info::MAX_SSBOS);
+    CHECK(std::ranges::count_if(fixture.program.info.storage_buffers_descriptors,
+                                [](const auto& desc) { return desc.indirect_offset != ~0U; }) == 2);
+}
+
+TEST_CASE("Pointer table entries stay within the stage's storage buffer limit",
+          "[shader][storage_buffer]") {
+    // The stage binds 31 storage buffers: the first pass leaves one binding, for one entry.
+    KernelProgram fixture;
+    fixture.storage_buffer_limit = 31;
+    EmitTableLoop(fixture, 28);
+
+    CHECK(fixture.TrackedOffsets().size() == 31);
+    CHECK(std::ranges::count_if(fixture.program.info.storage_buffers_descriptors,
+                                [](const auto& desc) { return desc.indirect_offset != ~0U; }) == 1);
+}
+
+TEST_CASE("Programs that read more pointers than a stage binds are rejected",
+          "[shader][storage_buffer]") {
+    KernelProgram fixture;
+    fixture.env.native = true;
+    SECTION("Stage limit") {
+        fixture.storage_buffer_limit = 4;
+    }
+    SECTION("Descriptor set limit") {
+        fixture.set_storage_buffer_limit = 4;
+    }
+    IR::IREmitter ir{fixture.entry};
+    for (u32 slot = 0; slot < 5; ++slot) {
+        const u32 offset{0x100 + slot * 8};
+        static_cast<void>(ir.LoadGlobal32(Address(ir, Word(ir, offset), Word(ir, offset + 4))));
+    }
+
+    CHECK_THROWS_AS(fixture.TrackedOffsets(), Shader::NotImplementedException);
+}
+
+TEST_CASE("Dual vertex halves that bind more storage buffers than the stage are rejected",
+          "[shader][storage_buffer]") {
+    // Vertex B's buffers join Vertex A's; one they share counts once.
+    Shader::Info base;
+    base.storage_buffers_descriptors.push_back({.cbuf_index = 0, .cbuf_offset = 0x110, .count = 1});
+    Shader::Info source;
+    source.storage_buffers_descriptors.push_back(
+        {.cbuf_index = 0, .cbuf_offset = 0x110, .count = 1});
+    source.storage_buffers_descriptors.push_back(
+        {.cbuf_index = 0, .cbuf_offset = 0x120, .count = 1});
+    SECTION("Within the limit") {
+        Shader::Optimization::JoinStorageInfo(base, source, 2);
+        CHECK(base.storage_buffers_descriptors.size() == 2);
+    }
+    SECTION("Past the limit") {
+        source.storage_buffers_descriptors.push_back(
+            {.cbuf_index = 0, .cbuf_offset = 0x130, .count = 1});
+        CHECK_THROWS_AS(Shader::Optimization::JoinStorageInfo(base, source, 2),
+                        Shader::NotImplementedException);
+    }
+}
+
+TEST_CASE("Pointer table entries that would overflow the storage buffers are left out",
+          "[shader][storage_buffer]") {
+    // Records at c0[0x30] or in the table *c0[0x38], at an offset c0[0x40] the environment cannot
+    // tell from a pointer. The table entry competes with the pair, so with it the access binds
+    // every candidate, c0[0x40] too: 33 storage buffers with 29 more pointers. The program keeps
+    // the 30 of the pass without table entries.
+    KernelProgram fixture;
+    fixture.env.native = true;
+    IR::IREmitter ir{fixture.entry};
+    const IR::Value table{
+        ir.LoadGlobal64(ir.PackUint2x32(ir.GetCbuf(ir.Imm32(0), ir.Imm32(0x38), 64, false)))};
+    const IR::U1 direct{ir.ILessThan(ir.LocalInvocationIdX(), ir.Imm32(16), false)};
+    const IR::U32 low{ir.Select(direct, Word(ir, 0x30), IR::U32{ir.CompositeExtract(table, 0)})};
+    const IR::U32 high{ir.Select(direct, Word(ir, 0x34), IR::U32{ir.CompositeExtract(table, 1)})};
+    static_cast<void>(ir.LoadGlobal128(Address(ir, ir.IAdd(low, Word(ir, 0x40)), high)));
+    for (u32 slot = 0; slot < Shader::Info::MAX_SSBOS - 3; ++slot) {
+        const u32 offset{0x100 + slot * 8};
+        static_cast<void>(ir.LoadGlobal32(Address(ir, Word(ir, offset), Word(ir, offset + 4))));
+    }
+
+    CHECK(fixture.TrackedOffsets().size() == Shader::Info::MAX_SSBOS - 2);
+    CHECK_FALSE(fixture.program.info.native_global_bounds);
+    CHECK(std::ranges::none_of(fixture.program.info.storage_buffers_descriptors,
+                               [](const auto& desc) { return desc.indirect_offset != ~0U; }));
 }
 
 TEST_CASE("NVN fallback descriptors use guest slots rather than compact binding indices",

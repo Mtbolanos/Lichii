@@ -279,7 +279,9 @@ struct MeshInfo {
 struct Info {
     static constexpr size_t MAX_INDIRECT_CBUFS{14};
     static constexpr size_t MAX_CBUFS{18};
-    static constexpr size_t MAX_SSBOS{32};
+    /// Native (Switch 2) programs take their storage buffers from raw pointers, as many as they
+    /// read: Ocarina of Time's foliage culling binds 37 for its lists and per-type instance tables.
+    static constexpr size_t MAX_SSBOS{64};
 
     bool is_task{}; ///< Switch 2 task program (Stage::Task)
     bool is_mesh{}; ///< Switch 2 mesh program (Stage::Mesh)

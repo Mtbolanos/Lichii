@@ -110,6 +110,11 @@ struct ShaderPools {
 struct ComputePipelineCacheEntry {
     std::unique_ptr<ComputePipeline> pipeline;
     std::string failure;
+    /// Constant buffer slots that were null pointers at translation (see NullStoragePointerSlots)
+    std::vector<std::pair<u32, u32>> null_pointer_slots;
+    /// Constant buffer slots bound as storage buffer pointers (see MappedStoragePointerKeys)
+    std::vector<u64> mapped_pointers;
+    u32 rebuilds{};
 
     [[nodiscard]] ComputePipeline* Get(bool native, GPUVAddr address,
                                        const ComputePipelineCacheKey& key) const;
@@ -176,8 +181,13 @@ private:
         bool build_in_parallel, std::shared_ptr<ShaderPools> emit_pools = nullptr,
         std::unique_ptr<EmissionBudget::Reservation> reservation = nullptr);
 
+    [[nodiscard]] bool StaleNullPointerSlot(const ComputePipelineCacheEntry& entry) const;
+
+    /// Translates the current compute program, binding the pointers in keep_pointers whatever
+    /// their slots hold now (see GenericEnvironment::KeepStoragePointers)
     ComputePipelineCacheEntry CreateComputePipeline(const ComputePipelineCacheKey& key,
-                                                     const ShaderInfo* shader);
+                                                    const ShaderInfo* shader,
+                                                    std::span<const u64> keep_pointers = {});
 
     ComputePipelineCacheEntry CreateComputePipeline(ShaderPools& pools,
                                                      const ComputePipelineCacheKey& key,
@@ -219,6 +229,9 @@ private:
     std::unordered_set<u64> used_and_evicted; ///< Key hashes of pipelines used this session, evicted since
 
     ::Common::unordered_map<ComputePipelineCacheKey, ComputePipelineCacheEntry> compute_cache;
+    /// Replaced compute pipelines, destroyed once the GPU and their queued build are done with
+    /// them (tick, pipeline)
+    std::deque<std::pair<u64, std::unique_ptr<ComputePipeline>>> retired_compute_pipelines;
     ::Common::unordered_map<GraphicsPipelineCacheKey, std::unique_ptr<GraphicsPipeline>> graphics_cache;
 
     ShaderPools main_pools;
