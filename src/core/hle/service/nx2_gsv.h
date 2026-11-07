@@ -435,27 +435,27 @@ private:
         TipcReplyWords(ctx, {1});
     }
 
-    // Used by nn::gpu::sdk::CreateGpuAddressSpace: three u64s after the result, a kind (< 5, 0 =
-    // none) and the GPU VA range of the in-process VirtualMachine that serves AllocSpace
-    // (nn::gpu::sdk::util::ExecuteVirtualMachineAllocSpace). NVN reserves fixed VA from 0x8000000
-    // up to 512 GiB, so report the same range NvRm gives AllocAsEx: [0x8000000, 0xC000000000).
+    /// Reports the GPU VA range NVN reserves, [Nx2GpuVaStart, Nx2GpuVaEnd), to
+    /// nn::gpu::sdk::CreateGpuAddressSpace. Three u64s follow the result: a kind (< 5, 0 =
+    /// none) and the range of the in-process VirtualMachine that serves AllocSpace
+    /// (nn::gpu::sdk::util::ExecuteVirtualMachineAllocSpace).
     void GetVaRange(HLERequestContext& ctx) {
         LOG_WARNING(Service, "(STUBBED) nx2:gpu TIPC 203 [2]={:#x}", ctx.CommandBuffer()[2]);
         constexpr u64 kind = 1;
-        constexpr u64 start = 0x8000000ULL;
-        constexpr u64 size = 0xC000000000ULL - start;
+        constexpr u64 start = Tegra::Nx2GpuVaStart;
+        constexpr u64 size = Tegra::Nx2GpuVaEnd - start;
         TipcReplyWords(ctx, {static_cast<u32>(kind), static_cast<u32>(kind >> 32),
                              static_cast<u32>(start), static_cast<u32>(start >> 32),
                              static_cast<u32>(size), static_cast<u32>(size >> 32)});
     }
 
-    // Newer SDKs (title 1) query the address space's user and gsv partitions with 201/202(id):
-    // two u64s each, stored as the partition's min/max. The user value works whether it is read
-    // as (start, size) or (min, max). Title 4 never needed the gsv partition, so it stays empty.
+    /// Reports the user partition (TIPC 201) as two u64s, [Nx2GpuVaStart, Nx2GpuVaEnd).
+    /// Newer SDKs (title 1) also query the gsv partition with 202. The user value works
+    /// whether it is read as (start, size) or (min, max). Title 4 leaves gsv empty.
     void GetUserPartition(HLERequestContext& ctx) {
         LOG_WARNING(Service, "(STUBBED) nx2:gpu TIPC 201 [2]={:#x}", ctx.CommandBuffer()[2]);
-        constexpr u64 first = 0x8000000ULL;
-        constexpr u64 second = 0xC000000000ULL - first;
+        constexpr u64 first = Tegra::Nx2GpuVaStart;
+        constexpr u64 second = Tegra::Nx2GpuVaEnd - first;
         TipcReplyWords(ctx, {static_cast<u32>(first), static_cast<u32>(first >> 32),
                              static_cast<u32>(second), static_cast<u32>(second >> 32)});
     }
@@ -683,16 +683,32 @@ private:
         rb.Push(ResultSuccess);
     }
 
-    // Sub 215 (nn::gpu::sdk::DestroySparseRegion): words 3-6 the range, word 8 the job slot, like
-    // 213. Drop the GPU mapping, then the backing 214 added: its SMMU mapping (in GPU-thread
-    // order) and, once the GPU thread is past that, its pages. Kept allocated, title 1 ran the
-    // pool dry within minutes and later regions had no memory at all (GPU writes to them lost).
+    /// Drops a sparse or GPU-only region (nn::gpu::sdk::DestroySparseRegion, sub 215).
+    /// Words 3-6 are the inclusive range, word 8 the job slot, like 213. The GPU mapping
+    /// goes first, then the backing 214 added: its SMMU mapping (in GPU-thread order) and,
+    /// once the GPU thread is past that, its pages. Kept allocated, title 1 ran the pool dry
+    /// within minutes and later regions had no memory at all (GPU writes to them lost).
+    /// A range that extends past the GMMU is refused whole: the page tables would keep the
+    /// part that fits, so releasing backing here would free memory that is still mapped.
     void SubDestroySparseRegion(HLERequestContext& ctx) {
         const auto* w = ctx.CommandBuffer();
         const u64 first = u64{w[3]} | (u64{w[4]} << 32);
         const u64 last = u64{w[5]} | (u64{w[6]} << 32);
         LOG_DEBUG(Service, "nx2:gpu 215 destroy sparse region [{:#x}, {:#x}] words {:#x} {:#x} {:#x} {:#x}",
                  first, last, w[1], w[2], w[7], w[8]);
+        // last is inclusive. Both ends have to sit inside the address space; `last - first + 1`
+        // is then the size PageTableOp will actually unmap.
+        if (last > first && (first >= Tegra::Nx2GpuAddressSpaceSize ||
+                             last >= Tegra::Nx2GpuAddressSpaceSize)) {
+            LOG_ERROR(Service,
+                      "nx2:gpu 215 region [{:#x}, {:#x}] extends past the {:#x}-byte GPU address "
+                      "space; leaving it mapped",
+                      first, last, Tegra::Nx2GpuAddressSpaceSize);
+            SignalAfterGpu(w[8]);
+            IPC::ResponseBuilder rb{ctx, 2};
+            rb.Push(ResultSuccess);
+            return;
+        }
         std::scoped_lock lk{m_region_mutex};
         FreeReleasedRegions();
         if (m_gpu_only_ranges.erase(first) != 0 && last > first) {
