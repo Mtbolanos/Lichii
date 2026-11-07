@@ -369,7 +369,10 @@ bool ComputePipeline::Configure(Tegra::Engines::KeplerCompute& kepler_compute,
     const auto read_handle{[&](const auto& desc, u32 index) {
         if (desc.handle_program != ~0U) {
             // Read by the shader from a storage buffer: computed for this dispatch.
-            static const bool align_storage{std::getenv("EDEN_NX2_HANDLE_ALIGN") != nullptr};
+            static const bool align_storage{[] {
+                const char* env = std::getenv("EDEN_NX2_HANDLE_ALIGN");
+                return env == nullptr || env[0] != '0';
+            }()};
             return TexturePair(VideoCommon::EvaluateTextureHandle(
                                    info, desc.handle_program, gpu_memory,
                                    [&](u32 cbuf) -> GPUVAddr {
