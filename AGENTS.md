@@ -27,6 +27,7 @@ Users report game bugs with Lichii logs (`eden_log.txt`, `eden_log.txt.old`). Ea
 | 0400380020056000 | Raiders |
 | 0400D1D02399A000 | The Duskbloods network test |
 | 0400486024DEC000 | The Legend of Zelda: Ocarina of Time |
+| 0400245021D2C000 | Yoshi and the Mysterious Book |
 
 Add ids here when a report identifies a new game.
 
