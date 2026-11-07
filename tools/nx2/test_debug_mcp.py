@@ -35,6 +35,8 @@ class FakeEmulator:
         method = request["method"]
         if method == "status":
             return {"result": {"title": "Test", "presents": 3}}
+        if method == "frame_times":
+            return {"result": {"frames": 2, "intervals_ms": [16.7, 33.3], "truncated": False}}
         if method == "screenshot":
             return {"result": {"width": 1280, "height": 720, "png_base64": PNG}}
         if method == "capture_frame":
@@ -96,11 +98,25 @@ class AdapterTest(unittest.TestCase):
         self.assertIsNone(self.adapter.handle({"method": "notifications/initialized"}))
         names = [tool["name"] for tool in self.adapter.handle({"id": 2, "method": "tools/list"})
                  ["result"]["tools"]]
-        self.assertEqual(names, ["status", "screenshot", "log_tail", "log_filter", "capture_frame",
-                                 "capture_image", "reject_shaders", "sample", "timeline",
-                                 "switch", "read_memory", "search_memory", "read_gpu_memory",
-                                 "input", "input_sequence", "input_record", "input_replay"])
+        self.assertEqual(names, ["status", "frame_times", "screenshot", "log_tail", "log_filter", "capture_frame",
+                                 "capture_image", "reject_shaders", "sample", "read_memory",
+                                 "search_memory", "read_gpu_memory", "input",
+                                 "input_sequence"])
         self.assertEqual(self.adapter.handle({"id": 3, "method": "bogus"})["error"]["code"], -32601)
+
+    def test_frame_times_is_forwarded(self):
+        arguments = {"seconds": 0.5, "refresh_hz": 59.94}
+        result = self.call("frame_times", arguments)
+        self.assertFalse(result["isError"])
+        self.assertEqual(json.loads(result["content"][0]["text"]),
+                         {"frames": 2, "intervals_ms": [16.7, 33.3], "truncated": False})
+        self.assertEqual(self.fake.requests[-1]["params"], arguments)
+        # A null where a number belongs answers with a tool error; the adapter keeps serving.
+        self.assertTrue(self.call("frame_times", {"seconds": None})["isError"])
+        self.assertFalse(self.call("frame_times", {})["isError"])
+        self.assertEqual(debug_mcp.default_timeout("frame_times", {}), 6)
+        self.assertEqual(debug_mcp.default_timeout("frame_times", {"seconds": 59.5}), 61)
+        self.assertEqual(debug_mcp.default_timeout("capture_frame", {}), 120)
 
     def test_status_is_forwarded(self):
         result = self.call("status", {"fps_window_ms": 0})
@@ -123,7 +139,6 @@ class AdapterTest(unittest.TestCase):
         sequence = {"steps": [{"frames": 300}, {"frames": 300, "buttons": ["A"]}]}
         self.assertEqual(debug_mcp.default_timeout("input_sequence", sequence), 40)
         self.assertEqual(debug_mcp.default_timeout("status", {}), 5)
-        self.assertEqual(debug_mcp.default_timeout("input_replay", {"path": "a.json"}), 86400)
         result = self.call("input_sequence", sequence)
         self.assertFalse(result["isError"])
         self.assertEqual(self.fake.requests[-1]["params"], sequence)
