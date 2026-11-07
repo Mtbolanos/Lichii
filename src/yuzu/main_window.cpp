@@ -2024,6 +2024,13 @@ bool MainWindow::LoadROM(const QString& filename, Service::AM::FrontendAppletPar
 
     if (result != Core::SystemResultStatus::Success) {
         switch (result) {
+        case Core::SystemResultStatus::ErrorMemoryAllocation:
+            QMessageBox::critical(
+                this, tr("Not enough memory to start the game"),
+                tr("Lichii could not allocate the game's memory. Close other applications and "
+                   "check that your system has enough available memory and paging-file space, "
+                   "then try again."));
+            break;
         case Core::SystemResultStatus::ErrorGetLoader:
             LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", filename.toStdString());
             QMessageBox::critical(this, tr("Error while loading ROM!"),

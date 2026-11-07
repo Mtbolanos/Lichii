@@ -384,10 +384,15 @@ object NativeLibrary {
         val ErrorVideoCore = 5
         val ErrorUnknown = 6
         val ErrorLoader = 7
+        val ErrorMemoryAllocation = 0x10007
 
         val captionId: Int
         var descriptionId: Int
         when (resultCode) {
+            ErrorMemoryAllocation -> {
+                captionId = R.string.loader_error_memory
+                descriptionId = R.string.loader_error_memory_description
+            }
             ErrorVideoCore -> {
                 captionId = R.string.loader_error_video_core
                 descriptionId = R.string.loader_error_video_core_description

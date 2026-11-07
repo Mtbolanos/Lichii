@@ -945,6 +945,8 @@
     <string name="loader_error_encrypted_roms_description"><![CDATA[Please follow the guides to redump your <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">game cartridges</a> or <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">installed titles</a>.]]></string>
     <string name="loader_error_encrypted_keys_description"><![CDATA[Please ensure your <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> file is installed so that games can be decrypted.]]></string>
     <string name="loader_error_video_core">An error occurred initializing the video core</string>
+    <string name="loader_error_memory">Not enough memory to start the game</string>
+    <string name="loader_error_memory_description">Lichii could not allocate the game\'s memory. Close other applications to free memory, then try again.</string>
     <string name="loader_error_video_core_description">This is usually caused by an incompatible GPU driver. Installing a custom GPU driver may resolve this problem.</string>
     <string name="loader_error_file_not_found">ROM file does not exist</string>
 

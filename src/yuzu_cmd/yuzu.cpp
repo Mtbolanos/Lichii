@@ -623,6 +623,11 @@ extern "C" SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
     case Core::SystemResultStatus::ErrorGetLoader:
         LOG_CRITICAL(Frontend, "Failed to obtain loader for {}!", lp.filepath);
         return SDL_APP_FAILURE;
+    case Core::SystemResultStatus::ErrorMemoryAllocation:
+        LOG_CRITICAL(Frontend,
+                     "Not enough host memory to start the game. Close other applications and "
+                     "check available memory and paging-file space, then try again.");
+        return SDL_APP_FAILURE;
     case Core::SystemResultStatus::ErrorLoader:
         LOG_CRITICAL(Frontend, "Failed to load ROM!");
         return SDL_APP_FAILURE;

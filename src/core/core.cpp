@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <atomic>
 #include <memory>
+#include <new>
 #include <utility>
 
 #include "game_settings.h"
@@ -187,8 +188,15 @@ struct System::Impl {
 
     u64 program_id;
 
-    void Initialize(System& system) {
-        device_memory.emplace();
+    bool Initialize(System& system) {
+        try {
+            device_memory.emplace();
+        } catch (const std::bad_alloc&) {
+            LOG_CRITICAL(Core, "Failed to allocate guest memory");
+        }
+        if (device_memory && !device_memory->buffer.BackingBasePointer()) {
+            device_memory.reset();
+        }
 
         is_multicore = Settings::values.use_multi_core.GetValue();
         memory_layout = Settings::values.memory_layout_mode.GetValue();
@@ -212,6 +220,7 @@ struct System::Impl {
         kernel.SetMulticore(is_multicore);
         cpu_manager.SetMulticore(is_multicore);
         cpu_manager.SetAsyncGpu(is_async_gpu);
+        return device_memory.has_value();
     }
 
     void ReinitializeIfNecessary(System& system) {
@@ -331,12 +340,17 @@ struct System::Impl {
         debugger.emplace(system, port);
     }
 
-    void InitializeKernel(System& system) {
+    SystemResultStatus InitializeKernel(System& system) {
         LOG_DEBUG(Core, "initialized OK");
 
         // Setting changes may require a full system reinitialization (e.g., disabling multicore).
         ReinitializeIfNecessary(system);
+        if (!device_memory) {
+            LOG_CRITICAL(Core, "Not enough host memory to start the guest kernel");
+            return SystemResultStatus::ErrorMemoryAllocation;
+        }
         kernel.Initialize();
+        return SystemResultStatus::Success;
     }
 
     SystemResultStatus SetupForApplicationProcess(System& system, Frontend::EmuWindow& emu_window) {
@@ -398,7 +412,10 @@ struct System::Impl {
         Common::g_wall_clock.SetGuestCNTFRQ(cntfrq);
         LOG_INFO(Core, "Guest counter frequency: {} Hz", cntfrq);
 
-        InitializeKernel(system);
+        const auto kernel_result = InitializeKernel(system);
+        if (kernel_result != SystemResultStatus::Success) {
+            return kernel_result;
+        }
 
         if (params.applet_type == Service::AM::AppletType::Application) {
             current_application_filepath = filepath;
@@ -647,8 +664,8 @@ const CpuManager& System::GetCpuManager() const {
     return impl->cpu_manager;
 }
 
-void System::Initialize() {
-    impl->Initialize(*this);
+bool System::Initialize() {
+    return impl->Initialize(*this);
 }
 
 void System::Run() {

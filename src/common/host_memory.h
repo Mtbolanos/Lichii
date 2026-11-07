@@ -94,6 +94,19 @@ public:
     }
 
 private:
+    void Swap(HostMemory& other) noexcept;
+
+    friend class HostMemoryTestAccess;
+    struct AllocationTestControl {
+        size_t backing_size;
+        size_t virtual_size;
+        bool fail_fastmem;
+        bool fail_fallback;
+        size_t fastmem_attempts{};
+        size_t fallback_attempts{};
+    };
+    static thread_local AllocationTestControl* allocation_test_control;
+
     size_t backing_size{};
     size_t virtual_size{};
 

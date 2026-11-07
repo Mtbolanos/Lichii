@@ -143,6 +143,7 @@ enum class SystemResultStatus : u32 {
     ErrorVideoCore,      ///< Error in the video core
     ErrorUnknown,        ///< Any other error
     ErrorLoader,         ///< The base for loader errors (too many to repeat)
+    ErrorMemoryAllocation = 0x10007, ///< Outside ErrorLoader plus the u16 loader result range
 };
 
 class System {
@@ -162,8 +163,10 @@ public:
     /**
      * Initializes the system
      * This function will initialize core functionality used for system emulation
+     * Returns whether guest memory is available. Frontend services remain available on
+     * allocation failure, and Load retries guest memory before initializing the kernel.
      */
-    void Initialize();
+    bool Initialize();
 
     /**
      * Run the OS and Application
