@@ -80,10 +80,10 @@ Both the scheme-preparation job and the publishing job check out CI helper scrip
 | ------------------- | ---------------------------- | ---------------------- |
 | Linux x86_64        | AppImage and `.tar.gz`       | AppImage and `.tar.gz` |
 | Linux aarch64       | AppImage and `.tar.gz`       | AppImage and `.tar.gz` |
-| Windows x86_64      | MSVC `.zip`                  | MinGW/clang `.zip`     |
+| Windows x86_64      | clang-cl + ThinLTO `.zip`    | MinGW/clang `.zip`     |
 | macOS Apple Silicon | App bundle `.zip` and `.dmg` | Not built              |
 
-The existing build steps use the repository's current CMake targets (`yuzu` and `yuzu-cmd`) and package the produced `eglantine` and `eden-cli` binaries. Linux AppImages require glibc 2.39 or newer. Linux tarballs use system Qt and other shared libraries. Windows archives contain the deployed runtime dependencies. macOS artifacts are ad-hoc signed, not notarized; Gatekeeper may require the user to approve the app on first launch.
+The existing build steps use the repository's current CMake targets (`yuzu` and `yuzu-cmd`) and package the produced `eglantine` and `eden-cli` binaries. Linux AppImages require glibc 2.39 or newer. Linux tarballs use system Qt and other shared libraries. The standard Windows build uses clang-cl from a pinned LLVM release (`WINDOWS_LLVM_VERSION` in `release-binaries.yml`) in Release mode with ThinLTO, against the MSVC headers, runtime and SDK. MSVC itself still builds the project for development but is not used for releases. Windows archives contain the deployed runtime dependencies. macOS artifacts are ad-hoc signed, not notarized; Gatekeeper may require the user to approve the app on first launch.
 
 Build artifacts are retained for seven days. Published GitHub Release assets remain available until a release is deleted. Daily releases are pruned to approximately the seven most recent; branch releases are rolling and are cleaned up when no longer needed.
 

@@ -33,6 +33,10 @@ permissions:
 # eglantine.profdata; bump it when a refreshed profile needs a newer LLVM.
 env:
   PGO_LLVM_VERSION: "23"
+  # LLVM release the standard Windows build compiles with (clang-cl, lld-link and ThinLTO). The
+  # installer is pinned by checksum so a runner image update never changes the release compiler.
+  WINDOWS_LLVM_VERSION: "22.1.8"
+  WINDOWS_LLVM_SHA256: "16e5709785fef73c854646241c4a92c5cd574318d1b33c63330dd7721903e55c"
 
 # A running build is never cancelled: it finishes and publishes. A push meanwhile queues one build;
 # a later push replaces it, so the newest commit builds as soon as the running one is done.
@@ -84,8 +88,8 @@ jobs:
           # The two -pgo builds are the same programs compiled by clang against the repo's
           # eglantine.profdata. Eden's profile (Eden-CI/PGO) comes from Switch 1 games: with it Mario
           # Kart World ran at about half the speed of the normal build, with eglantine.profdata at
-          # about the same speed. Windows uses MSYS2's MinGW clang like Eden does; MSVC cannot read
-          # an LLVM .profdata file.
+          # about the same speed. Windows -pgo uses MSYS2's MinGW clang like Eden does. The standard
+          # Windows build is clang-cl with ThinLTO; MSVC still builds for development.
           - platform: linux-x86_64-pgo
             runner: ubuntu-24.04
             pgo: true
@@ -188,6 +192,26 @@ jobs:
         if: matrix.platform == 'windows-x86_64'
         uses: ilammy/msvc-dev-cmd@v1
 
+      # clang-cl compiles against the MSVC headers, libraries and SDK that the previous step put
+      # on PATH; only the compiler, linker and archiver come from this LLVM.
+      - name: Install LLVM on Windows
+        if: matrix.platform == 'windows-x86_64'
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'llvm.exe'
+          Invoke-WebRequest -OutFile $installer "https://github.com/llvm/llvm-project/releases/download/llvmorg-$env:WINDOWS_LLVM_VERSION/LLVM-$env:WINDOWS_LLVM_VERSION-win64.exe"
+          if ((Get-FileHash -Algorithm SHA256 $installer).Hash -ne $env:WINDOWS_LLVM_SHA256) {
+            throw 'LLVM installer checksum mismatch'
+          }
+          $root = Join-Path $env:RUNNER_TEMP 'llvm'
+          Start-Process -Wait -FilePath $installer -ArgumentList '/S', "/D=$root"
+          $version = & "$root/bin/clang-cl.exe" --version
+          $version
+          if (-not ($version -match "clang version $([regex]::Escape($env:WINDOWS_LLVM_VERSION))")) {
+            throw "Unexpected clang-cl: $version"
+          }
+          "LLVM_ROOT=$($root.Replace('\', '/'))" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
       - name: Install Qt on Windows
         if: matrix.platform == 'windows-x86_64'
         uses: jurplel/install-qt-action@v4
@@ -199,8 +223,9 @@ jobs:
           modules: qtcharts
           cache: true
 
-      # MSVC is not something ccache handles well, so that job uses sccache. The other jobs use
-      # ccache, which CMake enables through USE_CCACHE (externals/cmake-modules/UseCcache.cmake).
+      # ccache does not handle MSVC-style command lines well, so the clang-cl job uses sccache. The
+      # other jobs use ccache, which CMake enables through USE_CCACHE
+      # (externals/cmake-modules/UseCcache.cmake).
       - name: Install sccache on Windows
         if: matrix.platform == 'windows-x86_64'
         shell: pwsh
@@ -318,6 +343,12 @@ jobs:
           -DUSE_DISCORD_PRESENCE=OFF
           -DCMAKE_C_COMPILER_LAUNCHER=sccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
+          "-DCMAKE_C_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
+          "-DCMAKE_CXX_COMPILER=$LLVM_ROOT/bin/clang-cl.exe"
+          "-DCMAKE_LINKER=$LLVM_ROOT/bin/lld-link.exe"
+          "-DCMAKE_AR=$LLVM_ROOT/bin/llvm-lib.exe"
+          "-DCMAKE_C_FLAGS=-DWIN32 -D_WINDOWS -DNOMINMAX -flto=thin"
+          "-DCMAKE_CXX_FLAGS=-DWIN32 -D_WINDOWS -EHsc -DNOMINMAX -flto=thin"
 
       - name: Configure macOS
         if: startsWith(matrix.platform, 'macos')
@@ -720,7 +751,7 @@ jobs:
           Windows packages are in-place zip files: extract and run \`lichii.exe\`, or \`eden-cli.exe\` from a terminal.
 
           $({
-            row "amd64 / x86_64 (MSVC)" "$(link "MSVC zip" lichii-windows-x86_64.zip)" "" "Use if you run into graphical issues on other builds"
+            row "amd64 / x86_64 (clang-cl)" "$(link zip lichii-windows-x86_64.zip)" "" "Built with clang-cl and ThinLTO"
             row "amd64 / x86_64 (MinGW)" "" "$(link "PGO zip" lichii-windows-x86_64-pgo.zip)" "Built with MinGW clang; bundles its own DLLs, no Visual C++ redistributable needed"
           } | table)
 
