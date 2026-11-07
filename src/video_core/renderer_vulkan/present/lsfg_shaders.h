@@ -20,10 +20,15 @@ public:
         return valid;
     }
 
+    [[nodiscard]] bool IsDeviceSupported() const {
+        return device_supported;
+    }
+
     [[nodiscard]] VkShaderModule Get(u32 shader_id) const;
 
 private:
     std::map<u32, vk::ShaderModule> modules;
+    bool device_supported{};
     bool valid{};
 };
 

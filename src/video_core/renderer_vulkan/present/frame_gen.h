@@ -3,9 +3,11 @@
 
 #pragma once
 
+#include <atomic>
 #include <optional>
 
 #include "common/common_types.h"
+#include "video_core/renderer_base.h"
 #include "video_core/renderer_vulkan/present/frame_gen_pacer.h"
 #include "video_core/renderer_vulkan/present/lsfg_chain.h"
 #include "video_core/renderer_vulkan/present/lsfg_shaders.h"
@@ -31,6 +33,11 @@ public:
 
     void GenerateInto(const Device& device, Frame* destination, size_t generation);
 
+    [[nodiscard]] VideoCore::FrameGenStatus CurrentStatus() const {
+        return {.state = state.load(std::memory_order_relaxed),
+                .generated_frames = generated_frames.load(std::memory_order_relaxed)};
+    }
+
 private:
     void Rebuild(const Device& device, VkExtent2D extent, VkFormat format, f32 flow_scale);
     void DumpDebugImages(u64 count);
@@ -54,6 +61,8 @@ private:
     bool generated{};
     bool unavailable{};
     bool dumped{};
+    std::atomic<VideoCore::FrameGenState> state{VideoCore::FrameGenState::Pending};
+    std::atomic<u64> generated_frames{};
 };
 
 } // namespace Vulkan

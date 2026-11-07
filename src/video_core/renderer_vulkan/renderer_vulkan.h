@@ -59,6 +59,14 @@ public:
         return device.GetDriverName();
     }
 
+    [[nodiscard]] VideoCore::FrameGenStatus GetFrameGenStatus() const override {
+#ifdef HAS_LSFG
+        return frame_gen.CurrentStatus();
+#else
+        return {.state = VideoCore::FrameGenState::UnsupportedBuild};
+#endif
+    }
+
     // Enhanced platform-specific initialization
     void InitializePlatformSpecific();
 

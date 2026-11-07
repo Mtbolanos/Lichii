@@ -13,6 +13,7 @@ LsfgShaders::LsfgShaders(const Device& device) {
         !device.IsFloat16Supported()) {
         return;
     }
+    device_supported = true;
 
     VideoCore::FrameGen::ShaderModules code;
     if (VideoCore::FrameGen::LoadShaderModules(code) != VideoCore::FrameGen::LosslessStatus::Ok) {
