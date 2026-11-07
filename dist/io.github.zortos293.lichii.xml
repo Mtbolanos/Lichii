@@ -14,7 +14,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <mime-type type="application/x-nx-nro">
         <comment>Nintendo Switch homebrew executable</comment>
         <acronym>NRO</acronym>
-        <icon name="dev.eden_emu.eden"/>
+        <icon name="io.github.zortos293.lichii"/>
         <glob pattern="*.nro"/>
         <magic><match value="NRO" type="string" offset="16"/></magic>
     </mime-type>
@@ -22,7 +22,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <mime-type type="application/x-nx-nso">
         <comment>Nintendo Switch homebrew executable</comment>
         <acronym>NSO</acronym>
-        <icon name="dev.eden_emu.eden"/>
+        <icon name="io.github.zortos293.lichii"/>
         <glob pattern="*.nso"/>
         <magic><match value="NSO" type="string" offset="0"/></magic>
     </mime-type>
@@ -30,7 +30,7 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <mime-type type="application/x-nx-nsp">
         <comment>Nintendo Switch Package</comment>
         <acronym>NSP</acronym>
-        <icon name="dev.eden_emu.eden"/>
+        <icon name="io.github.zortos293.lichii"/>
         <glob pattern="*.nsp"/>
         <magic><match value="PFS" type="string" offset="0"/></magic>
     </mime-type>
@@ -38,7 +38,29 @@ SPDX-License-Identifier: GPL-2.0-or-later
     <mime-type type="application/x-nx-xci">
         <comment>Nintendo Switch Card Image</comment>
         <acronym>XCI</acronym>
-        <icon name="dev.eden_emu.eden"/>
+        <icon name="io.github.zortos293.lichii"/>
         <glob pattern="*.xci"/>
+    </mime-type>
+    <mime-type type="application/x-nx-nup">
+        <comment>NX Package</comment>
+        <acronym>NUP</acronym>
+        <icon name="io.github.zortos293.lichii"/>
+        <glob pattern="*.nup"/>
+        <magic><match value="NUP\x01" type="string" offset="0"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-nx-nsz">
+        <comment>Compressed Nintendo Switch Package</comment>
+        <acronym>NSZ</acronym>
+        <icon name="io.github.zortos293.lichii"/>
+        <glob pattern="*.nsz"/>
+        <magic><match value="PFS" type="string" offset="0"/></magic>
+    </mime-type>
+
+    <mime-type type="application/x-nx-xcz">
+        <comment>Compressed Nintendo Switch Card Image</comment>
+        <acronym>XCZ</acronym>
+        <icon name="io.github.zortos293.lichii"/>
+        <glob pattern="*.xcz"/>
     </mime-type>
 </mime-info>
