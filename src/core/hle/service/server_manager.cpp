@@ -264,6 +264,9 @@ void ServerManager::StartAdditionalHostThreads(const char* name, size_t num_thre
 
 Result ServerManager::LoopProcess() {
     SCOPE_EXIT {
+        // Join the additional host threads before returning, so the state the caller keeps on its
+        // stack for the services (AM's WindowSystem) outlives any request they are still handling.
+        m_threads.clear();
         m_stopped.Set();
     };
 

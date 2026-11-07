@@ -7,8 +7,10 @@
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <span>
 #include <string>
@@ -101,6 +103,7 @@ public:
     }
 
     void ConvertToDomain() {
+        std::scoped_lock lk{domain_mutex};
         domain_handlers = {session_handler};
         is_domain = true;
     }
@@ -110,6 +113,7 @@ public:
     }
 
     std::size_t DomainHandlerCount() const {
+        std::scoped_lock lk{domain_mutex};
         return domain_handlers.size();
     }
 
@@ -126,20 +130,28 @@ public:
     }
 
     void CloseDomainHandler(std::size_t index) {
-        if (index < DomainHandlerCount()) {
-            domain_handlers[index] = nullptr;
-        } else {
-            ASSERT_MSG(false, "Unexpected handler index {}", index);
+        SessionRequestHandlerPtr closed;
+        {
+            std::scoped_lock lk{domain_mutex};
+            if (index < domain_handlers.size()) {
+                closed = std::move(domain_handlers[index]);
+            } else {
+                ASSERT_MSG(false, "Unexpected handler index {}", index);
+            }
         }
     }
 
     SessionRequestHandlerWeakPtr DomainHandler(std::size_t index) const {
-        ASSERT_MSG(index < DomainHandlerCount(), "Unexpected handler index {}", index);
+        std::scoped_lock lk{domain_mutex};
+        ASSERT_MSG(index < domain_handlers.size(), "Unexpected handler index {}", index);
         return domain_handlers.at(index);
     }
 
-    void AppendDomainHandler(SessionRequestHandlerPtr&& handler) {
+    /// Returns the new handler's object id.
+    std::size_t AppendDomainHandler(SessionRequestHandlerPtr&& handler) {
+        std::scoped_lock lk{domain_mutex};
         domain_handlers.emplace_back(std::move(handler));
+        return domain_handlers.size();
     }
 
     void SetSessionHandler(SessionRequestHandlerPtr&& handler) {
@@ -169,9 +181,11 @@ public:
 
 private:
     bool convert_to_domain{};
-    bool is_domain{};
+    std::atomic<bool> is_domain{};
     bool is_initialized_for_sm{};
     SessionRequestHandlerPtr session_handler;
+    // Sessions cloned from one domain share this manager and may be served on different threads.
+    mutable std::mutex domain_mutex;
     std::vector<SessionRequestHandlerPtr> domain_handlers;
 
 private:

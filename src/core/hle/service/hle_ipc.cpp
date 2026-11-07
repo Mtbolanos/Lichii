@@ -304,8 +304,8 @@ Result HLERequestContext::WriteToOutgoingCommandBuffer() {
         current_offset = domain_offset - static_cast<u32>(outgoing_domain_objects.size());
         for (auto& object : outgoing_domain_objects) {
             if (object) {
-                GetManager()->AppendDomainHandler(std::move(object));
-                cmd_buf[current_offset++] = static_cast<u32_le>(GetManager()->DomainHandlerCount());
+                cmd_buf[current_offset++] =
+                    static_cast<u32_le>(GetManager()->AppendDomainHandler(std::move(object)));
             } else {
                 cmd_buf[current_offset++] = 0;
             }

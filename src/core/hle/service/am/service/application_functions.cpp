@@ -498,12 +498,14 @@ Result IApplicationFunctions::CreateApplicationAndRequestToStart(u64 application
 
 Result IApplicationFunctions::ClearUserChannel() {
     LOG_DEBUG(Service_AM, "called");
+    std::scoped_lock lk{m_applet->lock};
     m_applet->user_channel_launch_parameter.clear();
     R_SUCCEED();
 }
 
 Result IApplicationFunctions::UnpopToUserChannel(SharedPointer<IStorage> storage) {
     LOG_DEBUG(Service_AM, "called");
+    std::scoped_lock lk{m_applet->lock};
     m_applet->user_channel_launch_parameter.push_back(storage->GetData());
     R_SUCCEED();
 }

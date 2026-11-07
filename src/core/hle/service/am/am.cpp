@@ -25,6 +25,13 @@ void LoopProcess(Core::System& system) {
         "appletAE", std::make_shared<IAllSystemAppletProxiesService>(system, window_system));
     server_manager->RegisterNamedService(
         "appletOE", std::make_shared<IApplicationProxyService>(system, window_system));
+    // The Switch 2 graphics system (nx2:gsv, from ISelfController) and every session it hands out
+    // (vi2, vdecsvc, syncpt, gpu, nvsrv) are served here. vi2's PresentClientBuffer blocks until
+    // the frame's fence and the next vblank (~14 ms of each 16.7 ms frame at 60 fps), and with one
+    // thread every other request queued behind it: Ocarina of Time's movie thread got its decoder
+    // images back at ~33 fps while presenting at 60, and the video fell ~10 s behind its audio.
+    // Each service keeps its own lock, as with bsdsocket's extra threads.
+    server_manager->StartAdditionalHostThreads("am", 2);
     ServerManager::RunServer(std::move(server_manager));
 }
 

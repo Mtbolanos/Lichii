@@ -8,6 +8,7 @@
 #include <chrono>
 #include <thread>
 
+#include "common/settings.h"
 #include "core/file_sys/errors.h"
 #include "core/hle/service/cmif_serialization.h"
 #include "core/hle/service/filesystem/fsp/fs_i_storage.h"
@@ -35,13 +36,19 @@ Result IStorage::Read(
     R_UNLESS(length >= 0, FileSys::ResultInvalidSize);
     R_UNLESS(offset >= 0, FileSys::ResultInvalidOffset);
 
-    const auto now = std::chrono::steady_clock::now();
-    if (now < next_read_tick) {
-        std::this_thread::sleep_for(next_read_tick - now);
+    // The 40 MB/s throttle emulates a Switch 1 card (Eden cbd4cf2d8c, Mario Strikers' intro).
+    // Switch 2 storage is many times faster, and a Switch 2 title that streams a movie with
+    // hundreds of reads a second (Ocarina of Time's opening: 300-460) sleeps most of each second
+    // on the thread that also hands decoder images back, so its video falls seconds behind.
+    if (!Settings::CurrentProgramIsSwitch2()) {
+        const auto now = std::chrono::steady_clock::now();
+        if (now < next_read_tick) {
+            std::this_thread::sleep_for(next_read_tick - now);
+        }
+        next_read_tick = std::chrono::steady_clock::now() +
+                         std::chrono::nanoseconds{std::min(length, MaxChargedReadSize) *
+                                                  1'000'000'000 / ReadBytesPerSecond};
     }
-    next_read_tick = std::chrono::steady_clock::now() +
-                     std::chrono::nanoseconds{std::min(length, MaxChargedReadSize) *
-                                              1'000'000'000 / ReadBytesPerSecond};
 
     // Read the data from the Storage backend
     backend->Read(out_bytes.data(), length, offset);

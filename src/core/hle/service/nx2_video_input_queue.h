@@ -20,6 +20,10 @@ public:
     };
 
     static constexpr size_t ReadyWatermark = 8;
+    /// The decoder refuses packets (nn::codec 3603, busy) from this many on. Well above the
+    /// watermark: a client may hold a ready signal when the event stops, and some send one packet
+    /// per signal and ignore the result, so those packets must still fit (a refused one is lost).
+    static constexpr size_t RefuseAt = ReadyWatermark * 3;
 
     void Push(Input input) {
         inputs.push_back(std::move(input));
@@ -45,6 +49,11 @@ public:
 
     bool BelowReadyWatermark() const {
         return inputs.size() < ReadyWatermark;
+    }
+
+    /// Whether SubmitInput refuses packets other than end of stream: RefuseAt or more queued.
+    bool Full() const {
+        return inputs.size() >= RefuseAt;
     }
 
 private:

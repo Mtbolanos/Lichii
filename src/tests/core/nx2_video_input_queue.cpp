@@ -27,6 +27,20 @@ TEST_CASE("NX2 video retains packets submitted beyond the readiness watermark", 
     REQUIRE(queue.Empty());
 }
 
+TEST_CASE("NX2 video refuses packets only well past the readiness watermark", "[nx2_video_input]") {
+    Service::Nx2VideoInputQueue queue;
+    STATIC_REQUIRE(queue.RefuseAt > queue.ReadyWatermark);
+    for (u64 index = 0; index < queue.RefuseAt; ++index) {
+        CAPTURE(index);
+        REQUIRE_FALSE(queue.Full());
+        queue.Push({{static_cast<u8>(index)}, index * 16667, false});
+    }
+    REQUIRE(queue.Full());
+    queue.Pop();
+    REQUIRE_FALSE(queue.Full());
+    REQUIRE_FALSE(queue.BelowReadyWatermark());
+}
+
 TEST_CASE("NX2 video queues preserve independent interleaved sessions", "[nx2_video_input]") {
     std::array<Service::Nx2VideoInputQueue, 3> queues;
     for (u64 frame = 0; frame < 32; ++frame) {
