@@ -175,6 +175,12 @@ endif()
 
 add_test(NAME tests COMMAND tests)
 
+if (TARGET SDL3::SDL3)
+    add_executable(sdl_window_state_tests yuzu_cmd/sdl_window_state.cpp)
+    target_link_libraries(sdl_window_state_tests PRIVATE SDL3::SDL3 Catch2::Catch2WithMain)
+    add_test(NAME sdl_window_state_tests COMMAND sdl_window_state_tests)
+endif()
+
 if (WIN32 AND ARCHITECTURE_x86_64)
     add_executable(event_wait_probe ../../tools/nx2/event_wait_probe.cpp)
     target_link_libraries(event_wait_probe PRIVATE common)

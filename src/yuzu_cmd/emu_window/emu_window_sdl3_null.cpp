@@ -33,6 +33,11 @@ EmuWindow_SDL3_Null::EmuWindow_SDL3_Null(InputCommon::InputSubsystem* input_subs
                          Layout::ScreenUndocked::Height,
                          SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY | Nx2HiddenWindowFlags());
 
+    if (render_window == nullptr) {
+        LOG_CRITICAL(Frontend, "Failed to create SDL3 window! {}", SDL_GetError());
+        std::exit(EXIT_FAILURE);
+    }
+
     SetWindowIcon();
 
     if (fullscreen) {
@@ -40,9 +45,9 @@ EmuWindow_SDL3_Null::EmuWindow_SDL3_Null(InputCommon::InputSubsystem* input_subs
         ShowCursor(false);
     }
 
-    OnResize();
     OnMinimalClientAreaChangeRequest(GetActiveConfig().min_client_area_size);
     SDL_PumpEvents();
+    OnResize();
     LOG_INFO(Frontend, "Eden Version: {} | {}-{} (Null)", Common::g_build_name,
              Common::g_scm_branch, Common::g_scm_desc);
 }

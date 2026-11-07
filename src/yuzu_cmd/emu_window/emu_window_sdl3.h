@@ -17,6 +17,7 @@
 
 #include "core/frontend/emu_window.h"
 #include "core/frontend/graphics_context.h"
+#include "yuzu_cmd/emu_window/sdl_window_state.h"
 
 namespace Core {
 class System;
@@ -105,8 +106,8 @@ protected:
     /// Is the window still open?
     bool is_open = true;
 
-    /// Is the window being shown?
-    bool is_shown = true;
+    /// SDL-thread updates, queried by the renderer.
+    SdlWindowState window_state;
 
     /// Internal SDL3 render window
     SDL_Window* render_window{};
