@@ -33,7 +33,8 @@ inline std::vector<s16> ConvertInputSamples(std::span<const s16> captured, u64 n
     if (device_channels == 0 || system_channels == 0) {
         return samples;
     }
-    const auto frames = std::min(num_samples / system_channels, captured.size() / device_channels);
+    const auto frames =
+        std::min<u64>(num_samples / system_channels, captured.size() / device_channels);
     for (size_t frame = 0; frame < frames; ++frame) {
         if (system_channels == 1 && device_channels > 1) {
             s32 sum{};
