@@ -1133,7 +1133,8 @@ IGeneralService::IGeneralService(Core::System& system_)
         {47, &IGeneralService::GetScanDataV3, "GetScanData"}, // 19.0.0+
         {50, nullptr, "IsRewriteFeatureEnabled"}, // 18.0.0+
         {51, nullptr, "CreateRewriteRule"}, // 18.0.0+
-        {52, nullptr, "DestroyRewriteRule"} // 18.0.0+
+        {52, nullptr, "DestroyRewriteRule"}, // 18.0.0+
+        {101, &IGeneralService::StubReplyZeroed, "Unknown101"}
     };
     // clang-format on
 
