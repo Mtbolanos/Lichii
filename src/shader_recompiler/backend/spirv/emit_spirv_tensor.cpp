@@ -52,8 +52,8 @@ CooperativeHmmaTypes DefineCooperativeHmmaTypes(Sirit::Module& module, Id u32_ty
     const Id float16{module.TypeFloat(16)};
     const auto constant{[&](u32 value) { return module.Constant(u32_type, value); }};
     const Id scope{constant(static_cast<u32>(spv::Scope::Subgroup))};
-    const auto matrix{[&](u32 columns, spv::CooperativeMatrixUse use) {
-        return module.TypeStruct(float16, scope, constant(16), constant(columns),
+    const auto matrix{[&](u32 cols, spv::CooperativeMatrixUse use) {
+        return module.TypeStruct(float16, scope, constant(16), constant(cols),
                                  constant(static_cast<u32>(use)));
     }};
     return CooperativeHmmaTypes{
