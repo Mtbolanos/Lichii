@@ -73,6 +73,7 @@
 #include "core/hle/service/nvdrv/nvdrv_interface.h"
 #include "core/hle/service/nx2_stub_interface.h"
 #include "core/hle/service/nx2_image_layout.h"
+#include "core/hle/service/nx2_movie_clock.h"
 #include "core/hle/service/nx2_video_input_queue.h"
 #include "core/hle/service/nx2_present_pacer.h"
 #include "core/hle/service/nx2_video_ready.h"
@@ -2766,11 +2767,7 @@ private:
     static constexpr u32 NoSyncpoint = ~0U;
     static constexpr size_t MaxDecodedAhead = 2; // decoded frames held while no image is free
     static constexpr u32 HostSyncpoints = 192;   // Tegra::Host1x::SyncpointManager
-    // Movie pacing (see DropOvertakenFrames): a longer gap between acquires is a pause, a longer
-    // lag a jump in the stream; both restart the clock instead of dropping frames.
-    static constexpr s64 PauseGap = 1'000'000;   // us
-    static constexpr s64 MaxCatchUp = 3'000'000; // us
-    static constexpr u32 MaxDroppedInARow = 30;
+    static constexpr u32 MaxDroppedInARow = 30; // see DropOvertakenFrames
 
     void Log(HLERequestContext& ctx, std::string_view what) {
         const auto* w = ctx.CommandBuffer();
@@ -2853,7 +2850,7 @@ private:
             m_codec = std::move(codec);
             m_width = w[5];
             m_height = w[6];
-            m_clock_offset.reset();
+            m_clock.Reset();
             m_stream_start.reset();
         }
         if (!m_worker.joinable()) {
@@ -2970,14 +2967,20 @@ private:
         const u64 pts = u64{w[words]} | (u64{w[words + 1]} << 32);
         const bool end = (w[words + 2] & 0xFF) != 0;
         Log(ctx, "submit");
-        // The SDK answers busy when the decoder cannot take a packet, and the client retries after
-        // the submission-ready event. Taking every packet let a player queue a whole movie: Ocarina
-        // of Time's title movie went in at ~330 packets a second (2,600 queued), and until the
-        // last was in, its pictures came at 20-28 fps, so the video started ~11 s behind its
-        // audio. End of stream is never refused.
-        if (!end) {
+        Input input{{}, pts, end};
+        if (!ctx.BufferDescriptorA().empty()) {
+            const auto data = ctx.ReadBufferA(0);
+            input.data.assign(data.begin(), data.end());
+        }
+        const auto input_size = input.data.size();
+        {
             std::scoped_lock lk{m_mutex};
-            if (m_inputs.Full()) {
+            // The SDK answers busy when the decoder cannot take a packet, and the client retries
+            // after the submission-ready event. Taking every packet let a player queue a whole
+            // movie: Ocarina of Time's title movie went in at ~330 packets a second (2,600
+            // queued), and until the last was in, its pictures came at 20-28 fps, so the video
+            // started ~11 s behind its audio. End of stream is never refused.
+            if (!m_inputs.Submit(std::move(input))) {
                 if (Nx2VideoTraceEnabled()) {
                     LOG_INFO(Service, "nx2:vdec trace refuse syncpoint={} pts={} queued={}",
                              m_syncpoint, pts, m_inputs.Size());
@@ -2988,16 +2991,6 @@ private:
                 rb.PushRaw<u32>(ResultDecoderBusy.raw);
                 return;
             }
-        }
-        Input input{{}, pts, end};
-        if (!ctx.BufferDescriptorA().empty()) {
-            const auto data = ctx.ReadBufferA(0);
-            input.data.assign(data.begin(), data.end());
-        }
-        const auto input_size = input.data.size();
-        {
-            std::scoped_lock lk{m_mutex};
-            m_inputs.Push(std::move(input));
             m_stream_ended = false;
             m_end_queued |= end;
             m_ready->room.store(!m_end_queued && m_inputs.BelowReadyWatermark(),
@@ -3035,7 +3028,7 @@ private:
             m_flush = true;
             m_stream_ended = false;
             m_end_queued = false;
-            m_clock_offset.reset();
+            m_clock.Reset();
             m_stream_start.reset();
             m_ready->room.store(true, std::memory_order_relaxed);
             // Only Stop: Bananza flushes (8) after its movies end and treats every completed
@@ -3061,7 +3054,7 @@ private:
                          m_decoded_frames, m_frames_out, m_stream_ended, m_end_queued);
             }
             CompleteHandedFences();
-            m_clock_offset.reset();
+            m_clock.Reset();
             m_stream_start.reset();
         }
         TipcReplyWords(ctx, {});
@@ -3071,38 +3064,9 @@ private:
         return system.CoreTiming().GetGlobalTimeUs().count();
     }
 
-    // Whether emulation was paused and resumed after host time `time_us`: the movie's audio
-    // stopped meanwhile, so the clock must restart from the next acquire.
-    bool ResumedSince(s64 time_us) const {
-        return system.CoreTiming().GetPauseEndTime().count() / 1000 > time_us;
-    }
-
-    // Starts or corrects the movie clock from a frame the client just acquired (m_mutex held).
-    // The clock never runs behind a frame the client already shows.
-    void AnchorClock(u64 pts) {
-        const s64 now = HostTimeUs();
-        const s64 offset = now - static_cast<s64>(pts);
-        if (!m_clock_offset || now - m_last_acquire > PauseGap || ResumedSince(m_last_acquire) ||
-            pts < m_last_acquired_pts || offset < *m_clock_offset ||
-            offset - *m_clock_offset > MaxCatchUp) {
-            m_clock_offset = offset;
-        }
-        m_last_acquire = now;
-        m_last_acquired_pts = pts;
-    }
-
-    // The pts the movie's audio has reached, if the client shows frames yet (m_mutex held).
-    std::optional<u64> DuePts() {
-        if (!m_clock_offset) {
-            return std::nullopt;
-        }
-        const s64 now = HostTimeUs();
-        const s64 due = now - *m_clock_offset;
-        // Nothing acquired for a while: paused; the next acquire restarts the clock.
-        if (due < 0 || now - m_last_acquire > PauseGap || ResumedSince(m_last_acquire)) {
-            return std::nullopt;
-        }
-        return static_cast<u64>(due);
+    // When emulation last resumed from a pause: the movie's audio stopped meanwhile.
+    s64 PauseEndUs() const {
+        return system.CoreTiming().GetPauseEndTime().count() / 1000;
     }
 
     // Games such as Ocarina of Time show one decoded frame per frame they draw and never skip
@@ -3114,7 +3078,7 @@ private:
         if (m_decoded.empty()) {
             return false;
         }
-        const auto due = DuePts();
+        const auto due = m_clock.Due(HostTimeUs(), PauseEndUs());
         if (!due) {
             m_dropped_in_a_row = 0;
             return false;
@@ -3160,7 +3124,7 @@ private:
             if (!m_outputs.empty()) {
                 output = m_outputs.front();
                 m_outputs.pop_front();
-                AnchorClock(output->pts);
+                m_clock.Acquired(HostTimeUs(), output->pts, PauseEndUs());
             }
         }
         if (!output) {
@@ -3519,9 +3483,7 @@ private:
     u64 m_frames_out{};
     u64 m_decoded_frames{};
     u64 m_frames_dropped{};
-    std::optional<s64> m_clock_offset; ///< Host time minus pts (us) of the frames the client shows
-    s64 m_last_acquire{};              ///< Host time (us) of the client's last acquire
-    u64 m_last_acquired_pts{};
+    Nx2MovieClock m_clock;
     u64 m_frame_interval{16667}; ///< us, from consecutive decoded frames
     u64 m_last_decoded_pts{};
     u32 m_dropped_in_a_row{};
