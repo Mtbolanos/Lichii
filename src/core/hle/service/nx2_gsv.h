@@ -3253,18 +3253,22 @@ private:
                 decoder = std::make_unique<Tegra::Host1x::Nx2VideoDecoder>(codec);
             }
             pictures.clear();
+            const auto decode_start = std::chrono::steady_clock::now();
             decoder->Decode(input.data, input.pts, pictures);
             if (input.end) {
                 decoder->Drain(pictures);
             }
+            const auto decode_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                                       std::chrono::steady_clock::now() - decode_start)
+                                       .count();
             lk.lock();
             m_decoded_frames += pictures.size();
             if (Nx2VideoTraceEnabled()) {
                 LOG_INFO(Service,
                          "nx2:vdec trace decode syncpoint={} codec={} open={} pts={} eos={} "
-                         "pictures={} decoded_frames={} discarded_by_flush={}",
+                         "pictures={} decoded_frames={} discarded_by_flush={} decode_us={}",
                          m_syncpoint, decoder->Name(), decoder->IsOpen(), input.pts, input.end,
-                         pictures.size(), m_decoded_frames, m_flush);
+                         pictures.size(), m_decoded_frames, m_flush, decode_us);
             }
             if (m_flush) {
                 continue;

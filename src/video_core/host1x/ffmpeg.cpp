@@ -186,6 +186,10 @@ Decoder::Decoder(Tegra::Host1x::NvdecCommon::VideoCodec codec) {
         }
     }
 #endif
+    if (!m_codec && av_codec == AV_CODEC_ID_AV1) {
+        // FFmpeg's own av1 decoder only decodes through a GPU hwaccel.
+        m_codec = avcodec_find_decoder_by_name("libdav1d");
+    }
     if (!m_codec) {
         m_codec = avcodec_find_decoder(av_codec);
     }
@@ -200,7 +204,6 @@ bool Decoder::SupportsDecodingOnDevice(AVPixelFormat* out_pix_fmt, AVHWDeviceTyp
         }
 
         if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX && config->device_type == type) {
-            LOG_INFO(HW_GPU, "Using {} GPU decoder", av_hwdevice_get_type_name(type));
             *out_pix_fmt = config->pix_fmt;
             return true;
         }
@@ -237,11 +240,13 @@ bool HardwareContext::InitializeForDecoder(DecoderContext& decoder_context, cons
             continue;
         }
 
-        if (!this->InitializeWithType(type)) {
+        // Creating a device is slow (CUDA, Vulkan): only create the ones the decoder can use.
+        if (!decoder.SupportsDecodingOnDevice(&hw_pix_fmt, type)) {
             continue;
         }
 
-        if (decoder.SupportsDecodingOnDevice(&hw_pix_fmt, type)) {
+        if (this->InitializeWithType(type)) {
+            LOG_INFO(HW_GPU, "Using {} GPU decoder", av_hwdevice_get_type_name(type));
             decoder_context.InitializeHardwareDecoder(*this, hw_pix_fmt);
             return true;
         }
