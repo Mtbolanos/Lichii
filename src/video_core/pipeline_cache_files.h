@@ -4,8 +4,13 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <functional>
+#include <map>
+#include <optional>
+#include <string>
 #include <string_view>
 #include <system_error>
+#include <unordered_set>
 
 #include <fmt/format.h>
 
@@ -94,5 +99,66 @@ inline bool CopyCompatiblePipelineCache(const std::filesystem::path& source,
     }
     return true;
 }
+
+/// Reads one pipeline record from `file` (positioned at its start, with exceptions enabled,
+/// `end` its size) and returns the bytes that identify its pipeline, or nullopt when the record
+/// is malformed. The bytes must compare equal for records of the same pipeline.
+using PipelineRecordKeyReader =
+    std::function<std::optional<std::string>(std::ifstream& file, std::streamoff end)>;
+
+using PipelineKeySet = std::unordered_set<std::string>;
+
+struct PipelineCacheMergeResult {
+    enum class Status {
+        Merged,         ///< `added_records` appended (possibly none)
+        Missing,        ///< No source file
+        WrongHeader,    ///< The source is not a cache of the expected magic and version
+        BadSource,      ///< A source record does not parse; nothing was written
+        BadDestination, ///< The destination does not parse; it was left as it is
+        NoSpace,        ///< Not enough free disk space for the merged copy
+        WriteFailed,    ///< Writing or renaming the merged copy failed; the destination is unchanged
+    };
+    Status status{};
+    size_t added_pipelines{};
+    size_t added_records{};
+    size_t known_pipelines{}; ///< Source pipelines the destination already had
+    std::string detail;
+};
+
+/// Appends to `destination` the records of `source` (a cache with `source_version` in its
+/// header, otherwise identical records) whose pipeline key the destination does not hold, every
+/// record of a new key in source order. The result is written next to `destination` and renamed
+/// over it; the source is never changed. A destination that does not exist is created with
+/// `destination_version`. `known_keys` holds the destination's keys: filled by scanning it when
+/// empty, and extended by a successful merge, so several sources scan the destination once.
+PipelineCacheMergeResult MergePipelineCache(const std::filesystem::path& source,
+                                            const std::filesystem::path& destination,
+                                            const std::array<char, 8>& magic, u32 source_version,
+                                            u32 destination_version,
+                                            const PipelineRecordKeyReader& read_key,
+                                            std::optional<PipelineKeySet>& known_keys);
+
+/// Adds to the used-pipelines list `destination` (magic, count, then u64 hash + u8 age per
+/// entry) the hashes of `source` it lacks, keeping the lower age of a hash both hold, through a
+/// temporary file. Returns how many were added, or nullopt when `source` is truncated or either
+/// file has another magic (then nothing is written).
+std::optional<size_t> MergeUsedPipelineLists(const std::filesystem::path& source,
+                                             const std::filesystem::path& destination, u32 magic);
+
+/// Size and modification time of a file, to tell whether it changed since it was merged.
+struct PipelineCacheFileStamp {
+    u64 size{};
+    s64 modified{};
+    bool operator==(const PipelineCacheFileStamp&) const = default;
+};
+
+[[nodiscard]] std::optional<PipelineCacheFileStamp> StampPipelineCacheFile(
+    const std::filesystem::path& file);
+
+/// The sidecar recording the stamp of each source file (by file name) when it was last merged.
+using PipelineMergeLog = std::map<std::string, PipelineCacheFileStamp>;
+
+[[nodiscard]] PipelineMergeLog ReadPipelineMergeLog(const std::filesystem::path& file);
+bool WritePipelineMergeLog(const std::filesystem::path& file, const PipelineMergeLog& log);
 
 } // namespace VideoCommon
