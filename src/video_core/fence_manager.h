@@ -91,7 +91,9 @@ public:
         Nx2Profile::Scope profile_scope{Nx2Profile::Zone::Fence};
         // The accuracy can change while the game runs (settings dialog, Settings::UpdateGPUAccuracy
         // at each command list end): read once, every decision of this fence uses one value.
-        const bool delay_fence = DelayFences();
+        // A fence that writes a fence-flagged query report is never skipped as empty (upstream
+        // #337): skipped, its operation runs before the host GPU ran the work the report follows.
+        const bool delay_fence = VideoCore::g_signaling_query_report_fence || DelayFences();
         if constexpr (!can_async_check) {
             TryReleasePendingFences<false>();
         }
