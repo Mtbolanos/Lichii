@@ -81,6 +81,7 @@ namespace Common {
 thread_local HostMemory::AllocationTestControl* HostMemory::allocation_test_control{};
 
 [[maybe_unused]] constexpr size_t PageAlignment = 0x1000;
+[[maybe_unused]] constexpr int BackingAttempts = 5; // fastmem backing allocation tries (Windows)
 [[maybe_unused]] constexpr size_t HugePageSize = 0x200000;
 
 #ifdef _WIN32
@@ -158,8 +159,32 @@ public:
             return false;
         }
 
-        // Allocate backing file map
-        backing_handle = pfn_CreateFileMapping2(INVALID_HANDLE_VALUE, nullptr, FILE_MAP_WRITE | FILE_MAP_READ, PAGE_READWRITE, SEC_COMMIT, backing_size, nullptr, nullptr, 0);
+        // Allocate backing file map. SEC_COMMIT charges all of it to the commit limit up front, and
+        // when the free commit is only just above its size the call fails with
+        // ERROR_NO_SYSTEM_RESOURCES without growing a system-managed page file. The emulator then
+        // runs the whole session without fastmem (Ocarina of Time: 20-25% fewer fps). A private
+        // commit of the same size does grow the page file, so make one, release it and try again.
+        for (int attempt = 1; attempt <= BackingAttempts && !backing_handle; ++attempt) {
+            backing_handle = pfn_CreateFileMapping2(INVALID_HANDLE_VALUE, nullptr, FILE_MAP_WRITE | FILE_MAP_READ, PAGE_READWRITE, SEC_COMMIT, backing_size, nullptr, nullptr, 0);
+            if (backing_handle) {
+                if (attempt > 1) {
+                    LOG_INFO(HW_Memory, "Allocated {} MiB of backing memory on attempt {}", backing_size >> 20, attempt);
+                }
+                break;
+            }
+            const DWORD error = GetLastError();
+            MEMORYSTATUSEX status{};
+            status.dwLength = sizeof(status);
+            GlobalMemoryStatusEx(&status);
+            LOG_WARNING(HW_Memory, "Failed to allocate {} MiB of backing memory (attempt {}, error {}, {} MiB of commit free)",
+                        backing_size >> 20, attempt, error, status.ullAvailPageFile >> 20);
+            if (void* const probe = VirtualAlloc(nullptr, backing_size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE)) {
+                VirtualFree(probe, 0, MEM_RELEASE);
+            }
+            if (attempt < BackingAttempts) {
+                Sleep(50);
+            }
+        }
         if (!backing_handle) {
             LOG_CRITICAL(HW_Memory, "Failed to allocate {} MiB of backing memory", backing_size >> 20);
             return false;
