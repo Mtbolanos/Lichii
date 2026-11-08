@@ -679,13 +679,14 @@ void Maxwell3D::CallConstBufferWords(Core::System& system, const u32* methods,
 }
 
 void Maxwell3D::CallMethodSlow(Core::System& system, u32 method, u32 method_argument, bool is_last_call) {
-    // It is an error to write to a register other than the current macro's ARG register before
-    // it has finished execution.
-    if (executing_macro != 0 && method != executing_macro + 1) {
+    // Every word of a macro register run is a parameter of the macro it started, whichever macro
+    // register it writes (as on the split front, FrontCallMethod). Only a write to an ordinary
+    // register before the macro has all its parameters is an error.
+    if (executing_macro != 0 && method < MacroRegistersStart) {
         DumpRecentWrites(method);
     }
     if (executing_macro != 0) {
-        ASSERT(method == executing_macro + 1);
+        ASSERT(method >= MacroRegistersStart);
     }
     RecordWrite(method, method_argument, 1, is_last_call ? 1 : 2);
 

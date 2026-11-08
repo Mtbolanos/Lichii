@@ -1349,7 +1349,8 @@ void MacroEngine::Execute(Core::System& system, Engines::Maxwell3D& maxwell3d, u
                           std::span<const u32> parameters) {
     VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Macro};
     if (native_turing) {
-        maxwell3d.RefreshParameters();
+        // The parameters are the words the pusher fetched, as on the split front (FrontRunMacro):
+        // read again from guest memory, they are whatever reused that command memory since.
         const auto context = reinterpret_cast<std::uintptr_t>(this);
         static std::unordered_set<std::uintptr_t> captured_contexts;
         static const bool capture = std::getenv("EDEN_NATIVE_FRAME_CAPTURE") != nullptr;
