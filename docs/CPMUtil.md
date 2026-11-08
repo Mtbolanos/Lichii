@@ -204,6 +204,8 @@ To use them, you must add `ci: true` to your package definition. Alongside the c
 
 **Note that `package` is subject to removal here.**
 
+CI packages take their SHA512 from the artifact's `.sha512sum` release file. Once a package is in the cache, the hash it was verified against is kept in `.cpm_archive_sha512` next to it and used instead, so configuring doesn't need the release host. Caches made before this file existed get it on the next configure that can reach the host.
+
 Example:
 
 ```json
