@@ -7,6 +7,6 @@
 
 namespace FileSys::SystemArchive::SharedFontData {
 
-extern const std::array<unsigned char, 214300> FONT_STANDARD;
+extern const std::array<unsigned char, 216028> FONT_STANDARD;
 
 } // namespace FileSys::SystemArchive::SharedFontData
