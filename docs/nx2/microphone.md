@@ -11,8 +11,13 @@ Switch 2 clients can obtain `IAudioInManager` from `aud:u` command 0. This follo
 [documented Switch 2 audio interface](https://switchbrew.org/wiki/Audio_services#(S2)_aud:u).
 Capture uses the selected host input rather than the playback device, and does not
 inherit a surround playback channel count. Captured stereo is padded with silence
-for any additional requested guest channels. Unavailable capture streams return an
-audio-service error. Guest capture buffers are zero-filled on underrun.
+for any additional requested guest channels. Guest capture buffers are zero-filled on underrun.
+
+When the host microphone cannot be opened or started, capture falls back to silence
+and logs one warning (`host microphone unavailable, capturing silence`). The guest still
+gets success and receives silent frames at 48 kHz. Console hardware always has a
+microphone, so games do not handle a failed open: Ocarina read a null pointer 1 ms after
+`OpenStream` returned an error, when cubeb could not open a Linux input device.
 
 Ocarina uses the newer `nn::audio::InputStream` interface through `auddmg:u` and
 `audsmx:u`, rather than the legacy `IAudioInManager`. The reproduced freeze was a
@@ -25,7 +30,8 @@ The guest owns the consumer at ring offset `0x44`; capture publishes the produce
 at `0x1004`, after writing PCM at `0x1040`. These offsets, input creation flags `2`,
 mode-2 filled-frame notifications, and purge-zero semantics were verified against
 the running SDK code. Tests cover fresh samples, mono downmix, wraparound, gain,
-producer ownership, notifications, purge, allocation size, and the IPC format query.
+producer ownership, notifications, purge, allocation size, the IPC format query, and
+the silent fallback when the host stream fails to open or start.
 The user retested the revised build in Ocarina, confirmed the microphone test no
 longer crashes, and confirmed working voice input. Other games and sample rates
 have not been validated.

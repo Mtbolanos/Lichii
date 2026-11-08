@@ -6,9 +6,11 @@
 #include <cmath>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <mutex>
 #include <string>
 
+#include "audio_core/sink/silent_input_stream.h"
 #include "audio_core/sink/sink.h"
 #include "audio_core/sink/sink_stream.h"
 #include "common/logging.h"
@@ -53,13 +55,28 @@ struct SysmixOutput::Impl {
         open = false;
         engaged = false;
         data_mode = 0;
-        if (host) {
-            sink.CloseStream(host);
-            host = nullptr;
-        }
+        ReleaseHost();
         if (state_event) {
             state_event->Signal(system.Kernel());
         }
+    }
+
+    void ReleaseHost() {
+        if (host == silent_input.get()) {
+            silent_input.reset();
+        } else {
+            sink.CloseStream(host);
+        }
+        host = nullptr;
+    }
+
+    /// Replace a host microphone that failed to open or start with silence the guest can capture.
+    void UseSilentInput(u32 guest_channels) {
+        LOG_WARNING(Service_Audio,
+                    "sysmix stream {}: host microphone unavailable, capturing silence", id);
+        ReleaseHost();
+        silent_input = std::make_unique<AudioCore::Sink::SilentInputStream>(system, guest_channels);
+        host = silent_input.get();
     }
 
     /// Stop admission and notify the guest after invalid memory or a fatal host-stream failure.
@@ -104,6 +121,7 @@ struct SysmixOutput::Impl {
     Kernel::KEvent* state_event{};
     Kernel::KEvent* data_event{};
     AudioCore::Sink::SinkStream* host{};
+    std::unique_ptr<AudioCore::Sink::SinkStream> silent_input;
     mutable std::mutex mutex;
     u32 id;
     u64 buffer;
@@ -193,11 +211,11 @@ Result SysmixOutput::Open(u32 sample_type, u32 channels, u32 rate, u32 frames, u
     p.host = p.sink.AcquireSinkStream(p.system, channels, "sysmix-" + std::to_string(p.id),
                                       p.input_stream ? AudioCore::Sink::StreamType::In
                                                      : AudioCore::Sink::StreamType::Sysmix);
+    if (p.input_stream && (!p.host || !p.host->IsReady())) {
+        p.UseSilentInput(channels);
+    }
     if (!p.host || !p.host->IsReady()) {
-        if (p.host) {
-            p.sink.CloseStream(p.host);
-            p.host = nullptr;
-        }
+        p.ReleaseHost();
         R_RETURN(ResultOperationFailed);
     }
     p.slots = static_cast<u32>(slots);
@@ -232,6 +250,10 @@ Result SysmixOutput::SetEngaged(bool engaged) {
     }
     if (engaged) {
         p.host->Start();
+        if (p.input_stream && (!p.host->IsReady() || p.host->IsPaused())) {
+            p.UseSilentInput(p.channels);
+            p.host->Start();
+        }
         R_UNLESS(p.host->IsReady() && !p.host->IsPaused(), ResultOperationFailed);
     } else {
         p.host->Stop();
