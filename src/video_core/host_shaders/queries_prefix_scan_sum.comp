@@ -142,7 +142,7 @@ void main() {
     }
 
     // if we had less queries than our subgroup, just write down the results.
-    if (total_work <= gl_SubgroupSize * LOCAL_RESULTS) { // This condition is constant per dispatch.
+    if (total_work < gl_SubgroupSize * LOCAL_RESULTS) { // This condition is constant per dispatch.
         WriteResults(results);
         return;
     }

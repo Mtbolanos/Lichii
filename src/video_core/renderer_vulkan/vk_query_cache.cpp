@@ -225,7 +225,8 @@ public:
         // logged every 5 s while they happen.
         const int limit_setting = VideoCore::Nx2Debug::Experiment(16);
         const size_t limit =
-            limit_setting > 0 ? static_cast<size_t>(limit_setting) : SamplesQueryBank::BANK_SIZE;
+            limit_setting > 0 ? static_cast<size_t>(limit_setting)
+                          : 4 * SamplesQueryBank::BANK_SIZE; // upstream #718
         if (current_query && current_query->size_slots > limit) {
             static u64 resets{};
             static auto since = std::chrono::steady_clock::now();
@@ -675,7 +676,7 @@ private:
     bool accumulation_since_last_sync{};
     VideoCommon::HostQueryBase* current_query;
     bool has_started{};
-    u64 bank_bound_resets{}; ///< Counts CloseCounter dropped once a query outgrew a bank.
+    u64 bank_bound_resets{}; ///< Counts CloseCounter dropped once a query outgrew the bank bound.
     std::mutex flush_guard;
     std::optional<QueriesPrefixScanPass> queries_prefix_scan_pass;
 };
