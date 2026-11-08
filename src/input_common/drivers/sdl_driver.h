@@ -7,6 +7,7 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <mutex>
 #include <thread>
 #include "common/container/unordered_map.h"
@@ -36,7 +37,8 @@ public:
     /// Unregisters SDL device factories and shut them down.
     ~SDLDriver() override;
 
-    void PumpEvents() const;
+    /// Pumps SDL events and restarts the motion sensors of controllers whose reports stopped.
+    void PumpEvents();
 
     /// Handle SDL_Events for joysticks from SDL_PollEvent
     void HandleGameControllerEvent(const SDL_Event& event);
@@ -116,6 +118,7 @@ private:
     /// Map of GUID of a list of corresponding virtual Joysticks
     ::Common::unordered_map<Common::UUID, std::vector<std::shared_ptr<SDLJoystick>>> joystick_map;
     std::mutex joystick_map_mutex;
+    std::chrono::steady_clock::time_point last_motion_stall_check{};
 
     std::atomic<bool> initialized = false;
     bool start_thread;

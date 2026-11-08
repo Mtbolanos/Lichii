@@ -383,7 +383,17 @@ void InputEngine::TriggerOnMotionChange(const PadIdentifier& identifier, int mot
     if (!configuring || !mapping_callback.on_data) {
         return;
     }
-    const auto old_value = GetMotion(identifier, motion);
+    // Compare with the first value since mapping began, not the previous one: a sensor that
+    // reports every few milliseconds (SDL3 delivers every sample) changes too little between two
+    // reports for a shake to cross the thresholds.
+    const auto baseline = std::ranges::find_if(motion_baselines, [&](const MotionBaseline& entry) {
+        return entry.identifier == identifier && entry.motion == motion;
+    });
+    if (baseline == motion_baselines.end()) {
+        motion_baselines.push_back({identifier, motion, value});
+        return;
+    }
+    const BasicMotion old_value{baseline->value};
     bool is_active = false;
     if (std::abs(value.accel_x - old_value.accel_x) > 1.5f ||
         std::abs(value.accel_y - old_value.accel_y) > 1.5f ||
@@ -451,10 +461,14 @@ bool InputEngine::IsInputIdentifierEqual(const InputIdentifier& input_identifier
 }
 
 void InputEngine::BeginConfiguration() {
+    std::scoped_lock lock{mutex_callback};
+    motion_baselines.clear();
     configuring = true;
 }
 
 void InputEngine::EndConfiguration() {
+    std::scoped_lock lock{mutex_callback};
+    motion_baselines.clear();
     configuring = false;
 }
 

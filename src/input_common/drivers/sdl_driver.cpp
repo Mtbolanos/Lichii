@@ -99,6 +99,7 @@ public:
             return;
         }
         SDL_Gamepad* controller = sdl_controller.get();
+        last_motion_report = std::chrono::steady_clock::now();
         if (HasMotion()) {
             SDL_SetGamepadSensorEnabled(controller, SDL_SENSOR_ACCEL, false);
             SDL_SetGamepadSensorEnabled(controller, SDL_SENSOR_GYRO, false);
@@ -131,9 +132,24 @@ public:
         return has_gyro || has_accel;
     }
 
+    /// A connected controller with sensors that sent no report for a while: some controllers
+    /// stop reporting when another program (Steam Input) changes their sensor mode, or after
+    /// they reconnect. Returns true when EnableMotion should restart them, backing off up to
+    /// MaxMotionStallRetry while they stay silent.
+    bool IsMotionStalled(std::chrono::steady_clock::time_point now) {
+        std::scoped_lock lock{mutex};
+        if (!sdl_controller || !HasMotion() || now - last_motion_report < motion_stall_retry) {
+            return false;
+        }
+        motion_stall_retry = (std::min)(motion_stall_retry * 2, MaxMotionStallRetry);
+        return true;
+    }
+
     bool UpdateMotion(SDL_GamepadSensorEvent event) {
         constexpr float gravity_constant = 9.80665f;
         std::scoped_lock lock{mutex};
+        last_motion_report = std::chrono::steady_clock::now();
+        motion_stall_retry = InitialMotionStallRetry;
         const u64 sensor_timestamp = event.sensor_timestamp != 0 ? event.sensor_timestamp
                                                                  : event.timestamp;
 
@@ -411,6 +427,10 @@ private:
     static constexpr std::size_t MaxMotionRestartThreshold = 200 * 64;
     std::size_t motion_error_count{};
     std::size_t motion_restart_threshold{InitialMotionRestartThreshold};
+    static constexpr std::chrono::milliseconds InitialMotionStallRetry{1000};
+    static constexpr std::chrono::milliseconds MaxMotionStallRetry{8000};
+    std::chrono::steady_clock::time_point last_motion_report{};
+    std::chrono::milliseconds motion_stall_retry{InitialMotionStallRetry};
     bool motion_capabilities_logged{false};
     bool logged_accel{false};
     bool logged_gyro{false};
@@ -587,9 +607,25 @@ void SDLDriver::CloseJoystick(SDL_Joystick* sdl_joystick) {
     }
 }
 
-void SDLDriver::PumpEvents() const {
-    if (initialized) {
-        SDL_PumpEvents();
+void SDLDriver::PumpEvents() {
+    if (!initialized) {
+        return;
+    }
+    SDL_PumpEvents();
+    const auto now = std::chrono::steady_clock::now();
+    if (now - last_motion_stall_check < std::chrono::milliseconds{250}) {
+        return;
+    }
+    last_motion_stall_check = now;
+    std::scoped_lock lock{joystick_map_mutex};
+    for (const auto& [guid, joysticks] : joystick_map) {
+        for (const auto& joystick : joysticks) {
+            if (joystick->IsMotionStalled(now)) {
+                LOG_INFO(Input, "Motion sensor of {} port {} stopped reporting, restarting it",
+                         joystick->GetControllerName(), joystick->GetPort());
+                joystick->EnableMotion();
+            }
+        }
     }
 }
 
