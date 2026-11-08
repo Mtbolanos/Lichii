@@ -23,6 +23,13 @@ public:
         return std::construct_at(Memory(), std::forward<Args>(args)...);
     }
 
+    /// Destroys the objects and returns their memory; ReleaseContents keeps it for reuse
+    void Free() {
+        chunks.clear();
+        chunks.shrink_to_fit();
+        node = &chunks.emplace_back(new_chunk_size);
+    }
+
     void ReleaseContents() {
         if (chunks.empty()) {
             return;
