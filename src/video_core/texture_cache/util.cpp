@@ -34,6 +34,7 @@
 #include "video_core/texture_cache/decode_bc.h"
 #include "video_core/texture_cache/format_lookup_table.h"
 #include "video_core/texture_cache/formatter.h"
+#include "video_core/texture_cache/host_mip_limits.h"
 #include "video_core/texture_cache/samples_helper.h"
 #include "video_core/texture_cache/util.h"
 #include "video_core/textures/astc.h"
@@ -1490,6 +1491,16 @@ void SwizzleImage(Tegra::MemoryManager& gpu_memory, GPUVAddr gpu_addr, const Ima
                   Common::ScratchBuffer<u8>& tmp_buffer) {
     const bool is_pitch_linear = info.type == ImageType::Linear;
     for (const BufferImageCopy& copy : copies) {
+        const u32 levels =
+            info.num_samples > 1
+                ? 1
+                : HostMipLevelCount(info.size.width, info.size.height, info.size.depth,
+                                    static_cast<u32>(info.resources.levels));
+        if (!IsHostMipLevel(copy.image_subresource.base_level, levels)) {
+            // The host did not download this tail level. Preserve the guest bytes.
+            continue;
+        }
+
         if (is_pitch_linear) {
             SwizzlePitchLinearImage(gpu_memory, gpu_addr, info, copy, memory);
         } else {

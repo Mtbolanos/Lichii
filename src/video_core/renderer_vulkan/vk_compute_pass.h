@@ -162,6 +162,7 @@ public:
         /// layer_view(host level, layer).
         std::span<const u32> layers{};
         std::function<VkImageView(s32 host_level, u32 layer)> layer_view{};
+        u32 levels{~u32{0}};
     };
 
     /// Decodes `info`'s ASTC data in `map` into `target`. `skip` leading levels are absent on the

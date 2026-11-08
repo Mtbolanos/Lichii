@@ -637,6 +637,7 @@ void ASTCDecoderPass::Assemble(Image& image, const StagingBufferRef& map,
         .initialized = image.ExchangeInitialization(),
         .level_view = [&image](s32 host_level) { return image.StorageImageView(host_level); },
         .wait = true,
+        .levels = image.HostMipLevels(),
     };
     AssembleInto(image.info, image.host_level_offset, image.guest_size_bytes, target, map,
                  swizzles);
@@ -652,9 +653,11 @@ void ASTCDecoderPass::AssembleLayers(Image& image, const StagingBufferRef& map,
         .level_view = [&image](s32 host_level) { return image.StorageImageView(host_level); },
         .wait = true,
         .layers = layers,
-        .layer_view = [&image](s32 host_level, u32 layer) {
-            return image.StorageImageLayerView(host_level, layer);
-        },
+        .layer_view =
+            [&image](s32 host_level, u32 layer) {
+                return image.StorageImageLayerView(host_level, layer);
+            },
+        .levels = image.HostMipLevels(),
     };
     AssembleInto(image.info, image.host_level_offset, image.guest_size_bytes, target, map,
                  swizzles);
@@ -711,6 +714,9 @@ void ASTCDecoderPass::AssembleInto(const VideoCommon::ImageInfo& info, u32 skip,
     // Only some layers: one dispatch per layer and level, into that layer's own view.
     for (size_t i = 0; i < target.layers.size(); ++i) {
         for (const VideoCommon::SwizzleParameters& swizzle : swizzles) {
+            if (swizzle.level < static_cast<s32>(skip) ||
+                static_cast<u32>(swizzle.level - static_cast<s32>(skip)) >= target.levels)
+                continue;
             const size_t layer_offset = i * input_layer_stride;
             compute_pass_descriptor_queue.Acquire(scheduler, 2);
             compute_pass_descriptor_queue.AddBuffer(map.buffer,
@@ -744,6 +750,9 @@ void ASTCDecoderPass::AssembleInto(const VideoCommon::ImageInfo& info, u32 skip,
     }
     for (const VideoCommon::SwizzleParameters& swizzle : target.layers.empty() ? swizzles
                                                         : std::span<const VideoCommon::SwizzleParameters>{}) {
+        if (swizzle.level < static_cast<s32>(skip) ||
+            static_cast<u32>(swizzle.level - static_cast<s32>(skip)) >= target.levels)
+            continue;
         const size_t input_offset = swizzle.buffer_offset + map.offset;
         const u32 num_dispatches_x = Common::DivCeil(swizzle.num_tiles.width, 8U);
         const u32 num_dispatches_y = Common::DivCeil(swizzle.num_tiles.height, 8U);
