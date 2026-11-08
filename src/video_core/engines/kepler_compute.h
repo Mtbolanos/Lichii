@@ -312,6 +312,8 @@ private:
     void CheckDlssNetwork();
     [[nodiscard]] VideoCore::GameDlssReason GameDlssBlocker() const;
     void UpdateGameDlssStatus(bool complete, VideoCore::GameDlssReason blocker);
+    std::pair<std::vector<u32>, std::vector<u32>> NativeImageHandles(GPUVAddr program);
+    void RememberNativeUpscaleInput();
 
     /// This frame's DLSS evaluation (Fortune's Weave): whether its passes all ran, and whether
     /// the game's own network output is shown instead of the replacement upscale.
@@ -340,6 +342,17 @@ private:
         /// What the Graphics tab was last told.
         VideoCore::GameDlssStatus status{};
     } dlss_chain;
+
+    /// Ocarina of Time's movie network: a pass that reads one colour image and stores none
+    /// retains its input here; the pass that stores an image upscaling it is replaced by a plain
+    /// copy (the network's matrix passes cost tens of milliseconds per frame). Cleared after the
+    /// copy.
+    std::optional<Texture::TICEntry> native_upscale_input;
+    /// Native dispatches left to skip while a retained network is being replaced (bounded, so a
+    /// non-network pass cannot silence the engine forever).
+    u32 network_skip_remaining{};
+    /// Set when the replacement copy fails, so the full network runs from then on.
+    bool native_upscale_disabled{};
 
     /// Motion vectors and depth of Fire Emblem: Fortune's Weave's DLSS evaluation, from its first
     /// pass (run earlier in the frame than the network pass the stand-in replaces), with the input

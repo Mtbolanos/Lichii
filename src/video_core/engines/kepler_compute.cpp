@@ -33,6 +33,7 @@
 #include "video_core/engines/fermi_2d.h"
 #include "video_core/engines/kepler_compute.h"
 #include "video_core/nx2_indirect_grid.h"
+#include "video_core/engines/native_upscale.h"
 #include "video_core/engines/maxwell_3d.h"
 #include "video_core/game_dlss_status.h"
 #include "video_core/memory_manager.h"
@@ -682,6 +683,155 @@ bool KeplerCompute::DispatchNativeCompute(const NativeQmdScheduler::Descriptor& 
         dlss_depth.reset();
         (void)fe_upscale_jitter.Take();
     }
+    // Ocarina of Time's movie network (port of Eglantine 92f119195f): a pass that reads one
+    // colour image and stores none retains its colour and opens a skip window; the pass that
+    // stores an image upscaling it is replaced by a plain copy and closes it. The gameplay
+    // network is left alone: its pair (+0xc0 -> +0xd0) carries the tonemap.
+    // Off by default in this fork: the copy shows the movies at 60 fps but not as the game's
+    // network renders them. EDEN_NX2_OOT_MOVIE_COPY=1 turns it on (read after nx2_switches.txt).
+    static const bool movie_copy = [] {
+        const char* value = std::getenv("EDEN_NX2_OOT_MOVIE_COPY");
+        return value != nullptr && value[0] == '1';
+    }();
+    if (movie_copy && !native_upscale_disabled && !dlss_chain.active &&
+        Settings::GetCurrentProgramID() == VideoCommon::OotNetwork::ProgramId &&
+        (launch_description.const_buffer_enable_mask & 1)) {
+        const auto& cbuf = launch_description.const_buffer_config[0];
+        const GPUVAddr cbuf_address = (GPUVAddr{cbuf.address_high} << 32) | cbuf.address_low;
+        const auto image = [&](u32 offset) -> std::optional<Texture::TICEntry> {
+            if (offset + sizeof(u32) > cbuf.size.Value()) return std::nullopt;
+            const u32 handle = memory_manager.Read<u32>(cbuf_address + offset);
+            if (handle == 0 || (handle & 0xfffff) > regs.tic.limit) return std::nullopt;
+            return GetTICEntry(handle & 0xfffff);
+        };
+        const auto upscale_pair = [](const std::optional<Texture::TICEntry>& from,
+                                     const std::optional<Texture::TICEntry>& to,
+                                     bool same_format) {
+            if (!from || !to || (same_format && from->format != to->format) ||
+                from->Address() == 0 || to->Address() == 0 ||
+                from->Address() == to->Address() || !from->IsBlockLinear() ||
+                !to->IsBlockLinear())
+                return false;
+            const u64 from_width = from->Width(), from_height = from->Height();
+            const u64 to_width = to->Width(), to_height = to->Height();
+            const u64 cross_a = to_width * from_height, cross_b = to_height * from_width;
+            return from_width >= 64 && to_width > from_width && to_width <= from_width * 4 &&
+                   (cross_a > cross_b ? cross_a - cross_b : cross_b - cross_a) * 32 <= cross_a;
+        };
+        const auto [reads, stores] = NativeImageHandles(regs.code_loc.Address());
+        std::optional<Texture::TICEntry> replacement_input;
+        std::optional<Texture::TICEntry> replacement_output;
+        if (native_upscale_input && network_skip_remaining > 0 && !stores.empty()) {
+            if (const auto store = FindNativeUpscaleOutput(native_upscale_input, stores, image,
+                                                           upscale_pair)) {
+                replacement_input = native_upscale_input;
+                replacement_output = image(*store);
+            }
+        }
+        bool skipping{};
+        if (reads.size() == 1 && stores.empty() && reads.front() == 0x58) {
+            // Ocarina's movie network reads its colour at +0x58; anchoring the window there
+            // keeps gameplay compute untouched.
+            RememberNativeUpscaleInput();
+            if (native_upscale_input) {
+                network_skip_remaining = 32;
+                skipping = true;
+            }
+        } else if (!replacement_input && network_skip_remaining > 0) {
+            if (--network_skip_remaining == 0) {
+                native_upscale_input.reset();
+            }
+            skipping = true;
+        }
+        if (replacement_input && replacement_output) {
+            const auto surface = [](const Texture::TICEntry& tic)
+                -> std::optional<Fermi2D::Surface> {
+                using RTFormat = Tegra::RenderTargetFormat;
+                Fermi2D::Surface result{};
+                switch (tic.format) {
+                case Texture::TextureFormat::B10G11R11:
+                    result.format = RTFormat::B10G11R11_FLOAT;
+                    break;
+                case Texture::TextureFormat::R16G16B16A16:
+                    result.format = RTFormat::R16G16B16A16_FLOAT;
+                    break;
+                case Texture::TextureFormat::A8B8G8R8:
+                    result.format = RTFormat::A8B8G8R8_UNORM;
+                    break;
+                case Texture::TextureFormat::A2B10G10R10:
+                    result.format = RTFormat::A2B10G10R10_UNORM;
+                    break;
+                default:
+                    return std::nullopt;
+                }
+                if (tic.Address() == 0 || !tic.IsBlockLinear()) {
+                    return std::nullopt;
+                }
+                result.linear = Fermi2D::MemoryLayout::BlockLinear;
+                result.block_width.Assign(tic.block_width);
+                result.block_height.Assign(tic.block_height);
+                result.block_depth.Assign(tic.block_depth);
+                result.depth = 1;
+                result.width = tic.Width();
+                result.height = tic.Height();
+                result.addr_upper = static_cast<u32>(tic.Address() >> 32);
+                result.addr_lower = static_cast<u32>(tic.Address());
+                return result;
+            };
+            const auto source = surface(*replacement_input);
+            const auto dest = surface(*replacement_output);
+            if (source && dest) {
+                // Does the program decode sRGB itself? (Ocarina's movie network does.)
+                const bool decodes_srgb = [&] {
+                    const GPUVAddr program = regs.code_loc.Address();
+                    std::array<u32, 0x400> block{};
+                    bool threshold = false, exponent = false;
+                    for (u64 offset = 0; offset < 0x20000 && !(threshold && exponent);
+                         offset += sizeof(block)) {
+                        if (!memory_manager.IsFullyMappedRange(program + offset, sizeof(block)))
+                            break;
+                        memory_manager.ReadBlock(program + offset, block.data(), sizeof(block));
+                        for (size_t word = 0; word < block.size(); word += 4) {
+                            const u32 opcode = block[word] & 0xfff;
+                            threshold |= opcode == 0x434 && block[word + 1] == 0x292d292d;
+                            exponent |= opcode == 0x832 && block[word + 1] == 0x40cc40cc;
+                        }
+                    }
+                    return threshold && exponent;
+                }();
+                const Fermi2D::Config config{
+                    .operation = decodes_srgb ? Fermi2D::Operation::SrcCopySrgbToLinear
+                                              : Fermi2D::Operation::SrcCopy,
+                    .filter = Fermi2D::Filter::Bilinear,
+                    .must_accelerate = true,
+                    .dst_x0 = 0,
+                    .dst_y0 = 0,
+                    .dst_x1 = static_cast<s32>(replacement_output->Width()),
+                    .dst_y1 = static_cast<s32>(replacement_output->Height()),
+                    .src_x0 = 0,
+                    .src_y0 = 0,
+                    .src_x1 = static_cast<s32>(replacement_input->Width()),
+                    .src_y1 = static_cast<s32>(replacement_input->Height()),
+                };
+                const bool done = rasterizer->AccelerateSurfaceCopy(*source, *dest, config);
+                LOG_DEBUG(HW_GPU,
+                          "Native network pass {:#x} replaced by input copy {}->{} ({}): {}",
+                          regs.code_loc.Address(), replacement_input->Address(),
+                          replacement_output->Address(), decodes_srgb ? "sRGB" : "plain", done);
+                native_upscale_input.reset();
+                network_skip_remaining = 0;
+                if (done) {
+                    return true;
+                }
+                // Run the real pass, and the whole network on later frames.
+                native_upscale_disabled = true;
+                skipping = false;
+            }
+        }
+        if (skipping) {
+            return true;
+        }
+    }
     bool dispatched = true;
     // EXP10 (GpuSplit::BeginDispatchRecord): what the dispatch writes. A rejected program writes
     // nothing besides what its bindings marked before (recorded as they were marked).
@@ -1125,6 +1275,63 @@ bool KeplerCompute::BypassOotNetwork(u64 program_id, u64 native_key) {
 }
 
 std::atomic<u32> g_nx2_trace_draws_after_upscale{};
+
+// The cbuf0 byte offsets of the texture handles a native program reads (TEX, TLD, TLD4, TXD) and
+// the surface handles it stores to (SUST.P), from its code up to the first unconditional EXIT.
+std::pair<std::vector<u32>, std::vector<u32>> KeplerCompute::NativeImageHandles(GPUVAddr program) {
+    static std::unordered_map<GPUVAddr, std::pair<std::vector<u32>, std::vector<u32>>> cache;
+    if (const auto it = cache.find(program); it != cache.end()) {
+        return it->second;
+    }
+    std::pair<std::vector<u32>, std::vector<u32>> handles;
+    const auto add = [](std::vector<u32>& list, u32 offset) {
+        if (std::find(list.begin(), list.end(), offset) == list.end()) list.push_back(offset);
+    };
+    std::array<u32, 0x400> block{};
+    bool exited = false;
+    for (u64 offset = 0; offset < 0x40000 && !exited; offset += sizeof(block)) {
+        if (!memory_manager.IsFullyMappedRange(program + offset, sizeof(block))) break;
+        memory_manager.ReadBlock(program + offset, block.data(), sizeof(block));
+        for (size_t word = 0; word < block.size() && !exited; word += 4) {
+            const u32 opcode = block[word] & 0xfff;
+            const u32 binding = (block[word + 1] >> 22) & 0x1f;
+            const u32 handle = ((block[word + 1] >> 8) & 0x3fff) * 4;
+            switch (opcode) {
+            case 0xb60: case 0xb63: case 0xb66: case 0xb6d:
+                if (binding == 0) add(handles.first, handle);
+                break;
+            case 0xb9b:
+                if (binding == 0) add(handles.second, handle);
+                break;
+            case 0x94d: // EXIT, unconditional when guarded by PT
+                exited = ((block[word] >> 12) & 0xf) == 7;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    return cache.emplace(program, std::move(handles)).first->second;
+}
+
+void KeplerCompute::RememberNativeUpscaleInput() {
+    native_upscale_input.reset();
+    const auto [reads, stores] = NativeImageHandles(regs.code_loc.Address());
+    // An image-fed matrix pass writes its intermediate results to buffers. Retain its colour
+    // input: the final pass's sampled image is another intermediate that a skipped network never
+    // produced (Ocarina's movie network reads its colour at +0x58).
+    if (reads.size() != 1 || !stores.empty()) return;
+    const auto& cbuf = launch_description.const_buffer_config[0];
+    if (reads.front() + sizeof(u32) > cbuf.size.Value()) return;
+    const GPUVAddr address = (GPUVAddr{cbuf.address_high} << 32) | cbuf.address_low;
+    const u32 handle = memory_manager.Read<u32>(address + reads.front());
+    if (handle == 0 || (handle & 0xfffff) > regs.tic.limit) return;
+    const auto input = GetTICEntry(handle & 0xfffff);
+    if (input.Address() != 0 && input.IsBlockLinear() && input.Width() >= 64 &&
+        input.Height() >= 64) {
+        native_upscale_input = input;
+    }
+}
 
 // Fire Emblem: Fortune's Weave's first DLSS pass (rejected, before the network) has the input colour
 // at cbuf0+0x278, its motion vectors (R16G16 float, the input's size) at +0x290, its depth (Z32, the
