@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
@@ -402,6 +403,55 @@ TEST_CASE("Welcome Tour logged half gathers round and pack both destination orde
                 }
             }
         }
+    }
+}
+
+TEST_CASE("Half gathers with fewer than four taps pack only the taps they have",
+          "[video_core][ampere][logged_textures]") {
+    struct Case {
+        u32 mask;
+        u32 second_dest;
+        u32 first;
+        std::optional<u32> second;
+    };
+    // sample {1.0, 1.0 + ulp, -0.0, 0.75}: the enabled taps pack low-high from R2, then R3.
+    for (const Case& c : {Case{1, 0xff, 0x00003c00, std::nullopt},
+                          Case{2, 0xff, 0x00003c01, std::nullopt},
+                          Case{3, 0xff, 0x3c013c00, std::nullopt},
+                          Case{12, 0xff, 0x3a008000, std::nullopt},
+                          Case{3, 0x03, 0x3c013c00, std::nullopt},
+                          Case{7, 0x03, 0x3c013c00, 0x00008000}}) {
+        INFO("mask " << c.mask << " second destination " << c.second_dest);
+        auto instruction{Gathers[0]};
+        instruction.words[2] = (instruction.words[2] & ~0xfffU) | (c.mask << 8) | c.second_dest;
+        const auto lowered{Shader::Ampere::LowerToMaxwell(std::array{instruction, Exit})};
+        INFO(lowered.error);
+        REQUIRE(lowered);
+        TextureTranslation translated;
+        translated.registers.fill(0xdeadbeef);
+        translated.registers[6] = 0x3e000000;
+        translated.registers[7] = 0x3f400000;
+        translated.registers[255] = 0; // RZ: constant propagation folds its reads to zero
+        translated.sample = {0x3f801000, 0x3f801001, 0x80000000, 0x3f400000};
+        const auto before{translated.registers};
+        translated.Translate(lowered, 7);
+        translated.Run();
+        CHECK(translated.textures == 1);
+        CHECK(translated.registers[2] == c.first);
+        if (c.second) {
+            CHECK(translated.registers[c.second_dest] == *c.second);
+        }
+        for (u32 reg = 0; reg < 246; ++reg) {
+            if (reg != 2 && (!c.second || reg != c.second_dest)) {
+                REQUIRE(translated.registers[reg] == before[reg]);
+            }
+        }
+    }
+    // Three or four taps still need a second destination register.
+    for (const u32 mask : {7U, 15U}) {
+        auto instruction{Gathers[0]};
+        instruction.words[2] = (instruction.words[2] & ~0xfffU) | (mask << 8) | 0xff;
+        CHECK_FALSE(Shader::Ampere::LowerToMaxwell(std::array{instruction, Exit}));
     }
 }
 
