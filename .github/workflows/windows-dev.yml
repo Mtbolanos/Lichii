@@ -215,7 +215,6 @@ jobs:
             -DVulkanHeaders_FORCE_BUNDLED=ON
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON
             -DENABLE_UPDATE_CHECKER=ON
-            -DLICHII_BUILD_TAG=build-${{ github.run_number }}
             -DLICHII_BUILD_PLATFORM=${{ matrix.platform }}
             -DUSE_DISCORD_PRESENCE=OFF
             -DUSE_CCACHE=ON
@@ -248,7 +247,6 @@ jobs:
           -DYUZU_USE_BUNDLED_QT=OFF
           -DYUZU_USE_BUNDLED_SDL3=ON
           -DENABLE_UPDATE_CHECKER=ON
-          -DLICHII_BUILD_TAG=build-${{ github.run_number }}
           -DLICHII_BUILD_PLATFORM=${{ matrix.platform }}
           -DUSE_DISCORD_PRESENCE=OFF
           -DCMAKE_C_COMPILER_LAUNCHER=sccache
@@ -272,7 +270,6 @@ jobs:
             -DVulkanHeaders_FORCE_BUNDLED=ON \
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
             -DENABLE_UPDATE_CHECKER=ON \
-            -DLICHII_BUILD_TAG=build-${{ github.run_number }} \
             -DLICHII_BUILD_PLATFORM=${{ matrix.platform }} \
             -DUSE_DISCORD_PRESENCE=OFF \
             -DUSE_CCACHE=ON
@@ -299,7 +296,6 @@ jobs:
             -DVulkanHeaders_FORCE_BUNDLED=ON \
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON \
             -DENABLE_UPDATE_CHECKER=ON \
-            -DLICHII_BUILD_TAG=build-${{ github.run_number }} \
             -DLICHII_BUILD_PLATFORM=${{ matrix.platform }} \
             -DUSE_DISCORD_PRESENCE=OFF \
             -DUSE_CCACHE=ON \
