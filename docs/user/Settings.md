@@ -12,6 +12,15 @@ Some of the options are self explanatory, and they do exactly what they say they
 
 Before touching the settings, see the game boots with stock options. We try our best to ensure users can boot any game using the default settings. If they don't work, then you may try fiddling with options - but please, first use stock options.
 
+## Recommended settings
+
+The first time Lichii starts, it asks whether to use the developer's recommended settings. They only change performance options on the Graphics (Advanced and Extras), System and CPU pages. Language, region, resolution, graphics backend and per-game settings stay as they are.
+
+- `Help/Apply Recommended Settings...`: Asks the same question again.
+- `Help/Restore My Previous Settings`: Puts back the values you had before you first applied the recommended ones. It appears once the recommended settings have changed something.
+
+Neither is available while a game runs.
+
 ## General
 
 - `General/Force X11 as Graphics Backend`: Wayland on *NIX has prominent issues that are unlikely to be resolved; the kind that are "not our fault, it's Wayland issue", this "temporary" hack forces X11 as the backend, regardless of the desktop manager's default.

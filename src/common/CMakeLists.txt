@@ -101,6 +101,8 @@ add_library(
     range_mutex.h
     range_sets.h
     range_sets.inc
+    recommended_settings.cpp
+    recommended_settings.h
     ring_buffer.h
     ${CMAKE_CURRENT_BINARY_DIR}/scm_rev.cpp
     scm_rev.h

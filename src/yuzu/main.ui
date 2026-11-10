@@ -236,6 +236,9 @@
     <addaction name="action_Open_Mods_Page"/>
     <addaction name="action_Open_UserHandbook"/>
     <addaction name="separator"/>
+    <addaction name="action_Apply_Recommended_Settings"/>
+    <addaction name="action_Restore_Previous_Settings"/>
+    <addaction name="separator"/>
     <addaction name="action_About"/>
     <addaction name="action_Eden_Dependencies"/>
    </widget>
@@ -410,6 +413,16 @@
   <action name="action_Open_UserHandbook">
    <property name="text">
     <string>&amp;User Handbook</string>
+   </property>
+  </action>
+  <action name="action_Apply_Recommended_Settings">
+   <property name="text">
+    <string>Apply Recommended &amp;Settings...</string>
+   </property>
+  </action>
+  <action name="action_Restore_Previous_Settings">
+   <property name="text">
+    <string>Restore My &amp;Previous Settings</string>
    </property>
   </action>
   <action name="action_Capture_Screenshot">

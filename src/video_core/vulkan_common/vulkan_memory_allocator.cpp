@@ -315,6 +315,11 @@ VkResult MemoryAllocator::AllocateImage(const VkImageCreateInfo &ci, bool dedica
     if (result != VK_SUCCESS) {
         failed_images.fetch_add(1, std::memory_order_relaxed);
         static u32 failed_logged{};
+        if (failed_logged == 0) {
+            // What ran out: the device's heaps or the host's commit. Before the error line,
+            // which is the one that reaches the log file when the session ends here.
+            LogMemoryTrace(device);
+        }
         if (failed_logged++ < 32) {
             LOG_ERROR(Render_Vulkan, "Image {}x{}x{} ({} levels, {} layers, format {}) failed: {}",
                       ci.extent.width, ci.extent.height, ci.extent.depth, ci.mipLevels,

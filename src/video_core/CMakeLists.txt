@@ -333,6 +333,7 @@ add_library(video_core STATIC
     texture_cache/format_lookup_table.h
     texture_cache/image_base.cpp
     texture_cache/image_base.h
+    texture_cache/host_memory_limit.h
     texture_cache/host_mip_limits.h
     texture_cache/image_info.cpp
     texture_cache/image_info.h

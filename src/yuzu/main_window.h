@@ -406,6 +406,9 @@ private slots:
     void OnInstallDecryptionKeys();
     void OnAbout();
     void OnEdenDependencies();
+    void OfferRecommendedSettings();
+    void OnApplyRecommendedSettings();
+    void OnRestorePreviousSettings();
     void OnDataDialog();
     void OnToggleFilterBar();
     void OnToggleStatusBar();

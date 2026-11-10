@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -132,8 +133,15 @@ private:
     bool Parse();
     bool ParseMeta(PackageInfo& package);
     bool ValidateDirTree() const;
-    void BuildDirTree(u32 dir_index, VectorVfsDirectory& out);
-    VirtualDir BuildPackageDir(u32 dir_index);
+    /// With serve_stand_ins, a .zs member with no zstd header is served from a sound sibling.
+    void BuildDirTree(u32 dir_index, VectorVfsDirectory& out, bool serve_stand_ins);
+    VirtualFile OpenFileAs(std::size_t file_index, const std::string& name);
+    /// Whether a member starts with the zstd frame magic; nothing when it cannot be read.
+    std::optional<bool> HasZstdMagic(std::size_t file_index) const;
+    /// A sound sibling to serve in place of a damaged .zs member, if any.
+    std::optional<std::size_t> FindStandIn(std::size_t damaged,
+                                           std::span<const std::size_t> siblings) const;
+    VirtualDir BuildPackageDir(u32 dir_index, bool serve_stand_ins);
     std::vector<u8> ReadExtentRaw(const FileNode& node) const;
 
     VirtualFile file;

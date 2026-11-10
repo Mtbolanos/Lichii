@@ -8,6 +8,7 @@
 #include <fstream>
 #include <random>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -74,6 +75,7 @@ struct Member {
     std::vector<u8> extent;
     u64 size;
     u8 codec;
+    std::string name{};
 };
 
 Member ZstdMember(const std::vector<u8>& content) {
@@ -85,7 +87,12 @@ std::vector<u8> BuildNup(const std::vector<Member>& members) {
     constexpr std::size_t TocOffset = 0x80;
     const std::size_t files_at = 0x30 + 0x40 + 0x18;
     const std::size_t children_at = files_at + members.size() * 0x50;
-    const std::size_t toc_size = children_at + members.size() * 4;
+    const std::size_t pool_at = children_at + members.size() * 4;
+    std::string pool;
+    for (const auto& member : members) {
+        pool += member.name;
+    }
+    const std::size_t toc_size = pool_at + pool.size();
     const std::size_t blob_offset = (TocOffset + toc_size + 15) & ~std::size_t{15};
     std::vector<u8> bytes(blob_offset);
     std::vector<u64> extent_offsets;
@@ -107,11 +114,17 @@ std::vector<u8> BuildNup(const std::vector<Member>& members) {
     Put(bytes, toc + 0x04, 1, 4);
     Put(bytes, toc + 0x08, 1, 8);
     Put(bytes, toc + 0x10, members.size(), 8);
-    Put(bytes, toc + 0x18, toc_size, 8);
+    Put(bytes, toc + 0x18, pool_at, 8);
+    Put(bytes, toc + 0x20, pool.size(), 8);
+    std::copy(pool.begin(), pool.end(), bytes.begin() + toc + pool_at);
     Put(bytes, toc + 0x30 + 0x0C, 0xFFFFFFFF, 4);
     Put(bytes, toc + 0x30 + 0x40 + 0x0C, members.size(), 4);
+    std::size_t name_offset = 0;
     for (std::size_t i = 0; i < members.size(); ++i) {
         const std::size_t record = toc + files_at + i * 0x50;
+        Put(bytes, record + 0x00, name_offset, 4);
+        Put(bytes, record + 0x04, members[i].name.size(), 4);
+        name_offset += members[i].name.size();
         Put(bytes, record + 0x08, members[i].size, 8);
         Put(bytes, record + 0x10, extent_offsets[i], 8);
         Put(bytes, record + 0x18, members[i].extent.size(), 8);
@@ -335,4 +348,61 @@ TEST_CASE("NUP zstd spilled members resume after their decoder is freed", "[nup]
     for (std::size_t i = 0; i < contents.size(); ++i) {
         REQUIRE(nup.OpenFile(i)->ReadAllBytes() == contents[i]);
     }
+}
+
+TEST_CASE("NUP serves a sound sibling in place of a .zs member with no zstd header",
+          "[nup][nup-read]") {
+    const auto zstd_file = [](u64 seed) { return Zstd(Content(200 * 1024, seed)); };
+    auto damaged = zstd_file(1);
+    std::fill_n(damaged.begin(), 12288, u8{0});
+    const auto stand_in = zstd_file(2);
+    const auto other_prefix = zstd_file(3);
+    const auto other_kind = zstd_file(4);
+    auto lonely = zstd_file(5);
+    std::fill_n(lonely.begin(), 12288, u8{0});
+    const std::vector<u8> zeros(4096, 0);
+    Member unreadable = ZstdMember(zstd_file(6));
+    std::fill_n(unreadable.extent.begin(), 8, u8{0xA5});
+
+    const auto named = [](Member member, std::string name) {
+        member.name = std::move(name);
+        return member;
+    };
+    const std::vector<Member> members{
+        named(ZstdMember(damaged), "Rock_WaterTemple_Gate_M_01_Nrm.bntx.zs"),
+        named(ZstdMember(stand_in), "Rock_WaterTemple_Gate_P_01_Nrm.bntx.zs"),
+        named({other_prefix, other_prefix.size(), 0}, "Rock_WaterTemple_Wall_A_01_Nrm.bntx.zs"),
+        named(ZstdMember(other_kind), "Rock_WaterTemple_Gate_M_01_Alb.bntx.zs"),
+        named(ZstdMember(lonely), "Lonely_Mask.bntx.zs"),
+        named(unreadable, "Broken_A_01_Nrm.bntx.zs"),
+        named(ZstdMember(zeros), "Model.bfres"),
+    };
+    TempDir t;
+    NupContainer nup{Backing(BuildNup(members)), std::size_t{64} << 20, t.path};
+    REQUIRE(nup.GetStatus() == Loader::ResultStatus::Success);
+    const auto dir = nup.GetRomFSDir(0);
+    REQUIRE(dir != nullptr);
+    REQUIRE(dir->GetFiles().size() == members.size());
+    const auto read = [&](std::string_view name) {
+        const auto file = dir->GetFile(name);
+        REQUIRE(file != nullptr);
+        REQUIRE(file->GetName() == name);
+        return file->ReadAllBytes();
+    };
+
+    // Same last name token, then the longest common prefix.
+    REQUIRE(read("Rock_WaterTemple_Gate_M_01_Nrm.bntx.zs") == stand_in);
+    REQUIRE(read("Rock_WaterTemple_Gate_P_01_Nrm.bntx.zs") == stand_in);
+    REQUIRE(read("Rock_WaterTemple_Wall_A_01_Nrm.bntx.zs") == other_prefix);
+    REQUIRE(read("Rock_WaterTemple_Gate_M_01_Alb.bntx.zs") == other_kind);
+    // Without a sibling of its kind a damaged member is served as stored.
+    REQUIRE(read("Lonely_Mask.bntx.zs") == lonely);
+    // A member that cannot be decoded is not known to be damaged, so it is not replaced.
+    REQUIRE(read("Broken_A_01_Nrm.bntx.zs").empty());
+    REQUIRE(read("Model.bfres") == zeros);
+
+    // Extraction reads the package tree, which keeps the stored bytes.
+    const auto package = nup.GetPackageDir(0);
+    REQUIRE(package != nullptr);
+    REQUIRE(package->GetFile("Rock_WaterTemple_Gate_M_01_Nrm.bntx.zs")->ReadAllBytes() == damaged);
 }
