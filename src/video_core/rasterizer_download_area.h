@@ -14,7 +14,27 @@ struct RasterizerDownloadArea {
     VAddr start_address;
     VAddr end_address;
     bool preemtive;
+    /// EDEN_NX2_EXP49 (async read-back): what guest memory lacks there is on its way for an
+    /// earlier read. Nothing to flush, only to wait for (RasterizerInterface::FinishRead).
+    bool in_flight{};
 };
+
+/// EDEN_NX2_EXP49: downloads for guest CPU reads that are submitted but not yet written to guest
+/// memory (RasterizerInterface::FlushRegionForRead). While there are any, a write to guest memory
+/// from the GPU's side first lands those it overlaps (FinishRead), so none lands over it later.
+inline std::atomic<u32> g_read_downloads{};
+
+/// Tegra::Nx2MayBeGpuWritten on Switch 2 titles, true otherwise. Defined in gpu.cpp: nx2.h can't
+/// be included here, since the Qt frontend reaches this header and its `slots` macro breaks it.
+[[nodiscard]] bool MayHoldGpuWrites(DAddr addr, u64 size);
+
+/// Whether such a download may still land over [addr, addr + size): what a write to guest memory
+/// from the GPU's side asks before FinishRead, on any thread, without the buffer cache's lock.
+/// The downloads take only GPU-modified bytes, whose pages Switch 2 titles mark
+/// (Tegra::Nx2MayBeGpuWritten): writes to other pages skip the lock.
+[[nodiscard]] inline bool ReadDownloadsMayCover(DAddr addr, u64 size) {
+    return g_read_downloads.load(std::memory_order_acquire) != 0 && MayHoldGpuWrites(addr, size);
+}
 
 /// What DownloadLanding publishes.
 struct DownloadLandingState {

@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "common/assert.h"
+#include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/settings_enums.h"
 #include "core/core.h"
@@ -39,7 +40,9 @@
 #include "video_core/host1x/syncpoint_manager.h"
 #include "video_core/memory_manager.h"
 #include "video_core/nx2.h"
+#include "video_core/nx2_async_readback.h"
 #include "video_core/nx2_debug_control.h"
+#include "video_core/nx2_profile.h"
 #include "video_core/renderer_base.h"
 #include "video_core/shader_notify.h"
 
@@ -113,15 +116,46 @@ struct GPU::Impl {
         std::vector<std::pair<DAddr, u64>> writes;
         std::function<void(PAddr, size_t)> callback_writes(
             [&writes](PAddr address, size_t size) { writes.emplace_back(address, size); });
-        system.GatherGPUDirtyMemory(callback_writes);
-        if (!writes.empty()) {
-            renderer->ReadRasterizer()->OnCacheInvalidations(writes);
+        // EDEN_NX2_EXP49: gathered writes stay pending (ForEachPendingCpuWrite) until they are
+        // applied. A read download written to guest memory meanwhile on a reading thread
+        // (FinishRead) would otherwise write the GPU's older bytes over them. Read downloads are
+        // recorded on the thread that applies these (FlushRegionForRead calls this first), so
+        // with none pending and the switch off nothing is tracked and no lock is taken.
+        const bool track = VideoCore::g_read_downloads.load(std::memory_order_acquire) != 0 ||
+                           VideoCore::Nx2Debug::Experiment(49) != 0;
+        if (!track) {
+            system.GatherGPUDirtyMemory(callback_writes);
+            if (!writes.empty()) {
+                renderer->ReadRasterizer()->OnCacheInvalidations(writes);
+            }
+            return;
         }
+        {
+            std::scoped_lock lock{applying_writes_mutex};
+            system.GatherGPUDirtyMemory(callback_writes);
+            if (writes.empty()) {
+                return;
+            }
+            applying_writes.push_back(&writes);
+        }
+        // Also if OnCacheInvalidations throws: ForEachPendingCpuWrite must not reach `writes`
+        // once it is gone.
+        SCOPE_EXIT {
+            std::scoped_lock lock{applying_writes_mutex};
+            std::erase(applying_writes, &writes);
+        };
+        renderer->ReadRasterizer()->OnCacheInvalidations(writes);
     }
 
     void ForEachPendingCpuWrite(const std::function<void(DAddr, size_t)>& callback) {
+        std::scoped_lock lock{applying_writes_mutex};
         for (auto& manager : system.GetGPUDirtyMemoryManager()) {
             manager.ForEachPending(callback);
+        }
+        for (const auto* writes : applying_writes) {
+            for (const auto& [address, size] : *writes) {
+                callback(address, size);
+            }
         }
     }
 
@@ -285,13 +319,45 @@ struct GPU::Impl {
                      raster_area.start_address, raster_area.end_address,
                      reads.load(std::memory_order_relaxed));
         }
-        const u64 fence = RequestSyncOperation([this, raster_area]() {
-            // Apply collected guest writes before downloading GPU data over guest memory.
-            InvalidateGPUCache();
-            renderer->ReadRasterizer()->FlushRegion(raster_area.start_address, raster_area.end_address - raster_area.start_address);
-        });
-        gpu_thread.TickGPU(is_async);
-        WaitForSyncOperation(fence);
+        namespace AsyncReadback = VideoCore::AsyncReadback;
+        const u64 request = AsyncReadback::Now();
+        const u64 area_size = raster_area.end_address - raster_area.start_address;
+        // EDEN_NX2_EXP49 (live; zortos293/Lichii#1028): the GPU thread submits the read's
+        // downloads without waiting for the host GPU, and this thread waits for them. An area an
+        // earlier read's downloads cover (in_flight) only waits; with the switch off it flushes
+        // as before, which lands or downloads those bytes again.
+        const bool async = VideoCore::Nx2Debug::Experiment(49) != 0;
+        if (!async || !raster_area.in_flight) {
+            const u64 fence = RequestSyncOperation([this, raster_area, area_size, async]() {
+                // Its own zone: it runs in whatever zone TickWork runs in (a draw's, mostly).
+                const VideoCommon::Nx2Profile::Scope read_scope{
+                    VideoCommon::Nx2Profile::Zone::ReadFlush};
+                const u64 start = AsyncReadback::Now();
+                // Apply collected guest writes before downloading GPU data over guest memory.
+                InvalidateGPUCache();
+                if (async) {
+                    renderer->ReadRasterizer()->FlushRegionForRead(raster_area.start_address,
+                                                                   area_size);
+                } else {
+                    renderer->ReadRasterizer()->FlushRegion(raster_area.start_address, area_size);
+                }
+                AsyncReadback::Add(AsyncReadback::g_counters.flush_ns,
+                                   AsyncReadback::Now() - start);
+            });
+            gpu_thread.TickGPU(is_async);
+            WaitForSyncOperation(fence);
+        }
+        AsyncReadback::Read kind = AsyncReadback::Read::Sync;
+        if (async) {
+            // Written to guest memory before this thread reads, while the GPU thread goes on.
+            AsyncReadback::t_reading = true;
+            renderer->ReadRasterizer()->FinishRead(raster_area.start_address, area_size);
+            AsyncReadback::t_reading = false;
+            kind = raster_area.in_flight ? AsyncReadback::Read::InFlight
+                                         : AsyncReadback::Read::Async;
+        }
+        AsyncReadback::CountRead(kind, AsyncReadback::Now() - request);
+        AsyncReadback::MaybeReport();
         return raster_area;
     }
 
@@ -301,6 +367,8 @@ struct GPU::Impl {
             VideoCore::RasterizerInterface* rasterizer = renderer->ReadRasterizer();
             if (!rasterizer->TryCacheInvalidation(addr, size)) {
                 const u64 fence = RequestSyncOperation([rasterizer, addr, size] {
+                    const VideoCommon::Nx2Profile::Scope read_scope{
+                        VideoCommon::Nx2Profile::Zone::ReadFlush};
                     rasterizer->FlushRegion(addr, size, VideoCommon::CacheType::BufferCache);
                     rasterizer->OnCacheInvalidation(addr, size);
                 });
@@ -419,6 +487,11 @@ struct GPU::Impl {
     VideoCommon::PendingMaps pending_maps;
     std::mutex sync_request_mutex;
     std::condition_variable sync_request_cv;
+
+    /// InvalidateGPUCache: the writes it gathered and is applying, on each thread doing so
+    /// (EDEN_NX2_EXP49).
+    std::vector<const std::vector<std::pair<DAddr, u64>>*> applying_writes;
+    std::mutex applying_writes_mutex;
     /// The GPU threads stopped and the requests were dropped (NotifyShutdown, under the mutex).
     bool sync_requests_dropped{};
 
@@ -494,6 +567,7 @@ void GPU::OnCommandListEnd() {
 
 u64 GPU::RequestFlush(DAddr addr, std::size_t size) {
     return impl->RequestSyncOperation([this, addr, size]() {
+        const VideoCommon::Nx2Profile::Scope read_scope{VideoCommon::Nx2Profile::Zone::ReadFlush};
         impl->renderer->ReadRasterizer()->FlushRegion(addr, size);
     });
 }
@@ -654,3 +728,12 @@ void GPU::FlushAndInvalidateRegion(DAddr addr, u64 size) {
 }
 
 } // namespace Tegra
+
+namespace VideoCore {
+
+bool MayHoldGpuWrites(DAddr addr, u64 size) {
+    return !Tegra::g_nx2_ampere.load(std::memory_order_relaxed) ||
+           Tegra::Nx2MayBeGpuWritten(addr, size);
+}
+
+} // namespace VideoCore

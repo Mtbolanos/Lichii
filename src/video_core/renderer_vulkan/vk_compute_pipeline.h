@@ -63,6 +63,8 @@ public:
                                  BindCommand* deferred_bind = nullptr);
 
     static constexpr u64 Ocarina1440pShader = 0x6bd913e1f34e83ebULL;
+    /// The same output pass at 1:1, run at 1920x1080 in handheld with the Max Resolution add-on.
+    static constexpr u64 OcarinaFullSizeShader = 0xc033c3ddc9f0897bULL;
     [[nodiscard]] bool CanReplaceOcarinaUpscale() const;
 
     bool IsBound() const noexcept {
@@ -103,6 +105,10 @@ public:
     /// Whether the build ended without a pipeline (its module could not be made).
     [[nodiscard]] bool BuildFailed() const noexcept {
         return is_built.load(std::memory_order::acquire) && !pipeline;
+    }
+    /// Whether the build ended, with a pipeline or not.
+    [[nodiscard]] bool IsBuilt() const noexcept {
+        return is_built.load(std::memory_order::acquire);
     }
 
     /// Whether no build of this pipeline is left queued on a worker thread, which holds it

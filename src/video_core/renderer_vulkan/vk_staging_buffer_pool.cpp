@@ -305,6 +305,17 @@ StagingBufferPool::StagingBuffersCache& StagingBufferPool::GetCache(MemoryUsage 
     }
 }
 
+u64 StagingBufferPool::CachedBytes(MemoryUsage usage) {
+    u64 bytes{};
+    const StagingBuffersCache& cache = GetCache(usage);
+    for (size_t level = 0; level < NUM_LEVELS; ++level) {
+        if (!cache[level].entries.empty()) {
+            bytes += u64{cache[level].entries.size()} << level;
+        }
+    }
+    return bytes;
+}
+
 void StagingBufferPool::ReleaseCache(MemoryUsage usage) {
     ReleaseLevel(GetCache(usage), current_delete_level);
 }

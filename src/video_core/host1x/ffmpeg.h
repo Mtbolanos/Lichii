@@ -191,11 +191,21 @@ public:
         return m_decode_order;
     }
 
+    /// Whether the context still decodes on the host GPU (get_format can drop the device).
+    bool UsingHardware() const {
+        return m_codec_context->hw_device_ctx != nullptr;
+    }
+
+    /// Send, receive and GPU copy-back errors so far.
+    u64 ErrorCount() const {
+        return m_errors;
+    }
+
 private:
     const Decoder& m_decoder;
     AVCodecContext* m_codec_context{};
-    std::shared_ptr<Frame> m_final_frame{};
     bool m_decode_order{};
+    u64 m_errors{};
 };
 
 struct FrameOffsets {

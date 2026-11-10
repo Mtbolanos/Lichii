@@ -64,8 +64,12 @@ public:
         ASSERT(references == 0);
         VideoCommon::BankBase::Reset();
         if (device.IsHostQueryResetSupported()) {
-            const auto& dev = device.GetLogical();
-            dev.ResetQueryPool(*query_pool, 0, BANK_SIZE);
+            // On the Vulkan worker, ahead of the BeginQuery commands recorded after it: a host
+            // reset costs the recording thread ~100 us a bank on AMD's driver. The bank is dead
+            // (no query uses it and the GPU is done with it), so nothing else touches the pool.
+            scheduler.Record([dev = &device.GetLogical(), pool = *query_pool](vk::CommandBuffer) {
+                dev->ResetQueryPool(pool, 0, BANK_SIZE);
+            });
         } else {
             scheduler.RequestOutsideRenderPassOperationContext();
             scheduler.Record([pool = *query_pool](vk::CommandBuffer cmdbuf) {
@@ -1764,6 +1768,11 @@ void QueryCacheRuntime::SyncValues(std::span<SyncValuesType> values, VkBuffer ba
             impl->buffers_to_upload_to.emplace_back(buffer->Handle(), offset);
         }
     });
+    // EDEN_NX2_EXP49: the copies below are GPU writes the buffer cache doesn't record. Read
+    // downloads taken before them must not keep the bytes they downloaded as the newest.
+    for (const auto& value : values) {
+        impl->buffer_cache.OutdateReadDownloads(value.address, value.size);
+    }
 
     VkBuffer src_buffer;
     [[maybe_unused]] StagingBufferRef ref;

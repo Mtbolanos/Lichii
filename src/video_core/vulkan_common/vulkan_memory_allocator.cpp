@@ -13,11 +13,23 @@
 #include <utility>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <dxgi1_4.h>
+#endif
+
+#include <cstring>
+#include <iterator>
+#include <string>
+
+#include <fmt/format.h>
+
 #include "common/alignment.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 #include "common/literals.h"
 #include "common/logging.h"
+#include "common/memory_detect.h"
 #include <ranges>
 #include "video_core/vulkan_common/unbacked_fallback.h"
 #include "video_core/vulkan_common/vma.h"
@@ -607,6 +619,135 @@ MemoryCommit MemoryAllocator::Commit(const vk::Buffer &buffer, MemoryUsage usage
     vk::Check(res);
     vk::Check(vmaBindBufferMemory2(allocator, a, 0, raw, nullptr));
     return MemoryCommit(allocator, a, info);
+}
+
+#ifdef _WIN32
+namespace {
+/// The DXGI adapter of the Vulkan device (matched by LUID), or null. Looked up again when the
+/// device changes (another GPU picked between sessions).
+IDXGIAdapter3* FindDxgiAdapter(const Device& device) {
+    VkPhysicalDeviceIDProperties id{};
+    id.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
+    VkPhysicalDeviceProperties2 properties{};
+    properties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    properties.pNext = &id;
+    device.GetPhysical().GetProperties2(properties);
+    if (!id.deviceLUIDValid) {
+        return nullptr;
+    }
+    LUID luid{};
+    std::memcpy(&luid, id.deviceLUID, sizeof(luid));
+    static LUID cached_luid{};
+    static IDXGIAdapter3* cached{};
+    if (cached != nullptr && cached_luid.LowPart == luid.LowPart &&
+        cached_luid.HighPart == luid.HighPart) {
+        return cached;
+    }
+    if (cached != nullptr) {
+        cached->Release();
+        cached = nullptr;
+    }
+    cached_luid = luid;
+    const HMODULE dxgi = LoadLibraryW(L"dxgi.dll");
+    if (dxgi == nullptr) {
+        return nullptr;
+    }
+    using CreateFactory = HRESULT(WINAPI*)(REFIID, void**);
+    const auto create =
+        reinterpret_cast<CreateFactory>(reinterpret_cast<void*>(GetProcAddress(dxgi, "CreateDXGIFactory1")));
+    IDXGIFactory4* factory{};
+    if (create == nullptr ||
+        FAILED(create(__uuidof(IDXGIFactory4), reinterpret_cast<void**>(&factory)))) {
+        return nullptr;
+    }
+    if (FAILED(factory->EnumAdapterByLuid(luid, __uuidof(IDXGIAdapter3),
+                                          reinterpret_cast<void**>(&cached)))) {
+        cached = nullptr;
+    }
+    factory->Release();
+    return cached;
+}
+} // Anonymous namespace
+#endif
+
+void LogMemoryTrace(const Device& device) {
+    const Common::ProcessMemoryUsage process = Common::GetProcessMemoryUsage();
+    LOG_INFO(Render_Vulkan,
+             "Memory trace: process commit {} MiB, working set {} MiB (private {} MiB), system "
+             "commit {} of {} MiB",
+             process.private_bytes >> 20, process.working_set >> 20,
+             process.private_working_set >> 20,
+             process.system_commit >> 20, process.system_commit_limit >> 20);
+#ifdef _WIN32
+    // This process's use of the card's memory (local) and of system memory for the GPU
+    // (non-local: host memory types, and what the OS moved out of video memory).
+    IDXGIAdapter3* const adapter = FindDxgiAdapter(device);
+    DXGI_QUERY_VIDEO_MEMORY_INFO local{};
+    DXGI_QUERY_VIDEO_MEMORY_INFO non_local{};
+    if (adapter != nullptr &&
+        SUCCEEDED(adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &local)) &&
+        SUCCEEDED(
+            adapter->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, &non_local))) {
+        LOG_INFO(Render_Vulkan,
+                 "Memory trace: DXGI local {} of {} MiB, non-local {} of {} MiB",
+                 local.CurrentUsage >> 20, local.Budget >> 20, non_local.CurrentUsage >> 20,
+                 non_local.Budget >> 20);
+    }
+#endif
+    const VmaAllocator allocator = device.GetAllocator();
+    const VkPhysicalDeviceMemoryProperties* properties{};
+    vmaGetMemoryProperties(allocator, &properties);
+    std::array<VmaBudget, VK_MAX_MEMORY_HEAPS> budgets{};
+    vmaGetHeapBudgets(allocator, budgets.data());
+    std::string heaps;
+    for (u32 heap = 0; heap < properties->memoryHeapCount; ++heap) {
+        const VmaBudget& budget = budgets[heap];
+        fmt::format_to(std::back_inserter(heaps), "{}{} ({}): driver {} of {} MiB, VMA {}/{} MiB",
+                       heap == 0 ? "" : "; ", heap,
+                       (properties->memoryHeaps[heap].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0
+                           ? "local"
+                           : "host",
+                       budget.usage >> 20, budget.budget >> 20,
+                       budget.statistics.allocationBytes >> 20,
+                       budget.statistics.blockBytes >> 20);
+    }
+    LOG_INFO(Render_Vulkan, "Memory trace: heaps {}", heaps);
+    VmaTotalStatistics stats{};
+    vmaCalculateStatistics(allocator, &stats);
+    std::string types;
+    for (u32 type = 0; type < properties->memoryTypeCount; ++type) {
+        const VmaStatistics& s = stats.memoryType[type].statistics;
+        if (s.blockCount == 0) {
+            continue;
+        }
+        fmt::format_to(std::back_inserter(types), "{}{} (heap {}, flags {:#x}): {} allocs {}/{} MiB",
+                       types.empty() ? "" : "; ", type, properties->memoryTypes[type].heapIndex,
+                       static_cast<u32>(properties->memoryTypes[type].propertyFlags),
+                       s.allocationCount, s.allocationBytes >> 20, s.blockBytes >> 20);
+    }
+    LOG_INFO(Render_Vulkan, "Memory trace: types {}", types);
+}
+
+HeapTotals GetHeapTotals(const Device& device) {
+    const VmaAllocator allocator = device.GetAllocator();
+    const VkPhysicalDeviceMemoryProperties* properties{};
+    vmaGetMemoryProperties(allocator, &properties);
+    std::array<VmaBudget, VK_MAX_MEMORY_HEAPS> budgets{};
+    vmaGetHeapBudgets(allocator, budgets.data());
+    HeapTotals totals{};
+    for (u32 heap = 0; heap < properties->memoryHeapCount; ++heap) {
+        const VmaBudget& budget = budgets[heap];
+        if ((properties->memoryHeaps[heap].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) != 0) {
+            totals.local_usage += budget.usage;
+            totals.local_budget += budget.budget;
+            totals.local_blocks += budget.statistics.blockBytes;
+        } else {
+            totals.host_usage += budget.usage;
+            totals.host_budget += budget.budget;
+            totals.host_blocks += budget.statistics.blockBytes;
+        }
+    }
+    return totals;
 }
 
 void LogMemoryStatistics(const Device& device) {

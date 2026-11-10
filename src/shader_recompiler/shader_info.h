@@ -309,6 +309,8 @@ struct Info {
     bool loads_indexed_attributes{};
 
     std::array<bool, 8> stores_frag_color{};
+    /// Components (bit 0 = R ... bit 3 = A) of each render target the fragment shader writes
+    std::array<u8, 8> frag_color_components{};
     bool stores_sample_mask{};
     bool stores_frag_depth{};
 
@@ -385,6 +387,9 @@ struct Info {
     boost::container::static_vector<ConstantBufferDescriptor, MAX_CBUFS>
         constant_buffer_descriptors;
     boost::container::static_vector<StorageBufferDescriptor, MAX_SSBOS> storage_buffers_descriptors;
+    /// One per storage_buffers_descriptors entry, same order: how far the program's loads and
+    /// atomics reach past the pointer. A size other than the descriptors' means unknown.
+    std::vector<StorageWriteExtent> storage_read_extents;
     TextureBufferDescriptors texture_buffer_descriptors;
     ImageBufferDescriptors image_buffer_descriptors;
     TextureDescriptors texture_descriptors;

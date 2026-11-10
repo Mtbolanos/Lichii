@@ -146,6 +146,9 @@ std::optional<Common::Net::Release> GetUpdate() {
 }
 
 std::string FritchiiVersion::ToString() const {
+    if (patch != 0) {
+        return fmt::format("{}.{}.{}", major, minor, patch);
+    }
     return minor == 0 ? fmt::format("{}", major) : fmt::format("{}.{}", major, minor);
 }
 
@@ -158,12 +161,31 @@ std::optional<FritchiiVersion> ParseFritchiiVersion(std::string_view text) {
     if (dot == std::string_view::npos) {
         return FritchiiVersion{.major = *major};
     }
-    // One decimal, and N.0 is spelled N, so each version has one tag and one package name.
-    const auto decimal = text.substr(dot + 1);
-    if (decimal.size() != 1 || decimal[0] < '1' || decimal[0] > '9') {
+    // N, N.M or N.M.P without leading zeros, and N.0 is spelled N, so each version has one tag
+    // and one package name (N.0.P is allowed: a fix of N). Builds before v5.6 read N.M with one
+    // digit only and skip the others.
+    const auto rest = text.substr(dot + 1);
+    const auto dot2 = rest.find('.');
+    const std::string_view minor_text = rest.substr(0, dot2);
+    const auto plain = [](std::string_view digits) {
+        return !digits.empty() && digits.size() <= 3 && (digits.size() == 1 || digits[0] != '0');
+    };
+    const auto minor = ParseNumber(minor_text);
+    if (!plain(minor_text) || !minor) {
         return std::nullopt;
     }
-    return FritchiiVersion{.major = *major, .minor = static_cast<u32>(decimal[0] - '0')};
+    if (dot2 == std::string_view::npos) {
+        if (*minor == 0) {
+            return std::nullopt;
+        }
+        return FritchiiVersion{.major = *major, .minor = *minor};
+    }
+    const std::string_view patch_text = rest.substr(dot2 + 1);
+    const auto patch = ParseNumber(patch_text);
+    if (!plain(patch_text) || !patch || *patch == 0) {
+        return std::nullopt;
+    }
+    return FritchiiVersion{.major = *major, .minor = *minor, .patch = *patch};
 }
 
 std::optional<FritchiiVersion> ParseBuildVersion(std::string_view build_version) {
@@ -273,12 +295,21 @@ std::optional<Common::Net::Asset> SelectFritchiiAsset(const Common::Net::Release
     return std::nullopt;
 }
 
+bool HiddenFromUpdater(const Common::Net::Release& release) {
+    return release.body.find(HiddenReleaseMarker) != std::string::npos;
+}
+
 std::optional<Common::Net::Release> SelectFritchiiUpdate(
     std::span<const Common::Net::Release> releases, const FritchiiVersion& current,
     const Source& source) {
     const Common::Net::Release* selected = nullptr;
     FritchiiVersion newest = current;
     for (const auto& release : releases) {
+        if (HiddenFromUpdater(release)) {
+            LOG_INFO(Frontend, "Update check skips {}: its notes hide it from the updater",
+                     release.tag);
+            continue;
+        }
         const auto version = ParseFritchiiTag(release.tag);
         if (version && *version > newest && SelectFritchiiAsset(release, source)) {
             newest = *version;

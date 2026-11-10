@@ -192,4 +192,20 @@ namespace Vulkan {
     /// Logs VMA's blocks and allocations per memory type, and each heap's budget.
     void LogMemoryStatistics(const Device& device);
 
+    /// One line each for the process's memory, what DXGI counts for the GPU (Windows), and VMA's
+    /// heaps and memory types against what the driver reports (EDEN_NX2_MEM_TRACE).
+    void LogMemoryTrace(const Device& device);
+
+    /// VMA's heaps summed by kind, for the "Memory owners" line: host heaps (system RAM) and
+    /// device-local ones (video memory), each the driver's usage and budget and VMA's blocks.
+    struct HeapTotals {
+        u64 host_usage{};
+        u64 host_budget{};
+        u64 host_blocks{};
+        u64 local_usage{};
+        u64 local_budget{};
+        u64 local_blocks{};
+    };
+    [[nodiscard]] HeapTotals GetHeapTotals(const Device& device);
+
 } // namespace Vulkan

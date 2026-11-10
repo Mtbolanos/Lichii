@@ -31,9 +31,11 @@ public:
     static constexpr size_t MAX_DEFERRED = 4096;
 
     /// The segments of a range when it has more than one. Fewer than two means that it needs no
-    /// splitting: one segment may then cover more than the range asked for.
+    /// splitting: one segment may then cover more than the range asked for. `hit` (profiling):
+    /// set to whether the cache answered without a page table walk.
     template <typename Memory = Tegra::MemoryManager>
-    const VirtualSegments* Query(Memory& memory, GPUVAddr gpu_addr, u32 size) {
+    const VirtualSegments* Query(Memory& memory, GPUVAddr gpu_addr, u32 size,
+                                 bool* hit = nullptr) {
         if (has_deferred.load(std::memory_order_acquire)) {
             ApplyDeferred();
         }
@@ -49,8 +51,14 @@ public:
             // half of them over 1 MiB). Keep the page table walk of the longest: its prefixes are
             // contiguous too.
             if (cached.size == size || (cached.segments.size() == 1 && size < cached.size)) {
+                if (hit != nullptr) {
+                    *hit = true;
+                }
                 return &cached.segments;
             }
+        }
+        if (hit != nullptr) {
+            *hit = false;
         }
         Entry entry{};
         entry.as_id = as_id;

@@ -35,6 +35,7 @@ enum class EdenPath {
     TASDir,         // Where TAS scripts are stored.
     IconsDir,       // Where Icons for Windows shortcuts are stored.
     StreamlineDir,  // Where the user-supplied NVIDIA Streamline loader is stored.
+    FidelityFxDir,  // Where AMD's FidelityFX runtime (FSR 4) is downloaded.
 };
 
 // migration/compat dirs

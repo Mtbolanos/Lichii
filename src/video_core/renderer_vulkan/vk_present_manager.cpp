@@ -428,7 +428,7 @@ bool PresentManager::PaceFrame(Frame* frame, std::stop_token token) {
     const bool allowed =
         (mode == VK_PRESENT_MODE_FIFO_KHR || mode == VK_PRESENT_MODE_MAILBOX_KHR ||
          mode == VK_PRESENT_MODE_FIFO_RELAXED_KHR) &&
-        !Settings::FrameGenActive() && Settings::values.use_speed_limit.GetValue() &&
+        !Settings::FrameGenActive() && Settings::SpeedLimitEnabled() &&
         Settings::values.current_speed_mode.GetValue() != Settings::SpeedMode::Turbo;
     // The refresh rate of the display the window is on (the HWND on Windows).
     const auto& window_info = render_window.GetWindowInfo();

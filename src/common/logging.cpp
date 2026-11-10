@@ -253,8 +253,23 @@ struct FileBackend final : public Backend {
         void(FS::RemoveFile(old_filename));
         void(FS::RenameFile(filename, old_filename));
         file.emplace(filename, FS::FileAccessMode::Write, FS::FileType::TextFile);
+        path = filename;
+        if (!file->IsOpen()) {
+            // Another Fritchii still holds the log (one that never finished closing, e.g. after
+            // an update's restart): without this the session logged nothing and Export Log sent
+            // that process's old log (a v5.3 log in a v5.5 export, 2026-11-09).
+            auto busy = filename;
+            busy.replace_extension();
+            busy += ".busy.txt";
+            file.emplace(busy, FS::FileAccessMode::Write, FS::FileType::TextFile);
+            path = busy;
+            primary_locked = true;
+        }
     }
     ~FileBackend() noexcept override = default;
+
+    std::filesystem::path path;
+    bool primary_locked = false;
 
     void Write(const Entry& entry) noexcept override {
         if (!enabled)
@@ -456,6 +471,21 @@ void Start() {
 void Stop() {
     if (logging_instance)
         logging_instance->ForEachBackend([](Backend& backend) { backend.Flush(); });
+}
+
+std::filesystem::path FilePath(bool* primary_locked) {
+    if (primary_locked) {
+        *primary_locked = false;
+    }
+#ifndef __OPENORBIS__
+    if (logging_instance && logging_instance->file_backend) {
+        if (primary_locked) {
+            *primary_locked = logging_instance->file_backend->primary_locked;
+        }
+        return logging_instance->file_backend->path;
+    }
+#endif
+    return {};
 }
 
 void SetGlobalFilter(const Filter& filter) {

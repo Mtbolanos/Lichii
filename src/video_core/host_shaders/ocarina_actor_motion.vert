@@ -25,6 +25,7 @@ layout(std140, binding = 2, row_major) uniform Transforms {
     vec4 current_origin;
     vec4 previous_origin;
     vec2 extent;
+    vec2 jitter;
 } transforms;
 
 void blend_joint(vec4 local, uint joint, float weight, inout vec3 current, inout vec3 previous) {

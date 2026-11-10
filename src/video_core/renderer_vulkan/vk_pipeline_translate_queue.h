@@ -40,6 +40,9 @@ struct TranslationRecord {
     /// compute form, and the pipeline needs the fallback's setup, which is not kept.
     bool mesh_emulated{};
     bool translate_only{}; ///< Stop there: no shader modules, no pipeline
+    /// With keep_infos: the stages' storage descriptors, and how many have a proven read extent
+    u32 storage_descriptors{};
+    u32 proven_read_extents{};
 };
 
 /// One graphics pipeline translated off the GPU thread (EDEN_NX2_ASYNC_TRANSLATE).

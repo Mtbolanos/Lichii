@@ -149,7 +149,7 @@ ENUM(NvdecEmulation, Off, Cpu, Gpu);
 ENUM(ResolutionSetup, Res1_4X, Res1_2X, Res3_4X, Res1X, Res5_4X, Res3_2X, Res2X, Res3X, Res4X, Res5X, Res6X, Res7X, Res8X);
 ENUM(ScalingFilter, NearestNeighbor, Bilinear, Bicubic, Gaussian, Lanczos, ScaleForce, Fsr, Area, ZeroTangent, BSpline, Mitchell, Spline1, Mmpx, Sgsr, SgsrEdge, Fsr3);
 ENUM(AntiAliasing, None, Fxaa, Smaa);
-ENUM(OotAntiAliasing, Game, NoSharpening);
+ENUM(OotAntiAliasing, Game, NoSharpening, Fsr3, Fsr4);
 ENUM(DlssPreset, Default, J, K, L, M);
 ENUM(AspectRatio, R16_9, R4_3, R21_9, R16_10, Stretch);
 ENUM(ConsoleMode, Handheld, Docked);
@@ -165,6 +165,11 @@ ENUM(GpuLogLevel, Off, Errors, Standard, Verbose, All)
 ENUM(GameListMode, TreeView, GridView, CarouselView);
 ENUM(SpeedMode, Standard, Turbo, Slow);
 ENUM(FrameGenType, Lsfg, Fsr3);
+ENUM(MeshShaderMode, Automatic, Native, Compute);
+// Ocarina of Time's movies: the game's own upscaler, or a bilinear copy (Settings oot_movie_upscale).
+ENUM(OotMovieUpscale, Automatic, Bilinear, Game);
+// Ocarina of Time's frame rate cap with its high refresh rate mode on (Settings oot_high_refresh).
+ENUM(OotRefreshCap, Display, Hz90, Hz120, Hz144, Hz165);
 
 template <typename Type>
 inline std::string_view CanonicalizeEnum(Type id) {

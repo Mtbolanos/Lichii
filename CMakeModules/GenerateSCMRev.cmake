@@ -18,7 +18,7 @@ get_timestamp(BUILD_DATE)
 # dist/frizti_version.txt holds the number.
 set(FRIZTI_VERSION_FILE "${CMAKE_SOURCE_DIR}/dist/frizti_version.txt")
 if (EXISTS "${FRIZTI_VERSION_FILE}")
-    file(STRINGS "${FRIZTI_VERSION_FILE}" FRIZTI_VERSION LIMIT_COUNT 1 REGEX "^[0-9]+([.][0-9]+)?$")
+    file(STRINGS "${FRIZTI_VERSION_FILE}" FRIZTI_VERSION LIMIT_COUNT 1 REGEX "^[0-9]+([.][0-9]+)?([.][0-9]+)?$")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${FRIZTI_VERSION_FILE}")
     # The log names the commit: reconfigure when HEAD moves (commit, checkout, merge, revert).
     if (EXISTS "${CMAKE_SOURCE_DIR}/.git/logs/HEAD")

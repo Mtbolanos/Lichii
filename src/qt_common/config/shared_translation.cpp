@@ -169,11 +169,20 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
     INSERT(Settings, anti_aliasing, tr("Anti-Aliasing Method:"),
            tr("The anti-aliasing method to use.\nSMAA offers the best quality.\nFXAA "
               "can produce a more stable picture in lower resolutions."));
+    INSERT(Settings, oot_movie_upscale, tr("Ocarina of Time movies:"),
+           tr("How the title screen and cutscene videos are scaled up.\nGame's own upscaler: the "
+              "game's video upscaler, which removes banding and sharpens. Fast on NVIDIA RTX, slow "
+              "on GPUs that emulate its math.\nBilinear: a plain, fast stretch.\nAutomatic: the "
+              "game's upscaler where the GPU runs it natively, bilinear elsewhere."));
     INSERT(Settings, oot_anti_aliasing, tr("Ocarina of Time anti-aliasing:"),
            tr("The Legend of Zelda: Ocarina of Time only.\nGame: the game's own anti-aliasing "
               "network, which sharpens heavily.\nNo sharpening: the image as the game renders it, "
-              "without the network (faster; pairs well with a higher resolution). Has no effect while "
-              "NVIDIA DLSS is on.\nTakes effect when the game starts."));
+              "without the network (faster; pairs well with a higher resolution).\nAMD FSR 3.1: "
+              "AMD's upscaler in place of the game's, on any GPU. RCAS Sharpness sets its "
+              "sharpening.\nAMD FSR 4: AMD's newer upscaler on Radeon RX 6000 or newer and Ryzen "
+              "AI GPUs, with AMD's files (download below). Without them, FSR 3.1 runs.\nWith Game "
+              "or No sharpening, NVIDIA DLSS replaces the game's upscaler while its setting is "
+              "on.\nTakes effect when the game starts."));
     INSERT(Settings, post_shader_chain, QString(), QString());
     INSERT(Settings, post_shader_preset, QString(), QString());
     INSERT(Settings, post_shader_enabled, tr("Enable post-processing effects"),
@@ -318,6 +327,12 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
     INSERT(Settings, oot_30fps, tr("Ocarina of Time: 30 FPS mode (lower-end PCs)"),
            tr("Caps Ocarina of Time at 30 FPS. The game keeps its normal speed. Takes effect at "
               "once; the 60 FPS / 30 FPS button in the status bar switches it too."));
+    INSERT(Settings, oot_high_refresh, QString(), QString());
+    INSERT(Settings, oot_high_refresh_cap, tr("OoT: high refresh rate (experimental)"),
+           tr("Lets Ocarina of Time run above 60 FPS, up to the chosen cap, at its normal speed. "
+              "Untested in much of the game: timers, cutscenes or minigames may run off. Takes "
+              "effect at once; Ctrl+U switches it while you play. The 30 FPS mode overrides "
+              "it."));
     INSERT(Settings, mkw_30fps, tr("Mario Kart World: 30 FPS mode"),
            tr("Forces the game to use its native 30 FPS mode at normal game speed. "
               "Takes effect after restarting the game."));
@@ -340,6 +355,14 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
 
     INSERT(Settings, vertex_input_dynamic_state, tr("Vertex Input Dynamic State"),
            tr("Enables vertex input dynamic state feature for better quality and performance."));
+
+    INSERT(Settings, mesh_shaders, tr("Mesh Shaders"),
+           tr("How Switch 2 games' mesh shader geometry is drawn.\n"
+              "Native uses the GPU's mesh shaders. Compute Fallback emulates them with compute "
+              "shaders: it can be slower in scenes with a lot of foliage, and it can't draw every "
+              "kind of mesh program.\n"
+              "Automatic uses the compute fallback on AMD GPUs, where native mesh shaders can hang "
+              "the GPU, and native mesh shaders everywhere else."));
 
     INSERT(
         Settings, sample_shading, tr("Sample Shading"),
@@ -580,10 +603,26 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent) {
                               PAIR(DlssPreset, L, tr("L")),
                               PAIR(DlssPreset, M, tr("M")),
                           }});
+    translations->insert({Settings::EnumMetadata<Settings::OotMovieUpscale>::Index(),
+                          {
+                              PAIR(OotMovieUpscale, Automatic, tr("Automatic")),
+                              PAIR(OotMovieUpscale, Bilinear, tr("Bilinear (fast)")),
+                              PAIR(OotMovieUpscale, Game, tr("Game's own upscaler")),
+                          }});
     translations->insert({Settings::EnumMetadata<Settings::OotAntiAliasing>::Index(),
                           {
                               PAIR(OotAntiAliasing, Game, tr("Game")),
                               PAIR(OotAntiAliasing, NoSharpening, tr("No sharpening")),
+                              PAIR(OotAntiAliasing, Fsr3, tr("AMD FSR 3.1")),
+                              PAIR(OotAntiAliasing, Fsr4, tr("AMD FSR 4")),
+                          }});
+    translations->insert({Settings::EnumMetadata<Settings::OotRefreshCap>::Index(),
+                          {
+                              PAIR(OotRefreshCap, Display, tr("Monitor refresh rate")),
+                              PAIR(OotRefreshCap, Hz90, tr("90 FPS")),
+                              PAIR(OotRefreshCap, Hz120, tr("120 FPS")),
+                              PAIR(OotRefreshCap, Hz144, tr("144 FPS")),
+                              PAIR(OotRefreshCap, Hz165, tr("165 FPS")),
                           }});
     translations->insert({Settings::EnumMetadata<Settings::AspectRatio>::Index(),
                           {
@@ -760,6 +799,13 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent) {
                               PAIR(ExtendedDynamicState, EDS1, tr("ExtendedDynamicState 1")),
                               PAIR(ExtendedDynamicState, EDS2, tr("ExtendedDynamicState 2")),
                               PAIR(ExtendedDynamicState, EDS3, tr("ExtendedDynamicState 3")),
+                          }});
+
+    translations->insert({Settings::EnumMetadata<Settings::MeshShaderMode>::Index(),
+                          {
+                              PAIR(MeshShaderMode, Automatic, tr("Automatic")),
+                              PAIR(MeshShaderMode, Native, tr("Native")),
+                              PAIR(MeshShaderMode, Compute, tr("Compute Fallback")),
                           }});
 
     translations->insert({Settings::EnumMetadata<Settings::GameListMode>::Index(),

@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <map>
+#include <mutex>
 
 #include "core/arm/arm_interface.h"
 #include "core/file_sys/program_metadata.h"
@@ -121,6 +122,9 @@ private:
 
     std::atomic<s64> m_cpu_time{};
     std::atomic_bool m_mkw_dynamic_fps_patch_applied{};
+    std::atomic<u64> m_oot_high_refresh_scale_address{};
+    std::atomic<u64> m_oot_main_code_address{};
+    std::mutex m_oot_high_refresh_mutex;
     std::atomic<s64> m_num_process_switches{};
     std::atomic<s64> m_num_thread_switches{};
     std::atomic<s64> m_num_fpu_switches{};
@@ -190,6 +194,44 @@ public:
 
     void SetMkwDynamicFpsPatchApplied(bool applied) {
         m_mkw_dynamic_fps_patch_applied.store(applied, std::memory_order_relaxed);
+    }
+
+    /// Ocarina of Time with its "High refresh rate" built-in patch: the guest address of the
+    /// routine's speed scale word (a float), else 0.
+    u64 GetOotHighRefreshScaleAddress() const {
+        return m_oot_high_refresh_scale_address.load(std::memory_order_relaxed);
+    }
+
+    void SetOotHighRefreshScaleAddress(u64 address) {
+        m_oot_high_refresh_scale_address.store(address, std::memory_order_relaxed);
+    }
+
+    /// Ocarina of Time: the guest address of its main's code (after the NSO header), where its
+    /// high refresh rate mode can be switched live (FileSys::SwitchOotHighRefreshLive), else 0.
+    u64 GetOotMainCodeAddress() const {
+        return m_oot_main_code_address.load(std::memory_order_relaxed);
+    }
+
+    void SetOotMainCodeAddress(u64 address) {
+        m_oot_main_code_address.store(address, std::memory_order_relaxed);
+    }
+
+    /// Held while the high refresh rate mode is switched live and while its speed scale word is
+    /// written, so the word is never written into Dark's cave.
+    std::mutex& GetOotHighRefreshLock() {
+        return m_oot_high_refresh_mutex;
+    }
+
+    /// Writes the high refresh rate routine's speed scale word (float bits) when the routine is
+    /// installed and the word differs. Whether it wrote.
+    bool UpdateOotHighRefreshScale(u32 bits) {
+        std::scoped_lock lk{m_oot_high_refresh_mutex};
+        const u64 address = GetOotHighRefreshScaleAddress();
+        if (address == 0 || GetMemory().Read32(address) == bits) {
+            return false;
+        }
+        GetMemory().Write32(address, bits);
+        return true;
     }
 
     u64 GetProcessId() const {

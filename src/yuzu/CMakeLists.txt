@@ -74,6 +74,8 @@ add_executable(yuzu
     configuration/configure_general.ui
     configuration/configure_graphics.cpp
     configuration/configure_graphics.h
+    configuration/amd_fsr4_panel.cpp
+    configuration/amd_fsr4_panel.h
     configuration/nvidia_dlss_panel.cpp
     configuration/nvidia_dlss_panel.h
     configuration/configure_graphics.ui
@@ -106,6 +108,8 @@ add_executable(yuzu
     configuration/configure_mouse_panning.cpp
     configuration/configure_mouse_panning.h
     configuration/configure_mouse_panning.ui
+    configuration/configure_microphone.cpp
+    configuration/configure_microphone.h
     configuration/configure_motion_touch.cpp
     configuration/configure_motion_touch.h
     configuration/configure_motion_touch.ui
@@ -476,6 +480,8 @@ if (WIN32 AND NOT YUZU_USE_BUNDLED_QT)
         find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt6 windeployqt
                      HINTS "${QT_HOST_PATH}/bin" "${QT_TARGET_PATH}/bin")
     endif()
+    file(GENERATE OUTPUT "$<TARGET_FILE_DIR:yuzu>/qt.conf"
+         CONTENT "[Paths]\nPrefix=.\nPlugins=plugins\n")
     if (WINDEPLOYQT_EXECUTABLE)
         set(YUZU_EXE_DIR "$<TARGET_FILE_DIR:yuzu>")
         add_custom_command(TARGET yuzu POST_BUILD COMMAND ${WINDEPLOYQT_EXECUTABLE} "$<TARGET_FILE:yuzu>" --dir "${YUZU_EXE_DIR}" --libdir "${YUZU_EXE_DIR}" --plugindir "${YUZU_EXE_DIR}/plugins" --no-compiler-runtime --no-opengl-sw --no-system-d3d-compiler --no-translations --verbose 0)

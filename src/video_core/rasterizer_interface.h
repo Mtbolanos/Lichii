@@ -123,6 +123,18 @@ public:
     virtual void FlushRegion(DAddr addr, u64 size,
                              VideoCommon::CacheType which = VideoCommon::CacheType::All) = 0;
 
+    /// EDEN_NX2_EXP49: FlushRegion for a guest CPU read of the region (GPU::OnCPURead), on the GPU
+    /// thread. A cache may submit its downloads without waiting for the host GPU, for FinishRead
+    /// to write.
+    virtual void FlushRegionForRead(DAddr addr, u64 size) {
+        FlushRegion(addr, size);
+    }
+
+    /// Writes to guest memory what FlushRegionForRead submitted over the region (and anything
+    /// submitted before it), waiting for the host GPU if it must. Any thread: the reading one
+    /// before it reads, and the GPU's side before it writes guest memory there.
+    virtual void FinishRead([[maybe_unused]] DAddr addr, [[maybe_unused]] u64 size) {}
+
     /// Switch 2, from the GPU thread's front: where a GPU-written command list's words are.
     enum class GpuWrittenList {
         Unknown, ///< Neither: the caller drains, flushes the page and notes it synced

@@ -125,6 +125,14 @@ inline std::atomic<int> g_idle_pause{-1};
 /// EXP19 (graphics pipeline lookup without Refresh, PipelineCache::CurrentGraphicsPipelineClean):
 /// 1 = as EDEN_NX2_PIPELINE_CLEAN=1, 2 = also #641's patches (blend registers left to the
 /// dual-source bit and Dirty::Blending, attribute types redone alone under Dirty::VertexInput).
+/// EXP50 (live; with EXP19 / EDEN_NX2_PIPELINE_CLEAN on; after the-cashman's fix in
+/// zortos293/Lichii#717): 1 = the blend registers leave the clean lookup's word compare and
+/// Dirty::Blending is not looked at; when they moved since the key was made, the attachments
+/// RefreshBlending would build from them (FixedPipelineState::BlendingMatches) and the
+/// dual-source bit are compared with the key's: equal keeps the pipeline without a Refresh,
+/// different patches only the blend part of the key. Reads the registers, so #679's writes
+/// without the flag are still caught. Logs "saved by the blend value check" and why the other
+/// lookups refreshed in "EDEN_NX2_PIPELINE_CLEAN per second". Off by default, not measured yet.
 /// EXP22 (split ring traffic, zortos293/Lichii#641; gpu_split.h DeltaWrite and DrawBatch), bits:
 /// 1 = 3D state writes that went as Direct macro writes or (EDEN_NX2_RING_PAIRS) as pairs go in
 /// StateDelta blocks, applied in one loop (FRONT_STATE, without its per-register merge),
@@ -170,6 +178,16 @@ inline std::atomic<int> g_idle_pause{-1};
 /// EXP35=2 (live): every guest write of cached memory is collected for the back, not only writes to
 /// never-GPU-written pages. EXP60 (live): 1 = a guest read whose cache mutexes stay taken after a
 /// short spin is answered with a flush request served by the back (GetFlushArea).
+/// EXP49 (live; async read-back, the core of zortos293/Lichii#1028 0b83798bf6): 1 = a guest read
+/// of GPU-written buffer memory (GPU::OnCPURead) has the GPU thread record and submit the
+/// downloads without waiting for the host GPU (RasterizerVulkan::FlushRegionForRead). The reading
+/// thread waits for them and writes them to guest memory (BufferCache::FinishReadDownloads); a
+/// read whose bytes are already on their way only waits. Until they land the bytes stay
+/// GPU-modified; guest CPU writes keep their bytes (ClearReplacedDownload, pending writes at
+/// landing); writes from the GPU's side (MemoryManager, query results, DMA clears and copies) land
+/// them first. 0 = the synchronous flush (Scheduler::Finish on the GPU thread under the buffer
+/// cache's lock). Both log "Read-back (EXP49) per second" every 10 s (reads, GPU thread time in
+/// read flushes, reader waits). Not ported: #1028's early downloads and EDEN_NX2_READ_CHECK.
 /// EXP27 (keep the split's back fed, fewer submits; zortos293/Lichii#717), bits: 1 = the front
 /// publishes before it yields or sleeps polling suspended channels (PUBLISH_WAITS,
 /// GpuSplit::PublishBeforeWait), 2 = retired (was PUBLISH_IDLE, each entry published at once
@@ -296,6 +314,9 @@ inline std::atomic<int> g_idle_pause{-1};
 /// collector's device memory figure, as deleted images waiting for the GPU are. Logs "Image pool
 /// (EXP42) last 600 frames" and counts pooled creates in "Slow clear texture cache". 1 is the default
 /// (LoadExperiments); 0 = off.
+/// EXP45 (live; 1 = off): the native compute write extent self-check (BufferCache::ExtentTrust,
+/// fable_answer_25): a program is marked in full until a dispatch at its dims showed its proof
+/// holds, and for good once one wrote past it (Ocarina of Time's glowing triangles, 2026-11-09).
 /// EXP43 (live; render target relocation, fable_answer_12 2A; TextureCache::JoinImages): a render
 /// target a clear overwrites whole, with no copies, aliases or remapped images among its overlaps
 /// and exactly one predecessor among its bad overlaps (an image of the same single-level,
@@ -315,6 +336,29 @@ inline std::atomic<int> g_idle_pause{-1};
 /// nor for rescaled, sparse, converted or CPU-read images, ones with a download queued, bound as
 /// another target of the clear or in another channel. Logs each shape's first candidate and
 /// relocation and "Render target relocation (EXP43=n) last 600 frames".
+/// EXP51 (live; RAM, fable_answer_26 C2c; Vulkan PipelineCache::EvictUnusedComputePipelines):
+/// compute pipelines unused for 9000 frames are destroyed, least recently used first, while more
+/// than 500 are held (checked every 600 frames). Their next dispatch translates them again on the
+/// GPU thread, binding the pointers they bound, and builds them from the driver's pipeline cache
+/// (no new disk cache record). 1 = only programs dispatched this session, 2 = also boot builds no
+/// dispatch used yet. Never one still building or with a rebuild pending; destroyed through
+/// retired_compute_pipelines once the GPU and their worker build are done. Off by default, not
+/// measured yet: compare the 10 s memory line's compute count and the working set over a long
+/// session, and the "Evicted N compute pipelines" log's "dispatched again" count (each is a
+/// GPU-thread rebuild, a possible hitch).
+/// EXP52 (live; with EXP19 / EDEN_NX2_PIPELINE_CLEAN on; fable52_answer_1 section 1; Vulkan
+/// PipelineCache::CurrentGraphicsPipelineClean): 1 = when only the bound programs changed since
+/// the last key (every other Refresh input stands), the key's state is kept and only what the
+/// programs feed is redone (with dynamic vertex input, the attribute types masked by what the
+/// programs read), then Next / the cache map looks the new key up, without
+/// FixedPipelineState::Refresh. 2 = as 1, and each such key is also built by the full Refresh and
+/// compared byte for byte; Refresh's is kept, the first 16 differences are logged ("Programs-only
+/// key (EXP52=2) differs"). The "EDEN_NX2_PIPELINE_CLEAN per second" line counts "programs only"
+/// and, at 2, "verified N, M differ". With EXP52 on its "programs" reason stays 0 (a change of
+/// programs together with other state counts under that state). Off by default, not measured yet:
+/// prove 2 shows 0 differ first (under EXP19=2 without EXP50, blend writes without
+/// Dirty::Blending already leave the clean lookup's attachments stale, and verify reports that
+/// too), then compare the lookup zone with profile_toggle (EXP52 0 vs 1).
 inline constexpr int ExperimentCount = 64;
 inline std::atomic<int> g_experiments[ExperimentCount]{};
 
@@ -366,6 +410,21 @@ inline void LoadExperiments() {
         // bugs, rarely under 40 fps.
         g_experiments[42].store(1, std::memory_order_relaxed);
         g_experiments[43].store(3, std::memory_order_relaxed);
+        // EXP56 = 1 (2026-11-09): a cleared depth target larger than its colour targets is not
+        // uploaded from guest memory first (TextureCache::JoinImages, overwritten_by_clear).
+        // Castle Town live toggle 41.3 -> 43.8 fps, clear zone 54.7 -> 36.3 ms/s; screenshots
+        // off/on identical.
+        g_experiments[56].store(1, std::memory_order_relaxed);
+        // EXP58 = 1 (2026-11-10): guarded render targets that a newer target of another shape
+        // superseded are deleted once 60 frames old (TextureCache::SweepColdImages). Castle Town
+        // 150 s A/B: device memory 7.8-10.5 -> 5.2-5.7 GB, collector evictions 83-1915 a window
+        // -> 0, worst frames 140-180 -> 30-48 ms, moving median 42.2 -> 46.9 fps; skeleton fight
+        // 5.1-5.5 GB instead of 10.9 with 0 evictions; two owner playtests without glitches.
+        g_experiments[58].store(1, std::memory_order_relaxed);
+        // EXP61 = 1 (2026-11-10): FlushCommands submits nothing when nothing was recorded since
+        // the last submit. Castle Town live toggle: empty submits 4,600 -> 145 a second, 43.0 ->
+        // 45.6 fps (3 of 4 pairs, the 4th a tie), GPU thread split drain 432 -> 396 ms/s.
+        g_experiments[61].store(1, std::memory_order_relaxed);
         // EXP39 = 3: publish to a back that waits after 8 words, no snapshot refresh of entries
         // that ran (zortos293/Lichii#805 62db242b34; see the EXP39 notes above). Timing only.
         g_experiments[39].store(3, std::memory_order_relaxed);

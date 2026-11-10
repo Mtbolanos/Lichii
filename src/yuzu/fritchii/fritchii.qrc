@@ -18,5 +18,7 @@
         <file>icons/restart.svg</file>
         <file>icons/fullscreen.svg</file>
         <file>icons/fullscreen-exit.svg</file>
+        <file>icons/community.svg</file>
+        <file>icons/heart.svg</file>
     </qresource>
 </RCC>

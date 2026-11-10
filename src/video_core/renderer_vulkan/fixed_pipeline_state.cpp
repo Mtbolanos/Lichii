@@ -101,6 +101,23 @@ void RefreshXfbState(VideoCommon::TransformFeedbackState& state, const Maxwell& 
                            });
     state.varyings = regs.stream_out_layout;
 }
+
+/// One past the last colour target with a format (CanonicalizeNative clears attachments past it).
+size_t UsedColorTargets(const std::array<u8, Maxwell::NumRenderTargets>& color_formats) {
+    size_t used = 0;
+    for (size_t index = 0; index < color_formats.size(); ++index) {
+        if (color_formats[index] != 0) {
+            used = index + 1;
+        }
+    }
+    return used;
+}
+
+/// An attachment below the last colour target as CanonicalizeNative keeps it: without blending,
+/// only the colour write mask.
+u32 CanonicalAttachmentRaw(const FixedPipelineState::BlendingAttachment& attachment) {
+    return attachment.enable ? attachment.raw : (attachment.raw & 0xF);
+}
 } // Anonymous namespace
 
 void FixedPipelineState::Refresh(Tegra::Engines::Maxwell3D& maxwell3d, DynamicFeatures& features) {
@@ -265,16 +282,36 @@ void FixedPipelineState::RefreshBlending(Tegra::Engines::Maxwell3D& maxwell3d) {
     const Maxwell& regs = maxwell3d.regs;
     maxwell3d.dirty.flags[Dirty::Blending] = false;
     for (size_t index = 0; index < attachments.size(); ++index) {
-        attachments[index].Refresh(regs, index);
-        auto& attachment = attachments[index];
-        if (color_write_enable_dynamic && attachment.mask_r == 0 && attachment.mask_g == 0 &&
-            attachment.mask_b == 0 && attachment.mask_a == 0) {
-            attachment.mask_r.Assign(1);
-            attachment.mask_g.Assign(1);
-            attachment.mask_b.Assign(1);
-            attachment.mask_a.Assign(1);
+        attachments[index] = BlendingFor(regs, index);
+    }
+}
+
+FixedPipelineState::BlendingAttachment FixedPipelineState::BlendingFor(const Maxwell& regs,
+                                                                      size_t index) const {
+    BlendingAttachment attachment{};
+    attachment.Refresh(regs, index);
+    if (color_write_enable_dynamic && attachment.mask_r == 0 && attachment.mask_g == 0 &&
+        attachment.mask_b == 0 && attachment.mask_a == 0) {
+        attachment.mask_r.Assign(1);
+        attachment.mask_g.Assign(1);
+        attachment.mask_b.Assign(1);
+        attachment.mask_a.Assign(1);
+    }
+    return attachment;
+}
+
+bool FixedPipelineState::BlendingMatches(const Maxwell& regs, bool canonical) const {
+    const size_t used = canonical ? UsedColorTargets(color_formats) : attachments.size();
+    for (size_t index = 0; index < attachments.size(); ++index) {
+        // Past the last colour target a canonical attachment is 0 whatever the registers say.
+        const u32 raw = index < used ? (canonical ? CanonicalAttachmentRaw(BlendingFor(regs, index))
+                                                  : BlendingFor(regs, index).raw)
+                                     : 0;
+        if (raw != attachments[index].raw) {
+            return false;
         }
     }
+    return true;
 }
 
 u64 FixedPipelineState::DynamicAttributeTypes(const Maxwell& regs) noexcept {
@@ -300,6 +337,14 @@ u64 FixedPipelineState::DynamicAttributeTypes(const Maxwell& regs) noexcept {
 
 bool FixedPipelineState::DualSourceBlend(const Maxwell& regs) noexcept {
     return ComputeAttachment0DualSourceBlend(regs);
+}
+
+Maxwell::PrimitiveTopology FixedPipelineState::KeyTopology(Maxwell::PrimitiveTopology topology,
+                                                           bool collapse_class) noexcept {
+    const size_t index = static_cast<size_t>(topology);
+    return collapse_class && index < TOPOLOGY_CLASS_REPRESENTATIVE_LUT.size()
+               ? TOPOLOGY_CLASS_REPRESENTATIVE_LUT[index]
+               : topology;
 }
 
 void FixedPipelineState::BlendingAttachment::Refresh(const Maxwell& regs, size_t index) {
@@ -432,19 +477,10 @@ void FixedPipelineState::CanonicalizeNative(u32 generic_read_mask) noexcept {
         attribute_types &= keep;
     }
     if (!extended_dynamic_state_3_blend) {
-        size_t used = 0;
-        for (size_t index = 0; index < Maxwell::NumRenderTargets; ++index) {
-            if (color_formats[index] != 0) {
-                used = index + 1;
-            }
-        }
+        const size_t used = UsedColorTargets(color_formats);
         for (size_t index = 0; index < Maxwell::NumRenderTargets; ++index) {
             auto& attachment = attachments[index];
-            if (index >= used) {
-                attachment.raw = 0;
-            } else if (!attachment.enable) {
-                attachment.raw &= 0xF; // the colour write mask
-            }
+            attachment.raw = index < used ? CanonicalAttachmentRaw(attachment) : 0;
         }
     }
     // Outside the hashed bytes but given to the driver: depth bounds are dynamic state, and the

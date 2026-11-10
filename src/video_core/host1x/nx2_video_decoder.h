@@ -46,9 +46,17 @@ public:
 
     bool IsOpen() const;
 
+    /// The decoder opened, then stopped after faults: it outputs nothing more.
+    bool Failed() const;
+
+    /// Whether frames are decoded on the host GPU (NVDEC emulation GPU, a codec it supports).
+    bool UsingHardware() const;
+
     const std::string& Name() const;
 
-    /// Decodes one compressed frame and appends the pictures it completes.
+    /// Decodes one compressed frame and appends the pictures it completes. Never fails the
+    /// caller: a bad packet is skipped, a failing GPU decoder is replaced by the CPU decoder,
+    /// and one that faults twice closes (IsOpen() false).
     void Decode(std::span<const u8> data, u64 pts, std::vector<Nx2Picture>& pictures);
 
     /// End of stream: appends the pictures the decoder still holds, then starts over.
@@ -63,6 +71,9 @@ public:
                 u64 pitch, u64 chroma_offset, std::span<u8> out);
 
 private:
+    void RenderUnguarded(const Nx2Picture& picture, Nx2PictureFormat format, u32 width,
+                         u32 height, u64 pitch, u64 chroma_offset, std::span<u8> out);
+
     struct Impl;
     std::unique_ptr<Impl> impl;
 };

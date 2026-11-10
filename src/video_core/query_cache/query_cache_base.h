@@ -199,6 +199,9 @@ protected:
     bool IsQueryDirty(QueryLocation location);
     bool SemiFlushQueryDirty(QueryLocation location);
     void RequestGuestHostSync();
+    /// Before a report's bytes go to guest memory: a download for a guest read still on its way
+    /// would write the GPU's older copy over them later (as MemoryManager::Write; EXP49).
+    void FinishReads(DAddr address, size_t size);
     void UnregisterPending();
 
     ::Common::unordered_map<u64, ::Common::unordered_map<u32, QueryLocation>> cached_queries;

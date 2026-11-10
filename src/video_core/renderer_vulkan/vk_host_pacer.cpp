@@ -212,6 +212,8 @@ void HostPacer::Refresh(Clock::time_point now, bool allowed, void* native_window
                                               "EDEN_NX2_HOST_PACE", 1) != 0;
     VideoCommon::Nx2Perf::g_host_refresh_ns.store(
         pacing ? static_cast<long long>(refresh_ns) : 0, std::memory_order_relaxed);
+    VideoCommon::Nx2Perf::g_display_refresh_ns.store(
+        refresh_known ? static_cast<long long>(refresh_ns) : 0, std::memory_order_relaxed);
 }
 
 HostPacer::Clock::time_point HostPacer::Target(Clock::time_point now) {

@@ -5,6 +5,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <memory>
+#include <QBoxLayout>
+#include <QLabel>
+#include <QPushButton>
 #include "common/logging.h"
 #include "common/settings.h"
 #include "common/settings_enums.h"
@@ -123,6 +126,32 @@ ConfigureDialog::ConfigureDialog(QWidget* parent, HotkeyRegistry& registry_,
         layout()->setSizeConstraint(QLayout::SetNoConstraint);
         setMinimumSize(640, 460);
         resize(940, 680);
+
+        // OoT's own values (Configure Game) beat these, the usual "my settings didn't apply".
+        if (const QStringList overrides = FritchiiUi::OcarinaGameOverrides();
+            !overrides.isEmpty()) {
+            auto* const banner = new QWidget(this);
+            auto* const row = new QHBoxLayout(banner);
+            row->setContentsMargins(0, 0, 0, 8);
+            auto* const text = new QLabel(
+                tr("Ocarina of Time keeps its own value for %n of these settings, so changes "
+                   "here don't reach it.",
+                   nullptr, static_cast<int>(overrides.size())),
+                banner);
+            text->setWordWrap(true);
+            text->setToolTip(overrides.join(QLatin1Char('\n')));
+            auto* const use_global = new QPushButton(tr("Use these for OoT too"), banner);
+            row->addWidget(text, 1);
+            row->addWidget(use_global);
+            if (auto* const main = qobject_cast<QBoxLayout*>(layout())) {
+                main->insertWidget(0, banner);
+            }
+            connect(use_global, &QPushButton::clicked, this, [banner] {
+                if (FritchiiUi::ClearOcarinaGameOverrides()) {
+                    banner->hide();
+                }
+            });
+        }
     }
 
     // Selects the leftmost button on the bottom bar (Cancel as of writing)

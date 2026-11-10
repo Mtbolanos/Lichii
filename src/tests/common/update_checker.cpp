@@ -264,10 +264,17 @@ std::string GitHubUrl(std::string_view repo, std::string_view tag, std::string_v
 
 } // namespace
 
-TEST_CASE("Fritchii versions compare numerically with one decimal", "[updater]") {
+TEST_CASE("Fritchii versions compare numerically, with a patch number", "[updater]") {
     CHECK(UpdateChecker::ParseFritchiiVersion("4") == FritchiiVersion{4, 0});
     CHECK(UpdateChecker::ParseFritchiiVersion("3.5") == FritchiiVersion{3, 5});
     CHECK(UpdateChecker::ParseFritchiiVersion("12") == FritchiiVersion{12, 0});
+    CHECK(UpdateChecker::ParseFritchiiVersion("5.10") == FritchiiVersion{5, 10});
+    CHECK(UpdateChecker::ParseFritchiiVersion("5.6.1") == FritchiiVersion{5, 6, 1});
+    CHECK(UpdateChecker::ParseFritchiiVersion("5.0.1") == FritchiiVersion{5, 0, 1});
+    CHECK(FritchiiVersion{5, 9} < FritchiiVersion{5, 10});
+    CHECK(FritchiiVersion{5, 6} < FritchiiVersion{5, 6, 1});
+    CHECK(FritchiiVersion{5, 6, 1} < FritchiiVersion{5, 7});
+    CHECK(FritchiiVersion{5, 6, 1}.ToString() == "5.6.1");
     CHECK(FritchiiVersion{3, 5} < FritchiiVersion{4, 0});
     CHECK(FritchiiVersion{4, 0} < FritchiiVersion{4, 1});
     CHECK(FritchiiVersion{4, 9} < FritchiiVersion{5, 0});
@@ -275,8 +282,9 @@ TEST_CASE("Fritchii versions compare numerically with one decimal", "[updater]")
     CHECK(FritchiiVersion{4, 1}.ToString() == "4.1");
     CHECK(FritchiiVersion{4, 0}.ToString() == "4");
 
-    const std::string invalid = GENERATE("", "0", "04", "4.", "4.0", "4.10", "4.a", "v4", " 4",
-                                         "4 ", "-1", "+4", "4.1.2", ".5", "99999999999");
+    const std::string invalid = GENERATE("", "0", "04", "4.", "4.0", "4.01", "4.a", "v4", " 4",
+                                         "4 ", "-1", "+4", "4.1.", "4.1.0", "4.1.02", "4.1.2.3",
+                                         ".5", "99999999999");
     CHECK_FALSE(UpdateChecker::ParseFritchiiVersion(invalid));
 }
 
@@ -375,6 +383,26 @@ TEST_CASE("Fritchii picks the newest newer release that has a package", "[update
     CHECK(select({4, 1}).empty());
     CHECK(select({6, 0}).empty());
     CHECK_FALSE(UpdateChecker::SelectFritchiiUpdate({}, {4, 0}, source));
+}
+
+TEST_CASE("Fritchii never offers a release whose notes hide it from the updater", "[updater]") {
+    const auto make = [](const std::string& tag, const std::string& name, std::string body) {
+        auto release = MakeFritchiiRelease(tag, {GitHubUrl("Lichii", tag, name)});
+        release.body = std::move(body);
+        return release;
+    };
+    const auto releases = std::array{
+        make("fritchii-v5.6", "Fritchii-v5.6-Windows-x64.zip", "Real notes"),
+        make("fritchii-v9", "Fritchii-v9-Windows-x64.zip",
+             "Big news!\n<!-- fritchii:no-update -->\nMore text"),
+    };
+    const auto source = UpdateChecker::DefaultSource();
+    CHECK(UpdateChecker::HiddenFromUpdater(releases[1]));
+    CHECK_FALSE(UpdateChecker::HiddenFromUpdater(releases[0]));
+    const auto update = UpdateChecker::SelectFritchiiUpdate(releases, {5, 5}, source);
+    REQUIRE(update);
+    CHECK(update->tag == "fritchii-v5.6");
+    CHECK_FALSE(UpdateChecker::SelectFritchiiUpdate(releases, {5, 6}, source));
 }
 
 TEST_CASE("EDEN_UPDATE_URL takes https anywhere and plain http only on loopback", "[updater]") {

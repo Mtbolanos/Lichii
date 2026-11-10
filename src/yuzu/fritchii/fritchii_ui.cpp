@@ -9,11 +9,15 @@
 #include <QActionGroup>
 #include <QApplication>
 #include <QBuffer>
+#include <QDateTime>
+#include <QDesktopServices>
+#include <QDir>
 #include <QFile>
 #include <QFont>
 #include <QFontDatabase>
 #include <QIcon>
 #include <QImageReader>
+#include <QLocale>
 #include <QMainWindow>
 #include <QMenu>
 #include <QMenuBar>
@@ -21,9 +25,13 @@
 #include <QPixmap>
 #include <QProxyStyle>
 #include <QPushButton>
+#include <QUrl>
 #include <QScrollArea>
 #include <QStyleFactory>
 
+#include "common/fs/fs_paths.h"
+#include "common/fs/path_util.h"
+#include "common/logging.h"
 #include "common/scm_rev.h"
 #include "common/settings.h"
 #include "core/core.h"
@@ -256,6 +264,12 @@ void RestructureMenus(Ui::MainWindow& ui, QMainWindow& window, const MenuHooks& 
     ui.menu_Help->insertAction(first_help, delete_cache);
     ui.menu_Help->insertSeparator(first_help);
     ui.menu_Help->insertAction(first_help, whats_new);
+    auto* discord = new QAction(Icon(QStringLiteral("community"), 16), tr("Fritchii &Discord"), &window);
+    QObject::connect(discord, &QAction::triggered, &window, [] { OpenDiscord(); });
+    auto* donate = new QAction(Icon(QStringLiteral("heart"), 16), tr("D&onate"), &window);
+    QObject::connect(donate, &QAction::triggered, &window, [] { OpenDonate(); });
+    ui.menu_Help->insertAction(first_help, discord);
+    ui.menu_Help->insertAction(first_help, donate);
 
     // Plain names.
     ui.menu_recent_files->setTitle(tr("Open &Recent"));
@@ -417,6 +431,147 @@ QProgressBar::chunk {
   background-color: #a78bfa;
   border-radius: 3px;
 })";
+}
+
+namespace {
+constexpr int KeptSettingsBackups = 10;
+constexpr const char* BackupFolderFormat = "yyyy-MM-dd HHmmss";
+
+QString ConfigDirPath() {
+    return QString::fromStdString(Common::FS::PathToUTF8String(
+        Common::FS::GetEdenPath(Common::FS::EdenPath::ConfigDir)));
+}
+
+bool CopyDirFiles(const QString& from, const QString& to) {
+    const QDir source(from);
+    if (!source.exists()) {
+        return true;
+    }
+    if (!QDir().mkpath(to)) {
+        return false;
+    }
+    bool ok = true;
+    for (const QString& name : source.entryList(QDir::Files)) {
+        QFile::remove(QDir(to).filePath(name));
+        ok &= QFile::copy(source.filePath(name), QDir(to).filePath(name));
+    }
+    return ok;
+}
+} // namespace
+
+QString BackupSettings() {
+    const QDir config(ConfigDirPath());
+    const QString folder =
+        config.filePath(QStringLiteral("backups/") +
+                        QDateTime::currentDateTime().toString(QString::fromLatin1(BackupFolderFormat)));
+    if (!QDir().mkpath(folder)) {
+        LOG_WARNING(Frontend, "Settings backup: cannot create {}", folder.toStdString());
+        return {};
+    }
+    bool ok = true;
+    for (const QString name : {QStringLiteral("qt-config.ini"), QStringLiteral("frizti.ini")}) {
+        if (config.exists(name)) {
+            ok &= QFile::copy(config.filePath(name), QDir(folder).filePath(name));
+        }
+    }
+    ok &= CopyDirFiles(config.filePath(QStringLiteral("custom")),
+                       QDir(folder).filePath(QStringLiteral("custom")));
+    LOG_INFO(Frontend, "Settings backup {}: {}", folder.toStdString(), ok ? "saved" : "incomplete");
+    // Keep the newest few.
+    const auto backups = SettingsBackups();
+    for (size_t i = KeptSettingsBackups; i < backups.size(); ++i) {
+        QDir(backups[i].first).removeRecursively();
+    }
+    return ok ? folder : QString{};
+}
+
+std::vector<std::pair<QString, QString>> SettingsBackups() {
+    const QDir root(QDir(ConfigDirPath()).filePath(QStringLiteral("backups")));
+    std::vector<std::pair<QString, QString>> backups;
+    // Folder names sort by time.
+    const QStringList names = root.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name | QDir::Reversed);
+    for (const QString& name : names) {
+        const QDateTime when =
+            QDateTime::fromString(name, QString::fromLatin1(BackupFolderFormat));
+        if (!when.isValid() || !QFile::exists(QDir(root.filePath(name)).filePath(QStringLiteral("qt-config.ini")))) {
+            continue;
+        }
+        backups.emplace_back(root.filePath(name),
+                             QLocale().toString(when, QStringLiteral("d MMM yyyy, HH:mm")));
+    }
+    return backups;
+}
+
+bool RestoreSettingsFiles(const QString& backup) {
+    const QDir config(ConfigDirPath());
+    const QDir from(backup);
+    if (!from.exists(QStringLiteral("qt-config.ini"))) {
+        return false;
+    }
+    bool ok = true;
+    for (const QString name : {QStringLiteral("qt-config.ini"), QStringLiteral("frizti.ini")}) {
+        if (from.exists(name)) {
+            QFile::remove(config.filePath(name));
+            ok &= QFile::copy(from.filePath(name), config.filePath(name));
+        }
+    }
+    QDir(config.filePath(QStringLiteral("custom"))).removeRecursively();
+    ok &= CopyDirFiles(from.filePath(QStringLiteral("custom")),
+                       config.filePath(QStringLiteral("custom")));
+    LOG_INFO(Frontend, "Settings restored from {}: {}", backup.toStdString(), ok ? "done" : "incomplete");
+    return ok;
+}
+
+QString& PendingSettingsRestore() {
+    static QString pending;
+    return pending;
+}
+
+void OpenDiscord() {
+    QDesktopServices::openUrl(QUrl(QString::fromLatin1(DiscordInvite)));
+}
+
+void OpenDonate() {
+    QDesktopServices::openUrl(QUrl(QString::fromLatin1(DonateLink)));
+}
+
+namespace {
+QString OcarinaGameConfigPath() {
+    return QDir(ConfigDirPath()).filePath(QStringLiteral("custom/0400486024DEC000.ini"));
+}
+} // namespace
+
+QStringList OcarinaGameOverrides() {
+    QFile file(OcarinaGameConfigPath());
+    QStringList names;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return names;
+    }
+    const QString suffix = QStringLiteral("\\use_global=false");
+    while (!file.atEnd()) {
+        const QString line = QString::fromUtf8(file.readLine()).trimmed();
+        if (line.endsWith(suffix)) {
+            names << line.chopped(suffix.size());
+        }
+    }
+    return names;
+}
+
+bool ClearOcarinaGameOverrides() {
+    QFile file(OcarinaGameConfigPath());
+    if (!file.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+    QByteArray text = file.readAll();
+    file.close();
+    text.replace("\\use_global=false", "\\use_global=true");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return false;
+    }
+    const bool ok = file.write(text) == text.size();
+    LOG_INFO(Frontend, "Ocarina of Time's game-specific settings back on the global ones: {}",
+             ok ? "done" : "failed");
+    return ok;
 }
 
 } // namespace FritchiiUi

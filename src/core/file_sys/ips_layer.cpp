@@ -101,6 +101,49 @@ VirtualFile PatchIPS(const VirtualFile& in, const VirtualFile& ips) {
     return nullptr;
 }
 
+PatchWriteRanges GetIPSWriteRanges(const VirtualFile& ips) {
+    if (ips == nullptr)
+        return {};
+
+    const auto type = IdentifyMagic(ips->ReadBytes(0x5));
+    if (type == IPSFileType::Error)
+        return {};
+
+    PatchWriteRanges ranges;
+    std::vector<u8> temp(type == IPSFileType::IPS ? 3 : 4);
+    u64 offset = 5; // After header
+    while (ips->Read(temp.data(), temp.size(), offset) == temp.size()) {
+        offset += temp.size();
+        if (IsEOF(type, temp)) {
+            return ranges;
+        }
+
+        const u64 real_offset = (type == IPSFileType::IPS32)
+            ? ((u64{temp[0]} << 24) | (u64{temp[1]} << 16) | (u64{temp[2]} << 8) | temp[3])
+            : ((u64{temp[0]} << 16) | (u64{temp[1]} << 8) | temp[2]);
+
+        u16 data_size{};
+        if (ips->ReadObject(&data_size, offset) != sizeof(u16))
+            return {};
+        data_size = Common::swap16(data_size);
+        offset += sizeof(u16);
+
+        u64 size = data_size;
+        if (data_size == 0) { // RLE: size, then the byte
+            u16 rle_size{};
+            if (ips->ReadObject(&rle_size, offset) != sizeof(u16))
+                return {};
+            size = Common::swap16(rle_size);
+            offset += sizeof(u16) + 1;
+        } else {
+            offset += data_size;
+        }
+        if (size != 0)
+            ranges.emplace_back(real_offset, real_offset + size);
+    }
+    return {}; // no EOF marker: PatchIPS applies none of it
+}
+
 
 struct IPSwitchRecord {
     std::vector<uint8_t> data;
@@ -307,6 +350,19 @@ VirtualFile IPSwitchCompiler::Apply(const VirtualFile& in) const {
         }
     }
     return std::make_shared<VectorVfsFile>(std::move(in_data), in->GetName(), in->GetContainingDirectory());
+}
+
+PatchWriteRanges IPSwitchCompiler::GetWriteRanges() const {
+    PatchWriteRanges ranges;
+    for (const auto& patch : patches) {
+        if (patch.enabled) {
+            for (const auto& record : patch.records) {
+                if (!record.second.data.empty())
+                    ranges.emplace_back(record.first, u64{record.first} + record.second.data.size());
+            }
+        }
+    }
+    return ranges;
 }
 
 } // namespace FileSys

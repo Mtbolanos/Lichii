@@ -28,10 +28,28 @@ struct ProcessMemoryUsage {
     u64 peak_working_set{};
     u64 private_bytes{}; ///< Private commit (mapped sections like the guest memory are not in it)
     u64 peak_private_bytes{};
+    /// Resident pages not shareable with other mappings: the working set minus the guest memory
+    /// section and mapped files (0 where Windows does not report it: older builds).
+    u64 private_working_set{};
     u64 system_commit{}; ///< Commit charge of the whole system
     u64 system_commit_limit{};
     u64 available_physical{};
 };
 [[nodiscard]] ProcessMemoryUsage GetProcessMemoryUsage();
+
+/// This process's Win32 heaps (the C runtime's malloc heap and every other HeapCreate heap: Qt's,
+/// drivers' that use one), summed with HeapSummary. Zeros elsewhere.
+struct HeapUsage {
+    u64 crt_committed{};   ///< The C runtime's heap (malloc, new)
+    u64 crt_allocated{};
+    u64 other_committed{}; ///< Every other heap of the process
+    u64 other_allocated{};
+    u32 heaps{};           ///< Heaps summed, the C runtime's included
+    u32 micros{};          ///< What the pass took
+};
+/// Locks each heap for its summary: call it off the busy threads. Also kept for LastHeapUsage.
+HeapUsage SampleHeapUsage();
+/// The last SampleHeapUsage result (zeros before the first).
+[[nodiscard]] HeapUsage LastHeapUsage();
 
 } // namespace Common

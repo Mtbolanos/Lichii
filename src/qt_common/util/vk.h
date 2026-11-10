@@ -58,7 +58,8 @@ namespace VkDeviceInfo {
 class Record {
 public:
     explicit Record(std::string_view name, const std::vector<VkPresentModeKHR>& vsync_modes,
-                    bool has_broken_compute, std::string_view driver_version = {});
+                    bool has_broken_compute, std::string_view driver_version = {},
+                    bool fsr4_capable = false);
     ~Record();
 
     const std::string name;
@@ -66,6 +67,7 @@ public:
     const bool has_broken_compute;
     /// The driver's own version text (e.g. "581.57"), for support logs.
     const std::string driver_version;
+    const bool fsr4_capable; ///< VideoCommon::IsFsr4CapableGpu
 };
 
 // TODO(crueter): Port some configure_graphics.cpp stuff

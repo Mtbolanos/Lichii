@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <cstdlib>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -38,6 +39,15 @@ public:
         if (root.used_objects == root.num_objects) {
             // Root chunk has been filled, squash allocations into it
             const size_t total_objects{root.num_objects + new_chunk_size * (chunks.size() - 1)};
+            // EDEN_NX2_IR_POOL_CAP_MIB=<n> (0 or unset = keep everything, as before): a pool
+            // whose squashed chunk would pass n MiB returns its memory instead. Every pool kept
+            // its largest shader's worth for good, per worker, and the process heap stayed
+            // ~1.2 GB above the game's needs (fable52_answer_2 Q1).
+            if (const size_t cap = CapBytes();
+                cap != 0 && total_objects * sizeof(Storage) > cap) {
+                Free();
+                return;
+            }
             chunks.clear();
             chunks.emplace_back(total_objects);
         } else {
@@ -49,6 +59,15 @@ public:
     }
 
 private:
+    static size_t CapBytes() {
+        static const size_t cap = [] {
+            const char* const text = std::getenv("EDEN_NX2_IR_POOL_CAP_MIB");
+            return text != nullptr ? static_cast<size_t>(std::strtoull(text, nullptr, 10)) << 20
+                                   : size_t{0};
+        }();
+        return cap;
+    }
+
     struct NonTrivialDummy {
         NonTrivialDummy() noexcept {}
     };

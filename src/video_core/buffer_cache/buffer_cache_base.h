@@ -49,7 +49,9 @@
 #include "video_core/engines/maxwell_3d.h"
 #include "video_core/memory_manager.h"
 #include "video_core/nx2.h"
+#include "video_core/nx2_async_readback.h"
 #include "video_core/nx2_download_trace.h"
+#include "video_core/rasterizer_download_area.h"
 #include "video_core/surface.h"
 #include "video_core/texture_cache/types.h"
 
@@ -262,8 +264,17 @@ public:
 
     void CachedWriteMemory(DAddr device_addr, u64 size);
 
-    /// Cancels pending downloads over the range, so a fence can't write them over newer bytes.
+    /// Cancels pending downloads over the range (fences' and, with EDEN_NX2_EXP49, reads'), so
+    /// none writes them over newer bytes. Those bytes reach guest memory later if at all (a GPU
+    /// copy, a clear, an inline or a discarded write), so read downloads already taken land
+    /// first: their reads get what a synchronous flush would have written.
     void ClearDownload(DAddr base_addr, u64 size);
+
+    /// ClearDownload where guest memory gets the newer bytes before a read can find the range: a
+    /// guest CPU write, a synchronous download landing under `mutex`, or a GPU-side write whose
+    /// read downloads MemoryManager landed first. Read downloads leave the range rather than land,
+    /// so this never waits for the host GPU.
+    void ClearReplacedDownload(DAddr device_addr, u64 size);
 
     /// CPU writes collected but not yet applied (SetPendingCpuWrites).
     [[nodiscard]] Common::RangeSet<DAddr> PendingCpuWriteRanges();
@@ -280,6 +291,27 @@ public:
 
     /// DownloadMemory for each range, waiting for the GPU once.
     void DownloadMemoryRanges(std::span<const std::pair<DAddr, u64>> ranges);
+
+    /// EDEN_NX2_EXP49: DownloadMemory for a guest CPU read. Submits the copies without waiting
+    /// for the host GPU, for FinishReadDownloads to write to guest memory. Their ranges stay
+    /// GPU-modified until then, and another read of them waits for these copies (GetFlushArea:
+    /// in_flight).
+    void DownloadMemoryForRead(DAddr device_addr, u64 size);
+
+    /// Writes the DownloadMemoryForRead copies over [device_addr, device_addr + size), and those
+    /// submitted before them, to guest memory, waiting for the host GPU if it must. Any thread:
+    /// the reading one before it reads, the GPU's side before it writes guest memory there. Takes
+    /// `mutex` itself (a caller holding it keeps it held while the host GPU finishes). Returns how
+    /// long it waited for the host GPU (at least 1 ns if it did), or nothing when no download was
+    /// over the range.
+    std::optional<u64> FinishReadDownloads(DAddr device_addr, u64 size);
+
+    /// A GPU write into the buffers over [device_addr, device_addr + size), after the read
+    /// downloads taken so far: they still write their older bytes to guest memory, as synchronous
+    /// ones would have, but a later read takes the range again. MarkWrittenBuffer does this for
+    /// the writes it records; the query cache's copies of its results call it themselves
+    /// (`mutex` held).
+    void OutdateReadDownloads(DAddr device_addr, u64 size);
 
     std::optional<VideoCore::RasterizerDownloadArea> GetFlushArea(DAddr device_addr, u64 size);
 
@@ -321,6 +353,15 @@ public:
                                    PixelFormat format, bool is_written, bool is_image);
 
     void UnbindComputeStorageBuffers();
+
+    /// The compute program whose storage buffers are bound next (its write extents are checked
+    /// per program, see ExtentTrust).
+    void SetComputeShaderHash(u64 hash) noexcept {
+        compute_shader_hash = hash;
+    }
+
+    /// Records the "after" copies of the write extent checks of the dispatch just recorded.
+    void RecordComputeExtentProbes();
 
     /// write_extent: how far the program's stores reach past the pointer (native programs).
     void BindComputeStorageBuffer(size_t ssbo_index, u32 cbuf_index, u32 cbuf_offset,
@@ -698,6 +739,10 @@ private:
 
     bool SynchronizeBuffer(Buffer& buffer, DAddr device_addr, u32 size);
 
+    /// EDEN_NX2_EXP59 & 8: before the full walk, counts and logs what the dirty-word walk would
+    /// have left out. Returns whether the dirty-word walk would have walked anything.
+    bool VerifyComputeDirtyWalk(DAddr device_addr, u32 size);
+
     void UploadMemory(Buffer& buffer, u64 total_size_bytes, u64 largest_copy,
                       std::span<BufferCopy> copies);
 
@@ -715,11 +760,33 @@ private:
 
     void DownloadRangesMemory(std::span<const std::pair<DAddr, u64>> ranges);
 
+    /// ClearDownload, for the downloads taken at fences only.
+    void ClearFenceDownloads(DAddr device_addr, u64 size);
+
+    /// Whether every GPU-modified byte in the range is in a read download's clean_ranges.
+    [[nodiscard]] bool ReadDownloadsCover(DAddr device_addr, u64 size) const;
+
+    /// Writes the read downloads up to `tick` to guest memory, oldest first (`mutex` held, the
+    /// host GPU past `tick`).
+    void WriteReadDownloads(u64 tick);
+
+    /// WriteReadDownloads for those the host GPU has completed: nothing waits.
+    void WriteCompletedReadDownloads();
+
+    /// WriteReadDownloads up to the newest read download over the range, if the host GPU ran it.
+    /// Returns whether it did.
+    bool WriteFinishedReadDownloads(DAddr device_addr, u64 size);
+
+    /// Records and submits a read download of the GPU-modified bytes over `ranges` that no read
+    /// download brings yet.
+    void RecordReadDownload(std::span<const std::pair<DAddr, u64>> ranges);
+
     void DeleteBuffer(BufferId buffer_id, bool do_not_mark = false);
 
     [[nodiscard]] Binding StorageBufferBinding(GPUVAddr ssbo_addr, u32 cbuf_index, bool is_written,
                                                bool native_pointer = false,
-                                               bool table_pointer = false) const;
+                                               bool table_pointer = false,
+                                               bool compute = false) const;
 
     void TraceTablePointer(bool compute, size_t stage, size_t ssbo_index, u32 cbuf_index,
                            u32 cbuf_offset, u32 indirect_offset, GPUVAddr holder,
@@ -808,6 +875,57 @@ private:
         return static_cast<u32>((std::min<u64>)(size, cap));
     }
 
+    /// Write extent self-check (fable_answer_25; Ocarina of Time's glowing triangles,
+    /// 2026-11-09). The store analysis bounds how far a native compute program writes, and only
+    /// that much is marked GPU-written; one program writes past it, and the CPU then read stale
+    /// guest bytes back (particle positions turned into one right vertex and garbage). Each program
+    /// is marked in full until a dispatch at its dims was checked: its tail past the proof, as
+    /// the GPU left it after that one dispatch, is compared with guest memory from right before
+    /// it (known GPU writes and unapplied CPU writes left out). The same: the proof holds at these
+    /// dims (and at smaller ones). Different: the program is marked in full for the session and
+    /// logged, naming it. EDEN_NX2_EXP45=1 (live) skips the check (the proof is trusted as before).
+    struct ExtentTrust {
+        std::array<u32, 3> block{};
+        std::array<u32, 3> grid{};
+        bool distrusted{};
+        bool probe_pending{};
+    };
+    struct ExtentProbeRequest {
+        bool active{};
+        u64 proven{};
+        u64 pointer{};
+        u64 pad{};
+        std::array<u32, 3> block{};
+        std::array<u32, 3> grid{};
+    };
+    struct ExtentProbe {
+        u64 shader_hash{};
+        BufferId buffer_id{};
+        DAddr device_addr{}; ///< The tail's start (in buffer_id)
+        u64 binding_size{};
+        ExtentProbeRequest request{};
+        u64 span{};
+        /// Guest memory of the tail at bind (fable_answer_26). Under the full mark the CPU's reads
+        /// bring the GPU's bytes into guest memory, so only a copy made before the dispatch shows
+        /// what the CPU would have read without the mark.
+        std::vector<u8> guest;
+        /// Tail offsets [begin, end) left out of the compare: known GPU writes and CPU writes not
+        /// applied to the buffer yet.
+        std::vector<std::pair<u64, u64>> skip;
+        std::optional<Async_Buffer> after;
+        u64 tick{};
+    };
+    u64 compute_shader_hash{};
+    std::unordered_map<u64, ExtentTrust> extent_trust;
+    std::array<ExtentProbeRequest, NUM_STORAGE_BUFFERS> extent_probe_requests{};
+    std::vector<ExtentProbe> extent_probes;
+    u64 extent_probes_trusted{};
+    u64 extent_probes_distrusted{};
+    u64 extent_full_marks{};
+
+    void CheckExtentProbes();
+    void ProbeExtentTail(u32 index, const Binding& binding);
+
     /// Whether a GPU write to this range is copied back at the next fence. Ranges the guest CPU
     /// has read (Preflushable, set by the first reactive flush) always are: later reads skip the
     /// flush and rely on these downloads, e.g. collision meshes skinned by compute shaders.
@@ -883,6 +1001,27 @@ private:
     PendingCpuWrites pending_cpu_writes;
     std::optional<Async_Buffer> current_buffer;
 
+    /// EDEN_NX2_EXP49: a DownloadMemoryForRead, its copies, and what is left of them to do once
+    /// the host GPU has run them.
+    struct ReadDownload {
+        u64 tick{}; ///< The submission with the copies
+        Async_Buffer staging{};
+        /// src_offset: the device address copied; dst_offset: where it is in `staging`.
+        boost::container::small_vector<BufferCopy, 4> copies;
+        /// Still to write to guest memory: a newer value there (ClearReplacedDownload) takes its
+        /// bytes out. A newer GPU write doesn't: until a download of its own lands, guest memory
+        /// is to hold what a synchronous flush would have left.
+        Common::RangeSet<DAddr> write_ranges;
+        /// No longer GPU-modified once written: a newer GPU write (OutdateReadDownloads) or value
+        /// in guest memory takes its bytes out.
+        Common::RangeSet<DAddr> clean_ranges;
+    };
+    /// Oldest first, and written to guest memory in that order: none lands over newer bytes.
+    std::deque<ReadDownload> read_downloads;
+    /// All the read downloads' clean_ranges (they don't overlap): GPU-modified bytes already on
+    /// their way, which later reads wait for rather than download again.
+    Common::RangeSet<DAddr> read_download_ranges;
+
     std::deque<Async_Buffer> async_buffers_death_ring;
 
     size_t immediate_buffer_capacity = 0;
@@ -899,6 +1038,24 @@ private:
     VirtualRangeCache virtual_ranges;
     std::vector<MultiRangeSegment> graphics_segments;
     std::vector<MultiRangeSegment> compute_segments;
+    /// EDEN_NX2_GPU_PROFILE: SynchronizeBuffer counts its uploads as compute storage uploads
+    /// (set in BindHostComputeStorageBuffers).
+    bool count_compute_sync = false;
+    /// EDEN_NX2_EXP59 bits 4 and 8 while BindHostComputeStorageBuffers runs (0 otherwise):
+    /// SynchronizeBuffer walks only the dirty tracker words (4), or walks all and checks (8).
+    int compute_dirty_walk = 0;
+    /// EXP59 & 8: synchronizes checked, and those where the dirty-word walk would have differed,
+    /// since the last totals line (VerifyComputeDirtyWalk).
+    struct DirtyWalkVerify {
+        u64 checked = 0;
+        u64 mismatches = 0;
+        u64 cpu_pages = 0;
+        u64 untracked_pages = 0;
+        u64 total_checked = 0;
+        u64 total_mismatches = 0;
+        u32 logged = 0;
+        std::chrono::steady_clock::time_point last_report{};
+    } dirty_walk_verify;
     u64 frame_tick = 0;
 
     /// EDEN_NX2_EXP18 (zortos293/Lichii#641): resolved bindings are kept while the GPU mappings

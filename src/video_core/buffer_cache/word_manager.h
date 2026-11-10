@@ -388,6 +388,43 @@ struct WordManager {
         return mask & ~clean_words;
     }
 
+    /// The part of [offset, offset + size) that the dirty-word walk visits: from its first dirty
+    /// word to its last (MemoryTrackerBase::ForEachDirtyUploadRange). Empty when all are clean.
+    [[nodiscard]] std::pair<u64, u64> DirtyWindow(u64 offset, u64 size) const noexcept {
+        const u64 dirty =
+            DirtyWords(offset / BYTES_PER_WORD, (offset + size - 1) / BYTES_PER_WORD);
+        if (dirty == 0) {
+            return {offset + size, offset + size};
+        }
+        const u64 begin = (std::max<u64>)(offset, std::countr_zero(dirty) * BYTES_PER_WORD);
+        const u64 end =
+            (std::min<u64>)(offset + size, (64 - std::countl_zero(dirty)) * BYTES_PER_WORD);
+        return {begin, end};
+    }
+
+    /// EDEN_NX2_EXP59 & 8: the CPU and Untracked pages of [offset, offset + size) outside
+    /// DirtyWindow, counted from the words themselves (not clean_words). The full walk uploads
+    /// the first and re-tracks the second; the dirty-word walk would do neither.
+    [[nodiscard]] std::pair<u64, u64> DirtyWalkMisses(u64 offset, u64 size) const noexcept {
+        const std::span<const u64> cpu_words = Span(Type::CPU);
+        const std::span<const u64> untracked_words = Span(Type::Untracked);
+        const auto [begin, end] = DirtyWindow(offset, size);
+        u64 cpu_pages = 0;
+        u64 untracked_pages = 0;
+        const auto count = [&](u64 from, u64 to) {
+            if (from >= to) {
+                return;
+            }
+            IterateWords(from, to - from, [&](size_t index, u64 mask) {
+                cpu_pages += std::popcount(cpu_words[index] & mask);
+                untracked_pages += std::popcount(untracked_words[index] & mask);
+            });
+        };
+        count(offset, begin);
+        count(end, offset + size);
+        return {cpu_pages, untracked_pages};
+    }
+
     /// Recounts the clean words: true when clean_words matches the CPU and Untracked words.
     [[nodiscard]] bool CleanWordsHold() const noexcept {
         const std::span<const u64> cpu_words = Span(Type::CPU);

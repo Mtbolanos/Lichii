@@ -208,6 +208,8 @@ add_library(audio_core STATIC
     renderer/voice/voice_info.h
     renderer/voice/voice_state.h
     sink/null_sink.h
+    sink/input_processing.h
+    sink/silent_input_stream.h
     sink/sink.h
     sink/sink_details.cpp
     sink/sink_details.h

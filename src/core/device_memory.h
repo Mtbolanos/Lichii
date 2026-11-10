@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifdef _WIN32
+#include <thread>
+#endif
+
 #include "common/host_memory.h"
 #include "common/typed_address.h"
 
@@ -66,6 +70,17 @@ public:
     }
 
     Common::HostMemory buffer;
+
+#ifdef _WIN32
+private:
+    void TrimZeroPages(std::stop_token stop);
+    /// EDEN_NX2_MEM_OWNERS (on by default, =0 off): every 10 s, samples which guest pages are
+    /// resident and the process's heaps for the "Memory owners" log line.
+    void ProbeMemory(std::stop_token stop);
+
+    std::jthread zero_trim_thread;
+    std::jthread memory_probe_thread;
+#endif
 };
 
 } // namespace Core

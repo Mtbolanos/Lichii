@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(binding = 0) uniform sampler2D current_effects;
+layout(binding = 1) uniform sampler2D previous_effects;
+layout(binding = 2) uniform sampler2D motion;
+layout(binding = 3, r16f) uniform writeonly image2D bias;
+layout(push_constant) uniform Controls { uint has_previous; } controls;
+
+float Nearby(sampler2D effects, ivec2 center) {
+    ivec2 last = textureSize(effects, 0) - 1;
+    float value = 0.0;
+    for (int y = -1; y <= 1; ++y) {
+        for (int x = -1; x <= 1; ++x) {
+            value = max(value, texelFetch(effects, clamp(center + ivec2(x, y), ivec2(0), last), 0).r);
+        }
+    }
+    return value;
+}
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pixel, imageSize(bias)))) {
+        return;
+    }
+    // Glows and particles have no motion of their own: use them as drawn this frame, and drop
+    // the history DLSS would read where they were drawn last frame.
+    float value = Nearby(current_effects, pixel);
+    if (controls.has_previous != 0) {
+        vec2 history = vec2(pixel) + 0.5 + texelFetch(motion, pixel, 0).rg;
+        value = max(value, Nearby(previous_effects, ivec2(floor(history))));
+    }
+    imageStore(bias, pixel, vec4(value));
+}

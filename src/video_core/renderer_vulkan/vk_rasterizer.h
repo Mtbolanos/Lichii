@@ -19,6 +19,7 @@
 #include "video_core/engines/maxwell_dma.h"
 #include "video_core/host1x/gpu_device_memory_manager.h"
 #include "video_core/oot_network.h"
+#include "video_core/ocarina_upscale.h"
 #include "video_core/rasterizer_interface.h"
 #include "video_core/renderer_vulkan/blit_image.h"
 #include "video_core/renderer_vulkan/vk_buffer_cache.h"
@@ -106,6 +107,8 @@ public:
     void FlushAll() override;
     void FlushRegion(DAddr addr, u64 size,
                      VideoCommon::CacheType which = VideoCommon::CacheType::All) override;
+    void FlushRegionForRead(DAddr addr, u64 size) override;
+    void FinishRead(DAddr addr, u64 size) override;
     GpuWrittenList ReadGpuWrittenCommandList(DAddr addr, std::span<u8> out,
                                              bool past_sync) override;
     void NoteGpuWrittenCommandListSynced(DAddr page) override;
@@ -216,7 +219,9 @@ private:
     /// the GPU makes them now (BufferCache::Nx2CopyListPages).
     void SubmitNx2ListCopies(u64 writer);
 
-    void UpdateDynamicStates(GraphicsPipeline* draw_pipeline = nullptr);
+    /// Records the dynamic state of the draw being prepared with `pipeline` (null for
+    /// DrawTexture's blit).
+    void UpdateDynamicStates(const GraphicsPipeline* pipeline);
 
     void HandleTransformFeedback();
 
@@ -249,19 +254,22 @@ private:
     void UpdateStencilOp(Tegra::Engines::Maxwell3D::Regs& regs);
     void UpdateStencilTestEnable(Tegra::Engines::Maxwell3D::Regs& regs);
     void UpdateLogicOp(Tegra::Engines::Maxwell3D::Regs& regs);
-    void UpdateBlending(Tegra::Engines::Maxwell3D::Regs& regs);
+    void UpdateBlending(Tegra::Engines::Maxwell3D::Regs& regs, const GraphicsPipeline* pipeline);
     void UpdateColorWriteEnable(Tegra::Engines::Maxwell3D::Regs& regs);
 
     void UpdateVertexInput(Tegra::Engines::Maxwell3D::Regs& regs);
 
     void FrameDumpPass(const Framebuffer* framebuffer);
-#ifdef EGLANTINE_STREAMLINE
-    bool OcarinaDlssEnabled() const;
+    bool OcarinaTemporalEnabled() const;
     void TrackOcarinaCamera();
+    /// Offsets the viewport of Ocarina's scene draws (depth-tested, into the scene depth) by a
+    /// sub-pixel amount that changes every frame while FSR replaces the game's upscale, so FSR
+    /// gets new sample positions each frame (the game renders without jitter). The offset goes to
+    /// FSR with the frame.
+    void UpdateOcarinaJitter();
     void TrackOcarinaActor(u64 shader_hash, bool is_indexed, bool is_indirect);
-    bool TryOcarinaDlss(const ComputePipeline& pipeline, bool replace);
+    bool TryOcarinaUpscale(const ComputePipeline& pipeline, bool replace);
     void ReadOcarinaActor(struct OcarinaActorMesh& mesh);
-#endif
     /// Records the uniform and storage buffers of the current draw or dispatch for the frame dump.
     bool FrameDumpBuffers(bool compute, std::span<const u64> shader_hashes);
     /// EDEN_NX2_PENDING_WRITE_TRACE: logs bound buffer ranges with collected, unapplied CPU writes.
@@ -300,8 +308,8 @@ private:
     boost::container::static_vector<VkSampler, MAX_TEXTURES> sampler_handles;
 
     u32 draw_counter = 0;
-#ifdef EGLANTINE_STREAMLINE
     std::optional<u64> oot_camera_sample_frame;
+    mutable std::optional<VideoCommon::OcarinaUpscaleBackend> oot_backend;
     struct OcarinaMotionTrace {
         const Tegra::MemoryManager* camera_channel{};
         const Tegra::MemoryManager* depth_channel{};
@@ -312,13 +320,20 @@ private:
         std::array<f32, 16> current{};
         std::array<f32, 16> previous{};
     } oot_motion;
-    std::unique_ptr<class OcarinaLiveDlss> oot_live_dlss;
+    std::unique_ptr<class OcarinaUpscaler> oot_live_dlss;
     bool oot_live_failed{};
     const char* oot_fallback_reason{};
     u32 oot_fallback_repeats{};
     std::optional<u64> oot_dlss_frame;
+    std::array<f32, 2> oot_jitter_applied{}; ///< in the viewport state now (render pixels)
+    std::array<f32, 2> oot_jitter_offset{};  ///< what oot_jitter_frame's scene draws used
+    std::optional<u64> oot_jitter_frame;
+    u32 oot_jitter_phases{8}; ///< Halton sequence length for the last FSR frame's scale
     std::optional<u64> oot_4k_scene_frame;
     VkImage oot_4k_guest_present{};
+    std::optional<u64> oot_effects_frame;
+    GPUVAddr oot_effects_address{};
+    VkImageView oot_effects_scene{};
     struct OcarinaActorPose {
         u64 frame{};
         const Tegra::MemoryManager* channel{};
@@ -328,7 +343,6 @@ private:
         std::array<f32, 4> origin{};
         std::array<f32, 280 * 12> bones{};
     } oot_actor, oot_previous_actor;
-#endif
     u64 render_trace_frame = 0;
     u32 render_trace_draws = 0;
     u32 render_trace_clears = 0;
@@ -378,6 +392,8 @@ private:
     u64 mesh_arena_size{64ULL << 20};
     /// The current submission's arena, after its counter is reset.
     const MeshArena& AcquireMeshArena();
+    /// Fragment output components the dynamic color write mask was last recorded with
+    u32 last_color_output_mask{};
 
     struct IndirectTrace {
         vk::Buffer readback;

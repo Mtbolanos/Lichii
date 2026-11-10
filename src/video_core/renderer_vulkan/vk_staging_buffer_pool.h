@@ -46,6 +46,14 @@ public:
 
     void TickFrame();
 
+    /// Bytes of the cached staging buffers of a kind, idle or in use (EDEN_NX2_MEM_TRACE).
+    [[nodiscard]] u64 CachedBytes(MemoryUsage usage);
+
+    /// The stream buffer's size (the "Memory owners" line).
+    [[nodiscard]] u64 StreamBufferBytes() const noexcept {
+        return stream_buffer_size;
+    }
+
 private:
     struct StreamBufferCommit {
         size_t upper_bound;

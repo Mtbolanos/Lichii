@@ -13,11 +13,13 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QMap>
 #include <QMessageBox>
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
 #include <QScreen>
+#include <QSet>
 #include <QStandardPaths>
 #include <QSysInfo>
 #include <QUrl>
@@ -189,7 +191,7 @@ QString SystemSummary(const std::vector<VkDeviceInfo::Record>& vk_device_records
     std::vector<Settings::BasicSetting*> settings{
         &values.renderer_backend, &values.vulkan_device,   &values.oot_30fps,
         &values.use_speed_limit,  &values.speed_limit,     &values.accelerate_astc,
-        &values.astc_recompression,
+        &values.astc_recompression, &values.oot_high_refresh, &values.oot_high_refresh_cap,
     };
     for (auto* setting : Settings::Frizti::TunedSettings(values)) {
         settings.push_back(setting);
@@ -197,6 +199,47 @@ QString SystemSummary(const std::vector<VkDeviceInfo::Record>& vk_device_records
     for (const auto* setting : settings) {
         text += Line(QString::fromStdString(setting->GetLabel()),
                      QString::fromStdString(setting->Canonicalize()));
+    }
+
+    // Ocarina's game-specific settings (right-click > Configure Game, a value with a clear button):
+    // they beat the global ones, the usual reason "my settings didn't apply" (2026-11-09).
+    text += QStringLiteral("\n== OoT game-specific settings (these beat the global ones) ==\n");
+    {
+        const auto game_ini = Common::FS::GetEdenPath(Common::FS::EdenPath::ConfigDir) / "custom" /
+                              "0400486024DEC000.ini";
+        QFile file(QString::fromStdString(Common::FS::PathToUTF8String(game_ini)));
+        QStringList overridden;
+        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString section;
+            QSet<QString> own;
+            QMap<QString, QString> values_by_key;
+            while (!file.atEnd()) {
+                const QString line = QString::fromUtf8(file.readLine()).trimmed();
+                if (line.startsWith(QLatin1Char('[')) && line.endsWith(QLatin1Char(']'))) {
+                    section = line.mid(1, line.size() - 2);
+                    continue;
+                }
+                const qsizetype eq = line.indexOf(QLatin1Char('='));
+                if (eq <= 0) {
+                    continue;
+                }
+                const QString key = line.left(eq);
+                const QString value = line.mid(eq + 1);
+                if (key.endsWith(QStringLiteral("\\use_global"))) {
+                    if (value == QStringLiteral("false")) {
+                        own.insert(section + QLatin1Char('/') + key.chopped(11));
+                    }
+                } else if (!key.contains(QLatin1Char('\\'))) {
+                    values_by_key.insert(section + QLatin1Char('/') + key, value);
+                }
+            }
+            for (const QString& key : own) {
+                overridden << QStringLiteral("%1: %2").arg(key, values_by_key.value(key));
+            }
+            overridden.sort();
+        }
+        text += overridden.isEmpty() ? QStringLiteral("none") : overridden.join(QLatin1Char('\n'));
+        text += QLatin1Char('\n');
     }
 
     QStringList switches;
@@ -264,8 +307,16 @@ void Export(QWidget* parent, const std::vector<VkDeviceInfo::Record>& vk_device_
 
     const QString log_dir = QString::fromStdString(
         Common::FS::PathToUTF8String(Common::FS::GetEdenPath(Common::FS::EdenPath::LogDir)));
-    const QString current_path = QDir(log_dir).filePath(QStringLiteral(LOG_FILE));
-    const QString previous_path = current_path + QStringLiteral(".old.txt");
+    const QString usual_path = QDir(log_dir).filePath(QStringLiteral(LOG_FILE));
+    const QString previous_path = usual_path + QStringLiteral(".old.txt");
+    // The file this session really writes: another Fritchii that never finished closing keeps
+    // the usual one locked, and that one then holds the stuck process's old log.
+    bool usual_locked = false;
+    const auto session_file = Common::Log::FilePath(&usual_locked);
+    const QString current_path =
+        session_file.empty()
+            ? usual_path
+            : QString::fromStdString(Common::FS::PathToUTF8String(session_file));
 
     const Scrubber scrubber;
     QStringList included;
@@ -281,8 +332,16 @@ void Export(QWidget* parent, const std::vector<VkDeviceInfo::Record>& vk_device_
     };
     add_log(current_path, QStringLiteral("log-this-session.txt"),
             QObject::tr("the log of this session"));
-    add_log(previous_path, QStringLiteral("log-previous-session.txt"),
-            QObject::tr("the log of the session before"));
+    if (usual_locked) {
+        add_log(usual_path, QStringLiteral("log-stuck-process.txt"),
+                QObject::tr("the log of a Fritchii that was still running when this one started"));
+        included << QStringLiteral(
+            "WARNING: another lichii.exe was still running when this session started. End it in "
+            "Task Manager (or restart the PC), then start Fritchii again.");
+    } else {
+        add_log(previous_path, QStringLiteral("log-previous-session.txt"),
+                QObject::tr("the log of the session before"));
+    }
     included.prepend(QStringLiteral("system-info.txt: this summary"));
     files.emplace(files.begin(), QStringLiteral("system-info.txt"),
                   scrubber.Apply(SystemSummary(vk_device_records, included)).toUtf8());

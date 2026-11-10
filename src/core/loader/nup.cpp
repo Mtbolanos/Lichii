@@ -70,8 +70,10 @@ std::unique_ptr<FileSys::NACP> BuildNacp(const NupContainer::PackageInfo& base,
             }
         }
     }
-    if (!effective_title.empty()) {
-        CopyNameToEntry(nacp->raw.language_entries.language_entries[0], effective_title);
+    // Slot 0 is en-us; an exact en-us localized title wins over the default title (SPEC 5.1).
+    auto& english = nacp->raw.language_entries.language_entries[0];
+    if (!effective_title.empty() && english.application_name[0] == '\0') {
+        CopyNameToEntry(english, effective_title);
     }
     if (!base.publisher.empty()) {
         for (auto& entry : nacp->raw.language_entries.language_entries) {
@@ -131,7 +133,44 @@ AppLoader_NUP::AppLoader_NUP(FileSys::VirtualFile file_)
 
     const auto& program = nup->GetPackages()[*program_index];
     base_title_id = program.title_id;
-    display_title = program.title_name;
+
+    // Title metadata lives on the base package (SPEC section 5.1), which is still present when
+    // its ExeFS is empty and the program boots from the update. Take each field from the base
+    // when it has one and fall back to the program package otherwise.
+    NupContainer::PackageInfo meta;
+    meta.title_id = program.title_id;
+    meta.title_name = program.title_name;
+    meta.localized_titles = program.localized_titles;
+    meta.source_dump = program.source_dump;
+    meta.publisher = program.publisher;
+    meta.icon = program.icon;
+    meta.localized_icons = program.localized_icons;
+    if (base_index && *base_index != *program_index) {
+        const auto& base = nup->GetPackages()[*base_index];
+        if (!base.title_name.empty()) {
+            meta.title_name = base.title_name;
+        }
+        if (!base.localized_titles.empty()) {
+            meta.localized_titles = base.localized_titles;
+        }
+        if (!base.source_dump.empty()) {
+            meta.source_dump = base.source_dump;
+        }
+        if (!base.publisher.empty()) {
+            meta.publisher = base.publisher;
+        }
+        // The default and localized icons are one set, so they come from the same package.
+        if (!base.icon.empty() || !base.localized_icons.empty()) {
+            meta.icon = base.icon;
+            meta.localized_icons = base.localized_icons;
+        }
+    }
+    display_title = meta.title_name;
+    for (const auto& [lang, name] : meta.localized_titles) {
+        if (lang == "en-us" && !name.empty()) {
+            display_title = name;
+        }
+    }
     has_program = true;
 
     const auto exefs = nup->GetExeFSDir(*exefs_index);
@@ -150,18 +189,18 @@ AppLoader_NUP::AppLoader_NUP(FileSys::VirtualFile file_)
         display_version = program.display_version.empty() ? DecodeVersion(program.version)
                                                           : program.display_version;
     }
-    nacp_file = BuildNacp(program, display_version);
-    if (!program.icon.empty()) {
-        icon_file = std::make_shared<FileSys::VectorVfsFile>(program.icon, "icon.dat");
+    nacp_file = BuildNacp(meta, display_version);
+    if (!meta.icon.empty()) {
+        icon_file = std::make_shared<FileSys::VectorVfsFile>(meta.icon, "icon.dat");
     } else {
-        for (const auto& [lang, icon] : program.localized_icons) {
+        for (const auto& [lang, icon] : meta.localized_icons) {
             if (lang == "en-us") {
                 icon_file = std::make_shared<FileSys::VectorVfsFile>(icon, "icon_" + lang + ".dat");
             }
         }
-        if (icon_file == nullptr && !program.localized_icons.empty()) {
+        if (icon_file == nullptr && !meta.localized_icons.empty()) {
             icon_file = std::make_shared<FileSys::VectorVfsFile>(
-                program.localized_icons.front().second, "icon.dat");
+                meta.localized_icons.front().second, "icon.dat");
         }
     }
 

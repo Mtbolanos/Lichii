@@ -9,6 +9,7 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <span>
@@ -375,7 +376,8 @@ private:
     /// Native dispatches left to skip while a retained network is being replaced (bounded, so a
     /// non-network pass cannot silence the engine forever).
     u32 network_skip_remaining{};
-    /// Set when the replacement copy fails, so the full network runs from then on.
+    /// Set when the replacement copy fails, so the full network runs from then on. Settings
+    /// oot_movie_upscale chooses the network itself (OotMovieNetworkChosen in the .cpp).
     bool native_upscale_disabled{};
 
     /// Motion vectors and depth of Fire Emblem: Fortune's Weave's DLSS evaluation, from its first

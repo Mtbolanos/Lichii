@@ -179,7 +179,17 @@ void TextureCache<P>::RunGarbageCollector(bool out_of_memory) {
             (!high_priority_mode && must_download)) {
             return false;
         }
+        // EDEN_NX2_EXP57 (live, 0 = off): at most one download with a full wait for the GPU per
+        // frame unless an allocation failed. A player's first high-priority pass downloaded
+        // image after image and froze for 3 s (fable52_answer_3 s7); the rest wait for later
+        // frames.
+        if (must_download && !out_of_memory && VideoCore::Nx2Debug::Experiment(57) != 0 &&
+            gc_waited_frame == frame_tick) {
+            ++gc_downloads_deferred;
+            return false;
+        }
         if (must_download) {
+            gc_waited_frame = frame_tick;
             auto map = runtime.DownloadStagingBuffer(image.unswizzled_size_bytes);
             const auto copies = FullDownloadCopies(image.info);
             image.DownloadMemory(map, copies);
@@ -425,7 +435,15 @@ void TextureCache<P>::ApplyThresholdOverrides(bool log) {
     // integrated GPUs, whose budget is capped at 4-6 GiB) keep the 5 GiB cap.
     u64 max_critical = MaxCriticalMemory;
     if constexpr (requires { runtime.GetDeviceMemoryBudget(); }) {
-        max_critical = (std::max)(max_critical, runtime.GetDeviceMemoryBudget() / 8 * 5);
+        const u64 budget = runtime.GetDeviceMemoryBudget();
+        max_critical = (std::max)(max_critical, budget / 8 * 5);
+        // Cards with 10 GiB or more of budget: 5/8 left ~7.3 GiB on a 12 GB RX 6700 XT, under what
+        // Ocarina's Kokiri Forest keeps alive, so every aggressive pass evicted its CostlyLoad ASTC
+        // textures (a 6144x6144 5x5 one, 31 MiB) and the game re-created them ~128 frames later:
+        // a 24 ms texture stall every ~3 s. Keep 2.5 GiB of the budget for everything else instead.
+        if (budget >= 10_GiB) {
+            max_critical = (std::max)(max_critical, budget - 2560_MiB);
+        }
     }
     critical_memory = (std::min)(critical_memory, max_critical);
     expected_memory =
@@ -566,6 +584,49 @@ void TextureCache<P>::TickFrame() {
             total_used_memory -= (std::min)(total_used_memory, runtime.PooledImageBytes());
         }
     }
+    // EDEN_NX2_MEM_TRACE=1 (from zortos293/Lichii#951): every 2 s, what the cache holds next to
+    // what the process and the driver report (memory climbs).
+    static const bool mem_trace = std::getenv("EDEN_NX2_MEM_TRACE") != nullptr;
+    if (const auto now = std::chrono::steady_clock::now();
+        mem_trace && now - mem_trace_time >= std::chrono::seconds{2}) {
+        mem_trace_time = now;
+        u64 image_bytes{};
+        u64 gpu_written_bytes{};
+        size_t images{};
+        size_t unbacked{};
+        for (const auto [image_id, image] : slot_images) {
+            ++images;
+            if (True(image->flags & ImageFlagBits::Unbacked)) {
+                ++unbacked;
+                continue;
+            }
+            const u64 bytes = GetScaledImageSizeBytes(*image);
+            image_bytes += bytes;
+            if (True(image->flags & ImageFlagBits::GpuModified)) {
+                gpu_written_bytes += bytes;
+            }
+        }
+        u64 decode_bytes{};
+        for (const auto& decode : async_decodes) {
+            // The worker sizes the buffer before it publishes complete.
+            if (decode->complete.load(std::memory_order_acquire)) {
+                decode_bytes += decode->decoded_data.capacity();
+            }
+        }
+        const u64 sentenced = std::accumulate(sentenced_image_bytes.begin(),
+                                              sentenced_image_bytes.end(), gpu_sentenced_bytes);
+        LOG_INFO(HW_GPU,
+                 "Memory trace: texture cache {} images {} MiB ({} MiB GPU-written, {} unbacked), "
+                 "device usage {} MiB (expected {} MiB, critical {} MiB), sentenced {} MiB, {} "
+                 "async decodes {} MiB, scratch {} MiB",
+                 images, image_bytes >> 20, gpu_written_bytes >> 20, unbacked,
+                 total_used_memory >> 20, expected_memory >> 20, critical_memory >> 20,
+                 sentenced >> 20, async_decodes.size(), decode_bytes >> 20,
+                 (swizzle_data_buffer.capacity() + unswizzle_data_buffer.capacity()) >> 20);
+        if constexpr (requires { runtime.LogMemoryTrace(); }) {
+            runtime.LogMemoryTrace();
+        }
+    }
     // Every 600 frames: device memory in use against the collector's thresholds.
     // Skip expensive heap allocation, map construction, and sorting unless debug logging is explicitly enabled.
     static const bool log_tc = std::getenv("EDEN_NX2_TC_LOG") != nullptr;
@@ -609,9 +670,9 @@ void TextureCache<P>::TickFrame() {
         if constexpr (requires { runtime.LogMemoryStatistics(); }) {
             runtime.LogMemoryStatistics();
         }
-        LOG_INFO(HW_GPU, "Texture cache last 600 frames: created {} images, deleted {} (collector {}, {} costly, {} downloaded), {} async decodes, ASTC {} opaque / {} alpha",
+        LOG_INFO(HW_GPU, "Texture cache last 600 frames: created {} images, deleted {} (collector {}, {} costly, {} downloaded, {} downloads deferred), {} async decodes, ASTC {} opaque / {} alpha",
                  images_created, images_deleted, gc_deletes + gc_costly_deletes, gc_costly_deletes,
-                 gc_download_deletes,
+                 gc_download_deletes, gc_downloads_deferred,
                  async_decodes_queued, astc_opaque_images, astc_alpha_images);
         LOG_INFO(HW_GPU, "Texture cache last 600 frames: {} uploads from guest memory, {} MiB (largest {} MiB, {} by layer)",
                  images_uploaded, uploaded_bytes >> 20, largest_upload >> 20, layer_uploads);
@@ -636,7 +697,8 @@ void TextureCache<P>::TickFrame() {
         created_shapes.clear();
         // The per-image and per-shape tallies only feed debug lines: skip them while those are off.
         debug_stats = Common::Log::IsLevelEnabled(Common::Log::Class::HW_GPU, Common::Log::Level::Debug);
-        gc_deletes = gc_costly_deletes = gc_download_deletes = async_decodes_queued = 0;
+        gc_deletes = gc_costly_deletes = gc_download_deletes = gc_downloads_deferred =
+            async_decodes_queued = 0;
         images_created = images_deleted = 0;
     }
     SweepColdImages();
@@ -761,6 +823,25 @@ void TextureCache<P>::WatchColdImage(ImageId image_id) {
 }
 
 template <class P>
+bool TextureCache<P>::ColdSuperseded(ImageId image_id, const ImageBase& image) {
+    const u64 shape = RelocationShapeKey(image.info);
+    const u64 touched = lru_cache.Tick(image.lru_index);
+    bool superseded = false;
+    ForEachImageInRegion(image.cpu_addr, image.guest_size_bytes,
+                         [&](ImageId other_id, Image& other) {
+                             if (other_id == image_id ||
+                                 False(other.flags & ImageFlagBits::Registered) ||
+                                 RelocationShapeKey(other.info) == shape ||
+                                 lru_cache.Tick(other.lru_index) <= touched) {
+                                 return false;
+                             }
+                             superseded = true;
+                             return true;
+                         });
+    return superseded;
+}
+
+template <class P>
 void TextureCache<P>::SweepColdImages() {
     const u64 cold_frames = TcColdFrames();
     if (cold_frames == 0) {
@@ -823,22 +904,59 @@ void TextureCache<P>::SweepColdImages() {
             ++index;
             continue;
         }
+        bool superseded = false; // EXP58 chose it
+        constexpr u64 SupersededFrames = 60;
+        // EDEN_NX2_EXP58=2 (live): images the CPU read once go the same way (below). Owner's
+        // Castle Town market + shooting gallery session: 150-170k "kept as read later" a window,
+        // ~6,000 images and device memory at the collector's line with EXP58=1.
+        const int sweep_mode = VideoCore::Nx2Debug::Experiment(58);
         if (True(image.flags & ImageFlagBits::GpuModified)) {
             // Its contents exist only on the GPU and the collector would not download them
             // either (BadOverlap): only where nothing says they may be read again.
             if (image.relocation_guard_noted != 0 || image.info.forced_flushed ||
                 image.info.dma_downloaded) {
-                ++cold_kept_read;
-                drop();
-                continue;
+                const u64 age = frame_tick - lru_cache.Tick(image.lru_index);
+                if (sweep_mode >= 2 && age < SupersededFrames &&
+                    frame_tick - watched_at <= MaxWatchFrames) {
+                    ++index; // looked at again when old enough
+                    continue;
+                }
+                // A newer target of another shape owns that memory now: a CPU read there goes
+                // to it, not to this image.
+                if (sweep_mode < 2 || age < SupersededFrames || !ColdSuperseded(image_id, image)) {
+                    ++cold_kept_read;
+                    drop();
+                    continue;
+                }
+                superseded = true;
             }
             const auto shape = relocation_shapes.find(RelocationShapeKey(image.info));
             const u8 guard = shape != relocation_shapes.end() ? shape->second.guard : 0;
-            if ((guard & GuardCpuRead) != 0 ||
-                (!sweep_guarded && (guard & (GuardSampled | GuardLoaded)) != 0)) {
-                ++cold_kept_guarded;
-                drop();
-                continue;
+            if (!superseded &&
+                ((guard & GuardCpuRead) != 0 ||
+                 (!sweep_guarded && (guard & (GuardSampled | GuardLoaded)) != 0))) {
+                // EDEN_NX2_EXP58 (live, 0 = off; fable52_answer_2 3.3 step 4): a guarded image
+                // still dies once it has been untouched for SupersededFrames and a render target
+                // of another shape, touched since, covers its memory: the game reused that memory
+                // for another layout, so the old contents have no reader left. Deleted without a
+                // download, as the collector would. The guard was made for relocation (same
+                // shape, live contents); these piled up (350k "kept" in 600 frames) until the
+                // collector's bursts. Shapes the CPU read only with EXP58=2.
+                const bool superseded_sweep =
+                    sweep_mode != 0 && ((guard & GuardCpuRead) == 0 || sweep_mode >= 2);
+                const u64 age = frame_tick - lru_cache.Tick(image.lru_index);
+                if (superseded_sweep && age < SupersededFrames &&
+                    frame_tick - watched_at <= MaxWatchFrames) {
+                    ++index; // looked at again when old enough
+                    continue;
+                }
+                if (!superseded_sweep || age < SupersededFrames ||
+                    !ColdSuperseded(image_id, image)) {
+                    ++cold_kept_guarded;
+                    drop();
+                    continue;
+                }
+                superseded = true;
             }
         }
         if (queued(image_id, uncommitted_downloads) ||
@@ -859,18 +977,20 @@ void TextureCache<P>::SweepColdImages() {
         UnregisterImage(image_id);
         DeleteImage(image_id);
         ++deleted;
+        cold_superseded += superseded ? 1 : 0;
         drop();
     }
     cold_deleted += deleted;
     if (frame_tick % 600 == 0) {
         LOG_INFO(HW_GPU,
                  "Cold sweep (EDEN_NX2_TC_COLD_FRAMES={}{}) last 600 frames: {} chain images "
-                 "deleted, {} kept as GPU-written and guarded, {} kept as read later; {} watched; "
-                 "{} images, device memory {} MiB (expected {} MiB)",
-                 cold_frames, sweep_guarded ? ", guarded too" : "", cold_deleted,
+                 "deleted ({} of them guarded but superseded, EXP58), {} kept as GPU-written and "
+                 "guarded, {} kept as read later; {} watched; {} images, device memory {} MiB "
+                 "(expected {} MiB)",
+                 cold_frames, sweep_guarded ? ", guarded too" : "", cold_deleted, cold_superseded,
                  cold_kept_guarded, cold_kept_read, cold_watch.size(), slot_images.size(),
                  total_used_memory >> 20, expected_memory >> 20);
-        cold_deleted = cold_kept_guarded = cold_kept_read = 0;
+        cold_deleted = cold_kept_guarded = cold_kept_read = cold_superseded = 0;
     }
 }
 
@@ -3558,16 +3678,23 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
     // A new render target that the clear binding it overwrites whole (every channel, the whole
     // image) needs no upload from guest memory first: Ocarina of Time creates ~4 such targets a
     // frame outdoors, and uploading them was ~15% of the GPU back thread.
+    // Which test refused the last call (EXP7's new-image line).
+    const char* clear_refusal = "";
     const auto overwritten_by_clear = [&] {
-        if (!clearing_render_targets || !join_copies_to_do.empty() ||
-            new_info.type != ImageType::e2D || new_info.resources.levels != 1 ||
+        if (!clearing_render_targets) {
+            return (clear_refusal = "not clearing", false);
+        }
+        if (!join_copies_to_do.empty()) {
+            return (clear_refusal = "join copies pending", false);
+        }
+        if (new_info.type != ImageType::e2D || new_info.resources.levels != 1 ||
             new_info.resources.layers != 1 || new_info.num_samples != 1) {
-            return false;
+            return (clear_refusal = "not a plain 2D target", false);
         }
         const auto& regs = maxwell3d->regs;
         const auto& surface = regs.clear_surface;
         if (surface.layer != 0) {
-            return false;
+            return (clear_refusal = "clear layer", false);
         }
         const u32 width = new_info.size.width;
         const u32 height = new_info.size.height;
@@ -3575,34 +3702,59 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
             const auto& scissor = regs.scissor_test[0];
             if (scissor.min_x != 0 || scissor.min_y != 0 || scissor.max_x < width ||
                 scissor.max_y < height) {
-                return false;
+                // EXP7: the numbers, for the per-object depth targets whose width is padded to
+                // 16 (fable52_answer_4: is the clear only a few pixels of padding short?).
+                static std::atomic<u32> scissor_logged{};
+                if (VideoCore::Nx2Debug::Experiment(7) != 0 &&
+                    scissor_logged.fetch_add(1, std::memory_order_relaxed) < 40) {
+                    LOG_WARNING(HW_GPU,
+                                "Clear rule: scissor ({},{})-({},{}) vs new image format {} "
+                                "{}x{} at {:#x}",
+                                scissor.min_x.Value(), scissor.min_y.Value(),
+                                scissor.max_x.Value(), scissor.max_y.Value(),
+                                static_cast<u32>(new_info.format), width, height, gpu_addr);
+                }
+                return (clear_refusal = "scissor", false);
             }
         }
         // The clear covers the framebuffer's render area, the smallest bound target.
+        // EDEN_NX2_EXP56 (live, 0 = off): not for the clear's own depth target, which follows
+        // IsFullClear as an existing one does (its contents are dropped, the colour targets'
+        // sizes aside). Ocarina binds a 1920x1024 depth buffer under 1280x720 colour and this
+        // rule uploaded its 7.5 MiB from guest memory every frame (fable52_answer_3 s7).
+        const bool depth_follows_full_clear = VideoCore::Nx2Debug::Experiment(56) != 0 &&
+                                              regs.zeta_enable && regs.zeta.Address() == gpu_addr;
         for (u32 index = 0; index < regs.rt_control.count && index < NUM_RT; ++index) {
             const auto& rt = regs.rt[index];
-            if (rt.Address() != 0 && rt.format != Tegra::RenderTargetFormat::NONE &&
+            if (!depth_follows_full_clear && rt.Address() != 0 &&
+                rt.format != Tegra::RenderTargetFormat::NONE &&
                 (rt.width < width || rt.height < height)) {
-                return false;
+                return (clear_refusal = "a smaller colour target", false);
             }
         }
         if (regs.zeta_enable && regs.zeta.Address() != 0 &&
             (regs.zeta_size.width < width || regs.zeta_size.height < height)) {
-            return false;
+            return (clear_refusal = "a smaller depth target", false);
         }
         const bool is_depth_target = regs.zeta_enable && regs.zeta.Address() == gpu_addr;
         const bool full_stencil = surface.S && regs.stencil_front_mask == 0xFF;
         switch (VideoCore::Surface::GetFormatType(new_info.format)) {
         case VideoCore::Surface::SurfaceType::ColorTexture: {
             const u32 index = surface.RT;
-            return surface.R && surface.G && surface.B && surface.A && index < NUM_RT &&
-                   index < regs.rt_control.count && regs.rt[index].Address() == gpu_addr;
+            const bool covered = surface.R && surface.G && surface.B && surface.A &&
+                                 index < NUM_RT && index < regs.rt_control.count &&
+                                 regs.rt[index].Address() == gpu_addr;
+            clear_refusal = covered ? "" : "colour channels or target";
+            return covered;
         }
         case VideoCore::Surface::SurfaceType::Depth:
+            clear_refusal = (is_depth_target && surface.Z) ? "" : "depth: not the bound target or no Z";
             return is_depth_target && surface.Z;
         case VideoCore::Surface::SurfaceType::Stencil:
+            clear_refusal = (is_depth_target && full_stencil) ? "" : "stencil: not the bound target or mask";
             return is_depth_target && full_stencil;
         case VideoCore::Surface::SurfaceType::DepthStencil:
+            clear_refusal = (is_depth_target && surface.Z && full_stencil) ? "" : "depth-stencil: not bound, no Z or stencil mask";
             return is_depth_target && surface.Z && full_stencil;
         default:
             return false;
@@ -3824,7 +3976,7 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
     // EDEN_NX2_EXP8 bit 2: skip the upload the copies overwrite.
     const bool copy_skip =
         !clear_skip && (VideoCore::Nx2Debug::Experiment(8) & 2) != 0 && overwritten_by_copies();
-    if (VideoCore::Nx2Debug::Experiment(7) != 0 && new_image.guest_size_bytes >= 4_MiB)
+    if (VideoCore::Nx2Debug::Experiment(7) != 0 && new_image.guest_size_bytes >= 1_MiB)
         [[unlikely]] {
         // Why a large new image was (or was not) uploaded from guest memory.
         static std::atomic<u32> logged{};
@@ -3839,7 +3991,7 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
             LOG_WARNING(HW_GPU,
                         "New image format {} {}x{}x{} levels {} layers {} at {:#x}: {} copies "
                         "({} aliases, {} GPU-written), {} bad overlaps, clearing {}, covered {}, "
-                        "upload {}",
+                        "upload {}{}{}",
                         static_cast<u32>(new_info.format), new_info.size.width,
                         new_info.size.height, new_info.size.depth, new_info.resources.levels,
                         new_info.resources.layers, new_image.gpu_addr, join_copies_to_do.size(),
@@ -3847,7 +3999,9 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
                         clearing_render_targets, overwritten_by_copies(),
                         clear_skip  ? "skipped (clear)"
                         : copy_skip ? "skipped (copies)"
-                                    : "done");
+                                    : "done",
+                        clear_skip || clear_refusal[0] == '\0' ? "" : ", clear refused: ",
+                        clear_skip ? "" : clear_refusal);
         }
     }
     const auto refresh_start = std::chrono::steady_clock::now();

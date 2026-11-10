@@ -4,7 +4,10 @@
 
 #include <functional>
 #include <string>
+#include <utility>
+#include <vector>
 #include <QString>
+#include <QStringList>
 
 class QIcon;
 class QMainWindow;
@@ -58,5 +61,28 @@ struct GraphicsHooks {
 
 /// Loading screen bar in the Graphite colours.
 [[nodiscard]] const char* LoadingBarStyle();
+
+/// The Fritchii Discord server and the owner's donation page, opened in the browser.
+inline constexpr const char* DiscordInvite = "https://discord.gg/fritchii";
+inline constexpr const char* DonateLink = "https://paypal.me/frizti";
+void OpenDiscord();
+void OpenDonate();
+
+/// Settings backups in config/backups/<yyyy-MM-dd HHmmss>: qt-config.ini, frizti.ini and the
+/// per-game configs (custom/). Copies the current ones and keeps the newest 10; returns the
+/// folder, empty when nothing could be saved.
+QString BackupSettings();
+/// The backups, newest first: {folder, label like "9 Nov 2026, 21:14"}.
+[[nodiscard]] std::vector<std::pair<QString, QString>> SettingsBackups();
+/// Puts a backup's files in place of the current ones (custom/ replaced as a whole).
+bool RestoreSettingsFiles(const QString& backup);
+/// The backup the settings dialog asked to restore; the main window reads and clears it.
+[[nodiscard]] QString& PendingSettingsRestore();
+
+/// Ocarina of Time's game-specific settings (Configure Game): the setting names whose value
+/// beats the global one, read from config/custom/0400486024DEC000.ini.
+[[nodiscard]] QStringList OcarinaGameOverrides();
+/// Puts all of them back on the global settings (use_global=true in that file).
+bool ClearOcarinaGameOverrides();
 
 } // namespace FritchiiUi

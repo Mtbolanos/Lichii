@@ -16,6 +16,8 @@ add_executable(tests
     common/dkb_cpu_trace.cpp
     common/dkb_frame_trace.cpp
     audio_core/nx2_sysmix.cpp
+    audio_core/nx2_input_service.cpp
+    audio_core/audio_in.cpp
     audio_core/sysmix_sink.cpp
     audio_core/sysmix_test_context.h
     video_core/ampere_starfox_test10.cpp
@@ -23,6 +25,7 @@ add_executable(tests
     video_core/ampere_yoshi_compute.cpp
     video_core/texture_rect_descriptor.cpp
     audio_core/batch_decoder.cpp
+    audio_core/microphone.cpp
     audio_core/hardware_audio_codec.cpp
     core/gpu_dirty_memory.cpp
     core/memory_acquire.cpp
@@ -96,6 +99,7 @@ add_executable(tests
     video_core/ampere_tennis_i2f.cpp
     video_core/ampere_tennis_tessellation.cpp
     video_core/pipeline_cache_files.cpp
+    video_core/evicted_pointer_slots.cpp
     video_core/shader_object_pool.cpp
     video_core/storage_binding_capacity.cpp
     video_core/native_indirect_reset.cpp
@@ -108,6 +112,8 @@ add_executable(tests
     video_core/spirv_builtin_capabilities.cpp
     video_core/spirv_nan_safe_min_max.cpp
     video_core/virtual_range_cache.cpp
+    video_core/ocarina_upscale.cpp
+    video_core/fsr4_support.cpp
     common/bit_field.cpp
     common/bit_util.cpp
     common/cityhash.cpp
@@ -117,6 +123,7 @@ add_executable(tests
     common/frizti_settings.cpp
     common/game_presets.cpp
     common/host_memory.cpp
+    common/multi_level_page_table.cpp
     common/page_table.cpp
     common/param_package.cpp
     common/range_map.cpp

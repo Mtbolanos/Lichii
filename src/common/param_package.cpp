@@ -36,13 +36,14 @@ ParamPackage::ParamPackage(const std::string& serialized) {
     Common::SplitString(serialized, PARAM_SEPARATOR, pairs);
 
     for (const std::string& pair : pairs) {
-        std::vector<std::string> key_value;
-        Common::SplitString(pair, KEY_VALUE_SEPARATOR, key_value);
-        if (key_value.size() != 2) {
+        const auto separator = pair.find(KEY_VALUE_SEPARATOR);
+        if (separator == std::string::npos ||
+            pair.find(KEY_VALUE_SEPARATOR, separator + 1) != std::string::npos) {
             LOG_ERROR(Common, "invalid key pair {}", pair);
             continue;
         }
 
+        std::array<std::string, 2> key_value{pair.substr(0, separator), pair.substr(separator + 1)};
         for (std::string& part : key_value) {
             part = Common::ReplaceAll(part, KEY_VALUE_SEPARATOR_ESCAPE, {KEY_VALUE_SEPARATOR});
             part = Common::ReplaceAll(part, PARAM_SEPARATOR_ESCAPE, {PARAM_SEPARATOR});

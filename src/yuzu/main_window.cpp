@@ -162,6 +162,7 @@ static FileSys::VirtualFile VfsDirectoryCreateFileWrapper(const FileSys::Virtual
 #include "core/file_sys/card_image.h"
 #include "core/file_sys/common_funcs.h"
 #include "core/file_sys/nup_writer.h"
+#include "core/file_sys/patch_manager.h"
 #include "core/file_sys/romfs.h"
 #include "core/file_sys/savedata_factory.h"
 
@@ -1514,7 +1515,10 @@ void MainWindow::InitializeHotkeys() {
     connect_shortcut(QStringLiteral("Audio Volume Up"), &MainWindow::OnIncreaseVolume);
 
     connect_shortcut(QStringLiteral("Toggle Framerate Limit"), [this] {
-        Settings::ToggleStandardMode();
+        // Ocarina of Time: its high refresh rate mode instead (unlocked, its logic ran fast).
+        if (!ToggleOotHighRefresh()) {
+            Settings::ToggleStandardMode();
+        }
         SetFPSSuffix();
     });
 
@@ -3847,7 +3851,17 @@ void MainWindow::OnConfigure() {
         // Cancel
         configure_dialog.ApplyConfiguration();
     } else if (UISettings::values.reset_to_defaults) {
-        LOG_INFO(Frontend, "Resetting all settings to defaults");
+        // Fritchii: the current settings are saved first (Settings > General > Restore Settings),
+        // a restore puts a saved set back, and a reset ends on Fritchii's own settings with the
+        // controls kept (2026-11-09).
+        const bool fritchii = FritchiiUi::Enabled();
+        const QString restore = std::exchange(FritchiiUi::PendingSettingsRestore(), QString{});
+        const auto old_players = Settings::values.players.GetValue(true);
+        if (fritchii) {
+            FritchiiUi::BackupSettings();
+        }
+        LOG_INFO(Frontend, "{}", restore.isEmpty() ? "Resetting all settings to defaults"
+                                                   : "Restoring saved settings");
         if (!Common::FS::RemoveFile(config->GetConfigFilePath())) {
             LOG_WARNING(Frontend, "Failed to remove configuration file");
         }
@@ -3867,11 +3881,22 @@ void MainWindow::OnConfigure() {
 
         Settings::values.disabled_addons.clear();
 
+        if (!restore.isEmpty() && !FritchiiUi::RestoreSettingsFiles(restore)) {
+            QMessageBox::warning(this, tr("Restore Settings"),
+                                 tr("Some settings could not be restored. Fritchii's defaults "
+                                    "fill the gaps."));
+        }
         config = std::make_unique<QtConfig>();
         UISettings::values.reset_to_defaults = false;
 
         UISettings::values.game_dirs = std::move(old_game_dirs);
         UISettings::values.favorited_ids = std::move(old_favorited_ids);
+        if (fritchii && restore.isEmpty()) {
+            // The tuned settings now, not at the next start (the revision went back to 0).
+            Settings::values.players.GetValue(true) = old_players;
+            MigrateFriztiSettings();
+            config->SaveAllValues();
+        }
 
         InitializeRecentFileMenuActions();
 
@@ -3935,6 +3960,12 @@ void MainWindow::OnConfigure() {
     UpdateStatusButtons();
     controller_dialog->refreshConfiguration();
     QtCommon::system->ApplySettings();
+
+    // Ocarina of Time: its high refresh rate checkbox switches the running game too.
+    if (IsOotRunning() &&
+        Settings::values.oot_high_refresh.GetValue() != Settings::OotHighRefreshPatched()) {
+        SetOotHighRefresh(Settings::values.oot_high_refresh.GetValue());
+    }
 }
 
 void MainWindow::OnConfigureTas() {
@@ -5241,7 +5272,7 @@ void MainWindow::UpdateStatusBar() {
     res_scale_label->setText(
         tr("Scale: %1x", "%1 is the resolution scaling factor").arg(res_scale));
 
-    if (Settings::values.use_speed_limit.GetValue()) {
+    if (Settings::SpeedLimitEnabled()) {
         emu_speed_label->setText(tr("Speed: %1% / %2%")
                                      .arg(results.emulation_speed * 100.0, 0, 'f', 0)
                                      .arg(Settings::SpeedLimit()));
@@ -5283,6 +5314,76 @@ void MainWindow::OnToggleOotFrameRate() {
     Settings::values.oot_fps_asked.SetValue(true);
     UpdateOotFpsButton();
     config->SaveAllValues();
+}
+
+bool MainWindow::IsOotRunning() const {
+    constexpr u64 OcarinaOfTime = 0x0400486024DEC000ULL;
+    // Not while "Closing software...": the kernel is being torn down (fable52_answer_10 2.6).
+    return emulation_running && !QtCommon::system->IsShuttingDown() &&
+           QtCommon::system->GetApplicationProcessProgramID() == OcarinaOfTime;
+}
+
+bool MainWindow::ToggleOotHighRefresh() {
+    if (!IsOotRunning()) {
+        return false;
+    }
+    SetOotHighRefresh(!Settings::OotHighRefreshPatched());
+    return true;
+}
+
+void MainWindow::SetOotHighRefresh(bool on) {
+    QString text;
+    switch (FileSys::SwitchOotHighRefreshLive(*QtCommon::system, on)) {
+    case FileSys::OotHighRefreshSwitch::Switched: {
+        Settings::values.oot_high_refresh.SetValue(on);
+        config->SaveAllValues();
+        const bool fps30 = Settings::values.oot_30fps.GetValue();
+        if (!on) {
+            text = fps30 ? tr("High refresh: off (30 FPS)") : tr("High refresh: off (60 FPS)");
+            break;
+        }
+        if (fps30) {
+            text = tr("High refresh: on, but the 30 FPS mode wins");
+            break;
+        }
+        int hz = 0;
+        switch (Settings::values.oot_high_refresh_cap.GetValue()) {
+        case Settings::OotRefreshCap::Hz90:
+            hz = 90;
+            break;
+        case Settings::OotRefreshCap::Hz120:
+            hz = 120;
+            break;
+        case Settings::OotRefreshCap::Hz144:
+            hz = 144;
+            break;
+        case Settings::OotRefreshCap::Hz165:
+            hz = 165;
+            break;
+        case Settings::OotRefreshCap::Display:
+        default:
+            break;
+        }
+        text = hz != 0 ? tr("High refresh: on (%1 FPS cap)").arg(hz)
+                       : tr("High refresh: on (monitor refresh cap)");
+        break;
+    }
+    case FileSys::OotHighRefreshSwitch::DisabledInAddOns:
+        text = tr("High refresh: off in Add-Ons");
+        break;
+    case FileSys::OotHighRefreshSwitch::Busy:
+        text = tr("High refresh: busy, try again");
+        break;
+    case FileSys::OotHighRefreshSwitch::UnknownCode:
+        text = tr("High refresh: can't switch, a mod or Add-Ons changed that code");
+        break;
+    case FileSys::OotHighRefreshSwitch::NotRunning:
+    default:
+        text = tr("High refresh: can't switch in this game version");
+        break;
+    }
+    statusBar()->showMessage(text, 4000);
+    SetFPSSuffix();
 }
 
 void MainWindow::UpdateDockedButton() {
@@ -5510,10 +5611,16 @@ void MainWindow::SetFPSSuffix() {
     case Settings::SpeedMode::Turbo:
         m_fpsSuffix = tr("Turbo");
         break;
-    case Settings::SpeedMode::Standard:
-        const bool limited = Settings::values.use_speed_limit.GetValue();
-        m_fpsSuffix = limited ? QString{} : tr("Unlocked");
+    case Settings::SpeedMode::Standard: {
+        const bool limited = Settings::SpeedLimitEnabled();
+        if (IsOotRunning() && Settings::OotHighRefreshPatched() &&
+            !Settings::values.oot_30fps.GetValue()) {
+            m_fpsSuffix = limited ? tr("High refresh") : tr("High refresh, unlocked");
+        } else {
+            m_fpsSuffix = limited ? QString{} : tr("Unlocked");
+        }
         break;
+    }
     }
 }
 

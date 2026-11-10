@@ -64,6 +64,31 @@ public:
     /// it needs RAM. The contents stay; using the pages brings them back.
     void HintCold(size_t physical_offset, size_t length,
                   std::optional<size_t> virtual_offset) const;
+    /// Windows: resident pages of guest memory (backing and its views) that hold only zeros leave
+    /// the working set, like HintCold. Returns {resident bytes looked at, bytes trimmed}.
+    std::pair<size_t, size_t> TrimZeroPages() const;
+
+    /// Bytes ClearBackingRegion has filled with zeros (memset) since start.
+    static u64 ZeroFilledBytes() noexcept;
+
+    /// Guest pages in this process's working set, from QueryWorkingSetEx on every stride-th 4 KiB
+    /// page (scaled back up): through the backing, through the guest's views of it, and view
+    /// pages whose backing page is resident too. The working set counts such a page once per
+    /// address, so the guest's real share of RAM is backing + views - both.
+    struct ResidentSample {
+        u64 backing_bytes{};     ///< Resident through the backing
+        u64 view_bytes{};        ///< Resident through the views
+        u64 both_bytes{};        ///< View pages whose backing page is resident too
+        u64 view_mapped_bytes{}; ///< What the views map (exact, not sampled)
+        u32 micros{};            ///< What the pass took
+        bool valid{};            ///< Windows, guest memory made
+    };
+    /// Windows (zeros elsewhere). Takes the views' lock to copy their ranges; touches no guest
+    /// page. Also kept for LastResidentSample.
+    ResidentSample SampleResident(size_t stride_pages = 64) const;
+    /// The last SampleResident result (zeros before the first).
+    [[nodiscard]] static ResidentSample LastResidentSample();
+
     /// Pages the kernel hands out (cleared or not).
     void MarkUsed(size_t physical_offset, size_t length);
 

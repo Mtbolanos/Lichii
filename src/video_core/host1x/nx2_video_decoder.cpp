@@ -5,6 +5,11 @@
 #include <cstring>
 #include <optional>
 #include <set>
+#include <type_traits>
+
+#if defined(_MSC_VER)
+#include <excpt.h>
+#endif
 
 #include "common/logging.h"
 #include "common/settings.h"
@@ -13,6 +18,8 @@
 #include "video_core/host1x/nx2_video_decoder.h"
 
 extern "C" {
+#include <libavutil/pixdesc.h>
+
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
@@ -44,6 +51,48 @@ std::optional<NvdecCommon::VideoCodec> CodecFromMime(std::string_view mime) {
         return NvdecCommon::VideoCodec::H264;
     }
     return std::nullopt;
+}
+
+#if defined(_MSC_VER)
+int FaultFilter(unsigned long code, unsigned long* out) {
+    switch (code) {
+    case 0xC0000005: // access violation
+    case 0xC0000006: // in-page error
+    case 0xC000001D: // illegal instruction
+    case 0xC000008C: // array bounds exceeded
+    case 0xC0000094: // integer divide by zero
+    case 0xC0000095: // integer overflow
+    case 0x80000002: // datatype misalignment
+        *out = code;
+        return EXCEPTION_EXECUTE_HANDLER;
+    default:
+        // C++ exceptions, breakpoints and stack overflows go on as before.
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+}
+
+/// Runs fn(arg); false when it faulted. No objects with destructors in this frame (SEH).
+bool RunGuarded(void (*fn)(void*), void* arg, unsigned long* code) {
+    __try {
+        fn(arg);
+    } __except (FaultFilter(GetExceptionCode(), code)) {
+        return false;
+    }
+    return true;
+}
+#else
+bool RunGuarded(void (*fn)(void*), void* arg, unsigned long*) {
+    fn(arg);
+    return true;
+}
+#endif
+
+/// Runs f on this thread; false when it faulted (Windows: a decoder or GPU driver reading bad
+/// memory). A movie frame must never take the game down.
+template <typename F>
+bool Guarded(F&& f, unsigned long& code) {
+    using Fn = std::remove_reference_t<F>;
+    return RunGuarded([](void* p) { (*static_cast<Fn*>(p))(); }, &f, &code);
 }
 
 } // namespace
@@ -89,14 +138,22 @@ bool IsH264Stream(std::span<const u8> data) {
 
 struct Nx2VideoDecoder::Impl {
     std::string name;
-    std::optional<FFmpeg::Decoder> decoder;
-    std::optional<FFmpeg::HardwareContext> hardware;
-    std::optional<FFmpeg::DecoderContext> context;
+    std::optional<NvdecCommon::VideoCodec> codec;
+    // Pointers, not values: a context that faulted is abandoned, never freed (its state is
+    // unknown, and freeing it calls into the same driver).
+    std::unique_ptr<FFmpeg::Decoder> decoder;
+    std::unique_ptr<FFmpeg::HardwareContext> hardware;
+    std::unique_ptr<FFmpeg::DecoderContext> context;
     SwsContext* scaler{};
     bool open{};
+    bool ever_open{};
+    bool using_hardware{};
+    bool received_any{};
+    u64 errors_seen{};
+    u32 hardware_failures{}; ///< Packets in a row that failed on the GPU
+    u32 render_faults{};
     H264PacketConverter h264_packets;
-    /// Timestamps of submitted frames not yet output. Frames copied back from a host GPU decoder
-    /// lose theirs and take the earliest one instead.
+    /// Timestamps of submitted frames not yet output, for frames that come out without one.
     std::multiset<u64> pending_pts;
     std::vector<u8> packet; ///< FFmpeg reads up to AV_INPUT_BUFFER_PADDING_SIZE past the data
 
@@ -106,52 +163,161 @@ struct Nx2VideoDecoder::Impl {
         hardware.reset();
     }
 
+    bool Open(bool use_gpu) {
+        context.reset();
+        hardware.reset();
+        decoder = std::make_unique<FFmpeg::Decoder>(*codec);
+        using_hardware = false;
+        received_any = false;
+        hardware_failures = 0;
+        pending_pts.clear();
+        h264_packets.Reset();
+        if (decoder->GetCodec() == nullptr) {
+            LOG_ERROR(HW_GPU, "nx2 video: FFmpeg has no decoder for \"{}\"", name);
+            return false;
+        }
+        context = std::make_unique<FFmpeg::DecoderContext>(*decoder);
+        if (use_gpu) {
+            hardware = std::make_unique<FFmpeg::HardwareContext>();
+            using_hardware = hardware->InitializeForDecoder(*context, *decoder);
+            if (!using_hardware) {
+                // No GPU decoder for this codec (libdav1d has none): the same context decodes
+                // on the CPU.
+                hardware.reset();
+            }
+        }
+        bool opened = false;
+        unsigned long code = 0;
+        if (!Guarded([&] { opened = context->OpenContext(*decoder); }, code)) {
+            LOG_CRITICAL(HW_GPU, "nx2 video: opening \"{}\" faulted ({:#x})", name, code);
+            Abandon();
+            return false;
+        }
+        errors_seen = context->ErrorCount();
+        return opened;
+    }
+
+    /// Leaks the decoder objects after a fault inside them.
+    void Abandon() {
+        (void)context.release();
+        (void)hardware.release();
+        (void)decoder.release();
+        using_hardware = false;
+        open = false;
+    }
+
     void Receive(std::vector<Nx2Picture>& pictures) {
         while (auto frame = context->ReceiveFrame()) {
             const AVFrame* f = frame->GetFrame();
+            if (f->width <= 0 || f->height <= 0) {
+                continue;
+            }
             const s64 stamp = f->best_effort_timestamp != AV_NOPTS_VALUE ? f->best_effort_timestamp
                                                                          : f->pts;
             u64 pts{};
             if (stamp != AV_NOPTS_VALUE) {
                 pts = static_cast<u64>(stamp);
-                if (const auto it = pending_pts.find(pts); it != pending_pts.end()) {
-                    pending_pts.erase(it);
-                }
+                // Frames come out in display order: earlier timestamps belong to frames the
+                // decoder dropped (errors, hidden frames). Left here, a frame without a
+                // timestamp of its own would take one of them and show too early.
+                pending_pts.erase(pending_pts.begin(), pending_pts.upper_bound(pts));
             } else if (!pending_pts.empty()) {
                 pts = *pending_pts.begin();
                 pending_pts.erase(pending_pts.begin());
             }
+            received_any = true;
             pictures.push_back({static_cast<u32>(f->width), static_cast<u32>(f->height), pts,
                                 std::move(frame)});
         }
+    }
+
+    /// Sends one packet and collects the pictures it completes. False when the decoder was
+    /// replaced (a fault, or a failing GPU decoder): the packet should go to the new one.
+    bool SendReceive(const FFmpeg::Packet& packet, std::vector<Nx2Picture>& pictures) {
+        const size_t first = pictures.size();
+        unsigned long code = 0;
+        if (!Guarded(
+                [&] {
+                    context->SendPacket(packet);
+                    Receive(pictures);
+                },
+                code)) {
+            pictures.resize(first);
+            LOG_CRITICAL(HW_GPU, "nx2 video: decoding \"{}\" on the {} faulted ({:#x})", name,
+                         using_hardware ? "GPU" : "CPU", code);
+            const bool had_hardware = using_hardware;
+            Abandon();
+            // A fault on the CPU decoder too: stop decoding this stream rather than risk more.
+            if (had_hardware && codec) {
+                open = Open(false);
+                LOG_INFO(HW_GPU, "nx2 video: CPU decoder for \"{}\" {}", name,
+                         open ? "open" : "failed to open, frames stay empty");
+            }
+            return false;
+        }
+        if (!using_hardware) {
+            return true;
+        }
+        if (!context->UsingHardware()) {
+            // get_format moved this stream to the CPU by itself.
+            using_hardware = false;
+            return true;
+        }
+        const u64 errors = context->ErrorCount();
+        if (errors == errors_seen) {
+            hardware_failures = 0;
+            return true;
+        }
+        errors_seen = errors;
+        // One bad packet is skipped; a GPU decoder that fails from the start or keeps failing
+        // is replaced.
+        if (received_any && ++hardware_failures < 3) {
+            return true;
+        }
+        LOG_WARNING(HW_GPU, "nx2 video: GPU decode of \"{}\" failed ({}), switching to the CPU",
+                    name, received_any ? "3 bad packets in a row" : "no picture yet");
+        open = Open(false);
+        LOG_INFO(HW_GPU, "nx2 video: CPU decoder for \"{}\" {}", name,
+                 open ? "open" : "failed to open, frames stay empty");
+        return false;
     }
 };
 
 Nx2VideoDecoder::Nx2VideoDecoder(std::string_view mime) : impl{std::make_unique<Impl>()} {
     impl->name = std::string{mime};
-    const auto codec = CodecFromMime(mime);
-    if (!codec) {
+    impl->codec = CodecFromMime(mime);
+    if (!impl->codec) {
         LOG_ERROR(HW_GPU, "nx2 video: no decoder for codec \"{}\"", mime);
         return;
     }
-    impl->decoder.emplace(*codec);
-    if (impl->decoder->GetCodec() == nullptr) {
-        LOG_ERROR(HW_GPU, "nx2 video: FFmpeg has no decoder for \"{}\"", mime);
-        return;
-    }
-    impl->context.emplace(*impl->decoder);
     if (Settings::values.nvdec_emulation.GetValue() == Settings::NvdecEmulation::Gpu) {
-        impl->hardware.emplace();
-        impl->hardware->InitializeForDecoder(*impl->context, *impl->decoder);
+        impl->open = impl->Open(true);
+        if (!impl->open && impl->decoder && impl->decoder->GetCodec() != nullptr) {
+            LOG_WARNING(HW_GPU, "nx2 video: GPU decoder for \"{}\" failed to open, using the CPU",
+                        mime);
+            impl->open = impl->Open(false);
+        }
+    } else {
+        impl->open = impl->Open(false);
     }
-    impl->open = impl->context->OpenContext(*impl->decoder);
-    LOG_INFO(HW_GPU, "nx2 video: decoder for \"{}\" {}", mime, impl->open ? "open" : "failed to open");
+    impl->ever_open = impl->open;
+    LOG_INFO(HW_GPU, "nx2 video: decoder for \"{}\" {}{}", mime,
+             impl->open ? "open" : "failed to open",
+             impl->open ? (impl->using_hardware ? " (GPU)" : " (CPU)") : "");
 }
 
 Nx2VideoDecoder::~Nx2VideoDecoder() = default;
 
 bool Nx2VideoDecoder::IsOpen() const {
     return impl->open;
+}
+
+bool Nx2VideoDecoder::Failed() const {
+    return impl->ever_open && !impl->open;
+}
+
+bool Nx2VideoDecoder::UsingHardware() const {
+    return impl->open && impl->using_hardware;
 }
 
 const std::string& Nx2VideoDecoder::Name() const {
@@ -166,7 +332,7 @@ void Nx2VideoDecoder::Decode(std::span<const u8> data, u64 pts, std::vector<Nx2P
     std::memcpy(impl->packet.data(), data.data(), data.size());
 
     // Convert MP4/avcC length-prefixed NALUs to Annex-B start codes for FFmpeg if needed.
-    if (impl->name.find("avc") != std::string::npos || impl->name.find("264") != std::string::npos) {
+    if (impl->codec == NvdecCommon::VideoCodec::H264) {
         impl->h264_packets.Convert(std::span<u8>{impl->packet.data(), data.size()});
     }
 
@@ -177,22 +343,40 @@ void Nx2VideoDecoder::Decode(std::span<const u8> data, u64 pts, std::vector<Nx2P
         impl->pending_pts.erase(impl->pending_pts.begin());
     }
     impl->pending_pts.insert(pts);
-    impl->context->SendPacket(packet);
-    impl->Receive(pictures);
+    if (!impl->SendReceive(packet, pictures) && impl->open) {
+        // The CPU decoder took over: give it this packet too (Open cleared the timestamps).
+        impl->pending_pts.insert(pts);
+        impl->SendReceive(packet, pictures);
+    }
 }
 
 void Nx2VideoDecoder::Drain(std::vector<Nx2Picture>& pictures) {
     if (!impl->open) {
         return;
     }
-    avcodec_send_packet(impl->context->GetCodecContext(), nullptr);
-    impl->Receive(pictures);
+    unsigned long code = 0;
+    if (!Guarded(
+            [&] {
+                avcodec_send_packet(impl->context->GetCodecContext(), nullptr);
+                impl->Receive(pictures);
+            },
+            code)) {
+        LOG_CRITICAL(HW_GPU, "nx2 video: draining \"{}\" faulted ({:#x})", impl->name, code);
+        impl->Abandon();
+        impl->open = impl->codec && impl->Open(false);
+        return;
+    }
     Reset();
 }
 
 void Nx2VideoDecoder::Reset() {
     if (impl->open) {
-        avcodec_flush_buffers(impl->context->GetCodecContext());
+        unsigned long code = 0;
+        if (!Guarded([&] { avcodec_flush_buffers(impl->context->GetCodecContext()); }, code)) {
+            LOG_CRITICAL(HW_GPU, "nx2 video: flushing \"{}\" faulted ({:#x})", impl->name, code);
+            impl->Abandon();
+            impl->open = impl->codec && impl->Open(false);
+        }
     }
     impl->pending_pts.clear();
     impl->h264_packets.Reset();
@@ -200,7 +384,30 @@ void Nx2VideoDecoder::Reset() {
 
 void Nx2VideoDecoder::Render(const Nx2Picture& picture, Nx2PictureFormat format, u32 width,
                              u32 height, u64 pitch, u64 chroma_offset, std::span<u8> out) {
+    if (!picture.frame) {
+        return;
+    }
+    unsigned long code = 0;
+    if (!Guarded([&] { RenderUnguarded(picture, format, width, height, pitch, chroma_offset, out); },
+                 code)) {
+        // The image keeps what it held; the next frame tries again.
+        if (impl->render_faults++ < 8) {
+            LOG_ERROR(HW_GPU, "nx2 video: converting a {}x{} frame of \"{}\" faulted ({:#x})",
+                      picture.width, picture.height, impl->name, code);
+        }
+    }
+}
+
+void Nx2VideoDecoder::RenderUnguarded(const Nx2Picture& picture, Nx2PictureFormat format,
+                                      u32 width, u32 height, u64 pitch, u64 chroma_offset,
+                                      std::span<u8> out) {
     const AVFrame* f = picture.frame->GetFrame();
+    const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(static_cast<AVPixelFormat>(f->format));
+    if (desc == nullptr || (desc->flags & AV_PIX_FMT_FLAG_HWACCEL) || f->data[0] == nullptr ||
+        f->width <= 0 || f->height <= 0) {
+        // Never read a GPU surface or an empty frame as memory.
+        return;
+    }
     const u64 needed = format == Nx2PictureFormat::Nv12
                            ? chroma_offset + pitch * ((u64{height} + 1) / 2)
                            : pitch * height;

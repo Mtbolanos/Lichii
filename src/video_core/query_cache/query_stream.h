@@ -130,9 +130,12 @@ protected:
     template <typename... Args, typename = decltype(QueryType(std::declval<Args>()...))>
     size_t BuildQuery(Args&&... args) {
         std::scoped_lock lk(guard);
-        if (!old_queries.empty()) {
-            size_t new_id = old_queries.front();
-            old_queries.pop_front();
+        if (old_queries_head != old_queries.size()) {
+            size_t new_id = old_queries[old_queries_head++];
+            if (old_queries_head == old_queries.size()) {
+                old_queries.clear();
+                old_queries_head = 0;
+            }
             new (&slot_queries[new_id]) QueryType(std::forward<Args>(args)...);
             return new_id;
         }
@@ -144,6 +147,11 @@ protected:
     void ReleaseQuery(size_t query_id) {
 
         if (query_id < slot_queries.size()) {
+            if (old_queries_head >= 1024 && old_queries_head * 2 >= old_queries.size()) {
+                old_queries.erase(old_queries.begin(),
+                                  old_queries.begin() + static_cast<std::ptrdiff_t>(old_queries_head));
+                old_queries_head = 0;
+            }
             old_queries.push_back(query_id);
             return;
         }
@@ -152,7 +160,10 @@ protected:
 
     std::mutex guard;
     std::deque<QueryType> slot_queries;
-    std::deque<size_t> old_queries;
+    /// Free ids, oldest first from old_queries_head: MSVC's deque of size_t allocated a block
+    /// every two pushes, and a report per draw frees two queries.
+    std::vector<size_t> old_queries;
+    size_t old_queries_head{};
 };
 
 } // namespace VideoCommon

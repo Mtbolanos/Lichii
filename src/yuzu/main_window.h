@@ -479,6 +479,13 @@ private:
     void OnApplicationChanged(u64 program_id);
     void UpdateDockedButton();
     void UpdateOotFpsButton();
+    bool IsOotRunning() const;
+    /// Ocarina of Time running: switches its high refresh rate mode live (Ctrl+U) and returns
+    /// true; otherwise false.
+    bool ToggleOotHighRefresh();
+    /// Switches Ocarina of Time's high refresh rate mode while it runs, saves the setting when it
+    /// worked, and says how it went in the status bar.
+    void SetOotHighRefresh(bool on);
     void UpdateAPIText();
     void UpdateFilterText();
     void UpdateAAText();

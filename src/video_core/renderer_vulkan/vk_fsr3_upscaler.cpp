@@ -24,6 +24,17 @@
 #include "video_core/host_shaders/fsr3_upscaler_shading_change_comp_spv.h"
 #include "video_core/host_shaders/fsr3_upscaler_shading_change_pyramid_comp_spv.h"
 #include "video_core/host_shaders/fsr3_upscaler_shading_change_pyramid_nowave_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_accumulate_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_accumulate_sharpen_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_luma_instability_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_luma_pyramid_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_luma_pyramid_nowave_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_prepare_inputs_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_prepare_reactivity_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_rcas_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_shading_change_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_shading_change_pyramid_ldr_comp_spv.h"
+#include "video_core/host_shaders/fsr3_upscaler_shading_change_pyramid_nowave_ldr_comp_spv.h"
 #include "video_core/renderer_vulkan/vk_compute_pass.h"
 #include "video_core/renderer_vulkan/vk_descriptor_pool.h"
 #include "video_core/renderer_vulkan/vk_fsr3_upscaler.h"
@@ -140,7 +151,6 @@ s32 JitterPhaseCount(u32 render_width, u32 display_width) {
 // DLSS takes no camera, so FSR's depth-to-view-space conversion (which only scales its
 // disocclusion thresholds) uses a typical near plane and vertical field of view.
 constexpr f32 CAMERA_NEAR = 0.1f;
-constexpr f32 CAMERA_FOV = 60.0f * std::numbers::pi_v<f32> / 180.0f;
 
 } // Anonymous namespace
 
@@ -243,9 +253,9 @@ Fsr3Upscaler::Fsr3Upscaler(const Device& device_, Scheduler& scheduler_,
                            MemoryAllocator& memory_allocator_,
                            StagingBufferPool& staging_buffer_pool_,
                            DescriptorPool& descriptor_pool,
-                           ComputePassDescriptorQueue& descriptor_queue_)
+                           ComputePassDescriptorQueue& descriptor_queue_, Profile profile_)
     : device{device_}, scheduler{scheduler_}, memory_allocator{memory_allocator_},
-      staging_buffer_pool{staging_buffer_pool_}, descriptor_queue{descriptor_queue_} {
+      staging_buffer_pool{staging_buffer_pool_}, descriptor_queue{descriptor_queue_}, profile{profile_} {
     const auto sampler = [&](VkFilter filter, VkSamplerMipmapMode mipmap) {
         return device.GetLogical().CreateSampler(VkSamplerCreateInfo{
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -279,6 +289,23 @@ Fsr3Upscaler::Fsr3Upscaler(const Device& device_, Scheduler& scheduler_,
         return std::make_unique<Pass>(device, scheduler, descriptor_pool, kinds, code, samplers);
     };
     passes.resize(PassCount);
+    if (profile == Profile::OcarinaLdr) {
+        passes[PassPrepareInputs] = pass(PREPARE_INPUTS, FSR3_UPSCALER_PREPARE_INPUTS_LDR_COMP_SPV);
+        passes[PassLumaPyramid] = pass(
+            LUMA_PYRAMID, quads ? std::span<const u32>(FSR3_UPSCALER_LUMA_PYRAMID_LDR_COMP_SPV)
+                               : std::span<const u32>(FSR3_UPSCALER_LUMA_PYRAMID_NOWAVE_LDR_COMP_SPV));
+        passes[PassShadingChangePyramid] = pass(
+            SHADING_CHANGE_PYRAMID,
+            quads ? std::span<const u32>(FSR3_UPSCALER_SHADING_CHANGE_PYRAMID_LDR_COMP_SPV)
+                  : std::span<const u32>(FSR3_UPSCALER_SHADING_CHANGE_PYRAMID_NOWAVE_LDR_COMP_SPV));
+        passes[PassShadingChange] = pass(SHADING_CHANGE, FSR3_UPSCALER_SHADING_CHANGE_LDR_COMP_SPV);
+        passes[PassPrepareReactivity] = pass(PREPARE_REACTIVITY, FSR3_UPSCALER_PREPARE_REACTIVITY_LDR_COMP_SPV);
+        passes[PassLumaInstability] = pass(LUMA_INSTABILITY, FSR3_UPSCALER_LUMA_INSTABILITY_LDR_COMP_SPV);
+        passes[PassAccumulate] = pass(ACCUMULATE, FSR3_UPSCALER_ACCUMULATE_LDR_COMP_SPV);
+        passes[PassAccumulateSharpen] = pass(ACCUMULATE, FSR3_UPSCALER_ACCUMULATE_SHARPEN_LDR_COMP_SPV);
+        passes[PassRcas] = pass(RCAS, FSR3_UPSCALER_RCAS_LDR_COMP_SPV);
+        return;
+    }
     passes[PassPrepareInputs] = pass(PREPARE_INPUTS, FSR3_UPSCALER_PREPARE_INPUTS_COMP_SPV);
     passes[PassLumaPyramid] =
         pass(LUMA_PYRAMID, quads ? std::span<const u32>(FSR3_UPSCALER_LUMA_PYRAMID_COMP_SPV)
@@ -412,7 +439,9 @@ void Fsr3Upscaler::CreateResources(VkExtent2D render_size, VkExtent2D upscale_si
     frame_info = CreateTexture(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1);
     spd_atomic = CreateTexture(VK_FORMAT_R32_UINT, 1, 1);
     lanczos_lut = CreateTexture(VK_FORMAT_R16_SNORM, 128, 1);
-    default_reactive = CreateTexture(VK_FORMAT_R8_UNORM, 1, 1);
+    // DilateReactiveMasks uses render-pixel texelFetch, not normalized sampling.
+    default_reactive = CreateTexture(VK_FORMAT_R8_UNORM, rw, rh);
+    unit_exposure = CreateTexture(VK_FORMAT_R32G32B32A32_SFLOAT, 1, 1);
     output = CreateTexture(VK_FORMAT_R16G16B16A16_SFLOAT, uw, uh);
     render_extent = render_size;
     upscale_extent = upscale_size;
@@ -449,13 +478,19 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
     constants.max_render_size = constants.render_size;
     constants.max_upscale_size = constants.upscale_size;
     {
-        // Reversed infinite depth (setupDeviceDepthToViewSpaceDepthParams with near = FLT_MAX).
         const f32 near_plane = CAMERA_NEAR;
-        const f32 fov = CAMERA_FOV;
+        const f32 fov = in.vertical_fov;
         const f32 aspect = static_cast<f32>(rw) / static_cast<f32>(rh);
         const f32 cot_half_fov = std::cos(0.5f * fov) / std::sin(0.5f * fov);
         constants.device_to_view_depth = {-1.0f * (0.0f + FLT_EPSILON), near_plane,
-                                          1.0f / (cot_half_fov / aspect), 1.0f / cot_half_fov};
+                                           1.0f / (cot_half_fov / aspect), 1.0f / cot_half_fov};
+        if (profile == Profile::OcarinaLdr) {
+            // Vulkan device depth is [0,1], despite the camera's GL [-1,1] clip projection.
+            // z_view = near*far / (far - device_depth*(far-near)).
+            constexpr f32 far_plane = 25000.0f;
+            constants.device_to_view_depth[0] = far_plane / (far_plane - near_plane);
+            constants.device_to_view_depth[1] = -far_plane * near_plane / (far_plane - near_plane);
+        }
         constants.tan_half_fov = std::tan(std::atan(std::tan(fov * 0.5f) * aspect));
     }
     constants.jitter = in.jitter;
@@ -541,7 +576,7 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
              {&farthest_depth, &shading_change, &new_locks, &spd_mips, &farthest_depth_mip1,
               &dilated_motion_vectors, &dilated_depth, &previous_nearest_depth,
               &dilated_reactive_masks, &frame_info, &spd_atomic, &lanczos_lut, &default_reactive,
-              &output}) {
+               &unit_exposure, &output}) {
             initialize.push_back(*texture->image);
         }
         clear_zero = initialize;
@@ -549,6 +584,8 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
         std::erase(clear_zero, *frame_info.image);
         clear_frame_info = {*frame_info.image};
     }
+    std::erase(clear_zero, *previous_nearest_depth.image);
+    std::erase(clear_zero, *unit_exposure.image);
     std::optional<StagingBufferRef> lut_upload;
     if (first) {
         // FSR's Lanczos-2 table (fsr3upscalerCreate).
@@ -565,7 +602,10 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
         std::memcpy(lut_upload->mapped_span.data(), weights.data(), sizeof(weights));
     }
     scheduler.RequestOutsideRenderPassOperationContext();
-    scheduler.Record([initialize, clear_zero, clear_frame_info, lut = *lanczos_lut.image,
+    scheduler.Record([initialize, clear_zero, clear_frame_info,
+                      nearest_depth = *previous_nearest_depth.image,
+                      unit = *unit_exposure.image, first, standard_depth = profile == Profile::OcarinaLdr,
+                      lut = *lanczos_lut.image,
                       lut_buffer = lut_upload ? lut_upload->buffer : VkBuffer{},
                       lut_offset = lut_upload ? lut_upload->offset : 0](vk::CommandBuffer cmdbuf) {
         // The inputs come from the game's draws and dispatches; our images from the last frame.
@@ -616,6 +656,14 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
         for (const VkImage image : clear_zero) {
             cmdbuf.ClearColorImage(image, VK_IMAGE_LAYOUT_GENERAL, VkClearColorValue{}, ALL_LEVELS);
         }
+        VkClearColorValue depth_clear{};
+        depth_clear.uint32[0] = standard_depth ? 0x3f800000U : 0U;
+        cmdbuf.ClearColorImage(nearest_depth, VK_IMAGE_LAYOUT_GENERAL, depth_clear, ALL_LEVELS);
+        if (first) {
+            VkClearColorValue exposure_clear{};
+            exposure_clear.float32[0] = 1.0f;
+            cmdbuf.ClearColorImage(unit, VK_IMAGE_LAYOUT_GENERAL, exposure_clear, ALL_LEVELS);
+        }
         for (const VkImage image : clear_frame_info) {
             VkClearColorValue value{};
             value.float32[0] = -1.0f;
@@ -636,7 +684,7 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
     const Resource color{.view = in.color};
     const Resource depth{.view = in.depth};
     const Resource motion{.view = in.motion_vectors};
-    const Resource exposure = tex(frame_info); // FSR's own exposure (auto exposure)
+    const Resource exposure = tex(profile == Profile::OcarinaLdr ? unit_exposure : frame_info);
     const Resource current_luma = tex(luma[p]);
     const auto groups = [](s32 size, u32 tile) {
         return Common::DivCeil(static_cast<u32>(size), tile);
@@ -664,7 +712,9 @@ void Fsr3Upscaler::Upscale(const Inputs& in) {
     passes[PassPrepareReactivity]->Dispatch(
         scheduler, descriptor_queue,
         std::array{tex(previous_nearest_depth), tex(dilated_motion_vectors), tex(dilated_depth),
-                   tex(default_reactive), tex(default_reactive), tex(accumulation[p]),
+                    in.reactive_mask ? Resource{.view = in.reactive_mask} : tex(default_reactive),
+                    in.transparency_mask ? Resource{.view = in.transparency_mask} : tex(default_reactive),
+                    tex(accumulation[p]),
                    tex(shading_change), current_luma, exposure, tex(dilated_reactive_masks),
                    tex(new_locks), tex(accumulation[q]), cb_fsr},
         groups(rw, 8), groups(rh, 8));

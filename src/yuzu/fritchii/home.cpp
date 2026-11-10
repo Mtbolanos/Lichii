@@ -227,10 +227,18 @@ QWidget* Home::MakeRail() {
             QPoint(menu_button->width() + 8, menu_button->height() - size.height())));
     });
 
+    // The community and support links sit at the bottom, above the menu.
+    QToolButton* discord = RailButton(QStringLiteral("community"), tr("Fritchii Discord"));
+    connect(discord, &QToolButton::clicked, this, [] { OpenDiscord(); });
+    QToolButton* donate = RailButton(QStringLiteral("heart"), tr("Donate"));
+    connect(donate, &QToolButton::clicked, this, [] { OpenDonate(); });
+
     layout->addWidget(library_button);
     layout->addWidget(settings);
     layout->addWidget(help);
     layout->addStretch(1);
+    layout->addWidget(discord);
+    layout->addWidget(donate);
     layout->addWidget(menu_button);
     return rail;
 }

@@ -101,6 +101,8 @@ struct StorageInfo {
     StorageBufferSet unbounded_writes;
     /// A store or atomic stayed global without a buffer: it may land in any written buffer
     bool untracked_writes{};
+    /// A load stayed global without a buffer: it may read any bound buffer
+    bool untracked_reads{};
 };
 
 /// Returns true when the instruction is a global memory instruction
@@ -1484,15 +1486,20 @@ bool CollectStorageBuffers(IR::Block& block, IR::Inst& inst, StorageInfo& info, 
     return true;
 }
 
-/// Bytes a global store or atomic writes
-u32 StoreSize(IR::Opcode opcode) {
+/// Bytes a global load, store or atomic accesses
+u32 AccessSize(IR::Opcode opcode) {
     switch (opcode) {
+    case IR::Opcode::LoadGlobalS8:
+    case IR::Opcode::LoadGlobalU8:
     case IR::Opcode::WriteGlobalS8:
     case IR::Opcode::WriteGlobalU8:
         return 1;
+    case IR::Opcode::LoadGlobalS16:
+    case IR::Opcode::LoadGlobalU16:
     case IR::Opcode::WriteGlobalS16:
     case IR::Opcode::WriteGlobalU16:
         return 2;
+    case IR::Opcode::LoadGlobal64:
     case IR::Opcode::WriteGlobal64:
     case IR::Opcode::GlobalAtomicIAdd64:
     case IR::Opcode::GlobalAtomicSMin64:
@@ -1516,10 +1523,27 @@ u32 StoreSize(IR::Opcode opcode) {
     case IR::Opcode::GlobalAtomicMinF32x2:
     case IR::Opcode::GlobalAtomicMaxF32x2:
         return 8;
+    case IR::Opcode::LoadGlobal128:
     case IR::Opcode::WriteGlobal128:
         return 16;
     default:
         return 4;
+    }
+}
+
+/// Whether a global memory instruction reads memory: a load or an atomic, not a plain store
+bool IsGlobalMemoryRead(const IR::Inst& inst) {
+    switch (inst.GetOpcode()) {
+    case IR::Opcode::WriteGlobalS8:
+    case IR::Opcode::WriteGlobalU8:
+    case IR::Opcode::WriteGlobalS16:
+    case IR::Opcode::WriteGlobalU16:
+    case IR::Opcode::WriteGlobal32:
+    case IR::Opcode::WriteGlobal64:
+    case IR::Opcode::WriteGlobal128:
+        return false;
+    default:
+        return true;
     }
 }
 
@@ -1540,17 +1564,18 @@ struct IdBound {
     }
 };
 
-/// Proves where a program's stores to one storage buffer can land relative to its pointer word.
-/// Anything not provably affine in the invocation and workgroup ids with constant non-negative
-/// strides (a value loaded from memory or read from another constant buffer word, a loop-carried
-/// index, a signed or 64-bit computation) leaves the extent unknown.
+/// Proves where a program's accesses to one storage buffer (its stores, or its loads and atomics)
+/// can land relative to its pointer word. Anything not provably affine in the invocation and
+/// workgroup ids with constant non-negative strides (a value loaded from memory or read from
+/// another constant buffer word, a loop-carried index, a signed or 64-bit computation) leaves the
+/// extent unknown.
 class StoreExtentAnalysis {
 public:
     explicit StoreExtentAnalysis(StorageBufferAddr buffer_, const std::array<u32, 3>& workgroup_)
         : buffer{buffer_}, workgroup{workgroup_} {}
 
-    /// Extent of one store, merged into `extent`
-    void AddStore(IR::Inst& inst, StorageWriteExtent& extent) {
+    /// Extent of one access, merged into `extent`
+    void AddAccess(IR::Inst& inst, StorageWriteExtent& extent) {
         const std::optional<StorageWriteExtent> store{StoreExtent(inst)};
         if (!store) {
             extent = StorageWriteExtent{};
@@ -1573,7 +1598,7 @@ private:
         if (!low || low->base != 1 || guard_failed) {
             return std::nullopt;
         }
-        const s64 end{low->c + addr->imm_offset + StoreSize(inst.GetOpcode())};
+        const s64 end{low->c + addr->imm_offset + AccessSize(inst.GetOpcode())};
         if (end > s64{0xffffffff}) {
             return std::nullopt;
         }
@@ -2071,6 +2096,7 @@ void GlobalMemoryToStorageBufferPass(Environment& env, IR::Program& program,
                 conditions.current = block;
                 const bool bound{CollectStorageBuffers(*block, inst, info, env, conditions)};
                 info.untracked_writes |= !bound && IsGlobalMemoryWrite(inst);
+                info.untracked_reads |= !bound && !IsGlobalMemoryWrite(inst);
             }
         }
     };
@@ -2126,8 +2152,41 @@ void GlobalMemoryToStorageBufferPass(Environment& env, IR::Program& program,
                 // An empty bounded extent, widened by every store
                 extents.emplace(storage_inst.storage_buffer, StorageWriteExtent{.bounded = true});
             }
-            analysis->second.AddStore(*storage_inst.inst, extents[storage_inst.storage_buffer]);
+            analysis->second.AddAccess(*storage_inst.inst, extents[storage_inst.storage_buffer]);
         }
+    }
+    // Read extents of the loads and atomics. An access left global is routed by address at run
+    // time into any bound buffer at any offset, so with one left no read extent is known.
+    const bool reads_known{!info.untracked_reads && !info.untracked_writes &&
+                           !info.native_runtime_bounds};
+    std::map<StorageBufferAddr, StorageWriteExtent> read_extents;
+    if (reads_known) {
+        // A buffer with no loads or atomics reads nothing: empty and proven
+        for (const StorageBufferAddr& storage_buffer : info.set) {
+            read_extents.emplace(storage_buffer, StorageWriteExtent{.bounded = true});
+        }
+        // Their own analyses: the guard state must not mix with the stores'
+        std::map<StorageBufferAddr, StoreExtentAnalysis> analyses;
+        for (const StorageInst& storage_inst : info.to_replace) {
+            if (!IsGlobalMemoryRead(*storage_inst.inst)) {
+                continue;
+            }
+            auto analysis{analyses.find(storage_inst.storage_buffer)};
+            if (analysis == analyses.end()) {
+                analysis = analyses
+                               .emplace(storage_inst.storage_buffer,
+                                        StoreExtentAnalysis{storage_inst.storage_buffer,
+                                                            program.workgroup_size})
+                               .first;
+            }
+            analysis->second.AddAccess(*storage_inst.inst,
+                                       read_extents[storage_inst.storage_buffer]);
+        }
+    }
+    for (const StorageBufferAddr& storage_buffer : info.set) {
+        const auto read_extent{read_extents.find(storage_buffer)};
+        program.info.storage_read_extents.push_back(
+            read_extent != read_extents.end() ? read_extent->second : StorageWriteExtent{});
     }
     for (const StorageBufferAddr& storage_buffer : info.set) {
         const bool is_written{info.writes.contains(storage_buffer)};
@@ -2167,15 +2226,30 @@ size_t StorageBufferLimit(const HostTranslateInfo& host_info) {
 
 void JoinStorageInfo(Info& base, Info& source, size_t limit) {
     base.requires_coherent_global_memory |= source.requires_coherent_global_memory;
+    // An access left global in either half is routed by address into any buffer of the joined
+    // program: then no read extent is known.
+    const bool reads_known{
+        !base.uses_global_memory && !source.uses_global_memory && !base.native_global_bounds &&
+        !source.native_global_bounds &&
+        base.storage_read_extents.size() == base.storage_buffers_descriptors.size() &&
+        source.storage_read_extents.size() == source.storage_buffers_descriptors.size()};
     base.native_global_bounds |= source.native_global_bounds;
     auto& descriptors = base.storage_buffers_descriptors;
-    for (auto& desc : source.storage_buffers_descriptors) {
+    auto& read_extents = base.storage_read_extents;
+    for (size_t index = 0; index < source.storage_buffers_descriptors.size(); ++index) {
+        auto& desc{source.storage_buffers_descriptors[index]};
+        const StorageWriteExtent source_read{reads_known ? source.storage_read_extents[index]
+                                                         : StorageWriteExtent{}};
         auto it{std::ranges::find_if(descriptors, [&desc](const auto& existing) {
             return desc.cbuf_index == existing.cbuf_index &&
                    desc.cbuf_offset == existing.cbuf_offset && desc.count == existing.count &&
                    desc.indirect_offset == existing.indirect_offset;
         })};
         if (it != descriptors.end()) {
+            if (reads_known) {
+                const auto existing{static_cast<size_t>(std::distance(descriptors.begin(), it))};
+                MergeStorageWriteExtent(read_extents[existing], source_read);
+            }
             if (desc.is_written) {
                 if (it->is_written) {
                     MergeStorageWriteExtent(it->write_extent, desc.write_extent);
@@ -2191,6 +2265,12 @@ void JoinStorageInfo(Info& base, Info& source, size_t limit) {
                                           descriptors.size() + 1, limit);
         }
         descriptors.push_back(desc);
+        if (reads_known) {
+            read_extents.push_back(source_read);
+        }
+    }
+    if (!reads_known) {
+        read_extents.assign(descriptors.size(), StorageWriteExtent{});
     }
 }
 

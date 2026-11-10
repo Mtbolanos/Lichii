@@ -147,6 +147,9 @@ void AddNVNStorageBuffers(IR::Program& program, const HostTranslateInfo& host_in
             .is_written = program.info.stores_global_memory,
         });
     }
+    // A global access is left: it is routed by address into any bound buffer at any offset, so no
+    // read extent of the program is known.
+    program.info.storage_read_extents.assign(descs.size(), StorageWriteExtent{});
 }
 
 using IR::IsLegacyAttribute; //rescoped to attribute.h to make it visible in load_store_attribute.cpp IPA

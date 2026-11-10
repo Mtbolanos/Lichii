@@ -65,6 +65,8 @@ SETTING(u16, false);
 SWITCHABLE(AnisotropyMode, true);
 SWITCHABLE(AntiAliasing, false);
 SWITCHABLE(OotAntiAliasing, false);
+SWITCHABLE(OotRefreshCap, false);
+SWITCHABLE(OotMovieUpscale, false);
 SWITCHABLE(AspectRatio, true);
 SWITCHABLE(AstcDecodeMode, true);
 SWITCHABLE(AstcRecompression, true);
@@ -201,6 +203,9 @@ struct Values {
                                      linkage, false, "audio_muted", Category::Audio, Specialization::Default, true, true};
     Setting<bool, false> dump_audio_commands{
                                              linkage, false, "dump_audio_commands", Category::Audio, Specialization::Default, false};
+
+    Setting<u16, true> microphone_volume{linkage, 100, 0, 200, "microphone_volume",
+                                        Category::Controls};
 
     // Core
     SwitchableSetting<bool> use_multi_core{linkage, true, "use_multi_core", Category::Core};
@@ -403,16 +408,25 @@ struct Values {
                                                       true};
 
     SwitchableSetting<AntiAliasing> anti_aliasing{linkage,
-                                                  AntiAliasing::Fxaa,
+                                                  AntiAliasing::None,
                                                   "anti_aliasing",
                                                   Category::Renderer,
                                                   Specialization::Default,
                                                   true,
                                                   true};
     // The Legend of Zelda: Ocarina of Time's own anti-aliasing network and its sharpening output
-    // pass, or the tonemapped image as the game renders it (video_core/oot_network.h).
+    // pass, the tonemapped image as the game renders it (video_core/oot_network.h), or AMD FSR 3.1
+    // or FSR 4 in place of the game's upscale pass (video_core/ocarina_upscale.h; FSR 4 needs
+    // AMD's downloaded runtime and falls back to FSR 3.1). NVIDIA DLSS keeps its own setting and,
+    // when on, still replaces Game and No sharpening; an FSR choice wins over it.
     SwitchableSetting<OotAntiAliasing> oot_anti_aliasing{linkage, OotAntiAliasing::Game,
                                                          "oot_anti_aliasing", Category::Renderer};
+    // The title screen's and cutscenes' videos (AV1 1080p60): the game's own upscaler (removes
+    // banding, 1080p -> 1440p; tensor operations) or a bilinear copy. Automatic: the game's where
+    // the GPU runs tensor operations natively (RTX), the copy elsewhere (its emulated matrices
+    // cost ~33 ms a frame). EDEN_NX2_OOT_MOVIE_NETWORK=0/1 overrides it for tests.
+    SwitchableSetting<OotMovieUpscale> oot_movie_upscale{linkage, OotMovieUpscale::Automatic,
+                                                         "oot_movie_upscale", Category::Renderer};
 
     SwitchableSetting<std::string> post_shader_chain{linkage,
                                                      std::string(),
@@ -661,6 +675,24 @@ struct Values {
     // first launch (oot_fps_asked).
     SwitchableSetting<bool> oot_30fps{linkage, false, "oot_30fps", Category::RendererAdvanced};
     Setting<bool> oot_fps_asked{linkage, false, "oot_fps_asked", Category::RendererAdvanced};
+    // Ocarina of Time above 60 fps (experimental, off by default): the "High refresh rate
+    // (built-in)" patch makes the game's step always follow real time, below 1.0 too, and the
+    // present pacing (nx2_gsv.h PaceToVblank) caps it at oot_high_refresh_cap instead of 60.
+    // Ctrl+U (and this setting in Configure) switch it while the game runs, no restart
+    // (FileSys::SwitchOotHighRefreshLive); the cap applies live too. The 30 FPS mode wins.
+    SwitchableSetting<bool> oot_high_refresh{linkage,
+                                             false,
+                                             "oot_high_refresh",
+                                             Category::RendererAdvanced,
+                                             Specialization::Paired};
+    SwitchableSetting<OotRefreshCap> oot_high_refresh_cap{linkage,
+                                                          OotRefreshCap::Display,
+                                                          "oot_high_refresh_cap",
+                                                          Category::RendererAdvanced,
+                                                          Specialization::Default,
+                                                          true,
+                                                          true,
+                                                          &oot_high_refresh};
     // Which revision of the Frizti tuned settings (common/frizti_settings.h) this config has had
     // applied once (MainWindow::MigrateFriztiSettings; config/frizti.ini keeps it too).
     Setting<u32> frizti_settings_revision{linkage, 0, "frizti_settings_revision",
@@ -778,6 +810,9 @@ struct Values {
                                                        true,
 #endif
                                                        "vertex_input_dynamic_state", Category::RendererExtensions};
+
+    SwitchableSetting<MeshShaderMode> mesh_shaders{linkage, MeshShaderMode::Automatic,
+                                                   "mesh_shaders", Category::RendererExtensions};
 
     Setting<bool> renderer_debug{linkage, false, "debug", Category::RendererDebug};
     Setting<bool> renderer_shader_feedback{linkage, false, "shader_feedback",
@@ -1028,6 +1063,16 @@ constexpr u32 MAX_FRAME_GEN_MULTIPLIER = 4;
 /// settings (a value left on by an older build made the camera flicker, 2026-11-09).
 [[nodiscard]] bool FrameGenActive();
 [[nodiscard]] u32 FrameGenMultiplier();
+/// Whether emulation runs at the speed limit: use_speed_limit, and in Fritchii always for Ocarina
+/// of Time, whose logic speeds up with the frame rate ("Unlocked" made the game run fast). Not
+/// while Ocarina runs with its high refresh rate patch outside the 30 FPS mode: its step follows
+/// real time then, so "Unlocked" only lifts the frame rate cap.
+[[nodiscard]] bool SpeedLimitEnabled();
+/// Set by the loader when it loads Ocarina of Time's main: whether the "High refresh rate
+/// (built-in)" patch was applied to it (Settings oot_high_refresh). Switching the mode while the
+/// game runs (Ctrl+U, FileSys::SwitchOotHighRefreshLive) sets it too.
+void SetOotHighRefreshPatched(bool patched);
+[[nodiscard]] bool OotHighRefreshPatched();
 
 [[nodiscard]] size_t FrameGenGenerations();
 

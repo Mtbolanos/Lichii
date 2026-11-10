@@ -88,7 +88,7 @@ public:
     /**
      * Start this device session, starting the backend stream.
      */
-    void Start();
+    Result Start();
 
     /**
      * Stop this device session, stopping the backend stream.
@@ -125,12 +125,17 @@ public:
     void SetRingSize(u32 ring_size);
 
 private:
+    void ReleaseStream();
+    void UseSilentInput();
+
     /// System
     Core::System& system;
     /// Output sink this device will use
     Sink::Sink* sink{};
     /// The backend stream for this device session to send samples to
     Sink::SinkStream* stream{};
+    /// Silent capture that replaces an input stream the host could not open or start
+    std::unique_ptr<Sink::SinkStream> silent_input;
     /// Name of this device session
     std::string name{};
     /// Type of this device session (render/in/out)

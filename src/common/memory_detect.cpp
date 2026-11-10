@@ -19,6 +19,14 @@
 #endif
 #endif
 
+#include <chrono>
+#include <mutex>
+#include <vector>
+
+#ifdef _MSC_VER
+#include <malloc.h>
+#endif
+
 #include "common/memory_detect.h"
 
 namespace Common {
@@ -91,15 +99,32 @@ u64 GetProcessPageFaults() {
 ProcessMemoryUsage GetProcessMemoryUsage() {
     ProcessMemoryUsage usage{};
 #ifdef _WIN32
-    PROCESS_MEMORY_COUNTERS_EX counters{};
-    counters.cb = sizeof(counters);
-    if (K32GetProcessMemoryInfo(GetCurrentProcess(),
-                                reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters),
-                                sizeof(counters))) {
-        usage.working_set = counters.WorkingSetSize;
-        usage.peak_working_set = counters.PeakWorkingSetSize;
-        usage.private_bytes = counters.PrivateUsage;
-        usage.peak_private_bytes = counters.PeakPagefileUsage;
+    // PROCESS_MEMORY_COUNTERS_EX2's layout (the SDK declares it only for NTDDI_WIN10_CU and up).
+    // Windows builds that know it fill PrivateWorkingSetSize; older ones either refuse the size
+    // (then the EX one is asked for) or leave it 0.
+    struct CountersEx2 {
+        PROCESS_MEMORY_COUNTERS_EX ex;
+        SIZE_T PrivateWorkingSetSize;
+        ULONG64 SharedCommitUsage;
+    };
+    CountersEx2 counters{};
+    counters.ex.cb = sizeof(counters);
+    bool ok = K32GetProcessMemoryInfo(GetCurrentProcess(),
+                                      reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters),
+                                      sizeof(counters));
+    if (!ok) {
+        counters = {};
+        counters.ex.cb = sizeof(counters.ex);
+        ok = K32GetProcessMemoryInfo(GetCurrentProcess(),
+                                     reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&counters.ex),
+                                     sizeof(counters.ex));
+    }
+    if (ok) {
+        usage.working_set = counters.ex.WorkingSetSize;
+        usage.peak_working_set = counters.ex.PeakWorkingSetSize;
+        usage.private_bytes = counters.ex.PrivateUsage;
+        usage.peak_private_bytes = counters.ex.PeakPagefileUsage;
+        usage.private_working_set = counters.PrivateWorkingSetSize;
     }
     MEMORYSTATUSEX status{};
     status.dwLength = sizeof(status);
@@ -110,6 +135,58 @@ ProcessMemoryUsage GetProcessMemoryUsage() {
     }
 #endif
     return usage;
+}
+
+namespace {
+std::mutex g_heap_usage_mutex;
+HeapUsage g_heap_usage{};
+} // Anonymous namespace
+
+HeapUsage SampleHeapUsage() {
+    HeapUsage usage{};
+#ifdef _WIN32
+    const auto start = std::chrono::steady_clock::now();
+#ifdef _MSC_VER
+    const HANDLE crt_heap = reinterpret_cast<HANDLE>(_get_heap_handle());
+#else
+    const HANDLE crt_heap = GetProcessHeap();
+#endif
+    std::vector<HANDLE> heaps(64);
+    for (int attempt = 0; attempt < 4; ++attempt) {
+        const DWORD count = GetProcessHeaps(static_cast<DWORD>(heaps.size()), heaps.data());
+        if (count <= heaps.size()) {
+            heaps.resize(count);
+            break;
+        }
+        heaps.resize(count + 16);
+    }
+    for (const HANDLE heap : heaps) {
+        HEAP_SUMMARY summary{};
+        summary.cb = sizeof(summary);
+        if (!HeapSummary(heap, 0, &summary)) {
+            continue;
+        }
+        ++usage.heaps;
+        if (heap == crt_heap) {
+            usage.crt_committed += summary.cbCommitted;
+            usage.crt_allocated += summary.cbAllocated;
+        } else {
+            usage.other_committed += summary.cbCommitted;
+            usage.other_allocated += summary.cbAllocated;
+        }
+    }
+    usage.micros = static_cast<u32>(std::chrono::duration_cast<std::chrono::microseconds>(
+                                        std::chrono::steady_clock::now() - start)
+                                        .count());
+#endif
+    std::scoped_lock lock{g_heap_usage_mutex};
+    g_heap_usage = usage;
+    return usage;
+}
+
+HeapUsage LastHeapUsage() {
+    std::scoped_lock lock{g_heap_usage_mutex};
+    return g_heap_usage;
 }
 
 } // namespace Common

@@ -22,13 +22,14 @@ class StagingBufferPool;
 /// AMD FidelityFX Super Resolution 3.1 (the FSR 3.1.4 upscaler from FidelityFX SDK v1.1.4, shaders
 /// in externals/FidelityFX-SDK) in place of a game's DLSS evaluation. The host side follows the
 /// SDK's ffx_fsr3upscaler.cpp: the same passes, internal images and constants, recorded through the
-/// scheduler. Inputs are taken as reversed depth, render-size motion vectors and HDR colour, and
-/// the exposure is computed by FSR itself.
+/// scheduler. The default profile takes reversed infinite depth and HDR colour with auto exposure.
+/// OoT uses finite standard depth and LDR colour with unit exposure. Both take render-size motion.
 class Fsr3Upscaler {
 public:
+    enum class Profile { HdrReversedDepth, OcarinaLdr };
     struct Inputs {
-        VkImageView color;          ///< Jittered linear colour at the render size.
-        VkImageView depth;          ///< Device depth (reversed) at the render size.
+        VkImageView color;          ///< Profile's HDR or tonemapped LDR colour, at render size.
+        VkImageView depth;          ///< Device depth in the profile's convention, at render size.
         VkImageView motion_vectors; ///< Motion to the previous frame at the render size.
         VkExtent2D render_size;
         VkExtent2D upscale_size;
@@ -40,12 +41,16 @@ public:
         bool reset;
         bool sharpen;
         f32 sharpness; ///< 0 to 1 as FSR takes it: 2 stops of RCAS at 0, none at 1.
+        VkImageView reactive_mask{}; ///< Optional render-size mask, 0..1.
+        VkImageView transparency_mask{}; ///< Optional render-size transparency/composition mask.
+        f32 vertical_fov = 1.04719755f; ///< Radians; 60 degrees when the camera is unknown.
     };
 
     explicit Fsr3Upscaler(const Device& device, Scheduler& scheduler,
                           MemoryAllocator& memory_allocator, StagingBufferPool& staging_buffer_pool,
                           DescriptorPool& descriptor_pool,
-                          ComputePassDescriptorQueue& descriptor_queue);
+                           ComputePassDescriptorQueue& descriptor_queue,
+                           Profile profile = Profile::HdrReversedDepth);
     ~Fsr3Upscaler();
 
     /// Whether the device has what the passes need (formats, shader features).
@@ -80,6 +85,7 @@ private:
     MemoryAllocator& memory_allocator;
     StagingBufferPool& staging_buffer_pool;
     ComputePassDescriptorQueue& descriptor_queue;
+    const Profile profile;
 
     vk::Sampler point_sampler;
     vk::Sampler linear_sampler;
@@ -103,6 +109,7 @@ private:
     Texture spd_atomic;
     Texture lanczos_lut;
     Texture default_reactive;
+    Texture unit_exposure;
     Texture output;
 
     VkExtent2D render_extent{};

@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -405,6 +406,44 @@ TEST_CASE("Maxwell F32 to U64 never converts an out-of-range operand", "[shader]
     }
 }
 
+TEST_CASE("Maxwell F32 to signed32 saturates before integer conversion",
+          "[shader][maxwell][numeric]") {
+    const std::array<u32, 24> inputs{
+        0U,          0x80000000U, 1U,          0x80000001U, 0x007fffffU, 0x807fffffU,
+        0x3f000000U, 0xbf000000U, 0x3fc00000U, 0xbfc00000U, 0x4effffffU, 0x4f000000U,
+        0x4f000001U, 0xceffffffU, 0xcf000000U, 0xcf000001U, 0x7f7fffffU, 0xff7fffffU,
+        0x7f800000U, 0xff800000U, 0x7fc00000U, 0xffc12345U, 0x7f800001U, 0xff800001U};
+    for (u32 rounding = 0; rounding < 4; ++rounding) {
+        for (u32 modifiers = 0; modifiers < 4; ++modifiers) {
+            const bool negate = (modifiers & 1) != 0;
+            const bool absolute = (modifiers & 2) != 0;
+            NumericProgram program{false, 2, rounding, true, 2, negate, absolute};
+            for (const u32 bits : inputs) {
+                f64 value = std::bit_cast<f32>(bits);
+                if (absolute) {
+                    value = std::abs(value);
+                }
+                if (negate) {
+                    value = -value;
+                }
+                const f64 rounded = rounding == 0   ? std::nearbyint(value)
+                                    : rounding == 1 ? std::floor(value)
+                                    : rounding == 2 ? std::ceil(value)
+                                                    : std::trunc(value);
+                const s32 expected =
+                    std::isnan(value)
+                        ? 0
+                        : static_cast<s32>(std::clamp(rounded, -2147483648.0, 2147483647.0));
+                CAPTURE(bits, rounding, modifiers);
+                u64 result{};
+                REQUIRE_NOTHROW(result = program.Run(bits));
+                REQUIRE(u32(result) == std::bit_cast<u32>(expected));
+                REQUIRE(u32(result >> 32) == 0xdeadbeefU);
+            }
+        }
+    }
+}
+
 TEST_CASE("Maxwell F2I byte destinations saturate and extend", "[shader][maxwell][numeric]") {
     const std::array<u16, 19> half_inputs{
         0, 0x8000, 0xb800, 0x3800, 0x3e00, 0x4100, 0x57f0, 0x57f8, 0x5800,
@@ -433,13 +472,17 @@ TEST_CASE("Maxwell F2I byte destinations saturate and extend", "[shader][maxwell
     }
 }
 
-TEST_CASE("Maxwell byte conversions emit with native and lowered float64",
+TEST_CASE("Maxwell saturating conversions emit with native and lowered float64",
           "[shader][maxwell][numeric_backend]") {
     for (u32 backend = 0; backend < 3; ++backend) {
         for (bool float64 : {false, true}) {
-            for (u32 format : {1U, 2U, 3U}) {
+            for (const auto [destination, format] : std::array{
+                     std::pair{0U, 1U}, std::pair{0U, 2U}, std::pair{0U, 3U}, std::pair{2U, 2U}}) {
                 for (bool sign : {false, true}) {
-                    NumericProgram translation{false, 0, 3, sign, format};
+                    if (destination == 2 && !sign) {
+                        continue;
+                    }
+                    NumericProgram translation{false, destination, 3, sign, format};
                     IR::IREmitter start{translation.block, translation.block.begin()};
                     start.SetReg(IR::Reg::R2, start.LocalInvocationIdX());
                     start.SetReg(IR::Reg::R3, start.LocalInvocationIdY());
@@ -463,7 +506,7 @@ TEST_CASE("Maxwell byte conversions emit with native and lowered float64",
                     Shader::Optimization::CollectShaderInfoPass(translation.env, program);
                     program.info.used_storage_buffer_types = IR::Type::U32;
                     program.info.storage_buffers_descriptors = {{0, 0, 1, true}};
-                    CAPTURE(backend, float64, format, sign);
+                    CAPTURE(backend, float64, destination, format, sign);
                     for (const auto& inst : translation.block.Instructions()) {
                         if (!float64) {
                             REQUIRE(inst.Type() != IR::Type::F64);

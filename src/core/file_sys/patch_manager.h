@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <array>
 #include <map>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include "common/common_types.h"
 #include "core/file_sys/nca_metadata.h"
@@ -121,5 +123,61 @@ private:
     const Service::FileSystem::FileSystemController& fs_controller;
     const ContentProvider& content_provider;
 };
+
+/// When `code` (a module's code, from the offset after its NSO header) holds Ocarina of Time's
+/// "High refresh rate (built-in, experimental)" routine, the offset in it of the routine's speed
+/// scale word (a float, 1.0 at 100% speed), else nullopt.
+[[nodiscard]] std::optional<size_t> OotHighRefreshScaleOffset(std::span<const u8> code);
+
+/// The parts of Ocarina of Time's main (offsets after its NSO header) that its high refresh rate
+/// mode changes. Off (Dark's Dynamic FPS, the default): Dark's 120-byte routine at the start of the
+/// cave, the rest of the cave zero, the water renderer's own fcvtzs. On: the high refresh routine
+/// (its speed scale word at +0x88), a zero word, the water ripple accumulator at +0x90, and a branch
+/// to it in place of that fcvtzs. Both have the frame step's call to the start of the cave.
+struct OotHighRefreshCode {
+    static constexpr size_t CallOffset = 0x6E6CC4;
+    static constexpr size_t WaterOffset = 0x475F8;
+    static constexpr size_t CaveOffset = 0x3C46200;
+    static constexpr size_t CaveSize = 0x110;
+    static constexpr size_t ScaleOffset = CaveOffset + 0x88;
+
+    std::array<u8, 4> call{};
+    std::array<u8, 4> water{};
+    std::array<u8, CaveSize> cave{};
+};
+
+enum class OotHighRefreshLayout {
+    Off,
+    On,
+    Unknown, ///< neither: a user mod, Dark's routine off in Add-Ons, a cave word in use...
+};
+
+/// Those parts of `code` (a module's code after its NSO header); nullopt when it is too small.
+[[nodiscard]] std::optional<OotHighRefreshCode> ReadOotHighRefreshCode(std::span<const u8> code);
+/// Which mode `code` holds (On whatever its speed scale word holds).
+[[nodiscard]] OotHighRefreshLayout GetOotHighRefreshLayout(const OotHighRefreshCode& code);
+/// `code` switched to the mode `on`: the bytes to write. `code` itself when it already is in that
+/// mode (its speed scale word kept), nullopt when it holds neither mode.
+[[nodiscard]] std::optional<OotHighRefreshCode> SwitchOotHighRefreshCode(
+    const OotHighRefreshCode& code, bool on);
+/// Whether the high refresh routine's state (Dark's timer state and the water ripple slots) lies
+/// in the module's BSS, [bss_start, bss_end) in module offsets.
+[[nodiscard]] bool OotHighRefreshStateInBss(u64 bss_start, u64 bss_end);
+
+enum class OotHighRefreshSwitch {
+    Switched,         ///< in that mode now (or already was)
+    NotRunning,       ///< no Ocarina of Time main that can switch (other game, its BSS differs)
+    DisabledInAddOns, ///< the high refresh patch is off in Add-Ons (switching on only)
+    UnknownCode,      ///< its code holds neither mode
+    Busy,             ///< a guest thread kept stopping inside the cave; try again
+};
+
+/// Switches the running Ocarina of Time between Dark's routine and the high refresh rate mode
+/// (Ctrl+U) without a restart: with every guest thread of the application stopped
+/// (System::StallApplication) and none of them inside the cave, writes the cave and the water hook,
+/// invalidates the translated code of both on every core, and updates the process's speed scale
+/// address and Settings::OotHighRefreshPatched (pacing and the speed limit follow). Call it from a
+/// host thread that is not an emulated core (the UI thread). Leaves Settings::values alone.
+[[nodiscard]] OotHighRefreshSwitch SwitchOotHighRefreshLive(Core::System& system, bool on);
 
 } // namespace FileSys

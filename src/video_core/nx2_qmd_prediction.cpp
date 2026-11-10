@@ -1065,7 +1065,7 @@ struct State {
             ScanAuditPositional(*key, stored);
             return;
         }
-        u32 matched = 0;
+        u32 match_count = 0;
         u32 wrong = 0;
         std::string first;
         for (u64 i = 0; i < stored; ++i) {
@@ -1074,7 +1074,7 @@ struct State {
                 (decision.sequence != key->sequence && decision.position < key->position)) {
                 continue;
             }
-            ++matched;
+            ++match_count;
             const bool bad = key->has_made ? !Meets(CompareOf(decision.operation), decision.value,
                                                     key->made)
                                            : true;
@@ -1088,7 +1088,7 @@ struct State {
         LOG_ERROR(HW_GPU,
                   "QMD release prediction feed (EXP13=3) audit: {} acquires {} met on device "
                   "{:#x} (of {} decisions on it since the record){}",
-                  wrong, key->has_made ? "wrongly" : "possibly wrongly", key->device, matched,
+                  wrong, key->has_made ? "wrongly" : "possibly wrongly", key->device, match_count,
                   first);
     }
 

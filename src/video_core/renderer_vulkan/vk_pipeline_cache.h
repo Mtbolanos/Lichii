@@ -126,6 +126,13 @@ struct ComputePipelineCacheEntry {
     /// Constant buffer slots bound as storage buffer pointers (see MappedStoragePointerKeys)
     std::vector<u64> mapped_pointers;
     u32 rebuilds{};
+    /// A rebuild still compiling: dispatches keep this entry's pipeline until it is ready
+    /// (zortos293/Lichii#969).
+    std::unique_ptr<ComputePipelineCacheEntry> pending;
+    /// GPU thread: frame_count at the last dispatch through this entry (EXP51 eviction)
+    u64 last_use_frame{};
+    /// Whether a dispatch went through it this session (a boot build may never be dispatched)
+    bool dispatched{};
 
     [[nodiscard]] ComputePipeline* Get(bool native, GPUVAddr address,
                                        const ComputePipelineCacheKey& key) const;
@@ -156,6 +163,16 @@ public:
     }
 
     void TickFrame();
+
+    /// What the "Memory owners" log line counts here (GPU thread).
+    struct MemoryOwnerCounts {
+        size_t graphics_built{};       ///< Built graphics pipelines (each holds driver memory)
+        size_t graphics_entries{};     ///< graphics_cache entries, unbuilt ones included
+        size_t compute{};              ///< Compute pipelines, pending rebuilds included
+        size_t awaiting_destruction{}; ///< Evicted or retired, destroyed once the GPU is done
+        u64 cache_data_bytes{};        ///< vkGetPipelineCacheData's size, at most a minute old
+    };
+    [[nodiscard]] MemoryOwnerCounts MemoryOwners();
 
     [[nodiscard]] ComputePipeline* CurrentComputePipeline();
 
@@ -188,12 +205,17 @@ private:
 
     /// EDEN_NX2_PIPELINE_CLEAN / EDEN_NX2_EXP19: CurrentGraphicsPipeline without
     /// FixedPipelineState::Refresh nor the key comparison while nothing Refresh reads changed
-    /// since the last lookup. `patch`: EXP19=2.
+    /// since the last lookup. `patch`: EXP19=2. With EXP50 the blend registers are compared by
+    /// what they make (FixedPipelineState::BlendingMatches), not word for word. With EXP52 a
+    /// change of programs alone keys only the attribute types again and looks the key up.
     [[nodiscard]] GraphicsPipeline* CurrentGraphicsPipelineClean(bool patch);
     /// The registers Refresh reads with these features, as (first word, words) ranges.
-    void BuildCleanWatch(bool patch);
+    /// `blend_by_value` (EXP50): the blend registers go to their own ranges.
+    void BuildCleanWatch(bool patch, bool blend_by_value, bool patch_vertex);
     [[nodiscard]] bool CleanInputsUnchanged() const;
     void TakeCleanSnapshot();
+    [[nodiscard]] bool CleanBlendUnchanged() const;
+    void TakeCleanBlendSnapshot();
 
     struct CleanLookup {
         struct Range {
@@ -202,10 +224,17 @@ private:
         };
         bool built{};
         bool patch{};                  ///< Built for CurrentGraphicsPipelineClean(true)
+        bool blend_by_value{};         ///< Built for EXP50: blend registers in blend_ranges
+        bool patch_vertex{};           ///< Built for EXP55: vertex attribute formats left out
         std::vector<Range> ranges;     ///< Read by every Refresh
         std::vector<Range> xfb_ranges; ///< Read while transform feedback is enabled
+        /// With blend_by_value: the registers the attachments and the dual-source bit come from.
+        std::vector<Range> blend_ranges;
         std::vector<u32> snapshot;     ///< ranges' words at the last Refresh
         std::vector<u32> xfb_snapshot;
+        /// blend_ranges' words the key's attachments and dual-source bit were last made from (or
+        /// proved equal to, by value).
+        std::vector<u32> blend_snapshot;
         std::array<u64, 6> hashes{};   ///< graphics_key.unique_hashes at the last Refresh
         const Tegra::Engines::Maxwell3D* maxwell3d{};
         Maxwell::PrimitiveTopology topology{};
@@ -215,6 +244,23 @@ private:
         u64 hits{};
         u64 patches{};
         u64 misses{};
+        /// Hits the old check would have refreshed: blend registers or Dirty::Blending moved
+        /// while the state they make stayed the same (EXP50).
+        u64 blend_saved{};
+        /// Hits whose programs changed while every other Refresh input stood: only the attribute
+        /// types were keyed again, then Next looked the new key up (EXP52).
+        u64 programs_only{};
+        /// EXP52=2: programs-only keys checked against a full Refresh, and those that differed.
+        u64 programs_verified{};
+        u64 programs_mismatches{};
+        u32 programs_mismatches_logged{}; ///< For the whole session: the first 16 are logged
+        /// Why lookups refreshed: pipeline changed or unknown, programs, Dirty::Blending,
+        /// other flags / topology / engine hint / dual-source bit, watched registers. With EXP52
+        /// on, programs count only when nothing else is in the way, which never refreshes.
+        std::array<u64, 5> miss_reasons{};
+        /// miss_reasons[3] ("other state") by its first differing part: vertex input, viewport
+        /// swizzles, topology, engine state, dual-source blend.
+        std::array<u64, 5> other_parts{};
         std::chrono::steady_clock::time_point last_log{};
     } clean;
 
@@ -259,7 +305,20 @@ private:
     /// Persistent targets listed so far (32 at most per session).
     mutable std::unordered_set<GPUVAddr> listed_persistent_targets;
 
-    std::unique_ptr<GraphicsPipeline> CreateGraphicsPipeline();
+    /// With `keep_pointers`, the slots an evicted pipeline of this key bound stay storage buffer
+    /// pointers whatever they hold now (from zortos293/Lichii#1143).
+    std::unique_ptr<GraphicsPipeline> CreateGraphicsPipeline(
+        const VideoCommon::EvictedPointerSlots::Slots* keep_pointers = nullptr);
+
+    /// The pointer slots kept for the current key (evicted_pointer_slots), null when none
+    [[nodiscard]] const VideoCommon::EvictedPointerSlots::Slots* KeptPointers() const;
+    /// Answers the kept slots of each program as storage buffer pointers (KeepStoragePointers)
+    static void KeepPointers(std::span<VideoCommon::GraphicsEnvironment> envs,
+                             const GraphicsPipelineCacheKey& key,
+                             const VideoCommon::EvictedPointerSlots::Slots* keep_pointers);
+    /// Logs a kept pointer slot (an index of keep_pointers) that this translation would otherwise
+    /// have classified as no pointer: null, unmapped, or out of range right now.
+    void WarnKeptPointer(size_t program, u64 slot) const;
 
     /// Stores a graphics pipeline built at run time in the disk cache (unless it is there and
     /// loads), with the environments it was translated from. GPU thread.
@@ -269,8 +328,8 @@ private:
 
     /// EDEN_NX2_ASYNC_TRANSLATE=1/2 (translate_queue set). Queues the current key's translation
     /// from snapshot environments when the draw may be skipped; false when it is to be built on
-    /// the GPU thread instead.
-    bool EnqueueTranslation();
+    /// the GPU thread instead. `keep_pointers` as CreateGraphicsPipeline's.
+    bool EnqueueTranslation(const VideoCommon::EvictedPointerSlots::Slots* keep_pointers = nullptr);
     /// A later lookup of a key whose entry is empty: its translated pipeline when ready; `pending`
     /// when the draw is to be skipped meanwhile. Waits (capped) or builds here for a draw that
     /// must not be skipped.
@@ -297,7 +356,10 @@ private:
     /// (FileEnvironment::AnswersHoldFor): created on the GPU thread without translating, built on
     /// a worker from the kept SPIR-V, stored in the disk cache like a translated one. Null when
     /// the key is not precompiled or a check differs: the draw takes the normal path then.
-    std::unique_ptr<GraphicsPipeline> CreatePrecompiledGraphicsPipeline();
+    /// `keep_pointers` (an evicted key's) are answered as pointers before the check, as a
+    /// translation would see them.
+    std::unique_ptr<GraphicsPipeline> CreatePrecompiledGraphicsPipeline(
+        const VideoCommon::EvictedPointerSlots::Slots* keep_pointers = nullptr);
     /// The compute counterpart: the first of the key's records (one per storage pointer state it
     /// was prepared in) whose answers hold for `env`. An entry without a pipeline otherwise.
     ComputePipelineCacheEntry CreatePrecompiledComputePipeline(const ComputePipelineCacheKey& key,
@@ -366,9 +428,12 @@ private:
 
     /// Translates the current compute program, binding the pointers in keep_pointers whatever
     /// their slots hold now (see GenericEnvironment::KeepStoragePointers)
+    /// `store` false: the program is in the disk cache already (one EXP51 evicted), so no record
+    /// is appended for it.
     ComputePipelineCacheEntry CreateComputePipeline(const ComputePipelineCacheKey& key,
                                                     const ShaderInfo* shader,
-                                                    std::span<const u64> keep_pointers = {});
+                                                    std::span<const u64> keep_pointers = {},
+                                                    bool store = true);
 
     /// A compute translation's SPIR-V and serialized info (the precompiled preparation keeps
     /// them; its audit compares them). With translate_only no pipeline is made.
@@ -376,6 +441,9 @@ private:
         std::vector<u32> spirv;
         std::vector<u8> info;
         bool translate_only{};
+        /// The program's storage descriptors, and how many have a proven read extent
+        u32 storage_descriptors{};
+        u32 proven_read_extents{};
     };
 
     ComputePipelineCacheEntry CreateComputePipeline(ShaderPools& pools,
@@ -473,6 +541,8 @@ private:
     /// The pipeline cache warm-up builds go through: none by default, so the tens of thousands
     /// of warm-up programs stay in the driver's disk cache and out of vulkan_pipelines.bin (which
     /// is loaded into memory at every boot). EDEN_NX2_WARM_APP_CACHE=1 uses ours.
+    /// The cache a pipeline built in play goes to (EDEN_NX2_AMD_APP_CACHE rules).
+    [[nodiscard]] vk::PipelineCache& PlayPipelineCache();
     [[nodiscard]] vk::PipelineCache& WarmPipelineCache();
     vk::PipelineCache no_pipeline_cache;
 
@@ -515,11 +585,25 @@ private:
     std::deque<std::pair<u64, std::unique_ptr<GraphicsPipeline>>> retired_translations; ///< (tick, pipeline)
     void RetireTranslatedPipeline(std::unique_ptr<GraphicsPipeline> pipeline);
     std::unordered_set<u64> used_and_evicted; ///< Key hashes of pipelines used this session, evicted since
+    /// The pointer slots of evicted graphics pipelines, for their next translation (from
+    /// zortos293/Lichii#1143). Forgotten once a pipeline of the key is made again.
+    VideoCommon::EvictedPointerSlots evicted_pointer_slots;
 
     ::Common::unordered_map<ComputePipelineCacheKey, ComputePipelineCacheEntry> compute_cache;
     /// Replaced compute pipelines, destroyed once the GPU and their queued build are done with
     /// them (tick, pipeline)
     std::deque<std::pair<u64, std::unique_ptr<ComputePipeline>>> retired_compute_pipelines;
+    /// EXP51: destroys compute pipelines unused for a while (through retired_compute_pipelines).
+    void EvictUnusedComputePipelines(int mode);
+    /// What an evicted compute entry learned, kept so its next dispatch translates it as it was
+    /// (the pointers it bound, the rebuilds it used) without a new disk cache record.
+    struct EvictedCompute {
+        std::vector<u64> mapped_pointers;
+        u32 rebuilds{};
+    };
+    ::Common::unordered_map<ComputePipelineCacheKey, EvictedCompute> evicted_compute;
+    size_t compute_evicted_total{};       ///< EXP51 evictions this session
+    size_t compute_rebuilt_after_evict{}; ///< Evicted compute programs dispatched again
     ::Common::unordered_map<GraphicsPipelineCacheKey, std::unique_ptr<GraphicsPipeline>> graphics_cache;
 
     ShaderPools main_pools;
@@ -560,6 +644,8 @@ private:
     size_t pipelines_since_flush{};
     std::chrono::steady_clock::time_point last_flush{};
     std::atomic<size_t> last_cache_size{};
+    /// When MemoryOwners last asked the driver for the cache data size.
+    std::chrono::steady_clock::time_point last_cache_size_query{};
     std::atomic_bool flush_in_flight{};
     std::atomic_bool save_again{};
 

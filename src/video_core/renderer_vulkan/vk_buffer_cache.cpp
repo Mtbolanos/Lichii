@@ -30,6 +30,18 @@
 
 namespace Vulkan {
 namespace {
+/// Device writes so far made visible to host reads of mapped staging memory.
+void HostReadBarrier(vk::CommandBuffer cmdbuf) {
+    const VkMemoryBarrier barrier{
+        .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+        .pNext = nullptr,
+        .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
+        .dstAccessMask = VK_ACCESS_HOST_READ_BIT,
+    };
+    cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0,
+                           barrier);
+}
+
 VkBufferCopy MakeBufferCopy(const VideoCommon::BufferCopy& copy) {
     return VkBufferCopy{
         .srcOffset = copy.src_offset,
@@ -585,6 +597,41 @@ void BufferCacheRuntime::WaitSubmittedTickImpl(u64 tick) {
 
 void BufferCacheRuntime::Finish() {
     scheduler.Finish();
+}
+
+u64 BufferCacheRuntime::SubmitForHostRead() {
+    scheduler.RequestOutsideRenderPassOperationContext();
+    scheduler.Record(HostReadBarrier);
+    return scheduler.Flush();
+}
+
+void BufferCacheRuntime::WaitForHostRead(u64 tick) {
+    auto& master = scheduler.GetMasterSemaphore();
+    if (master.IsFree(tick)) {
+        return;
+    }
+    // SubmitForHostRead flushed it, so it is handed to the worker: wait without flushing, which
+    // only the recording thread may do. Should a tick not be submitted yet, ask the split's back
+    // for it, as WaitSubmittedTickImpl does.
+    if (!scheduler.IsSubmitted(tick) && VideoCommon::GpuSplit::Get().Active() &&
+        !VideoCommon::GpuSplit::OnBackThread()) {
+        if (!scheduler.WaitSubmitted(tick)) {
+            scheduler.Wait(tick);
+            return;
+        }
+    }
+    master.Wait(tick);
+}
+
+bool BufferCacheRuntime::IsFreeNow(u64 tick) {
+    if (scheduler.IsFree(tick)) {
+        return true;
+    }
+    if (!scheduler.IsSubmitted(tick)) {
+        return false;
+    }
+    scheduler.GetMasterSemaphore().Refresh();
+    return scheduler.IsFree(tick);
 }
 
 bool BufferCacheRuntime::CanReorderUpload(const Buffer& buffer,

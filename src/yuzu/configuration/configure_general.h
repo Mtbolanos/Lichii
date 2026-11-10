@@ -39,6 +39,8 @@ public:
 
     void SetResetCallback(std::function<void()> callback);
     void ResetDefaults();
+    /// Fritchii: brings back settings a reset (or an earlier restore) saved.
+    void RestoreBackup();
     void ApplyConfiguration() override;
     void SetConfiguration() override;
 

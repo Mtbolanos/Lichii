@@ -16,6 +16,12 @@
 #include "core/perf_stats.h"
 #include "yuzu/main_window.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <dxgi1_4.h>
+#include <psapi.h>
+#endif
+
 namespace FritchiiUi {
 namespace {
 
@@ -25,7 +31,9 @@ constexpr double GapFps = 10.0;
 // "low" is the lowest of the most recent samples (about half a minute).
 constexpr size_t LowSamples = 30;
 constexpr int Width = 272;
-constexpr int Height = 158;
+constexpr int Height = 210;
+constexpr int RamRowTop = 66;
+constexpr int VramRowTop = RamRowTop + 26;
 constexpr int Pad = 18;
 constexpr int GraphHeight = 54;
 
@@ -35,6 +43,57 @@ const QColor Text{0xec, 0xec, 0xf1};
 const QColor Muted{0x9a, 0x9a, 0xa8};
 const QColor Accent{0xa7, 0x8b, 0xfa};
 const QColor Guide{255, 255, 255, 34};
+
+#ifdef _WIN32
+/// Fritchii's video memory: DXGI's per-process usage and budget on the adapter where Fritchii's
+/// usage shows up (the GPU it renders on). dxgi.dll is loaded at run time. False when unknown.
+bool QueryVideoMemory(double& used_gb, double& left_gb) {
+    using CreateFactory = HRESULT(WINAPI*)(REFIID, void**);
+    static const CreateFactory create = [] {
+        const HMODULE dxgi = LoadLibraryW(L"dxgi.dll");
+        return dxgi ? reinterpret_cast<CreateFactory>(GetProcAddress(dxgi, "CreateDXGIFactory1"))
+                    : nullptr;
+    }();
+    if (create == nullptr) {
+        return false;
+    }
+    // Kept for the session: the overlay asks about once a second.
+    static IDXGIFactory1* const factory = [] {
+        IDXGIFactory1* created = nullptr;
+        return SUCCEEDED(create(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&created)))
+                   ? created
+                   : nullptr;
+    }();
+    if (factory == nullptr) {
+        return false;
+    }
+    UINT64 best_usage = 0;
+    UINT64 best_budget = 0;
+    IDXGIAdapter1* adapter = nullptr;
+    for (UINT index = 0; factory->EnumAdapters1(index, &adapter) != DXGI_ERROR_NOT_FOUND; ++index) {
+        IDXGIAdapter3* adapter3 = nullptr;
+        if (SUCCEEDED(adapter->QueryInterface(__uuidof(IDXGIAdapter3),
+                                              reinterpret_cast<void**>(&adapter3)))) {
+            DXGI_QUERY_VIDEO_MEMORY_INFO info{};
+            if (SUCCEEDED(adapter3->QueryVideoMemoryInfo(0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
+                                                         &info)) &&
+                info.CurrentUsage > best_usage) {
+                best_usage = info.CurrentUsage;
+                best_budget = info.Budget;
+            }
+            adapter3->Release();
+        }
+        adapter->Release();
+    }
+    if (best_usage == 0) {
+        return false;
+    }
+    constexpr double GiB = 1024.0 * 1024.0 * 1024.0;
+    used_gb = static_cast<double>(best_usage) / GiB;
+    left_gb = best_budget > best_usage ? static_cast<double>(best_budget - best_usage) / GiB : 0.0;
+    return true;
+}
+#endif
 
 QFont InterFont(int pixel_size, QFont::Weight weight) {
     QFont font(QStringLiteral("Inter"));
@@ -76,6 +135,22 @@ void PerfOverlay::OnStats(const Core::PerfStatsResults& results) {
     if (!std::isnan(results.frametime)) {
         frametime_ms = results.frametime * 1000.0;
     }
+#ifdef _WIN32
+    constexpr double GiB = 1024.0 * 1024.0 * 1024.0;
+    PROCESS_MEMORY_COUNTERS counters{};
+    if (GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof(counters))) {
+        ram_used_gb = static_cast<double>(counters.WorkingSetSize) / GiB;
+    }
+    MEMORYSTATUSEX status{};
+    status.dwLength = sizeof(status);
+    if (GlobalMemoryStatusEx(&status)) {
+        ram_free_gb = static_cast<double>(status.ullAvailPhys) / GiB;
+    }
+    if (!QueryVideoMemory(vram_used_gb, vram_left_gb)) {
+        vram_used_gb = -1;
+        vram_left_gb = -1;
+    }
+#endif
     update();
 }
 
@@ -120,6 +195,32 @@ void PerfOverlay::paintEvent(QPaintEvent*) {
     painter.setPen(Muted);
     painter.drawText(QRect(right - 140, Pad + 26, 140, 20), Qt::AlignRight | Qt::AlignVCenter,
                      low_text);
+
+    // RAM and VRAM: Fritchii's, then what is left. Amber when nearly out: RAM then pages, VRAM
+    // spills into RAM, both show as stutter.
+    const auto memory_row = [&](int top, double used, const QString& name, double left,
+                                double warn_below) {
+        if (used < 0) {
+            return;
+        }
+        const QString used_text = tr("%1 GB").arg(used, 0, 'f', 1);
+        painter.setFont(value);
+        painter.setPen(Text);
+        painter.drawText(QRect(Pad, top, 120, 22), Qt::AlignLeft | Qt::AlignVCenter, used_text);
+        const int used_width = QFontMetrics(value).horizontalAdvance(used_text);
+        painter.setFont(label);
+        painter.setPen(Muted);
+        painter.drawText(QRect(Pad + used_width + 6, top, 60, 22),
+                         Qt::AlignLeft | Qt::AlignVCenter, name);
+        if (left >= 0) {
+            const QColor Warn{0xf5, 0xb0, 0x4b};
+            painter.setPen(left < warn_below ? Warn : Muted);
+            painter.drawText(QRect(right - 140, top, 140, 22), Qt::AlignRight | Qt::AlignVCenter,
+                             tr("%1 GB free").arg(left, 0, 'f', 1));
+        }
+    };
+    memory_row(RamRowTop, ram_used_gb, tr("RAM"), ram_free_gb, 2.0);
+    memory_row(VramRowTop, vram_used_gb, tr("VRAM"), vram_left_gb, 1.0);
 
     // The line: the last samples against the target frame rate.
     const QRectF graph(Pad, Height - Pad - GraphHeight, Width - 2 * Pad, GraphHeight);

@@ -12,18 +12,16 @@ namespace {
 
 // Every field of Info is listed in VisitInfo below. An info that grows a field has to be listed
 // there too: this size check fails the build until it is (update the size with it).
-// Ported from zortos293/Lichii#896 for Fritchii: our Info has no frag_color_components (their
-// #8xx), so it is 8 bytes smaller and that field is not visited. A new field here also needs
-// PrecompiledKeptMagic (vk_pipeline_cache.cpp) bumped, so kept files written before are rebuilt.
+// Bump Magic in vk_precompiled_kept.cpp when this layout changes.
 #if defined(_MSC_VER) && defined(_WIN64)
-static_assert(sizeof(Info) == 6928,
+static_assert(sizeof(Info) == 6960,
               "Shader::Info changed: list the new fields in VisitInfo, then update this size");
 // The descriptors are held in vectors, so a field they grow does not change sizeof(Info).
 static_assert(sizeof(ConstantBufferDescriptor) == 8 && sizeof(StorageBufferDescriptor) == 80 &&
                   sizeof(TextureBufferDescriptor) == 40 && sizeof(ImageBufferDescriptor) == 28 &&
                   sizeof(TextureDescriptor) == 44 && sizeof(ImageDescriptor) == 36,
               "A Shader::Info descriptor changed: list the new fields in its Visit function below, "
-              "then update these sizes and PrecompiledKeptMagic (vk_pipeline_cache.cpp)");
+              "then update these sizes and Magic (vk_precompiled_kept.cpp)");
 static_assert(sizeof(StorageWriteExtent) == 60,
               "StorageWriteExtent changed: list the new fields in VisitWriteExtent below");
 #endif
@@ -255,6 +253,8 @@ void VisitAnyDescriptor(Io& io, D& d) {
         VisitConstantBuffer(io, d);
     } else if constexpr (std::is_same_v<T, StorageBufferDescriptor>) {
         VisitStorageBuffer(io, d);
+    } else if constexpr (std::is_same_v<T, StorageWriteExtent>) {
+        VisitWriteExtent(io, d);
     } else if constexpr (std::is_same_v<T, TextureBufferDescriptor>) {
         VisitTextureBuffer(io, d);
     } else if constexpr (std::is_same_v<T, ImageBufferDescriptor>) {
@@ -297,6 +297,7 @@ void VisitInfo(Io& io, I& info) {
     io(info.legacy_stores_mapping);
     io(info.loads_indexed_attributes);
     io(info.stores_frag_color);
+    io(info.frag_color_components);
     io(info.stores_sample_mask);
     io(info.stores_frag_depth);
     io(info.stores_tess_level_outer);
@@ -360,6 +361,7 @@ void VisitInfo(Io& io, I& info) {
     io(info.used_clip_distances);
     io(info.constant_buffer_descriptors);
     io(info.storage_buffers_descriptors);
+    io(info.storage_read_extents);
     io(info.texture_buffer_descriptors);
     io(info.image_buffer_descriptors);
     io(info.texture_descriptors);

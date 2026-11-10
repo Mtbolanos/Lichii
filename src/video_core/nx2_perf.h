@@ -64,7 +64,7 @@ inline bool Enabled() {
 
 inline bool On(Opt opt) {
     static const unsigned off = [] {
-        const auto bit = [](Opt opt) { return 1U << static_cast<unsigned>(opt); };
+        const auto bit = [](Opt option) { return 1U << static_cast<unsigned>(option); };
         const auto names = [](const char* variable) {
             unsigned bits = 0;
             std::string_view list = std::getenv(variable) ? std::getenv(variable) : "";
@@ -122,6 +122,14 @@ inline std::atomic<long long> g_guest_frame_interval_ns{0};
 /// The display's measured refresh period while the host frame pacer runs, else 0. The game's
 /// present pacing (nx2_gsv.h) times its frames to whole multiples of it (genlock).
 inline std::atomic<long long> g_host_refresh_ns{0};
+
+/// The display's refresh period once the host frame pacer has measured it, paced or not, else
+/// 0. Ocarina of Time's high refresh rate cap (nx2_gsv.h) stays at or below it.
+inline std::atomic<long long> g_display_refresh_ns{0};
+
+/// Whether the Vulkan device runs the guest's tensor operations on native cooperative matrices
+/// (set at device creation). Ocarina's movie upscaler setting picks by it on Automatic.
+inline std::atomic<bool> g_native_tensor_ops{false};
 
 /// At 30 FPS and below the host frame pacer presents frames as soon as they are rendered and
 /// publishes how long before the display's next refresh the last one was ready (ns), or -1

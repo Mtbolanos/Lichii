@@ -28,6 +28,7 @@
 #include "core/debugger/nx2_debug_server.h"
 #include "core/debugger/nx2_debug_tools.h"
 #include "core/frontend/framebuffer_layout.h"
+#include "core/file_sys/patch_manager.h"
 #include "core/hle/kernel/k_process.h"
 #include "core/memory.h"
 #include "hid_core/hid_core.h"
@@ -472,6 +473,23 @@ json SetSwitch(ToolState&, const json& params) {
         value->store(params.at("value").get<int>(), std::memory_order_relaxed);
     }
     return {{"name", name}, {"previous", previous}, {"value", value->load()}};
+}
+
+// Ocarina of Time's high refresh rate mode, switched live for tests without saving the setting
+// (the Ctrl+U hotkey saves it into the player's config). Also returns main's code address, for
+// read_memory of the patched cave (main + 0x3C46200) and the ripple hook (main + 0x475F8).
+json OotHighRefresh(ToolState& state, const json& params) {
+    Kernel::KProcess* const process = state.system.ApplicationProcess();
+    json result = {{"patched", Settings::OotHighRefreshPatched()},
+                   {"main", HexAddress(process ? process->GetOotMainCodeAddress() : 0)}};
+    if (params.contains("on")) {
+        const auto outcome =
+            FileSys::SwitchOotHighRefreshLive(state.system, params.at("on").get<bool>());
+        result["outcome"] = static_cast<int>(outcome);
+        result["switched"] = outcome == FileSys::OotHighRefreshSwitch::Switched;
+        result["patched"] = Settings::OotHighRefreshPatched();
+    }
+    return result;
 }
 
 // Lifts or restores the speed limit (test scripts boot through the logos and menus unlimited).
@@ -922,6 +940,7 @@ Handlers MakeHandlers(const std::shared_ptr<ToolState>& state) {
         {"pgo_dump", handler(PgoDump)},
         {"switch", handler(SetSwitch)},
         {"speed_limit", handler(SpeedLimit)},
+        {"oot_high_refresh", handler(OotHighRefresh)},
         {"read_memory", handler(ReadMemory)},
         {"search_memory", handler(SearchMemory)},
         {"read_gpu_memory", handler(ReadGpuMemory)},

@@ -12,7 +12,7 @@
 // 10 MB for 132k pipelines); every info, SPIR-V and recorded environment is read from disk with
 // a positional read when a pipeline needs it, never the whole file.
 //
-// Layout: "NX2KEPT2", u32 stamp size, the stamp, then entries: u8 1 (info) or 2 (SPIR-V, one
+// Layout: "NX2KEPT4", u32 stamp size, the stamp, then entries: u8 1 (info) or 2 (SPIR-V, one
 // zstd frame of its words), u64 content hash, u32 size, the bytes; u8 3 (record), u32 record
 // index in the precompiled file, then a Record (72 bytes); u8 4 ends the entries. Then the
 // index: u32 graphics count, u32 compute count, u32 blob count, the Records of each kind sorted

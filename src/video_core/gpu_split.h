@@ -317,13 +317,13 @@ public:
     /// Bit 2: `count` (method | argument << 32) writes of an instance-loop group (draw.begin
     /// Subsequent and the instance loop stores after it), run once, then `repeats - 1` more
     /// identical groups counted as instances (Maxwell3D::RunDrawBatch).
-    void DrawBatch(Tegra::Engines::EngineInterface* engine, const u64* writes, u32 count,
+    void DrawBatch(Tegra::Engines::EngineInterface* engine, const u64* group_writes, u32 count,
                    u32 repeats, Effect effect) {
         SelectEngine(engine);
         u64* const entry = Reserve(1 + size_t{count});
         entry[0] = static_cast<u64>(Kind::DrawBatch) | (u64{count & 0xff} << 8) |
                    (u64{repeats} << 32);
-        std::memcpy(entry + 1, writes, size_t{count} * sizeof(u64));
+        std::memcpy(entry + 1, group_writes, size_t{count} * sizeof(u64));
         CountBatched(Batched::DrawBatches);
         CountBatched(Batched::DrawRepeats, repeats - 1);
         Commit(1 + size_t{count}, effect);

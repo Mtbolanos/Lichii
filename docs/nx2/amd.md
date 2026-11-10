@@ -22,6 +22,7 @@ the old way there.
 | Demoted fragments stop writing where the guest's control flow says | Moving demotes to the end of the program over nested returns let helper lanes keep writing; AMD drew a black scene | Nested returns are counted before demotes move | [#127] |
 | Fragment subgroup shuffles | AMD's proprietary driver gets them wrong | Broadcast fallback on that driver | [#273] |
 | Depth-compare samples | Undefined on colour or integer images; AMD returned green | Depth-compare images stay floating point. Binding the null image for depth-compare samples of uncomparable images is proposed in the open PR | [#273]; [#354] (open) |
+| Task and mesh programs | Native task/mesh draws hang AMD GPUs. RADV resets the GPU within minutes on RX 6000, 7000 and 9000 cards, often taking the desktop session down with it; Mesa 26.2.6 still hangs, though it recovers more often. AMD's Windows driver times out (TDR) on the Radeon 780M | On AMD drivers (RADV and AMD's own), task/mesh draws take the compute fallback ([#569]). It can be slower in scenes full of foliage, and it skips the mesh programs it can't run (per-primitive outputs, primitives other than triangles, layered output); Ocarina of Time testers report all geometry drawn. The Mesh Shaders setting (GraphicsExtra tab, Vulkan Extensions) picks Native or Compute Fallback instead of Automatic, also per game | [#316], [#871] |
 | Native FP16 arithmetic | Turned off on AMD as a driver workaround | Turned off, with no override yet. An `EDEN_AMD_FP16=1` switch to keep it for testing is proposed in the open PR | [#378] (open) |
 
 Not specific to AMD, but easy to mistake for an AMD bug:
@@ -41,7 +42,7 @@ Check these before filing a new one.
 |---|---|
 | Neon-green canopy or tint in Kokiri Forest | [#285], [#354] |
 | Lighting flicker | [#392] |
-| Driver timeout or device lost at gameplay start | [#165] |
+| Driver timeout or device lost at gameplay start | [#871] |
 | Out of device memory on 8 GB cards | [#342] |
 | Frame rate (one GPU thread at 99%) | [#403] |
 
@@ -76,11 +77,11 @@ Check these before filing a new one.
 
 [#127]: https://github.com/zortos293/Lichii/pull/127
 [#163]: https://github.com/zortos293/Lichii/issues/163
-[#165]: https://github.com/zortos293/Lichii/issues/165
 [#200]: https://github.com/zortos293/Lichii/issues/200
 [#273]: https://github.com/zortos293/Lichii/pull/273
 [#285]: https://github.com/zortos293/Lichii/issues/285
 [#295]: https://github.com/zortos293/Lichii/pull/295
+[#316]: https://github.com/zortos293/Lichii/issues/316
 [#323]: https://github.com/zortos293/Lichii/issues/323
 [#325]: https://github.com/zortos293/Lichii/issues/325
 [#342]: https://github.com/zortos293/Lichii/issues/342
@@ -92,3 +93,5 @@ Check these before filing a new one.
 [#403]: https://github.com/zortos293/Lichii/issues/403
 [#425]: https://github.com/zortos293/Lichii/pull/425
 [#432]: https://github.com/zortos293/Lichii/pull/432
+[#569]: https://github.com/zortos293/Lichii/pull/569
+[#871]: https://github.com/zortos293/Lichii/issues/871

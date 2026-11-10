@@ -74,6 +74,15 @@ struct KernelProgram {
         FAIL("No descriptor for the pointer");
         return program.info.storage_buffers_descriptors.front();
     }
+
+    /// Runs the pass once and returns the read extent of the buffer whose pointer is at c0[offset]
+    const StorageWriteExtent& Read(u32 offset) {
+        const auto& descriptor{Run(offset)};
+        const auto& descriptors{program.info.storage_buffers_descriptors};
+        REQUIRE(program.info.storage_read_extents.size() == descriptors.size());
+        return program.info
+            .storage_read_extents[static_cast<size_t>(&descriptor - descriptors.data())];
+    }
 };
 
 IR::U32 Word(IR::IREmitter& ir, u32 offset) {
@@ -236,6 +245,60 @@ TEST_CASE("A global store left untracked makes every written buffer unbounded",
     ir.WriteGlobal32(ir.PackUint2x32(ir.CompositeConstruct(ir.LocalInvocationIdX(), ir.Imm32(0))),
                      ir.Imm32(0));
     CHECK_FALSE(fixture.Run(0x170).write_extent.bounded);
+}
+
+TEST_CASE("Loads and atomics have read extents, buffers only stored to read nothing",
+          "[shader][storage_extent]") {
+    KernelProgram fixture;
+    fixture.env.native = GENERATE(false, true);
+    IR::IREmitter ir{fixture.entry};
+    const IR::U32 word{ir.ShiftLeftLogical(ir.LocalInvocationIdX(), ir.Imm32(2))};
+    const IR::U32 value{ir.LoadGlobal32(Address(ir, 0x180, word))};
+    const IR::Value vector{ir.LoadGlobal128(Address(
+        ir, 0x190, ir.IAdd(ir.ShiftLeftLogical(ir.LocalInvocationIdX(), ir.Imm32(4)),
+                           ir.Imm32(0x10))))};
+    const IR::U32 old{ir.GlobalAtomicIAdd(Address(ir, 0x1a0, word), ir.Imm32(1))};
+    ir.WriteGlobal32(Address(ir, 0x170, ir.Imm32(0)),
+                     ir.IAdd(ir.IAdd(value, old), IR::U32{ir.CompositeExtract(vector, 0)}));
+    const StorageWriteExtent& loaded{fixture.Read(0x180)};
+    REQUIRE(loaded.bounded);
+    CHECK(loaded.const_end == 4);
+    CHECK(loaded.local_stride == std::array<u32, 3>{4, 0, 0});
+    CHECK(At(loaded, {64, 1, 1}, std::array<u32, 3>{1, 1, 1}) == 4 + 4 * 63);
+    const StorageWriteExtent& wide{fixture.Read(0x190)};
+    REQUIRE(wide.bounded);
+    CHECK(wide.const_end == 0x20);
+    CHECK(wide.local_stride == std::array<u32, 3>{16, 0, 0});
+    const StorageWriteExtent& atomic{fixture.Read(0x1a0)};
+    REQUIRE(atomic.bounded);
+    CHECK(atomic.const_end == 4);
+    CHECK(atomic.local_stride == std::array<u32, 3>{4, 0, 0});
+    // Only stored to: empty and proven
+    const StorageWriteExtent& stored{fixture.Read(0x170)};
+    CHECK(stored.bounded);
+    CHECK(At(stored, {64, 1, 1}, std::array<u32, 3>{1, 1, 1}) == 0);
+}
+
+TEST_CASE("A load indexed by a loaded value has no read extent", "[shader][storage_extent]") {
+    KernelProgram fixture;
+    IR::IREmitter ir{fixture.entry};
+    const IR::U32 index{ir.LoadGlobal32(
+        Address(ir, 0x180, ir.ShiftLeftLogical(ir.LocalInvocationIdX(), ir.Imm32(2))))};
+    const IR::U32 value{ir.LoadGlobal32(Address(ir, 0x190, ir.ShiftLeftLogical(index, ir.Imm32(2))))};
+    ir.WriteGlobal32(Address(ir, 0x170, ir.Imm32(0)), value);
+    CHECK_FALSE(fixture.Read(0x190).bounded);
+}
+
+TEST_CASE("An access left global leaves every read extent unknown", "[shader][storage_extent]") {
+    KernelProgram fixture;
+    IR::IREmitter ir{fixture.entry};
+    const IR::U32 value{ir.LoadGlobal32(Address(ir, 0x180, ir.Imm32(0)))};
+    // An address with no constant-buffer pointer at all stays a global load
+    const IR::U32 other{ir.LoadGlobal32(
+        ir.PackUint2x32(ir.CompositeConstruct(ir.LocalInvocationIdX(), ir.Imm32(0))))};
+    ir.WriteGlobal32(Address(ir, 0x170, ir.Imm32(0)), ir.IAdd(value, other));
+    CHECK_FALSE(fixture.Read(0x180).bounded);
+    CHECK_FALSE(fixture.Read(0x170).bounded);
 }
 
 TEST_CASE("Store extents merge to cover both", "[shader][storage_extent]") {

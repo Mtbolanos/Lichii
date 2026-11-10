@@ -34,6 +34,17 @@ enum class StreamType {
     Sysmix,
 };
 
+/// Sample frames the host audio device took from the first audio renderer stream, played
+/// (rendered by the game) and starved (the last frame repeated: nothing was queued). Switch 2
+/// movies are shown by this clock (EDEN_NX2_VIDEO_PTS_SYNC, on unless 0) and the movie sync trace
+/// (EDEN_NX2_VIDEO_TRACE) compares it with video timestamps. Counted only when one of them is on.
+struct RenderOutputClock {
+    std::atomic<u64> played{};
+    std::atomic<u64> starved{};
+};
+RenderOutputClock& GetRenderOutputClock();
+bool RenderOutputClockEnabled();
+
 struct SinkBuffer {
     u64 frames;
     u64 frames_played;
@@ -202,6 +213,9 @@ public:
      */
     virtual std::vector<s16> ReleaseBuffer(u64 num_samples);
 
+    /// Read only captured frames, without padding missing host input with silence.
+    std::vector<s16> DrainInputSamples(u64 max_frames);
+
     /**
      * Empty out the buffer queue.
      */
@@ -214,6 +228,19 @@ public:
      * @param num_frames - Number of frames to be filled.
      */
     void ProcessAudioIn(std::span<const s16> input_buffer, std::size_t num_frames);
+
+    // Preview captures never feed guest buffers or depend on emulation timing.
+    void EnableInputPreview() {
+        input_preview = true;
+    }
+
+    void SetInputPreviewGain(float gain) {
+        input_preview_gain.store(gain);
+    }
+
+    u32 TakeInputPeak() {
+        return input_peak.exchange(0);
+    }
 
     /**
      * Callback for AudioOut and AudioRenderer.
@@ -259,6 +286,9 @@ protected:
 private:
     /// Ring buffer of the samples waiting to be played or consumed
     Common::RingBuffer<s16, 0x10000> samples_buffer;
+    bool input_preview{};
+    std::atomic<float> input_preview_gain{1.0f};
+    std::atomic<u32> input_peak{};
     /// Audio buffers queued and waiting to play
     Common::SPSCQueue<SinkBuffer, 0x10000> queue;
     /// The currently-playing audio buffer

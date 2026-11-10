@@ -7,10 +7,13 @@
 #include <functional>
 #include <utility>
 #include <vector>
+#include <QBoxLayout>
 #include <QDir>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QPushButton>
 #include "common/settings.h"
 #include "core/core.h"
 #include "qt_common/config/uisettings.h"
@@ -18,6 +21,7 @@
 #include "yuzu/configuration/configuration_shared.h"
 #include "yuzu/configuration/configure_general.h"
 #include "yuzu/configuration/shared_widget.h"
+#include "yuzu/fritchii/fritchii_ui.h"
 
 ConfigureGeneral::ConfigureGeneral(const Core::System& system_,
                                    std::shared_ptr<std::vector<ConfigurationShared::Tab*>> group_,
@@ -43,7 +47,44 @@ ConfigureGeneral::ConfigureGeneral(const Core::System& system_,
 
     if (!Settings::IsConfiguringGlobal()) {
         ui->button_reset_defaults->setVisible(false);
+    } else if (FritchiiUi::Enabled()) {
+        // Reset goes back to Fritchii's own settings after saving a backup; this brings one back.
+        ui->button_reset_defaults->setText(tr("Reset to Defaults…"));
+        auto* const restore = new QPushButton(tr("Restore Settings…"), this);
+        if (auto* const row = qobject_cast<QBoxLayout*>(
+                ui->button_reset_defaults->parentWidget()->layout())) {
+            row->insertWidget(row->indexOf(ui->button_reset_defaults) + 1, restore);
+        }
+        connect(restore, &QPushButton::clicked, this, &ConfigureGeneral::RestoreBackup);
     }
+}
+
+void ConfigureGeneral::RestoreBackup() {
+    const auto backups = FritchiiUi::SettingsBackups();
+    if (backups.empty()) {
+        QMessageBox::information(this, tr("Restore Settings"),
+                                 tr("No saved settings yet. Reset to Defaults saves them first."));
+        return;
+    }
+    QStringList labels;
+    for (const auto& backup : backups) {
+        labels << backup.second;
+    }
+    bool ok = false;
+    const QString chosen = QInputDialog::getItem(
+        this, tr("Restore Settings"), tr("Settings saved on:"), labels, 0, false, &ok);
+    if (!ok) {
+        return;
+    }
+    const auto index = labels.indexOf(chosen);
+    if (index < 0) {
+        return;
+    }
+    // The current settings are saved too before they are replaced (MainWindow::OnConfigure).
+    FritchiiUi::PendingSettingsRestore() = backups[static_cast<size_t>(index)].first;
+    UISettings::values.reset_to_defaults = true;
+    UISettings::values.is_game_list_reload_pending.exchange(true);
+    reset_callback();
 }
 
 ConfigureGeneral::~ConfigureGeneral() = default;
@@ -97,10 +138,14 @@ void ConfigureGeneral::SetResetCallback(std::function<void()> callback) {
 }
 
 void ConfigureGeneral::ResetDefaults() {
+    const QString text =
+        FritchiiUi::Enabled()
+            ? tr("Put every setting back to Fritchii's defaults?\n\nYour current settings are saved "
+                 "first: Restore Settings brings them back. Controls and game folders stay.")
+            : tr("This reset all settings and remove all per-game configurations. This will not "
+                 "delete game directories, profiles, or input profiles. Proceed?");
     QMessageBox::StandardButton answer = QMessageBox::question(
-        this, tr("Lichii"),
-        tr("This reset all settings and remove all per-game configurations. This will not delete "
-           "game directories, profiles, or input profiles. Proceed?"),
+        this, FritchiiUi::Enabled() ? tr("Reset to Defaults") : tr("Lichii"), text,
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
     if (answer == QMessageBox::No) {
         return;

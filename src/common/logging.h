@@ -8,6 +8,7 @@
 
 #include <chrono>
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -140,6 +141,10 @@ void Start();
 
 /// Explicitly stops the logger thread and flushes the buffers
 void Stop();
+
+/// The file this session logs to (empty without a file log). `primary_locked` is set when the
+/// usual log file was held by another process, so the session logs to a fallback file.
+std::filesystem::path FilePath(bool* primary_locked = nullptr);
 
 /// The global filter will prevent any messages from even being processed if they are filtered.
 void SetGlobalFilter(const Filter& filter);

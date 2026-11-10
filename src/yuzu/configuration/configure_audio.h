@@ -61,6 +61,6 @@ private:
     QPushButton* restore_sink_button;
     QComboBox* output_device_combo_box;
     QPushButton* restore_output_device_button;
-    QComboBox* input_device_combo_box;
+    QComboBox* input_device_combo_box{};
     QPushButton* restore_input_device_button;
 };

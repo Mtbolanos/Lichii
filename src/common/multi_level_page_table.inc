@@ -51,8 +51,11 @@ MultiLevelPageTable<BaseAddr>::~MultiLevelPageTable() noexcept {
 
 template <typename BaseAddr>
 void MultiLevelPageTable<BaseAddr>::ReserveRange(u64 start, std::size_t size) {
+    if (size == 0) {
+        return;
+    }
     const u64 new_start = start >> first_level_shift;
-    const u64 new_end = (start + size) >> first_level_shift;
+    const u64 new_end = (start + size - 1) >> first_level_shift;
     for (u64 i = new_start; i <= new_end; i++)
         if (!first_level_map[i])
             AllocateLevel(i);

@@ -12,6 +12,7 @@
 #include "common/dynamic_library.h"
 #include "common/logging.h"
 #include "qt_common/util/vk.h"
+#include "video_core/fsr4_support.h"
 #include "video_core/vulkan_common/vulkan_device.h"
 #include "video_core/vulkan_common/vulkan_instance.h"
 #include "video_core/vulkan_common/vulkan_library.h"
@@ -23,9 +24,9 @@ class QWindow;
 
 namespace VkDeviceInfo {
 Record::Record(std::string_view name_, const std::vector<VkPresentModeKHR>& vsync_modes_,
-               bool has_broken_compute_, std::string_view driver_version_)
+               bool has_broken_compute_, std::string_view driver_version_, bool fsr4_capable_)
     : name{name_}, vsync_support{vsync_modes_}, has_broken_compute{has_broken_compute_},
-      driver_version{driver_version_} {}
+      driver_version{driver_version_}, fsr4_capable{fsr4_capable_} {}
 
 Record::~Record() = default;
 
@@ -66,6 +67,9 @@ void PopulateRecords(std::vector<Record>& records, QWindow* window) try {
         bool has_broken_compute{
             Vulkan::Device::CheckBrokenCompute(driverID, properties.properties.driverVersion)};
 
+        const bool fsr4_capable = VideoCommon::IsFsr4CapableGpu(
+            properties.properties.vendorID, driverID == VK_DRIVER_ID_AMD_PROPRIETARY, name);
+
         std::string driver_string = Vulkan::vk::GetDriverName(driver_properties);
 
         if (driver_string.empty())
@@ -74,7 +78,8 @@ void PopulateRecords(std::vector<Record>& records, QWindow* window) try {
         name = fmt::format("{} ({})", name, driver_string);
 
         records.push_back(VkDeviceInfo::Record(name, present_modes, has_broken_compute,
-                                               static_cast<const char*>(driver_properties.driverInfo)));
+                                               static_cast<const char*>(driver_properties.driverInfo),
+                                               fsr4_capable));
     }
 } catch (const Vulkan::vk::Exception& exception) {
     LOG_ERROR(Frontend, "Failed to enumerate devices with error: {}", exception.what());

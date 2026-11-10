@@ -47,6 +47,16 @@ std::atomic<u64> g_profile_finish_ns{};
 std::atomic<u64> g_profile_window_start{};
 std::mutex g_profile_end_mutex;
 std::map<std::string, u64> g_profile_ends;
+/// Submits (Flush and Finish) by call site: file name pointer and line, named at report time.
+std::map<std::pair<const char*, u32>, u64> g_profile_submit_sites;
+
+void CountSubmitSite(const std::source_location& location) {
+    if (!VideoCommon::Nx2Profile::Enabled()) {
+        return;
+    }
+    std::scoped_lock lock{g_profile_end_mutex};
+    ++g_profile_submit_sites[{location.file_name(), location.line()}];
+}
 
 void CountRenderPassEnd(const char* file, u32 line) {
     if (!VideoCommon::Nx2Profile::Enabled()) {
@@ -80,12 +90,37 @@ void ReportSubmitCounts() {
              static_cast<double>(g_profile_finishes.exchange(0)) / seconds,
              static_cast<double>(g_profile_finish_ns.exchange(0)) / 1e6 / seconds);
     std::vector<std::pair<u64, std::string>> ends;
+    std::vector<std::pair<u64, std::string>> submit_sites;
     {
         std::scoped_lock lock{g_profile_end_mutex};
         for (const auto& [site, count] : g_profile_ends) {
             ends.emplace_back(count, site);
         }
         g_profile_ends.clear();
+        // One site can have several file name pointers (a header's inline callers).
+        std::map<std::string, u64> merged;
+        for (const auto& [site, count] : g_profile_submit_sites) {
+            std::string_view name{site.first};
+            if (const auto slash = name.find_last_of("/\\"); slash != std::string_view::npos) {
+                name.remove_prefix(slash + 1);
+            }
+            merged[fmt::format("{}:{}", name, site.second)] += count;
+        }
+        g_profile_submit_sites.clear();
+        for (const auto& [site, count] : merged) {
+            submit_sites.emplace_back(count, site);
+        }
+    }
+    std::sort(submit_sites.rbegin(), submit_sites.rend());
+    std::string submits_text;
+    for (size_t i = 0; i < submit_sites.size() && i < 6; ++i) {
+        submits_text += fmt::format(" {} {:.0f},", submit_sites[i].second,
+                                    static_cast<double>(submit_sites[i].first) / seconds);
+    }
+    if (!submits_text.empty()) {
+        submits_text.pop_back();
+        LOG_INFO(Render_Vulkan, "Submits per second by site ({} sites, top 6):{}",
+                 submit_sites.size(), submits_text);
     }
     std::sort(ends.rbegin(), ends.rend());
     for (size_t i = 0; i < ends.size() && i < 16; ++i) {
@@ -170,12 +205,14 @@ u64 Scheduler::Flush(VkSemaphore signal_semaphore, VkSemaphore wait_semaphore,
     if (state.renderpass) {
         CountRenderPassEnd(location.file_name(), location.line());
     }
+    CountSubmitSite(location);
     if (VideoCommon::GpuSplit::check_owner) [[unlikely]] {
         VideoCommon::GpuSplit::CheckOwner("Scheduler::Flush");
     }
     // When flushing, we only send data to the worker thread; no waiting is necessary.
     const u64 signal_value = SubmitExecution(signal_semaphore, wait_semaphore);
     AllocateNewContext();
+    submitted_serial = record_serial; // what AllocateNewContext recorded counts as submitted
     last_flush = std::chrono::steady_clock::now();
     flush_pending = false;
     return signal_value;
@@ -262,6 +299,7 @@ void Scheduler::Finish(VkSemaphore signal_semaphore, VkSemaphore wait_semaphore,
     if (state.renderpass) {
         CountRenderPassEnd(location.file_name(), location.line());
     }
+    CountSubmitSite(location);
     if (VideoCommon::GpuSplit::check_owner) [[unlikely]] {
         VideoCommon::GpuSplit::CheckOwner("Scheduler::Finish");
     }
@@ -272,6 +310,7 @@ void Scheduler::Finish(VkSemaphore signal_semaphore, VkSemaphore wait_semaphore,
     SubmitExecution(signal_semaphore, wait_semaphore);
     Wait(presubmit_tick);
     AllocateNewContext();
+    submitted_serial = record_serial;
     last_flush = std::chrono::steady_clock::now();
     flush_pending = false;
     if (profile) {

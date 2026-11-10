@@ -15,7 +15,7 @@
 namespace Settings::Frizti {
 
 // Bump when the tuned values change, so every player gets them once more.
-inline constexpr u32 Revision = 5; // 5: Fritchii v5.5 (EDS2 and dynamic vertex input tuned)
+inline constexpr u32 Revision = 6; // 6: Fritchii v5.6 (no FXAA on top of the game's AA)
 inline constexpr u64 OcarinaOfTimeProgramId = 0x0400486024DEC000ULL;
 
 // The tuned settings. Frizti's value is each setting's default in settings.h.
