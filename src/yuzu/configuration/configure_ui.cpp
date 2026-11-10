@@ -14,8 +14,10 @@
 #include <QCoreApplication>
 #include <QDirIterator>
 #include <QFileDialog>
+#include <QLocale>
 #include <QString>
 #include <QToolButton>
+#include <QTranslator>
 #include <QVariant>
 
 #include "common/common_types.h"
@@ -54,6 +56,13 @@ QString GetTranslatedFolderIconSize(size_t index) {
 
 QString GetTranslatedRowTextName(size_t index) {
     return QCoreApplication::translate("ConfigureUI", row_text_names[index]);
+}
+
+/// A translation's name in the language list, e.g. "German (Germany)" for "de".
+QString LanguageName(const QString& locale) {
+    const QLocale language(locale);
+    return QStringLiteral("%1 (%2)").arg(QLocale::languageToString(language.language()),
+                                         QLocale::territoryToString(language.territory()));
 }
 } // Anonymous namespace
 
@@ -177,8 +186,19 @@ void ConfigureUi::RequestGameListUpdate() {
 void ConfigureUi::SetConfiguration() {
     ui->theme_combobox->setCurrentIndex(
         ui->theme_combobox->findData(QString::fromStdString(UISettings::values.theme)));
-    ui->language_combobox->setCurrentIndex(ui->language_combobox->findData(
-        QString::fromStdString(UISettings::values.language.GetValue())));
+    const QString language = QString::fromStdString(UISettings::values.language.GetValue());
+    if (ui->language_combobox->findData(language) == -1) {
+        // A language the list doesn't have, listed so that the setting stays until another one is
+        // chosen. It is marked missing only if the main window's load fails too: that load falls
+        // back to the base language (de.qm for de_AT), and shows English without one.
+        QTranslator probe;
+        QString name = LanguageName(language);
+        if (!probe.load(language, QStringLiteral(":/languages/"))) {
+            name = tr("%1 - not in this build").arg(name);
+        }
+        ui->language_combobox->addItem(name, language);
+    }
+    ui->language_combobox->setCurrentIndex(ui->language_combobox->findData(language));
     ui->show_add_ons->setChecked(UISettings::values.show_add_ons.GetValue());
     ui->show_size->setChecked(UISettings::values.show_size.GetValue());
     ui->show_types->setChecked(UISettings::values.show_types.GetValue());
@@ -215,11 +235,13 @@ void ConfigureUi::RetranslateUI() {
             i, GetTranslatedFolderIconSize(static_cast<size_t>(i)));
     }
 
-    for (int i = 0; i < ui->row_1_text_combobox->count(); i++) {
-        const QString name = GetTranslatedRowTextName(static_cast<size_t>(i));
-
-        ui->row_1_text_combobox->setItemText(i, name);
-        ui->row_2_text_combobox->setItemText(i, name);
+    // Each row list leaves names out (the first has no None, and neither lists the other row's
+    // choice), so an item's name comes from its data, not its position.
+    for (QComboBox* const combobox : {ui->row_1_text_combobox, ui->row_2_text_combobox}) {
+        for (int i = 0; i < combobox->count(); i++) {
+            combobox->setItemText(
+                i, GetTranslatedRowTextName(static_cast<size_t>(combobox->itemData(i).toUInt())));
+        }
     }
 }
 
@@ -231,9 +253,7 @@ void ConfigureUi::InitializeLanguageComboBox() {
         QString locale = it.next();
         locale.truncate(locale.lastIndexOf(QLatin1Char{'.'}));
         locale.remove(0, locale.lastIndexOf(QLatin1Char{'/'}) + 1);
-        const QString lang = QLocale::languageToString(QLocale(locale).language());
-        const QString country = QLocale::territoryToString(QLocale(locale).territory());
-        ui->language_combobox->addItem(QStringLiteral("%1 (%2)").arg(lang, country), locale);
+        ui->language_combobox->addItem(LanguageName(locale), locale);
     }
 
     // Unlike other configuration changes, interface language changes need to be reflected on the

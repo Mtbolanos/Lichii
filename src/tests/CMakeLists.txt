@@ -90,6 +90,7 @@ add_executable(tests
     video_core/nx2_semaphore_mirror.cpp
     video_core/command_writer.cpp
     video_core/split_fence_wait.cpp
+    video_core/nx2_written_pages.cpp
     video_core/command_snapshot_suspensions.cpp
     video_core/pending_maps.cpp
     video_core/maxwell_fast_method.cpp
@@ -112,6 +113,7 @@ add_executable(tests
     video_core/ampere_tennis_tessellation.cpp
     video_core/pipeline_cache_files.cpp
     video_core/shader_cache_v2.cpp
+    video_core/evicted_pointer_slots.cpp
     video_core/shader_cache_v2_programs.cpp
     video_core/shader_cache_v2_driver.cpp
     video_core/vulkan_pipeline_binaries.cpp
@@ -131,6 +133,8 @@ add_executable(tests
     video_core/spirv_min_max_denorms.cpp
     video_core/spirv_nan_safe_min_max.cpp
     video_core/virtual_range_cache.cpp
+    video_core/ocarina_upscale.cpp
+    video_core/fsr4_support.cpp
     common/bit_field.cpp
     common/bit_util.cpp
     common/cityhash.cpp

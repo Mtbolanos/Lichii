@@ -6,10 +6,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <numeric>
 #include "common/common_types.h"
 
 namespace FSR {
+/// FSR 3 dispatch sharpness: zero is two stops, one is zero stops.
+constexpr f32 RcasSharpnessFromStops(f32 stops) {
+    return std::clamp(1.0f - stops / 2.0f, 0.0f, 1.0f);
+}
+
 // Reimplementations of the constant generating functions in ffx_fsr1.h
 // GCC generated a lot of warnings when using the official header.
 void FsrEasuConOffset(u32 con0[4], u32 con1[4], u32 con2[4], u32 con3[4],

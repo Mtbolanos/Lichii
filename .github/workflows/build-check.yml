@@ -105,6 +105,7 @@ jobs:
             -DBUILD_TESTING=ON \
             -DYUZU_TESTS=ON \
             -DENABLE_QT=ON \
+            -DENABLE_QT_TRANSLATION=ON \
             -DYUZU_CMD=ON \
             -DYUZU_ROOM=OFF \
             -DYUZU_ROOM_STANDALONE=OFF \
@@ -229,6 +230,7 @@ jobs:
           -DBUILD_TESTING=ON
           -DYUZU_TESTS=ON
           -DENABLE_QT=ON
+          -DENABLE_QT_TRANSLATION=ON
           -DYUZU_CMD=ON
           -DYUZU_ROOM=OFF
           -DYUZU_ROOM_STANDALONE=OFF
@@ -247,6 +249,18 @@ jobs:
           ccache --zero-stats
           cmake --build build --parallel
           ccache --show-stats -v
+
+      # Windows may refuse to load the unsigned nxformat.dll (Smart App Control, code integrity
+      # policies), so lichii.exe must not import it at startup: only a delay import is allowed.
+      - name: Check nxformat.dll is delay-loaded
+        run: |
+          imports=$("$LLVM_ROOT/bin/llvm-readobj" --coff-imports build/bin/lichii.exe |
+            awk '/^(Import|DelayImport) {/ { kind = $1 } /^  Name:/ { print kind, $2 }')
+          echo "$imports"
+          if grep -qix 'Import nxformat.dll' <<< "$imports"; then
+            echo "::error::lichii.exe imports nxformat.dll at startup; it must be delay-loaded"
+            exit 1
+          fi
 
       - name: Run tests
         run: ctest --test-dir build --output-on-failure --no-tests=error --parallel "$NUMBER_OF_PROCESSORS"

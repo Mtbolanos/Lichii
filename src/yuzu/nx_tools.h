@@ -45,6 +45,9 @@ signals:
 
 private:
     struct Job;
+    /// Loads nxformat before the first call into it; tells the user and returns false when it
+    /// can't be loaded.
+    bool LoadNxformat();
     void Start(std::shared_ptr<Job> job);
     void Finished(std::shared_ptr<Job> job, int code, QString error);
     void ReplyOriginal(Job& job, const QString& text);

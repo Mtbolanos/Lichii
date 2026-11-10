@@ -202,18 +202,19 @@ public:
             return 0;
         }
         length = static_cast<std::size_t>(std::min<u64>(length, info.size - offset));
-        const u64 chunk_size = u64{1} << info.chunk_log2;
         std::size_t done = 0;
         while (done < length) {
-            // One block per call: a read spanning blocks is first staged in a buffer of its
-            // whole length, then copied again.
-            const u64 position = offset + done;
-            const auto part = static_cast<std::size_t>(std::min<u64>(
-                {length - done, chunk_size - position % chunk_size, session->max_read_bytes()}));
-            if (part == 0 || !session->read(info.id, position, part, output + done, part, cursor)) {
+            // read() commits each verified block straight into the output, so a read may span
+            // blocks; only the session's max_read_bytes() splits it. On failure, `bytes` is the
+            // verified prefix, which is all this returns.
+            const auto part = static_cast<std::size_t>(
+                std::min<u64>(length - done, session->max_read_bytes()));
+            const auto result =
+                session->read(info.id, offset + done, part, output + done, part, cursor);
+            done += result.bytes;
+            if (!result) {
                 break;
             }
-            done += part;
         }
         return done;
     }
@@ -240,27 +241,20 @@ public:
         : session{std::move(session_)}, handle{handle_}, name{std::move(name_)},
           parent{std::move(parent_)} {}
 
+    // lookup() is a binary search over the directory's sorted entries.
     VirtualFile GetFile(std::string_view file_name) const override {
-        VirtualFile result;
-        session->archive().enumerate(handle, [&](const nx::DirectoryEntryView& entry) {
-            if (entry.type != nx::EntryType::file || entry.name != file_name) {
-                return true;
-            }
-            result = MakeFile(entry);
-            return false;
-        });
-        return result;
+        const auto entry = session->archive().lookup(handle, file_name);
+        if (!entry || entry.value->type != nx::EntryType::file) {
+            return nullptr;
+        }
+        return MakeFile(*entry.value);
     }
     VirtualDir GetSubdirectory(std::string_view dir_name) const override {
-        VirtualDir result;
-        session->archive().enumerate(handle, [&](const nx::DirectoryEntryView& entry) {
-            if (entry.type != nx::EntryType::directory || entry.name != dir_name) {
-                return true;
-            }
-            result = MakeDirectory(entry);
-            return false;
-        });
-        return result;
+        const auto entry = session->archive().lookup(handle, dir_name);
+        if (!entry || entry.value->type != nx::EntryType::directory) {
+            return nullptr;
+        }
+        return MakeDirectory(*entry.value);
     }
     std::vector<VirtualFile> GetFiles() const override {
         std::vector<VirtualFile> result;

@@ -1081,7 +1081,8 @@ void MainWindow::InitializeWidgets() {
             [this](const QPoint& menu_location) {
                 QMenu context_menu;
                 for (auto const& [type, text] : ConfigurationShared::frame_gen_type_texts_map) {
-                    context_menu.addAction(text, [this, type] {
+                    const QString label = ConfigurationShared::TranslateMapText(translator, text);
+                    context_menu.addAction(label, [this, type] {
                         Settings::values.frame_gen_type.SetValue(type);
                         Settings::values.frame_gen.SetValue(true);
                         UpdateFrameGenButton();
@@ -1148,7 +1149,9 @@ void MainWindow::InitializeWidgets() {
             [this](const QPoint& menu_location) {
                 QMenu context_menu;
                 for (auto const& aa_text_pair : ConfigurationShared::anti_aliasing_texts_map) {
-                    context_menu.addAction(aa_text_pair.second, [this, aa_text_pair] {
+                    const QString label =
+                        ConfigurationShared::TranslateMapText(translator, aa_text_pair.second);
+                    context_menu.addAction(label, [this, aa_text_pair] {
                         Settings::values.anti_aliasing.SetValue(aa_text_pair.first);
                         UpdateAAText();
                     });
@@ -1171,7 +1174,9 @@ void MainWindow::InitializeWidgets() {
             [this](const QPoint& menu_location) {
                 QMenu context_menu;
                 for (auto const& filter_text_pair : ConfigurationShared::scaling_filter_texts_map) {
-                    context_menu.addAction(filter_text_pair.second, [this, filter_text_pair] {
+                    const QString label =
+                        ConfigurationShared::TranslateMapText(translator, filter_text_pair.second);
+                    context_menu.addAction(label, [this, filter_text_pair] {
                         Settings::values.scaling_filter.SetValue(filter_text_pair.first);
                         UpdateFilterText();
                     });
@@ -1194,7 +1199,9 @@ void MainWindow::InitializeWidgets() {
                 QMenu context_menu;
 
                 for (auto const& pair : ConfigurationShared::use_docked_mode_texts_map) {
-                    context_menu.addAction(pair.second, [this, &pair] {
+                    const QString label =
+                        ConfigurationShared::TranslateMapText(translator, pair.second);
+                    context_menu.addAction(label, [this, &pair] {
                         if (pair.first != Settings::values.use_docked_mode.GetValue()) {
                             OnToggleDockedMode();
                         }
@@ -1218,7 +1225,9 @@ void MainWindow::InitializeWidgets() {
                 QMenu context_menu;
 
                 for (auto const& gpu_accuracy_pair : ConfigurationShared::gpu_accuracy_texts_map) {
-                    context_menu.addAction(gpu_accuracy_pair.second, [this, gpu_accuracy_pair] {
+                    const QString label =
+                        ConfigurationShared::TranslateMapText(translator, gpu_accuracy_pair.second);
+                    context_menu.addAction(label, [this, gpu_accuracy_pair] {
                         Settings::values.gpu_accuracy.SetValue(gpu_accuracy_pair.first);
                         UpdateGPUAccuracyButton();
                     });
@@ -1248,11 +1257,12 @@ void MainWindow::InitializeWidgets() {
                     if (renderer_backend_pair.first == Settings::RendererBackend::Null) {
                         continue;
                     }
-                    context_menu.addAction(
-                        renderer_backend_pair.second, [this, renderer_backend_pair] {
-                            Settings::values.renderer_backend.SetValue(renderer_backend_pair.first);
-                            UpdateAPIText();
-                        });
+                    const QString label = ConfigurationShared::TranslateMapText(
+                        translator, renderer_backend_pair.second);
+                    context_menu.addAction(label, [this, renderer_backend_pair] {
+                        Settings::values.renderer_backend.SetValue(renderer_backend_pair.first);
+                        UpdateAPIText();
+                    });
                 }
                 context_menu.exec(renderer_status_button->mapToGlobal(menu_location));
                 renderer_status_button->repaint();
@@ -5120,8 +5130,8 @@ void MainWindow::UpdateStatusBar() {
 
 void MainWindow::UpdateGPUAccuracyButton() {
     const auto gpu_accuracy = Settings::values.gpu_accuracy.GetValue();
-    const auto gpu_accuracy_text =
-        ConfigurationShared::gpu_accuracy_texts_map.find(gpu_accuracy)->second;
+    const auto gpu_accuracy_text = ConfigurationShared::TranslateMapText(
+        translator, ConfigurationShared::gpu_accuracy_texts_map.find(gpu_accuracy)->second);
     gpu_accuracy_button->setText(gpu_accuracy_text.toUpper());
     gpu_accuracy_button->setChecked(gpu_accuracy != Settings::GpuAccuracy::Low);
 }
@@ -5129,29 +5139,31 @@ void MainWindow::UpdateGPUAccuracyButton() {
 void MainWindow::UpdateDockedButton() {
     const auto console_mode = Settings::values.use_docked_mode.GetValue();
     dock_status_button->setChecked(Settings::IsDockedMode());
-    dock_status_button->setText(
-        ConfigurationShared::use_docked_mode_texts_map.find(console_mode)->second.toUpper());
+    const QString docked_text = ConfigurationShared::TranslateMapText(
+        translator, ConfigurationShared::use_docked_mode_texts_map.find(console_mode)->second);
+    dock_status_button->setText(docked_text.toUpper());
 }
 
 void MainWindow::UpdateAPIText() {
     const auto api = Settings::values.renderer_backend.GetValue();
-    const auto renderer_status_text =
-        ConfigurationShared::renderer_backend_texts_map.find(api)->second;
+    const auto renderer_status_text = ConfigurationShared::TranslateMapText(
+        translator, ConfigurationShared::renderer_backend_texts_map.find(api)->second);
     renderer_status_button->setText(renderer_status_text.toUpper());
 }
 
 void MainWindow::UpdateFilterText() {
     const auto filter = Settings::values.scaling_filter.GetValue();
-    const auto filter_text = ConfigurationShared::scaling_filter_texts_map.find(filter)->second;
+    const auto filter_text = ConfigurationShared::TranslateMapText(
+        translator, ConfigurationShared::scaling_filter_texts_map.find(filter)->second);
     filter_status_button->setText(filter_text.toUpper());
 }
 
 void MainWindow::UpdateAAText() {
     const auto aa_mode = Settings::values.anti_aliasing.GetValue();
-    const auto aa_text = ConfigurationShared::anti_aliasing_texts_map.find(aa_mode)->second;
-    aa_status_button->setText(aa_mode == Settings::AntiAliasing::None
-                                  ? QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "NO AA"))
-                                  : aa_text.toUpper());
+    const auto aa_text = ConfigurationShared::TranslateMapText(
+        translator, ConfigurationShared::anti_aliasing_texts_map.find(aa_mode)->second);
+    aa_status_button->setText(aa_mode == Settings::AntiAliasing::None ? tr("NO AA")
+                                                                      : aa_text.toUpper());
 }
 
 #ifdef HAS_RESHADE
@@ -5183,9 +5195,10 @@ void MainWindow::UpdateFrameGenButton() {
         return;
     }
 
-    const QString type = ConfigurationShared::frame_gen_type_texts_map
-                             .find(Settings::values.frame_gen_type.GetValue())
-                             ->second.toUpper();
+    const QString& type_text = ConfigurationShared::frame_gen_type_texts_map
+                                   .find(Settings::values.frame_gen_type.GetValue())
+                                   ->second;
+    const QString type = ConfigurationShared::TranslateMapText(translator, type_text).toUpper();
     const u32 target_rate = Settings::values.frame_gen_target_rate.GetValue();
     const QString mode = target_rate == 0
                              ? tr("FG %1 %2X").arg(type).arg(Settings::FrameGenMultiplier())
@@ -5711,35 +5724,49 @@ void MainWindow::UpdateUITheme() {
 void MainWindow::LoadTranslation() {
     bool loaded;
 
-    if (UISettings::values.language.GetValue().empty()) {
+    const std::string language = UISettings::values.language.GetValue();
+    if (language.empty()) {
         // If the selected language is empty, use system locale
         loaded = translator.load(QLocale(), {}, {}, QStringLiteral(":/languages/"));
     } else {
         // Otherwise load from the specified file
-        loaded = translator.load(QString::fromStdString(UISettings::values.language.GetValue()),
-                                 QStringLiteral(":/languages/"));
+        loaded = translator.load(QString::fromStdString(language), QStringLiteral(":/languages/"));
     }
 
-    if (loaded)
+    if (loaded) {
         qApp->installTranslator(&translator);
-    else
-        UISettings::values.language = std::string("en");
+    } else if (!language.empty() && language != "en") {
+        // A language this build has no translation for shows English, but the setting is kept
+        // (the language list marks it as missing), so a build that has the translation shows it
+        // again. Likewise <System> stays when the system's language has no translation. English
+        // works without its file (en.qm only holds plurals, and builds without translations lack
+        // it), so it gets no warning.
+        LOG_WARNING(Frontend, "No UI translation for \"{}\" in this build, showing English",
+                    language);
+    }
 }
 
 void MainWindow::OnLanguageChanged(const QString& locale) {
     if (UISettings::values.language.GetValue() != std::string("en"))
         qApp->removeTranslator(&translator);
 
+    UISettings::values.language = locale.toStdString();
+    LoadTranslation();
+
+    // After the new translator is in: renamed before it, the sizes stayed in English.
     QList<QAction*> actions = game_size_actions->actions();
     for (size_t i = 0; i < default_game_icon_sizes.size(); i++) {
         actions.at(i)->setText(GetTranslatedGameIconSize(i));
     }
 
-    UISettings::values.language = locale.toStdString();
-    LoadTranslation();
     ui->retranslateUi(this);
     multiplayer_state->retranslateUi();
     UpdateWindowTitle();
+    // The status bar's buttons are named in code, so retranslateUi leaves them as they were.
+    UpdateStatusButtons();
+#ifdef HAS_RESHADE
+    UpdatePostShaderText();
+#endif
 }
 
 void MainWindow::SetDiscordEnabled([[maybe_unused]] bool state) {

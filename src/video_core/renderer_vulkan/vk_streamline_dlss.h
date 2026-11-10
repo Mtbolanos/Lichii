@@ -74,6 +74,7 @@ private:
     Scheduler& scheduler;
     MemoryAllocator& memory_allocator;
     void* set_options{}; ///< slDLSSSetOptions
+    void* get_state{};   ///< slDLSSGetState
     VkExtent2D render_extent{};
     VkExtent2D upscale_extent{};
     bool hdr_input = true;

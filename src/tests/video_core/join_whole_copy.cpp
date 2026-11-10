@@ -17,6 +17,7 @@ using VideoCommon::ImageCopy;
 using VideoCommon::ImageFlagBits;
 using VideoCommon::ImageInfo;
 using VideoCommon::ImageType;
+using VideoCommon::MarkSubresourcesWrittenWhole;
 using VideoCore::Surface::PixelFormat;
 
 ImageInfo Info(PixelFormat format, u32 width, u32 height, s32 levels = 1, s32 layers = 1) {
@@ -104,4 +105,30 @@ TEST_CASE("CopiesWriteWholeImage rejects rescaled and partly backed images",
         src.flags &= ~flag;
         REQUIRE_FALSE(CopiesWriteWholeImage(dst, src, copies));
     }
+}
+
+TEST_CASE("MarkSubresourcesWrittenWhole adds up layers copied from several images",
+          "[video_core][texture_cache]") {
+    const ImageBase dst(Info(RGBA, 5, 4, 1, 3), 0, 0);
+    const ImageBase src(Info(RGBA, 5, 4), 0, 0);
+    const auto layer_copy = [](s32 layer) {
+        ImageCopy copy = LevelCopy(0, 5, 4);
+        copy.dst_subresource.base_layer = layer;
+        return copy;
+    };
+    std::vector<u8> written(3);
+    MarkSubresourcesWrittenWhole(dst, src, std::vector{layer_copy(0)}, written);
+    MarkSubresourcesWrittenWhole(dst, src, std::vector{layer_copy(2)}, written);
+    REQUIRE(written == std::vector<u8>{1, 0, 1});
+    MarkSubresourcesWrittenWhole(dst, ImageBase(Info(PixelFormat::R32_FLOAT, 5, 4), 0, 0),
+                                 std::vector{layer_copy(1)}, written);
+    REQUIRE(written == std::vector<u8>{1, 0, 1});
+    ImageCopy partial = layer_copy(1);
+    partial.extent.width = 4;
+    MarkSubresourcesWrittenWhole(dst, src, std::vector{partial}, written);
+    REQUIRE(written == std::vector<u8>{1, 0, 1});
+    MarkSubresourcesWrittenWhole(dst, src, std::vector{layer_copy(1)}, written);
+    REQUIRE(written == std::vector<u8>{1, 1, 1});
+    REQUIRE(CopiesWriteWholeImage(dst, src,
+                                  std::vector{layer_copy(0), layer_copy(1), layer_copy(2)}));
 }

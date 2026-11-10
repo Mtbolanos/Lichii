@@ -88,7 +88,7 @@ The following options are desktop only.
 Also desktop-only, but apply strictly to Qt
 
 - `ENABLE_QT` (ON) Enable the Qt frontend (recommended)
-- `ENABLE_QT_TRANSLATION` (OFF) Enable translations for the Qt frontend
+- `ENABLE_QT_TRANSLATION` (OFF) Enable translations for the Qt frontend. Release builds turn it on; it needs Qt Linguist Tools (`lrelease`)
 - `YUZU_USE_BUNDLED_QT` (ON for MSVC) Download bundled Qt binaries
   - Not recommended on Linux. For Windows and macOS, the provided build is statically linked.
 - `YUZU_QT_MIRROR` (string) What mirror to use for downloading the bundled Qt libraries

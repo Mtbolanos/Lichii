@@ -6,6 +6,7 @@ layout(binding = 1, rg16f) uniform writeonly image2D motion;
 
 layout(push_constant, row_major) uniform Parameters {
     mat4 clip_to_previous_clip;
+    vec2 jitter;
 } params;
 
 void main() {
@@ -17,8 +18,10 @@ void main() {
 
     vec2 size = vec2(extent);
     float depth = texelFetch(scene_depth, pixel, 0).r;
-    vec2 screen = (vec2(pixel) + 0.5) / size;
-    // The captured Zelda path is unjittered, with [-1, 1] clip depth and negative viewport height.
+    // The scene is drawn offset by the jitter, so this depth sample lies at the pixel centre minus
+    // the jitter; motion goes from that unjittered position, as FSR expects motion without jitter.
+    vec2 screen = (vec2(pixel) + 0.5 - params.jitter) / size;
+    // The captured Zelda path has [-1, 1] clip depth and a negative viewport height.
     vec4 clip = vec4(screen * vec2(2, -2) + vec2(-1, 1), depth * 2 - 1, 1);
     vec4 previous = params.clip_to_previous_clip * clip;
     vec2 pixels = vec2(0);

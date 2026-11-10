@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <filesystem>
+#include <QTimer>
+#include <QEventLoop>
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
@@ -377,8 +379,36 @@ bool UpdateDialog::DownloadTo(const QString& filename) {
         return true;
     };
 
-    // Now send off request
-    auto result = client->Get(m_asset.path, content_receiver, progress_callback);
+    // Now send off request. GitHub's file server sometimes answers 502-504 or drops the
+    // connection for a moment (v5.2's release hour): try up to three times, a few seconds apart,
+    // starting the file over each time. The size and SHA-256 checks below still decide.
+    constexpr int attempts = 3;
+    httplib::Result result;
+    for (int attempt = 1; attempt <= attempts; ++attempt) {
+        if (attempt > 1) {
+            file.seek(0);
+            file.resize(0);
+            hash.reset();
+            received = 0;
+            progress->setValue(0);
+            progress->setLabelText(tr("Downloading... (try %1 of %2)").arg(attempt).arg(attempts));
+            QEventLoop wait;
+            QTimer::singleShot(2000 * (attempt - 1), &wait, &QEventLoop::quit);
+            wait.exec();
+            if (progress->wasCanceled()) {
+                break;
+            }
+        }
+        result = client->Get(m_asset.path, content_receiver, progress_callback);
+        const bool canceled = !result && result.error() == httplib::Error::Canceled;
+        const bool transient = (!result && !canceled) ||
+                               (result && (result->status >= 500 || result->status == 429));
+        if (!transient || attempt == attempts) {
+            break;
+        }
+        LOG_WARNING(Frontend, "GET to {}{} failed ({}), trying again", m_asset.url, m_asset.path,
+                    result ? std::to_string(result->status) : httplib::to_string(result.error()));
+    }
     progress->close();
 
     if (!result) {

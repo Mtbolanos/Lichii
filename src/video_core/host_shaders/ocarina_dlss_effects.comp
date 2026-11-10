@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(binding = 0) uniform sampler2D before_effects;
+layout(binding = 1) uniform sampler2D after_effects;
+layout(binding = 2, r8) uniform writeonly image2D effects;
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pixel, imageSize(effects)))) {
+        return;
+    }
+    // Compare in the square-root encoding the guest hands its anti-aliasing, so a glow over a
+    // dark forest counts as much as one over a bright sky.
+    vec3 before = sqrt(max(texelFetch(before_effects, pixel, 0).rgb, vec3(0.0)));
+    vec3 after = sqrt(max(texelFetch(after_effects, pixel, 0).rgb, vec3(0.0)));
+    vec3 change = abs(after - before);
+    imageStore(effects, pixel, vec4(smoothstep(0.02, 0.08, max(change.r, max(change.g, change.b)))));
+}

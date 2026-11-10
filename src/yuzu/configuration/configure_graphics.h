@@ -71,6 +71,7 @@ private:
     void UpdateBackgroundColorButton(QColor color);
     void UpdateAPILayout();
     void UpdateDeviceSelection(int device);
+    void UpdateAmdFsr4Visibility();
 
     void RetrieveVulkanDevices();
 
@@ -110,4 +111,5 @@ private:
     QWidget* api_widget;
     QComboBox* aspect_ratio_combobox;
     QComboBox* resolution_combobox;
+    QWidget* amd_fsr4_group{}; ///< The FSR 4 setting and AmdFsr4Panel
 };

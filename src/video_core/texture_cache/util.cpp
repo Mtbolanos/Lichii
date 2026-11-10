@@ -1444,35 +1444,47 @@ Extent3D MipBlockSize(const ImageInfo& info, u32 level) {
     return AdjustMipBlockSize(num_tiles, level_info.block, level, level_info.num_levels);
 }
 
-bool CopiesWriteWholeImage(const ImageBase& dst, const ImageBase& src,
-                           std::span<const ImageCopy> copies) {
+void MarkSubresourcesWrittenWhole(const ImageBase& dst, const ImageBase& src,
+                                  std::span<const ImageCopy> copies, std::span<u8> written) {
     constexpr ImageFlagBits excluded = ImageFlagBits::Rescaled | ImageFlagBits::TrimmedLevels |
                                        ImageFlagBits::Unbacked | ImageFlagBits::UnwrittenSparse |
                                        ImageFlagBits::SparseLayers | ImageFlagBits::SparseTiles;
     if (dst.info.type != ImageType::e2D || src.info.type != ImageType::e2D ||
         src.info.format != dst.info.format || src.info.astc_opaque != dst.info.astc_opaque ||
         True((src.flags | dst.flags) & excluded)) {
-        return false;
+        return;
     }
     // Alias copies count a compressed extent in blocks, but the backends copy it as texels, so
     // such a copy writes only part of the image.
     if (DefaultBlockWidth(dst.info.format) != 1 || DefaultBlockHeight(dst.info.format) != 1) {
-        return false;
+        return;
     }
-    for (s32 level = 0; level < dst.info.resources.levels; ++level) {
+    const s32 layers = dst.info.resources.layers;
+    for (const ImageCopy& copy : copies) {
+        const s32 level = copy.dst_subresource.base_level;
+        if (level < 0 || level >= dst.info.resources.levels) {
+            continue;
+        }
         const Extent3D size = MipSize(dst.info.size, level);
-        const bool covered = std::ranges::any_of(copies, [&](const ImageCopy& copy) {
-            return copy.dst_subresource.base_level == level &&
-                   copy.dst_subresource.base_layer == 0 &&
-                   copy.dst_subresource.num_layers >= dst.info.resources.layers &&
-                   copy.dst_offset == Offset3D{} && copy.extent.width >= size.width &&
-                   copy.extent.height >= size.height;
-        });
-        if (!covered) {
-            return false;
+        if (copy.dst_offset != Offset3D{} || copy.extent.width < size.width ||
+            copy.extent.height < size.height) {
+            continue;
+        }
+        const s32 first = (std::max)(copy.dst_subresource.base_layer, 0);
+        const s32 last =
+            (std::min)(copy.dst_subresource.base_layer + copy.dst_subresource.num_layers, layers);
+        for (s32 layer = first; layer < last; ++layer) {
+            written[static_cast<size_t>(level * layers + layer)] = 1;
         }
     }
-    return true;
+}
+
+bool CopiesWriteWholeImage(const ImageBase& dst, const ImageBase& src,
+                           std::span<const ImageCopy> copies) {
+    std::vector<u8> written(
+        static_cast<size_t>(dst.info.resources.levels * dst.info.resources.layers));
+    MarkSubresourcesWrittenWhole(dst, src, copies, written);
+    return std::ranges::all_of(written, [](u8 whole) { return whole != 0; });
 }
 
 boost::container::small_vector<SwizzleParameters, 16> FullUploadSwizzles(const ImageInfo& info) {

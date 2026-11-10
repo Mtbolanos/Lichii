@@ -80,6 +80,8 @@ add_executable(yuzu
     configuration/configure_general.ui
     configuration/configure_graphics.cpp
     configuration/configure_graphics.h
+    configuration/amd_fsr4_panel.cpp
+    configuration/amd_fsr4_panel.h
     configuration/nvidia_dlss_panel.cpp
     configuration/nvidia_dlss_panel.h
     configuration/configure_graphics.ui
@@ -500,6 +502,12 @@ if (TARGET nxformat::nxformat)
     target_sources(yuzu PRIVATE nx_tools.h nx_tools.cpp)
     target_link_libraries(yuzu PRIVATE nxformat::nxformat)
     target_compile_definitions(yuzu PRIVATE LICHII_NX_TOOLS)
+    if (MSVC)
+        # Windows may refuse to load the unsigned DLL (Smart App Control, code integrity
+        # policies); delay-loaded, only the NX tools are lost, and NxTools::LoadNxformat says so.
+        target_link_options(yuzu PRIVATE /DELAYLOAD:nxformat.dll)
+        target_link_libraries(yuzu PRIVATE delayimp)
+    endif()
 endif()
 if (LICHII_NXFORMAT_RUNTIME)
     add_custom_command(TARGET yuzu POST_BUILD

@@ -16,6 +16,7 @@
 #include <fmt/format.h>
 
 #include "video_core/nx2_profile.h"
+#include "video_core/renderer_vulkan/pipeline_build_failure.h"
 #include "video_core/renderer_vulkan/pipeline_build_trace.h"
 #include "video_core/renderer_vulkan/pipeline_helper.h"
 #include "video_core/renderer_vulkan/pipeline_optimization.h"
@@ -313,8 +314,9 @@ ComputePipeline::ComputePipeline(const Device& device_, Scheduler& scheduler, vk
                                    std::chrono::steady_clock::now() - trace_begin)
                                    .count());
         } catch (const vk::Exception& exception) {
-            LOG_CRITICAL(Render_Vulkan, "Adreno rejected compute shader {:016X}: {}", shader_hash,
+            LOG_CRITICAL(Render_Vulkan, "Driver rejected compute shader {:016X}: {}", shader_hash,
                          exception.what());
+            ReportPipelineBuildFailure(exception.GetResult());
             std::scoped_lock lock{build_mutex};
             is_built = true;
             build_condvar.notify_one();
@@ -409,7 +411,9 @@ void ComputePipeline::RunBuild() {
 
 bool ComputePipeline::CanReplaceOcarinaUpscale() const {
     const bool known_shader =
-        shader_hash == 0xe40f5efb5480e692ULL || shader_hash == Ocarina1440pShader;
+        shader_hash == 0xe40f5efb5480e692ULL || shader_hash == 0xef542df87cacfe9eULL ||
+        shader_hash == Ocarina1440pShader ||
+        shader_hash == OcarinaFullSizeShader;
     return known_shader && !info.stores_global_memory &&
            info.image_buffer_descriptors.empty() && info.image_descriptors.size() == 1 &&
            info.image_descriptors.front().count == 1 && info.image_descriptors.front().is_written &&

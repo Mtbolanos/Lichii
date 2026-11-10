@@ -41,8 +41,10 @@
 
 #include <nxformat.h>
 
+#include "common/error.h"
 #include "common/fs/fs_util.h"
 #include "common/fs/path_util.h"
+#include "common/logging.h"
 #include "core/file_sys/card_image.h"
 #include "core/file_sys/common_funcs.h"
 #include "core/file_sys/decrypted_nca.h"
@@ -56,6 +58,10 @@
 #include "frontend_common/nx_archive.h"
 #include "qt_common/qt_common.h"
 #include "yuzu/nx_tools.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace {
 
@@ -297,6 +303,29 @@ struct NxTools::Job {
     // The new icon given to set-metadata, removed when the job ends.
     std::unique_ptr<QTemporaryFile> icon_file;
 
+    // nxformat 1.0.1 fails pack and add when the rebuild recipe cannot be kept (1.0.0 only
+    // warned). Such a failure can be run again without the recipe.
+    bool CanRetryWithoutRecipe(const QString& error) const {
+        if (args.empty() || (args[0] != "pack" && args[0] != "add") ||
+            std::ranges::find(args, std::string{"--no-recipe"}) != args.end()) {
+            return false;
+        }
+        return error.contains(QStringLiteral("recipe"), Qt::CaseInsensitive) ||
+               error.contains(QStringLiteral("rebuild"), Qt::CaseInsensitive);
+    }
+
+    // Runs the same command again, without the recipe. The decrypted sources stay open.
+    void PrepareRetryWithoutRecipe() {
+        args.emplace_back("--no-recipe");
+        total = 0;
+        written = 0;
+        counting_since = -1;
+        seconds_left = -1;
+        // `added` is kept: what the failed run committed stays in the archive.
+        std::scoped_lock lock{lines_mutex};
+        skipped.clear();
+    }
+
     // Closes the packages nxformat read, so the original can be moved.
     void ReleaseSources() {
         for (auto* source : sources) {
@@ -373,6 +402,35 @@ NxTools::~NxTools() {
     }
 }
 
+bool NxTools::LoadNxformat() {
+#ifdef _WIN32
+    // lichii.exe delay-loads nxformat.dll, so Lichii starts even when Windows refuses to load it
+    // (Smart App Control and code integrity policies block unsigned DLLs). The tools load it here
+    // before their first nxformat call, which would otherwise end the process.
+    static const DWORD error =
+        LoadLibraryExW(L"nxformat.dll", nullptr, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) ? 0
+                                                                                    : GetLastError();
+    if (error == 0) {
+        return true;
+    }
+    const auto reason = Common::NativeErrorToString(static_cast<int>(error));
+    LOG_ERROR(Frontend, "Could not load nxformat.dll: error {}: {}", error, reason);
+    // 4550-4599 are the ERROR_SYSTEM_INTEGRITY_* codes of a code integrity block.
+    const bool blocked = error == ERROR_INVALID_IMAGE_HASH || (error >= 4550 && error <= 4599);
+    QMessageBox::warning(
+        parent_widget, tr("NX Archive"),
+        blocked ? tr("NX converter unavailable: Windows blocked nxformat.dll (Smart App Control or "
+                     "a code integrity policy). Error %1.")
+                      .arg(error)
+                : tr("NX converter unavailable: could not load nxformat.dll. Error %1: %2")
+                      .arg(error)
+                      .arg(QString::fromStdString(reason)));
+    return false;
+#else
+    return true;
+#endif
+}
+
 bool NxTools::CanConvert(const std::string& game_path) {
     return KindOf(game_path) != Kind::None;
 }
@@ -382,7 +440,7 @@ bool NxTools::IsNxArchive(const std::string& game_path) {
 }
 
 void NxTools::ConvertToNx(const std::string& game_path) {
-    if (running) {
+    if (running || !LoadNxformat()) {
         return;
     }
     const QString title = tr("Convert to NX");
@@ -492,7 +550,7 @@ void NxTools::ConvertToNx(const std::string& game_path) {
 }
 
 void NxTools::AddToNx(const std::string& archive_path) {
-    if (running) {
+    if (running || !LoadNxformat()) {
         return;
     }
     const QString title = tr("Add to NX");
@@ -571,7 +629,7 @@ void NxTools::AddToNx(const std::string& archive_path) {
 }
 
 void NxTools::RemoveFromNx(const std::string& archive_path) {
-    if (running) {
+    if (running || !LoadNxformat()) {
         return;
     }
     const QString title = tr("Remove from NX");
@@ -639,7 +697,7 @@ void NxTools::RemoveFromNx(const std::string& archive_path) {
 }
 
 void NxTools::EditNxMetadata(const std::string& archive_path) {
-    if (running) {
+    if (running || !LoadNxformat()) {
         return;
     }
     const QString title = tr("Edit NX Metadata");
@@ -875,8 +933,12 @@ void NxTools::Start(std::shared_ptr<Job> job) {
                                       QStringLiteral(" v") + fields[3]);
                 } else if (fields[0] == QStringLiteral("@SKIPPED") && fields.size() >= 4) {
                     std::scoped_lock lock{j.lines_mutex};
-                    j.skipped.push_back(fields[1] + QLatin1Char(' ') + fields[2].toUpper() +
-                                        QStringLiteral(" v") + fields[3]);
+                    auto entry = fields[1] + QLatin1Char(' ') + fields[2].toUpper() +
+                                 QStringLiteral(" v") + fields[3];
+                    // A retry finds what the failed run added: it is listed as added.
+                    if (!j.added.contains(entry)) {
+                        j.skipped.push_back(std::move(entry));
+                    }
                 }
             },
             job.get(), job->cancel, error, sizeof(error));
@@ -959,6 +1021,13 @@ void NxTools::Finished(std::shared_ptr<Job> job, int code, QString error) {
     running.reset();
     emit RunningChanged(false);
 
+    // add keeps the content it committed before a failure or a cancel, also across a retry:
+    // report it and refresh.
+    const bool changed = !job->added.isEmpty();
+    const QString kept = changed ? QStringLiteral("\n\n") +
+                                       tr("Already added to the archive: %1")
+                                           .arg(job->added.join(QStringLiteral(", ")))
+                                 : QString{};
     switch (code) {
     case NXFORMAT_OK: {
         QString text = job->done_message;
@@ -978,12 +1047,38 @@ void NxTools::Finished(std::shared_ptr<Job> job, int code, QString error) {
         break;
     }
     case NXFORMAT_CANCELLED:
-        QMessageBox::information(parent_widget, job->title,
-                                 tr("Cancelled. Nothing was changed on disk."));
+        if (changed) {
+            QMessageBox::information(parent_widget, job->title, tr("Cancelled.") + kept);
+            emit ArchivesChanged();
+        } else {
+            QMessageBox::information(parent_widget, job->title,
+                                     tr("Cancelled. Nothing was changed on disk."));
+        }
         break;
-    default:
-        QMessageBox::warning(parent_widget, job->title,
-                             tr("The operation failed:\n%1").arg(error));
+    default: {
+        if (job->CanRetryWithoutRecipe(error)) {
+            const auto answer = QMessageBox::question(
+                parent_widget, job->title,
+                tr("The operation failed because the rebuild recipe could not be kept:\n%1\n\n"
+                   "Try again without the recipe? The game still runs from the NX archive, but "
+                   "the original package cannot be rebuilt exactly from it.")
+                        .arg(error) +
+                    kept,
+                QMessageBox::Retry | QMessageBox::Cancel, QMessageBox::Retry);
+            if (answer == QMessageBox::Retry) {
+                // The retry refreshes the archives when it ends.
+                job->PrepareRetryWithoutRecipe();
+                Start(std::move(job));
+                break;
+            }
+        } else {
+            QMessageBox::warning(parent_widget, job->title,
+                                 tr("The operation failed:\n%1").arg(error) + kept);
+        }
+        if (changed) {
+            emit ArchivesChanged();
+        }
         break;
+    }
     }
 }

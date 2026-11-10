@@ -18,6 +18,7 @@
 
 #include "common/thread_worker.h"
 #include "shader_recompiler/shader_info.h"
+#include "video_core/evicted_pointer_slots.h"
 #include "video_core/engines/maxwell_3d.h"
 #include "video_core/renderer_vulkan/fixed_pipeline_state.h"
 #include "video_core/renderer_vulkan/pipeline_build.h"
@@ -251,6 +252,15 @@ public:
         return used;
     }
 
+    /// The constant buffer slots each program binds as storage buffer pointers
+    [[nodiscard]] const VideoCommon::EvictedPointerSlots::Slots& MappedPointers() const noexcept {
+        return mapped_pointers;
+    }
+
+    void SetMappedPointers(VideoCommon::EvictedPointerSlots::Slots slots) noexcept {
+        mapped_pointers = std::move(slots);
+    }
+
     /// Forgets the transitions, which may point to pipelines the cache evicted.
     void ClearTransitions() noexcept {
         transition_keys.clear();
@@ -369,6 +379,7 @@ private:
 
     std::vector<GraphicsPipelineCacheKey> transition_keys;
     std::vector<GraphicsPipeline*> transitions;
+    VideoCommon::EvictedPointerSlots::Slots mapped_pointers;
     u64 last_use_frame{};
     bool used{};
 

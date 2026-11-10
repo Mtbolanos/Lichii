@@ -17,6 +17,7 @@ layout(std140, binding = 2, row_major) uniform Transforms {
     vec4 current_origin;
     vec4 previous_origin;
     vec2 extent;
+    vec2 jitter;
 } transforms;
 
 void main() {
@@ -31,7 +32,9 @@ void main() {
         discard;
     }
     vec2 previous_uv = previous_clip.xy / previous_clip.w * vec2(0.5, -0.5) + 0.5;
-    vec2 displacement = previous_uv * transforms.extent - gl_FragCoord.xy;
+    // The draw is offset by the scene's jitter so it covers the same samples as the game's draw;
+    // the motion goes from the unjittered position, as FSR expects motion without jitter.
+    vec2 displacement = previous_uv * transforms.extent - (gl_FragCoord.xy - transforms.jitter);
     if (!all(lessThanEqual(abs(displacement), vec2(65504)))) {
         discard;
     }

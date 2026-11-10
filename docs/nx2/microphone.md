@@ -36,6 +36,17 @@ The user retested the revised build in Ocarina, confirmed the microphone test no
 longer crashes, and confirmed working voice input. Other games and sample rates
 have not been validated.
 
+## Bluetooth headsets on Linux
+
+With PipeWire, opening a Bluetooth headset's microphone switches the headset from
+A2DP to HFP/HSP: the sink becomes 16 kHz mono, and an output stream opened while
+the headset was still on A2DP can go silent even though PipeWire keeps it linked.
+If a game loses audio as soon as it starts capturing, select a non-Bluetooth input
+such as the built-in analog microphone in Configure -> Controls -> Microphone,
+switch the headset back to A2DP (or reconnect it), and relaunch the game. The
+Microphone tab has no "None" option, so this also applies when microphone features
+are not used.
+
 ## Verification
 
 - Select two different microphones and verify the meter responds to the selected

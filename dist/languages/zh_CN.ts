@@ -736,22 +736,22 @@ Aggressive mode may impact performance of other applications such as recording s
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="198"/>
         <source>GPU Readback Before NCE Invalidation</source>
-        <translation type="unfinished"/>
+        <translation>NCE 失效前回读 GPU 数据</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="199"/>
         <source>Flushes GPU buffer data back to guest memory before NCE invalidates the whole guest page, preserving it while the CPU store proceeds.</source>
-        <translation type="unfinished"/>
+        <translation>在 NCE 使整个 guest 页失效之前把 GPU 缓冲区数据回写到 guest 内存，以便 CPU 存储进行期间这些数据仍得以保留。</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="202"/>
         <source>Patch Runtime NROs for NCE</source>
-        <translation type="unfinished"/>
+        <translation>为 NCE 修补运行时 NRO</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="203"/>
         <source>Applies NCE code patches to runtime-loaded NRO modules.This is required for some games to run correctly.</source>
-        <translation type="unfinished"/>
+        <translation>对运行时加载的 NRO 模块应用 NCE 代码补丁。部分游戏需要此项才能正常运行。</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="205"/>
@@ -854,7 +854,7 @@ Immediate is the fastest option, but can introduce some issues.
 Balanced offers better compatibility and may fix issues in some games.
 Accurate further improves compatibility at the cost of some performance.
 Default follows the GPU Mode setting.</source>
-        <translation type="unfinished"/>
+        <translation>控制 GPU 围栏同步行为。\n“即时”最快，但可能引入一些问题。\n“均衡”兼容性更好，可能修复部分游戏的问题。\n“精确”进一步提升兼容性，但会牺牲一些性能。\n“默认”跟随 GPU 模式设置。</translation>
     </message>
     <message>
         <location filename="../../src/qt_common/config/shared_translation.cpp" line="238"/>
@@ -10744,6 +10744,784 @@ Error code: %3</source>
         <location filename="../../src/yuzu/updater/update_dialog.cpp" line="173"/>
         <source>Successfully downloaded %1. Would you like to open it?</source>
         <translation>已成功下载 %1。您要打开它吗?</translation>
+    </message>
+</context>
+<context>
+    <name>CompatibilityReporting::Dialog</name>
+    <message>
+        <source>Submit compatibility report</source>
+        <translation>提交兼容性报告</translation>
+    </message>
+    <message>
+        <source>Share your experience with the latest completed session. Nothing is sent until you choose Search or Submit. Logs are not uploaded. No account is required.</source>
+        <translation>分享您最近一次已完成会话的体验。在您选择“搜索”或“提交”之前不会发送任何内容。不会上传日志。无需账号。</translation>
+    </message>
+    <message>
+        <source>Game title to search</source>
+        <translation>要搜索的游戏名称</translation>
+    </message>
+    <message>
+        <source>Search catalog</source>
+        <translation>搜索目录</translation>
+    </message>
+    <message>
+        <source>Search sends only the text above to lichii.zortos.me. The service sees your IP address.</source>
+        <translation>搜索只会把上方文本发送到 lichii.zortos.me。该服务会看到您的 IP 地址。</translation>
+    </message>
+    <message>
+        <source>Previous</source>
+        <translation>上一步</translation>
+    </message>
+    <message>
+        <source>Next</source>
+        <translation>下一步</translation>
+    </message>
+    <message>
+        <source>Confirm game</source>
+        <translation>确认游戏</translation>
+    </message>
+    <message>
+        <source>No catalog game confirmed.</source>
+        <translation>尚未确认任何目录中的游戏。</translation>
+    </message>
+    <message>
+        <source>Experience</source>
+        <translation>体验</translation>
+    </message>
+    <message>
+        <source>Public nickname</source>
+        <translation>公开昵称</translation>
+    </message>
+    <message>
+        <source>X handle (optional)</source>
+        <translation>X 账号（可选）</translation>
+    </message>
+    <message>
+        <source>Choose your assessment</source>
+        <translation>选择您的评价</translation>
+    </message>
+    <message>
+        <source>Compatibility</source>
+        <translation>兼容性</translation>
+    </message>
+    <message>
+        <source>Summary</source>
+        <translation>摘要</translation>
+    </message>
+    <message>
+        <source>How far did you play?</source>
+        <translation>您游玩到哪个进度？</translation>
+    </message>
+    <message>
+        <source>What worked or failed?</source>
+        <translation>哪些正常、哪些失败？</translation>
+    </message>
+    <message>
+        <source>Steps to reproduce (optional)</source>
+        <translation>复现步骤（可选）</translation>
+    </message>
+    <message>
+        <source>System and settings</source>
+        <translation>系统与设置</translation>
+    </message>
+    <message>
+        <source>Prefilled values describe launch settings, not measured performance. Review changes made during play. Unknown means not collected. Do not paste logs, paths, keys or private details.</source>
+        <translation>预填值描述的是启动设置，而不是实测性能。请检查游玩过程中做过的改动。“未知”表示未采集。请勿粘贴日志、路径、密钥或私人信息。</translation>
+    </message>
+    <message>
+        <source>Lichii build</source>
+        <translation>Lichii 版本</translation>
+    </message>
+    <message>
+        <source>Game version</source>
+        <translation>游戏版本</translation>
+    </message>
+    <message>
+        <source>GPU driver / OpenGL version</source>
+        <translation>GPU 驱动 / OpenGL 版本</translation>
+    </message>
+    <message>
+        <source>Operating system</source>
+        <translation>操作系统</translation>
+    </message>
+    <message>
+        <source>RAM (optional)</source>
+        <translation>内存（可选）</translation>
+    </message>
+    <message>
+        <source>Graphics API</source>
+        <translation>图形 API</translation>
+    </message>
+    <message>
+        <source>Launch settings</source>
+        <translation>启动设置</translation>
+    </message>
+    <message>
+        <source>Updates (optional)</source>
+        <translation>更新（可选）</translation>
+    </message>
+    <message>
+        <source>Mods (optional)</source>
+        <translation>模组（可选）</translation>
+    </message>
+    <message>
+        <source>Public preview</source>
+        <translation>公开预览</translation>
+    </message>
+    <message>
+        <source>All report fields in the preview will be public. Logs, files, local title IDs and play history are not sent. The server uses your IP address for rate limiting. Review and clear anything you do not want to share.</source>
+        <translation>预览中的所有报告字段都会公开。日志、文件、本地标题 ID 与游玩记录不会发送。服务器会使用您的 IP 地址进行限流。请检查并清除任何您不愿分享的内容。</translation>
+    </message>
+    <message>
+        <source>I understand my name, optional X handle, report text, hardware and settings will be public.</source>
+        <translation>我了解我的名字、可选的 X 账号、报告正文、硬件与设置将会公开。</translation>
+    </message>
+    <message>
+        <source>My report contains no game files, keys, firmware, saves or private account details.</source>
+        <translation>我的报告不包含任何游戏文件、密钥、固件、存档或私人账号信息。</translation>
+    </message>
+    <message>
+        <source>Clear draft</source>
+        <translation>清除草稿</translation>
+    </message>
+    <message>
+        <source>Submit report</source>
+        <translation>提交报告</translation>
+    </message>
+    <message>
+        <source>Open public report</source>
+        <translation>打开公开报告</translation>
+    </message>
+    <message>
+        <source>Draft cleared. Nothing was sent by clearing it.</source>
+        <translation>草稿已清除。清除操作本身不会发送任何内容。</translation>
+    </message>
+    <message>
+        <source>Search for and confirm the catalog game first.</source>
+        <translation>请先搜索并确认目录中的游戏。</translation>
+    </message>
+    <message>
+        <source>Check %1: required fields must be filled, within their length limit, and contain no control characters.</source>
+        <translation>请检查 %1：必填项必须填写、不超过长度限制，且不能包含控制字符。</translation>
+    </message>
+    <message>
+        <source>An X handle must contain 1–15 letters, digits or underscores, with an optional @.</source>
+        <translation>X 账号只能包含 1–15 个字母、数字或下划线，可带一个可选的 @。</translation>
+    </message>
+    <message>
+        <source>Choose your own compatibility assessment.</source>
+        <translation>请选择您自己的兼容性评价。</translation>
+    </message>
+    <message>
+        <source>The report is too large.</source>
+        <translation>报告内容过大。</translation>
+    </message>
+    <message>
+        <source>Check the search text.</source>
+        <translation>请检查搜索文本。</translation>
+    </message>
+    <message>
+        <source>Searching catalog… Cancel closes the dialog and stops this request.</source>
+        <translation>正在搜索目录…“取消”会关闭对话框并中止本次请求。</translation>
+    </message>
+    <message>
+        <source>Confirmed: %1 (catalog ID %2)</source>
+        <translation>已确认：%1（目录 ID %2）</translation>
+    </message>
+    <message>
+        <source>Submitting… Closing stops waiting, but cannot retract a report the server already received. There are no automatic retries.</source>
+        <translation>正在提交…关闭会停止等待，但无法撤回服务器已收到的报告。不会自动重试。</translation>
+    </message>
+    <message>
+        <source>Rate limit reached. Wait %1 seconds, then retry explicitly. Nothing will be retried automatically.</source>
+        <translation>已达到速率限制。请等待 %1 秒后手动重试。不会自动重试任何内容。</translation>
+    </message>
+    <message>
+        <source>The server rejected the report. Review the fields and length limits before submitting again.</source>
+        <translation>服务器拒绝了该报告。请检查各字段与长度限制后再提交。</translation>
+    </message>
+    <message>
+        <source>The server rejected these fields: %1. Review them before submitting again.</source>
+        <translation>服务器拒绝了以下字段：%1。请检查后再提交。</translation>
+    </message>
+    <message>
+        <source>The server rejected this submission identity. Edit the draft to start a new submission; first check whether your report was already accepted.</source>
+        <translation>服务器拒绝了该提交标识。请编辑草稿以开始新的提交；请先确认您的报告是否已被接受。</translation>
+    </message>
+    <message>
+        <source>The server rejected the request (HTTP %1). No automatic retry was made.</source>
+        <translation>服务器拒绝了该请求（HTTP %1）。未进行自动重试。</translation>
+    </message>
+    <message>
+        <source>No valid receipt was received. Delivery may have succeeded. An explicit retry of this unchanged draft uses the same submission identity. Closing loses that identity; do not create a duplicate.</source>
+        <translation>未收到有效回执。投递可能已经成功。对这份未改动的草稿显式重试会使用相同的提交标识。关闭将丢失该标识；请勿创建重复报告。</translation>
+    </message>
+    <message>
+        <source>Catalog search failed. Check your connection and retry explicitly.</source>
+        <translation>目录搜索失败。请检查网络连接后手动重试。</translation>
+    </message>
+    <message>
+        <source>Report submitted. It is public. Thank you.</source>
+        <translation>报告已提交，内容公开。谢谢！</translation>
+    </message>
+    <message>
+        <source>The server returned an invalid receipt. The report may have been accepted. Only retry this unchanged draft explicitly.</source>
+        <translation>服务器返回了无效回执。报告可能已被接受。仅可对这份未改动的草稿显式重试。</translation>
+    </message>
+    <message>
+        <source>Page %1 of %2. Select the exact game and press Confirm game.</source>
+        <translation>第 %1 页，共 %2 页。请选择确切的游戏并点击“确认游戏”。</translation>
+    </message>
+    <message>
+        <source>The catalog returned an invalid response. No game was confirmed.</source>
+        <translation>目录返回了无效响应。未确认任何游戏。</translation>
+    </message>
+</context>
+<context>
+    <name>ConfigureMicrophone</name>
+    <message>
+        <source>Microphone</source>
+        <translation>麦克风</translation>
+    </message>
+    <message>
+        <source>Choose the microphone used by games. Start a test and speak to check the input level.</source>
+        <translation>选择游戏使用的麦克风。开始测试并说话以检查输入电平。</translation>
+    </message>
+    <message>
+        <source>Input device:</source>
+        <translation>输入设备：</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>刷新设备</translation>
+    </message>
+    <message>
+        <source>Microphone volume:</source>
+        <translation>麦克风音量：</translation>
+    </message>
+    <message>
+        <source>Input level:</source>
+        <translation>输入电平：</translation>
+    </message>
+    <message>
+        <source>Start microphone test</source>
+        <translation>开始麦克风测试</translation>
+    </message>
+    <message>
+        <source>Microphone disconnected or capture failed.</source>
+        <translation>麦克风已断开或采集失败。</translation>
+    </message>
+    <message>
+        <source>Stop emulation to change the microphone input device or volume.</source>
+        <translation>停止模拟后才能更改麦克风输入设备或音量。</translation>
+    </message>
+    <message>
+        <source>System default</source>
+        <translation>系统默认</translation>
+    </message>
+    <message>
+        <source>%1 (unavailable)</source>
+        <translation>%1（不可用）</translation>
+    </message>
+    <message>
+        <source>Microphone input is unavailable. Choose an available input device.</source>
+        <translation>麦克风输入不可用。请选择一个可用的输入设备。</translation>
+    </message>
+    <message>
+        <source>Unable to open the microphone. Check the device and microphone permissions in your operating system.</source>
+        <translation>无法打开麦克风。请检查操作系统的设备与麦克风权限。</translation>
+    </message>
+    <message>
+        <source>Stop microphone test</source>
+        <translation>停止麦克风测试</translation>
+    </message>
+    <message>
+        <source>Listening. Speak into your microphone.</source>
+        <translation>正在聆听。请对麦克风说话。</translation>
+    </message>
+</context>
+<context>
+    <name>GameListWorker</name>
+    <message>
+        <source>Not scanned</source>
+        <translation>未扫描</translation>
+    </message>
+    <message>
+        <source>Folder size is not calculated during game discovery.</source>
+        <translation>游戏扫描期间不计算文件夹大小。</translation>
+    </message>
+</context>
+<context>
+    <name>IconDropZone</name>
+    <message>
+        <source>Drop an image here or click to browse</source>
+        <translation>将图片拖到此处，或点击浏览</translation>
+    </message>
+    <message>
+        <source>Drop to replace</source>
+        <translation>松开以替换</translation>
+    </message>
+    <message>
+        <source>Release to use this image</source>
+        <translation>松开以使用此图片</translation>
+    </message>
+    <message>
+        <source>Drop an icon here
+or click to browse</source>
+        <translation>将图标拖到此处\n或点击浏览</translation>
+    </message>
+</context>
+<context>
+    <name>IconSearch</name>
+    <message>
+        <source>Find Icon</source>
+        <translation>查找图标</translation>
+    </message>
+    <message>
+        <source>Please enter a game name first so the icon can be found.</source>
+        <translation>请先输入游戏名称，才能查找图标。</translation>
+    </message>
+    <message>
+        <source>Choose an Icon</source>
+        <translation>选择图标</translation>
+    </message>
+    <message>
+        <source>SteamGridDB has several icons for this game. Pick one:</source>
+        <translation>SteamGridDB 为该游戏提供了多个图标，请选择一个：</translation>
+    </message>
+    <message>
+        <source>No matching icon was found on switchiconshowdown.com. A SteamGridDB API key enables a fallback search.</source>
+        <translation>在 switchiconshowdown.com 上未找到匹配图标。配置 SteamGridDB API 密钥可启用备用搜索。</translation>
+    </message>
+    <message>
+        <source>SteamGridDB rejected the saved API key.</source>
+        <translation>SteamGridDB 拒绝了已保存的 API 密钥。</translation>
+    </message>
+    <message>
+        <source>Create a free key on the &lt;a href=&quot;%1&quot;&gt;SteamGridDB API preferences&lt;/a&gt; page.</source>
+        <translation>请在 &lt;a href=&quot;%1&quot;&gt;SteamGridDB API 首选项&lt;/a&gt; 页面创建免费密钥。</translation>
+    </message>
+    <message>
+        <source>SteamGridDB API Key</source>
+        <translation>SteamGridDB API 密钥</translation>
+    </message>
+    <message>
+        <source>API key</source>
+        <translation>API 密钥</translation>
+    </message>
+    <message>
+        <source>No matching icon was found on switchiconshowdown.com or SteamGridDB. Try a different game name or choose an icon file.</source>
+        <translation>在 switchiconshowdown.com 或 SteamGridDB 上均未找到匹配图标。请尝试其他游戏名称，或选择图标文件。</translation>
+    </message>
+    <message>
+        <source>Searching for an icon took longer than %1 seconds and was stopped. Check your connection and try again.</source>
+        <translation>查找图标超过 %1 秒已停止。请检查网络连接后重试。</translation>
+    </message>
+    <message>
+        <source>Could not reach the icon sources (%1). Check your connection and try again.</source>
+        <translation>无法连接图标来源（%1）。请检查网络连接后重试。</translation>
+    </message>
+    <message>
+        <source>Searching for an icon failed unexpectedly: %1</source>
+        <translation>查找图标发生意外错误：%1</translation>
+    </message>
+</context>
+<context>
+    <name>NupEditDialog</name>
+    <message>
+        <source>English (UK)</source>
+        <translation>英语（英国）</translation>
+    </message>
+    <message>
+        <source>Japanese</source>
+        <translation>日语</translation>
+    </message>
+    <message>
+        <source>French</source>
+        <translation>法语</translation>
+    </message>
+    <message>
+        <source>German</source>
+        <translation>德语</translation>
+    </message>
+    <message>
+        <source>Spanish (Latin America)</source>
+        <translation>西班牙语（拉丁美洲）</translation>
+    </message>
+    <message>
+        <source>Spanish</source>
+        <translation>西班牙语</translation>
+    </message>
+    <message>
+        <source>Italian</source>
+        <translation>意大利语</translation>
+    </message>
+    <message>
+        <source>Dutch</source>
+        <translation>荷兰语</translation>
+    </message>
+    <message>
+        <source>French (Canada)</source>
+        <translation>法语（加拿大）</translation>
+    </message>
+    <message>
+        <source>Portuguese</source>
+        <translation>葡萄牙语</translation>
+    </message>
+    <message>
+        <source>Russian</source>
+        <translation>俄语</translation>
+    </message>
+    <message>
+        <source>Korean</source>
+        <translation>韩语</translation>
+    </message>
+    <message>
+        <source>Chinese (Traditional)</source>
+        <translation>中文（繁体）</translation>
+    </message>
+    <message>
+        <source>Chinese (Simplified)</source>
+        <translation>中文（简体）</translation>
+    </message>
+    <message>
+        <source>Portuguese (Brazil)</source>
+        <translation>葡萄牙语（巴西）</translation>
+    </message>
+    <message>
+        <source>Edit NUP Metadata</source>
+        <translation>编辑 NUP 元数据</translation>
+    </message>
+    <message>
+        <source>Choose Icon...</source>
+        <translation>选择图标...</translation>
+    </message>
+    <message>
+        <source>Find Icon Online...</source>
+        <translation>在线查找图标...</translation>
+    </message>
+    <message>
+        <source>Remove Icon</source>
+        <translation>移除图标</translation>
+    </message>
+    <message>
+        <source>Searching...</source>
+        <translation>正在搜索...</translation>
+    </message>
+    <message>
+        <source>Name shown in the game list</source>
+        <translation>游戏列表中显示的名称</translation>
+    </message>
+    <message>
+        <source>Publisher shown in the game list</source>
+        <translation>游戏列表中显示的发行商</translation>
+    </message>
+    <message>
+        <source>e.g. 1.2.0</source>
+        <translation>例如 1.2.0</translation>
+    </message>
+    <message>
+        <source>Icon</source>
+        <translation>图标</translation>
+    </message>
+    <message>
+        <source>Same as Name</source>
+        <translation>与名称相同</translation>
+    </message>
+    <message>
+        <source>Localized names (%1 set)</source>
+        <translation>本地化名称（已设置 %1 项）</translation>
+    </message>
+    <message>
+        <source>Localized names</source>
+        <translation>本地化名称</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <source>Publisher</source>
+        <translation>发行商</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;File&lt;/b&gt;&lt;br&gt;%1</source>
+        <translation>&lt;b&gt;文件&lt;/b&gt;&lt;br&gt;%1</translation>
+    </message>
+    <message>
+        <source>Empty fields remove that metadata. The change is written in place; game data is untouched.</source>
+        <translation>留空字段会移除对应元数据。更改就地写入；游戏数据不受影响。</translation>
+    </message>
+    <message>
+        <source>Choose Icon</source>
+        <translation>选择图标</translation>
+    </message>
+    <message>
+        <source>Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)</source>
+        <translation>图片 (*.png *.jpg *.jpeg *.bmp *.webp);;所有文件 (*)</translation>
+    </message>
+    <message>
+        <source>That file could not be read as an image.</source>
+        <translation>无法将该文件读取为图片。</translation>
+    </message>
+    <message>
+        <source>The icon that was found could not be read.</source>
+        <translation>找到的图标无法读取。</translation>
+    </message>
+    <message>
+        <source>Icon will be removed.</source>
+        <translation>图标将被移除。</translation>
+    </message>
+    <message>
+        <source>Custom icon, stored as %1x%1 JPEG.</source>
+        <translation>自定义图标，以 %1x%1 JPEG 存储。</translation>
+    </message>
+    <message>
+        <source>Current icon in the NUP.</source>
+        <translation>NUP 中的当前图标。</translation>
+    </message>
+    <message>
+        <source>No icon in the NUP. Add one, or it will have none.</source>
+        <translation>NUP 中没有图标。添加一个，否则将没有图标。</translation>
+    </message>
+</context>
+<context>
+    <name>NupMetadataDialog</name>
+    <message>
+        <source>Convert to NUP</source>
+        <translation>转换为 NUP</translation>
+    </message>
+    <message>
+        <source>Choose Icon...</source>
+        <translation>选择图标...</translation>
+    </message>
+    <message>
+        <source>Use Detected</source>
+        <translation>使用检测结果</translation>
+    </message>
+    <message>
+        <source>Name shown in the game list</source>
+        <translation>游戏列表中显示的名称</translation>
+    </message>
+    <message>
+        <source>Publisher shown in the game list</source>
+        <translation>游戏列表中显示的发行商</translation>
+    </message>
+    <message>
+        <source>Auto-detect (nothing found in the dump)</source>
+        <translation>自动检测（转储中未找到任何内容）</translation>
+    </message>
+    <message>
+        <source>Auto-detect: %1 (from %2)</source>
+        <translation>自动检测：%1（来自 %2）</translation>
+    </message>
+    <message>
+        <source>Set manually:</source>
+        <translation>手动设置：</translation>
+    </message>
+    <message>
+        <source>e.g. 1.2.0</source>
+        <translation>例如 1.2.0</translation>
+    </message>
+    <message>
+        <source>Icon</source>
+        <translation>图标</translation>
+    </message>
+    <message>
+        <source>Name</source>
+        <translation>名称</translation>
+    </message>
+    <message>
+        <source>Publisher</source>
+        <translation>发行商</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Source&lt;/b&gt;&lt;br&gt;%1&lt;br&gt;&lt;b&gt;Target&lt;/b&gt;&lt;br&gt;%2</source>
+        <translation>&lt;b&gt;源&lt;/b&gt;&lt;br&gt;%1&lt;br&gt;&lt;b&gt;目标&lt;/b&gt;&lt;br&gt;%2</translation>
+    </message>
+    <message>
+        <source>Approximate space needed: %1 MB. Free on the target volume: %2 MB.</source>
+        <translation>预计需要空间：%1 MB。目标卷可用空间：%2 MB。</translation>
+    </message>
+    <message>
+        <source>Free space is less than the estimate.</source>
+        <translation>可用空间小于预计值。</translation>
+    </message>
+    <message>
+        <source>Low storage: delete the original files as they are packed (cannot be undone)</source>
+        <translation>存储空间不足：打包时删除原始文件（无法撤销）</translation>
+    </message>
+    <message>
+        <source>Convert</source>
+        <translation>转换</translation>
+    </message>
+    <message>
+        <source>Choose Icon</source>
+        <translation>选择图标</translation>
+    </message>
+    <message>
+        <source>Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)</source>
+        <translation>图片 (*.png *.jpg *.jpeg *.bmp *.webp);;所有文件 (*)</translation>
+    </message>
+    <message>
+        <source>That file could not be read as an image.</source>
+        <translation>无法将该文件读取为图片。</translation>
+    </message>
+    <message>
+        <source>Custom icon, stored as %1x%1 JPEG.</source>
+        <translation>自定义图标，以 %1x%1 JPEG 存储。</translation>
+    </message>
+    <message>
+        <source>Icon found in the dump.</source>
+        <translation>在转储中找到图标。</translation>
+    </message>
+    <message>
+        <source>No icon found in the dump. Add one, or the NUP will have none.</source>
+        <translation>转储中未找到图标。添加一个，否则 NUP 将没有图标。</translation>
+    </message>
+</context>
+<context>
+    <name>NupProgressDialog</name>
+    <message>
+        <source>Preparing...</source>
+        <translation>正在准备...</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>%1 / %2 MB  -  %3 / %4 files</source>
+        <translation>%1 / %2 MB  -  %3 / %4 个文件</translation>
+    </message>
+    <message>
+        <source>
+%1 MB/s  -  about %2:%3 left</source>
+        <translation>\n%1 MB/s  -  剩余约 %2:%3</translation>
+    </message>
+    <message>
+        <source>Cancelling...</source>
+        <translation>正在取消...</translation>
+    </message>
+</context>
+<context>
+    <name>NvidiaDlssPanel</name>
+    <message>
+        <source>Open Folder</source>
+        <translation>打开文件夹</translation>
+    </message>
+    <message>
+        <source>Where do these files come from?</source>
+        <translation>这些文件来自哪里？</translation>
+    </message>
+    <message>
+        <source>NVIDIA's Streamline releases on GitHub. The files are in bin\x64 of the release zip.</source>
+        <translation>NVIDIA 的 Streamline 发布在 GitHub 上。文件位于发布压缩包的 bin\x64 目录中。</translation>
+    </message>
+    <message>
+        <source>%1 from the NVIDIA app</source>
+        <translation>来自 NVIDIA app 的 %1</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Ready.&lt;/b&gt; Found %1 and %2.</source>
+        <translation>&lt;b&gt;就绪。&lt;/b&gt;找到了 %1 和 %2。</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;One file needed:&lt;/b&gt; NVIDIA's Streamline loader (sl.interposer.dll). %1 will be used. Until then, games use AMD FSR 3.1.</source>
+        <translation>&lt;b&gt;需要一个文件：&lt;/b&gt;NVIDIA 的 Streamline 加载器（sl.interposer.dll）。将使用 %1。在此之前，游戏使用 AMD FSR 3.1。</translation>
+    </message>
+    <message>
+        <source>Download from NVIDIA (1 MB)</source>
+        <translation>从 NVIDIA 下载（1 MB）</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;One file needed:&lt;/b&gt; NVIDIA DLSS (nvngx_dlss.dll). Until then, games use AMD FSR 3.1.</source>
+        <translation>&lt;b&gt;需要一个文件：&lt;/b&gt;NVIDIA DLSS（nvngx_dlss.dll）。在此之前，游戏使用 AMD FSR 3.1。</translation>
+    </message>
+    <message>
+        <source>Download from NVIDIA (31 MB)</source>
+        <translation>从 NVIDIA 下载（31 MB）</translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;NVIDIA's files needed:&lt;/b&gt; the Streamline loader and DLSS (sl.interposer.dll and nvngx_dlss.dll). Until then, games use AMD FSR 3.1.</source>
+        <translation>&lt;b&gt;需要 NVIDIA 的文件：&lt;/b&gt;Streamline 加载器与 DLSS（sl.interposer.dll 和 nvngx_dlss.dll）。在此之前，游戏使用 AMD FSR 3.1。</translation>
+    </message>
+    <message>
+        <source>Download from NVIDIA (32 MB)</source>
+        <translation>从 NVIDIA 下载（32 MB）</translation>
+    </message>
+    <message>
+        <source>Folder: %1</source>
+        <translation>文件夹：%1</translation>
+    </message>
+    <message>
+        <source>Could not download NVIDIA's files: %1</source>
+        <translation>无法下载 NVIDIA 的文件：%1</translation>
+    </message>
+    <message>
+        <source>Contacting NVIDIA's download...</source>
+        <translation>正在连接 NVIDIA 的下载服务器...</translation>
+    </message>
+    <message>
+        <source>Download NVIDIA DLSS</source>
+        <translation>下载 NVIDIA DLSS</translation>
+    </message>
+    <message>
+        <source>Lichii will download %1 from NVIDIA's Streamline %2 release on GitHub into %3.&lt;br&gt;These files are NVIDIA's, under NVIDIA's licence terms below.</source>
+        <translation>Lichii 会把 %1 从 GitHub 上 NVIDIA 的 Streamline %2 发布包下载到 %3。&lt;br&gt;这些文件属于 NVIDIA，适用下方 NVIDIA 的许可条款。</translation>
+    </message>
+    <message>
+        <source>Accept and Download</source>
+        <translation>接受并下载</translation>
+    </message>
+    <message>
+        <source>Downloading NVIDIA's DLSS files...</source>
+        <translation>正在下载 NVIDIA 的 DLSS 文件...</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>NVIDIA DLSS is ready. It is used the next time a game starts.</source>
+        <translation>NVIDIA DLSS 已就绪。下次启动游戏时生效。</translation>
+    </message>
+</context>
+<context>
+    <name>fs</name>
+    <message>
+        <source>Could not find Ryujinx installation</source>
+        <translation>无法找到 Ryujinx 安装数据</translation>
+    </message>
+    <message>
+        <source>Could not find a valid Ryujinx installation. This may typically occur if you are using Ryujinx in portable mode.
+
+Would you like to manually select a portable folder to use?</source>
+        <translation>未找到有效的 Ryujinx 安装。这通常可能发生在您以便携模式使用 Ryujinx 时。您想手动选择一个便携模式文件夹来使用吗?</translation>
+    </message>
+    <message>
+        <source>Ryujinx Portable Location</source>
+        <translation>便携 Ryujinx 安装位置</translation>
+    </message>
+    <message>
+        <source>Not a valid Ryujinx directory</source>
+        <translation>不是有效的 Ryujinx 安装目录</translation>
+    </message>
+    <message>
+        <source>The specified directory does not contain valid Ryujinx data.</source>
+        <translation>指定的目录不包含有效的 Ryujinx 数据。</translation>
+    </message>
+    <message>
+        <source>Could not find Ryujinx save data</source>
+        <translation>找不到 Ryujinx 的存档数据</translation>
     </message>
 </context>
 </TS>

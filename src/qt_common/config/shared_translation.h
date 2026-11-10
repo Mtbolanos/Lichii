@@ -13,8 +13,10 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <QByteArray>
 #include <QObject>
 #include <QString>
+#include <QTranslator>
 #include "common/common_types.h"
 #include "common/settings_enums.h"
 
@@ -26,6 +28,23 @@ using ComboboxTranslationMap = std::map<u32, ComboboxTranslations>;
 std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent);
 
 std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent);
+
+/// A text from the maps below, in the UI's language (the language `translator` holds). The maps
+/// hold the English texts, which QT_TRANSLATE_NOOP only marks for lupdate, so they are translated
+/// where they are shown. Many languages translate a setting's name in the settings dialog
+/// (ConfigurationShared) but have no status-bar translation (MainWindow) for it; those take the
+/// settings dialog's. A status-bar translation that keeps the English text, such as an acronym,
+/// stays: the translator returns it, and returns an empty string only for a missing one.
+inline QString TranslateMapText(const QTranslator& translator, const QString& text) {
+    const QByteArray source = text.toUtf8();
+    for (const char* const context : {"MainWindow", "ConfigurationShared"}) {
+        const QString translated = translator.translate(context, source.constData());
+        if (!translated.isEmpty()) {
+            return translated;
+        }
+    }
+    return text;
+}
 
 static const std::map<Settings::AntiAliasing, QString> anti_aliasing_texts_map = {
     {Settings::AntiAliasing::None, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "None"))},

@@ -7,6 +7,41 @@
 - Change backend manually in the settings file (set it from `0` to `1` or vice versa).
 - Disconnect your second monitor, if any
 
+## Shaders fail with "out of host memory" on Windows
+
+*Platform(s) Affected*: **Windows**, mostly PCs with 16 GB of RAM.
+
+**Symptoms:** the log has lines like these, and parts of the image are missing (in Ocarina of
+Time, the intro video). The game may then close with exception `0xc0000409` in `ucrtbase.dll`.
+
+```text
+Driver rejected compute shader F9EA14A22394F5B1: VK_ERROR_OUT_OF_HOST_MEMORY
+Graphics pipeline build failed: VK_ERROR_OUT_OF_HOST_MEMORY (...)
+The GPU driver ran out of host memory building a pipeline: Windows commit is 31.8 of 31.9 GiB. ...
+```
+
+**Cause:** Windows lets programs commit only as much memory as RAM plus the page file (the
+*commit limit*). A Switch 2 game commits 14 GiB of guest memory when it starts, and the first run
+compiles shaders, several at once, some of which need gigabytes each (more on GPUs without matrix
+cores, where tensor-core shaders are emulated). With 16 GB of RAM and a small page file, the limit
+is reached. Little of it is ever written to disk: what runs out is the limit, not free memory.
+
+**Fix:** enlarge the page file.
+
+1. Open *System Properties* → *Advanced* → *Performance: Settings* → *Advanced* → *Virtual
+   memory: Change*.
+2. Clear *Automatically manage paging file size for all drives*, select the drive for the page
+   file (usually `C:`), and choose *Custom size*. Enter an *Initial size* in MB so that RAM plus
+   page file is at least 48 GB (on 16 GB of RAM, a 32 GB page file: `32768`), and a *Maximum
+   size* at least that large (`49152` or more; don't lower an existing maximum). Click *Set*,
+   then *OK*, and reboot.
+3. Check *Task Manager* → *Performance* → *Memory* → *Committed* (used / limit) while the game
+   runs. The *Commit size* of the emulator in the *Details* tab doesn't include guest memory, so
+   use the system-wide figure.
+
+On an RX 6750 GRE with 16 GB of RAM, a 31.9 GB commit limit failed 25 pipelines in Ocarina of
+Time's intro, and 53.9 GB failed none ([#462](https://github.com/zortos293/Lichii/issues/462)).
+
 ## This mod only works on an Emulator
 
 - Enable RNG seed
