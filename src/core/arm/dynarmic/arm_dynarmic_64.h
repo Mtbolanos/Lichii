@@ -65,6 +65,9 @@ public:
 
     Dynarmic::CodePage cached_code_page;
     u64 last_code_addr = u64(-1);
+    /// Warm compiles read code straight from memory: other threads reset last_code_addr
+    /// (InvalidateCacheRange) and the page copy may hold another page (fable52_answer_12).
+    bool direct_code_reads = false;
     ArmDynarmic64& m_parent;
     Core::Memory::Memory& m_memory;
     u64 m_tpidrro_el0{};
@@ -102,6 +105,7 @@ public:
     void SignalInterrupt(Kernel::KThread* thread) override;
     void ClearInstructionCache() override;
     void InvalidateCacheRange(u64 addr, std::size_t size) override;
+    std::size_t WarmCompile(std::span<const u64> keys, const std::atomic<bool>& stop) override;
 
 protected:
     const Kernel::DebugWatchpoint* HaltedWatchpoint() const override;

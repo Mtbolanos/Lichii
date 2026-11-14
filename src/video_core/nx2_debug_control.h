@@ -425,6 +425,11 @@ inline void LoadExperiments() {
         // the last submit. Castle Town live toggle: empty submits 4,600 -> 145 a second, 43.0 ->
         // 45.6 fps (3 of 4 pairs, the 4th a tie), GPU thread split drain 432 -> 396 ms/s.
         g_experiments[61].store(1, std::memory_order_relaxed);
+        // EXP49 = 1 (2026-11-10, owner's call for v5.7): the async read-back. Stalchild fight,
+        // flipped every 30 s while the owner fought: 51.9 -> 56.9 fps, the back's read flushes
+        // 35 -> 6 ms/s, guest lock waits halved. No beams in that session or two later ones
+        // played with it on from boot.
+        g_experiments[49].store(1, std::memory_order_relaxed);
         // EXP39 = 3: publish to a back that waits after 8 words, no snapshot refresh of entries
         // that ran (zortos293/Lichii#805 62db242b34; see the EXP39 notes above). Timing only.
         g_experiments[39].store(3, std::memory_order_relaxed);

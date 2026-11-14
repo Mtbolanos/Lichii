@@ -3210,10 +3210,14 @@ void RasterizerVulkan::ReadOcarinaActor(OcarinaActorMesh& mesh) {
 /// Track the scene depth on its reader dispatch, or try to replace a recognized upscale dispatch.
 bool RasterizerVulkan::TryOcarinaUpscale(const ComputePipeline& pipeline, bool replace) {
     constexpr u64 depth_reader = 0x1fc7a0423116281fULL;
-    const bool upscale_4k = replace && pipeline.ShaderHash() == ComputePipeline::Ocarina1440pShader;
+    const bool pass_1440p = replace && pipeline.ShaderHash() == ComputePipeline::Ocarina1440pShader;
     if ((!replace && pipeline.ShaderHash() != depth_reader) || !OcarinaTemporalEnabled()) {
         return false;
     }
+    const bool native_resolution =
+        oot_backend == VideoCommon::OcarinaUpscaleBackend::Dlss &&
+        Settings::GetNvidiaDlssRuntimeSettings().quality == Settings::NvidiaDlssQuality::Native;
+    const bool upscale_4k = pass_1440p && !native_resolution;
     const auto read_tic = [this](u32 index) -> std::optional<Tegra::Texture::TICEntry> {
         const auto& table = kepler_compute->regs.tic;
         using Entry = Tegra::Texture::TICEntry;
@@ -3296,13 +3300,12 @@ bool RasterizerVulkan::TryOcarinaUpscale(const ComputePipeline& pipeline, bool r
     using VideoCore::Surface::PixelFormat;
     const auto extent = oot_motion.extent;
     const bool native_size = pipeline.ShaderHash() == ComputePipeline::OcarinaFullSizeShader;
-    const bool valid_extents = upscale_4k
-        ? extent.width == 2560 && extent.height == 1440 &&
-            target.size.width == 2560 && target.size.height == 1440
-        : native_size
-        ? target.size.width == extent.width && target.size.height == extent.height
-        : target.size.width == extent.width * 4 / 3 &&
-            target.size.height == extent.height * 4 / 3;
+    const bool valid_extents =
+        pass_1440p ? extent.width == 2560 && extent.height == 1440 && target.size.width == 2560 &&
+                         target.size.height == 1440
+        : native_size ? target.size.width == extent.width && target.size.height == extent.height
+                      : target.size.width == extent.width * 4 / 3 &&
+                            target.size.height == extent.height * 4 / 3;
     if (!valid_extents || !color.BackingImage() || !target.BackingImage() ||
         color.IsRescaled() || target.IsRescaled() ||
         color.Samples() != VK_SAMPLE_COUNT_1_BIT || target.Samples() != VK_SAMPLE_COUNT_1_BIT ||
@@ -3343,7 +3346,9 @@ bool RasterizerVulkan::TryOcarinaUpscale(const ComputePipeline& pipeline, bool r
         if (oot_jitter_frame == render_trace_frame) {
             jitter = oot_jitter_offset;
         }
-        const VkExtent2D output_extent = upscale_4k ? VkExtent2D{3840, 2160} : target_extent;
+        const VkExtent2D output_extent = native_resolution ? extent
+                                         : upscale_4k      ? VkExtent2D{3840, 2160}
+                                                           : target_extent;
         const bool recorded = oot_live_dlss->Record(color_view, depth.DepthView(), target_view,
                                                    extent, output_extent, target_extent, oot_motion.current,
                                                    oot_motion.previous, mesh, depth.ImageHandle(),
@@ -3400,7 +3405,8 @@ bool RasterizerVulkan::FrameDumpBuffers(bool compute, std::span<const u64> shade
         // EDEN_NX2_FRAME_DUMP_HOST: the host copy of guest-sourced ranges read from the buffer
         // cache (storage, and uniforms too large for the stream path), to find stale uploads.
         static const bool host_too = std::getenv("EDEN_NX2_FRAME_DUMP_HOST") != nullptr;
-        buffer.also_host = host_too && host && !gpu_modified && (storage || bound_size > 4096);
+        buffer.also_host = (host_too || frame_dump.HostCopies()) && host && !gpu_modified &&
+                           (storage || bound_size > 4096);
     });
     return frame_dump.NoteBuffers(compute, shader_hashes, buffers);
 }
@@ -3439,10 +3445,13 @@ void RasterizerVulkan::TickFrame() {
     }
     if (VideoCore::Nx2Debug::HasRequests()) {
         if (auto capture = VideoCore::Nx2Debug::TakeCapture()) {
-            // This build keeps the EDEN_NX2_FRAME_DUMP capture (file or time trigger) only.
-            VideoCore::Nx2Debug::FinishCapture(
-                capture->id, {.error = "capture_frame is not available in this build; use "
-                                       "EDEN_NX2_FRAME_DUMP"});
+            // Mid-game through the frame dump (no boot switch needed); "buffers" records every
+            // draw's bound buffers with their host copies, to tell stale data from a wrong read.
+            if (!frame_dump.RequestNow(capture->id, capture->directory, capture->buffers,
+                                       capture->buffers)) {
+                VideoCore::Nx2Debug::FinishCapture(
+                    capture->id, {.error = "a frame dump capture is already running"});
+            }
         }
         if (const auto change = VideoCore::Nx2Debug::TakeRejectChange()) {
             pipeline_cache.RefreshDebugRejections(change->unrejected);

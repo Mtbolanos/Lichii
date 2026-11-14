@@ -399,6 +399,10 @@ public:
         u64 frame;
     };
     static constexpr u64 ImagePoolMaxBytes = u64{512} << 20;
+    /// EXP42=2 pools the big dedicated render targets too (a 2560x1440 one is ~30 MiB): 512 MiB
+    /// held ~17 of them and evicted 1,150-1,400 images a 600 frames in Castle Town (2026-11-10).
+    static constexpr u64 ImagePoolMaxBytesDedicated = u64{1536} << 20;
+    [[nodiscard]] static u64 ImagePoolCap();
     static constexpr u64 ImagePoolMaxFrames = 180;
     std::deque<PooledImage> image_pool;
     u64 image_pool_bytes{};

@@ -23,6 +23,7 @@
 
 #include "common/alignment.h"
 #include "common/memory_detect.h"
+#include "common/memory_detect.h"
 #include "common/scope_exit.h"
 #include "common/settings.h"
 #include "common/slot_vector.h"
@@ -32,6 +33,7 @@
 #include "video_core/guest_memory.h"
 #include "video_core/host1x/gpu_device_memory_manager.h"
 #include "video_core/nx2_debug_control.h"
+#include "video_core/texture_cache/host_memory_limit.h"
 #include "video_core/texture_cache/image_view_base.h"
 #include "video_core/texture_cache/conversion.h"
 #include "video_core/texture_cache/samples_helper.h"
@@ -450,6 +452,19 @@ void TextureCache<P>::ApplyThresholdOverrides(bool log) {
         (std::min)(expected_memory, critical_memory - (std::min)(critical_memory, u64{768_MiB}));
     minimum_memory =
         (std::min)(minimum_memory, expected_memory - (std::min)(expected_memory, u64{1_GiB}));
+    // EDEN_NX2_TC_CEILING_MIB: a ceiling for the critical threshold (expected 1.5 GiB under it),
+    // which only ever lowers them, so cards with a smaller budget keep theirs. Fritchii builds it
+    // in at 7680 (2026-11-10, owner's playtests: 16 GB card, VRAM 10 -> ~6 GB, 4-6 GB of RAM kept
+    // free instead of ~1.5 since Windows charges device memory to commit, 58.8 fps over 30 min).
+    if (const char* value = std::getenv("EDEN_NX2_TC_CEILING_MIB")) {
+        const u64 ceiling = std::strtoull(value, nullptr, 10) << 20;
+        if (ceiling >= 2_GiB) {
+            critical_memory = (std::min)(critical_memory, ceiling);
+            expected_memory = (std::min)(expected_memory, ceiling - 1536_MiB);
+            minimum_memory = (std::min)(minimum_memory,
+                                        expected_memory - (std::min)(expected_memory, u64{1_GiB}));
+        }
+    }
     // EDEN_NX2_TC_EXPECTED_MIB / EDEN_NX2_TC_CRITICAL_MIB override the collector's thresholds.
     for (const auto& [name, target] : {std::pair{"EDEN_NX2_TC_EXPECTED_MIB", &expected_memory},
                                        std::pair{"EDEN_NX2_TC_CRITICAL_MIB", &critical_memory}}) {
@@ -533,6 +548,17 @@ void TextureCache<P>::TickFrame() {
                     }
                     critical_memory =
                         budget - (std::min)(margin + pressure_margin + slack_margin, budget / 2);
+                    // zortos293/Lichii#1210: the device's budget is not all the room there is.
+                    // Windows charges device memory to the system's commit limit, so the cache
+                    // may also hold no more than the device memory in use plus the commit still
+                    // free, less 2 GiB (HostCriticalMemory; an OoT out-of-memory crash on a PC
+                    // with 16 GiB of RAM). The usage is the driver's.
+                    const std::optional<u64> commit_room = Common::GetSystemCommitRoom();
+                    const u64 host_critical =
+                        commit_room
+                            ? HostCriticalMemory(runtime.GetDeviceMemoryUsage(), *commit_room)
+                            : (std::numeric_limits<u64>::max)();
+                    critical_memory = (std::min)(critical_memory, host_critical);
                     expected_memory = critical_memory - (std::min)(margin, critical_memory / 2);
                     ApplyThresholdOverrides(false);
                     // Log the first values and real changes (the budget moves by a few MiB all
@@ -552,6 +578,13 @@ void TextureCache<P>::TickFrame() {
                         LOG_INFO(HW_GPU,
                                  "Memory margins: base {} MiB, out of memory {} MiB, block slack {} MiB",
                                  margin >> 20, pressure_margin >> 20, slack_margin >> 20);
+                        if (commit_room) {
+                            LOG_INFO(HW_GPU, "Host memory: {} MiB of commit left, {}",
+                                     *commit_room >> 20,
+                                     critical_memory == host_critical
+                                         ? "which bounds the thresholds"
+                                         : "the device budget bounds the thresholds");
+                        }
                     }
                 }
             }
@@ -991,6 +1024,40 @@ void TextureCache<P>::SweepColdImages() {
                  cold_kept_guarded, cold_kept_read, cold_watch.size(), slot_images.size(),
                  total_used_memory >> 20, expected_memory >> 20);
         cold_deleted = cold_kept_guarded = cold_kept_read = cold_superseded = 0;
+        // The image families made in those frames, most made first (fable52_answer_13 sec. 6).
+        std::vector<std::pair<std::pair<u32, u32>, const MadeShapes*>> families;
+        u64 made_total = 0;
+        for (const auto& [key, shapes] : made_shapes) {
+            families.emplace_back(key, &shapes);
+            made_total += shapes.made;
+        }
+        if (made_total != 0) {
+            std::ranges::sort(families, [](const auto& a, const auto& b) {
+                return a.second->made > b.second->made;
+            });
+            std::string text;
+            for (size_t i = 0; i < (std::min)(families.size(), size_t{6}); ++i) {
+                const auto& [key, shapes] = families[i];
+                const auto [low, high] = std::ranges::minmax(shapes->heights);
+                text += fmt::format("{}format {} width {}: {} made, {} heights {}-{}",
+                                    i == 0 ? "" : "; ", key.first, key.second, shapes->made,
+                                    shapes->heights.size(), low, high);
+            }
+            LOG_INFO(HW_GPU, "Images made in the last 600 frames: {} in {} (format, width) "
+                             "families; most made: {}",
+                     made_total, families.size(), text);
+        }
+        made_shapes.clear();
+    }
+}
+
+template <class P>
+void TextureCache<P>::NoteMadeShape(const ImageInfo& info) {
+    auto& shapes = made_shapes[{static_cast<u32>(info.format), info.size.width}];
+    ++shapes.made;
+    if (shapes.heights.size() < 64 &&
+        std::ranges::find(shapes.heights, info.size.height) == shapes.heights.end()) {
+        shapes.heights.push_back(info.size.height);
     }
 }
 
@@ -3846,6 +3913,7 @@ ImageId TextureCache<P>::JoinImages(const ImageInfo& info, GPUVAddr gpu_addr, DA
     const auto create_start = std::chrono::steady_clock::now();
     const ImageId new_image_id = slot_images.insert(runtime, new_info, gpu_addr, cpu_addr);
     rt_stats.create_ns += NsSince(create_start);
+    NoteMadeShape(new_info);
     if constexpr (requires(const Image& image) { image.FromPool(); }) {
         rt_stats.pooled_images += slot_images[new_image_id].FromPool() ? 1 : 0;
         Churn::Add(Churn::ImagesPooled, slot_images[new_image_id].FromPool() ? 1 : 0);

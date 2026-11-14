@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include "common/container/unordered_map.h"
@@ -89,6 +90,10 @@ public:
         return legacy_paths.at(legacy_path);
     }
 
+    bool IsPortableMode() const {
+        return portable;
+    }
+
     void CreateEdenPaths() {
         std::for_each(eden_paths.begin(), eden_paths.end(), [](auto &path) {
             void(FS::CreateDirs(path.second));
@@ -114,6 +119,7 @@ public:
 #ifdef _WIN32
         // User directory takes priority over global %AppData% directory
         eden_path = GetExeDirectory() / PORTABLE_DIR;
+        portable = IsDir(eden_path);
         if (!Exists(eden_path) || !IsDir(eden_path)) {
             eden_path = GetAppDataRoamingDirectory() / EDEN_DIR;
         }
@@ -126,13 +132,17 @@ public:
         LEGACY_PATH(Sudachi, SUDACHI)
         LEGACY_PATH(Yuzu, YUZU)
         LEGACY_PATH(Suyu, SUYU)
+        LEGACY_PATH(LegacyEden, EDEN_LEGACY)
+        LEGACY_PATH(Lichii, LICHII)
 #undef LEGACY_PATH
 #elif __ANDROID__
+        portable = true;
         ASSERT(!eden_path.empty());
         eden_path_cache = eden_path / CACHE_DIR;
         eden_path_config = eden_path / CONFIG_DIR;
 #else
         eden_path = GetCurrentDir() / PORTABLE_DIR;
+        portable = IsDir(eden_path);
         if (!Exists(eden_path) || !IsDir(eden_path)) {
             eden_path = GetDataDirectory("XDG_DATA_HOME") / EDEN_DIR;
             eden_path_cache = GetDataDirectory("XDG_CACHE_HOME") / EDEN_DIR;
@@ -148,6 +158,8 @@ public:
         LEGACY_PATH(Sudachi, SUDACHI)
         LEGACY_PATH(Yuzu, YUZU)
         LEGACY_PATH(Suyu, SUYU)
+        LEGACY_PATH(LegacyEden, EDEN_LEGACY)
+        LEGACY_PATH(Lichii, LICHII)
 #undef LEGACY_PATH
 #endif
         // data
@@ -203,6 +215,7 @@ private:
 
     ::Common::unordered_map<EdenPath, fs::path> eden_paths;
     ::Common::unordered_map<EmuPath, fs::path> legacy_paths;
+    bool portable{};
 };
 
 bool ValidatePath(const fs::path& path) {
@@ -286,6 +299,10 @@ void SetAppDirectory(const std::string& app_directory) {
     PathManagerImpl::GetInstance().Reinitialize(app_directory);
 }
 
+bool IsPortableMode() {
+    return PathManagerImpl::GetInstance().IsPortableMode();
+}
+
 const fs::path& GetEdenPath(EdenPath eden_path) {
     return PathManagerImpl::GetInstance().GetEdenPathImpl(eden_path);
 }
@@ -329,6 +346,11 @@ fs::path GetExeDirectory() {
 }
 
 fs::path GetAppDataRoamingDirectory() {
+    // Tests only: EDEN_NX2_APPDATA_ROOT stands in for %APPDATA%, so the profile import (v5.8) is
+    // tested on planted profiles in a sandbox, never on the player's own.
+    if (const char* root = std::getenv("EDEN_NX2_APPDATA_ROOT"); root != nullptr && *root != 0) {
+        return fs::path{Common::FS::ToU8String(root)};
+    }
     PWSTR appdata_roaming_path = nullptr;
 
     SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &appdata_roaming_path);

@@ -80,6 +80,39 @@ public:
         }
     }
 
+    // Memory [cpu_address, +size) is destroyed (sub 102): every GPU range that still reaches it
+    // stops reaching it, wherever it was mapped, because the game reuses the memory right after.
+    // Returns the ranges other than the one at the memory's own address, as (GPU address, size).
+    std::vector<std::pair<u64, u64>> UnmapMemory(u64 cpu_address, u64 size) {
+        std::scoped_lock lk{mutex};
+        const u64 end = cpu_address + size;
+        struct Range {
+            u64 gpu_address;
+            u64 size;
+            bool own; ///< The mapping at the memory's own address
+        };
+        std::vector<Range> ranges;
+        for (const auto& m : mappings) {
+            const u64 first = (std::max)(m.cpu_address, cpu_address);
+            const u64 last = (std::min)(m.cpu_address + m.size, end);
+            if (first < last) {
+                ranges.push_back({m.gpu_address + (first - m.cpu_address), last - first,
+                                  m.gpu_address == m.cpu_address});
+            }
+        }
+        std::vector<std::pair<u64, u64>> leftovers;
+        for (const auto& range : ranges) {
+            TrimMappings(range.gpu_address, range.size);
+            for (auto& [owner, listener] : listeners) {
+                listener.unmap(range.gpu_address, range.size);
+            }
+            if (!range.own) {
+                leftovers.emplace_back(range.gpu_address, range.size);
+            }
+        }
+        return leftovers;
+    }
+
     // Backing memory [cpu_address, +size) is about to be freed (its GPU mappings are gone): each
     // address space drops its SMMU mapping of it, in GPU-thread order.
     void ReleaseBacking(u64 cpu_address, u64 size) {

@@ -31,6 +31,7 @@
 #include "common/cityhash.h"
 #include "common/polyfill_thread.h"
 #include "common/scm_rev.h"
+#include "nx2_shader_stamp.h" // generated: NX2_SHADER_STAMP
 #include "common/scope_exit.h"
 #include "common/fs/fs.h"
 #include "common/fs/fs_util.h"
@@ -4078,13 +4079,14 @@ void PipelineCache::PreparePrecompiled(const std::filesystem::path& base_dir,
     }
     const auto modified = std::filesystem::last_write_time(path, error).time_since_epoch().count();
     // The driver keeps what it compiled; the step runs again for another file, driver, GPU or
-    // release. The release version, not the commit (2026-11-09, owner): every dev build re-ran the
-    // ~20 minute preparation. A translator change inside a release only costs a few runtime
-    // compiles, which the game handles anyway.
+    // shader translator. Not the commit (2026-11-09, owner: every dev build re-ran the ~20 minute
+    // preparation), and since v5.8 not the release either (every release re-ran it for every
+    // player, also releases that changed no shader): NX2_SHADER_STAMP hashes the shader
+    // recompiler, pipeline creation and the precompile step (CMakeModules/Nx2ShaderStamp.cmake).
     const auto stamp_path =
         base_dir / fmt::format("precompiled_prepared.fork-v{}.txt", CACHE_VERSION);
-    const std::string stamp = fmt::format("{} {} {:#x} {} {}\n", file_size, modified,
-                                          device.GetDriverVersion(), Common::g_build_version,
+    const std::string stamp = fmt::format("{} {} {:#x} shaders-{} {}\n", file_size, modified,
+                                          device.GetDriverVersion(), NX2_SHADER_STAMP,
                                           device.GetModelName());
     // EDEN_NX2_PRECOMPILED_FAST: the preparation keeps each pipeline's infos and SPIR-V too
     // (vk_precompiled_kept.h), for this release, its settings and GPU. Whether this build

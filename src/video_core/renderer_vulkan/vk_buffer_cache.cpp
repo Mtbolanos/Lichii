@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "video_core/buffer_cache/buffer_cache_base.h"
+#include "video_core/nx2_debug_control.h"
 #include "video_core/nx2_perf.h"
 #include "video_core/nx2_profile.h"
 #include "video_core/renderer_vulkan/vk_buffer_cache.h"
@@ -677,6 +678,17 @@ void BufferCacheRuntime::CopyBuffer(VkBuffer dst_buffer, VkBuffer src_buffer,
     }
 
     scheduler.RequestOutsideRenderPassOperationContext();
+    // EDEN_NX2_EXP62 (live, 0 = off): zortos293/Lichii#1245's batched uploads. OoT records ~600
+    // inline uploads a frame, each with two barriers; in-order ones share one command and one
+    // pair of barriers (#805's test: 55.9 -> 57.8 fps, GPU 8.2 -> 7.55 ms a frame).
+    if (barrier && VideoCore::Nx2Debug::Experiment(62) != 0 && src_buffer == staging_pool.StreamBuf() &&
+        !vk_copies.empty()) {
+        // Only in-order stream uploads share barriers. Dedicated staging buffers retain their
+        // normal recording path and tick-based reuse.
+        scheduler.RecordUpload(src_buffer, dst_buffer,
+                               std::span<const VkBufferCopy>{vk_copies.data(), vk_copies.size()});
+        return;
+    }
     scheduler.Record([src_buffer, dst_buffer, vk_copies, barrier](vk::CommandBuffer cmdbuf) {
         if (barrier) {
             cmdbuf.PipelineBarrier(vk::PIPELINE_STAGE_GRAPHICS_COMPUTE_TRANSFER,

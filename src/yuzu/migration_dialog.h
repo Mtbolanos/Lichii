@@ -26,5 +26,5 @@ private:
     QVBoxLayout* m_boxes;
     QHBoxLayout* m_buttons;
 
-    QAbstractButton* m_clickedButton;
+    QAbstractButton* m_clickedButton{};
 };

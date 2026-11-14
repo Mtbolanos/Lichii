@@ -24,6 +24,7 @@
 
 #include "qt_common/game_list/game_list_p.h"
 #include "yuzu/fritchii/fritchii_ui.h"
+#include "yuzu/fritchii/saves_window.h"
 
 namespace FritchiiUi {
 namespace {
@@ -227,18 +228,11 @@ QWidget* Home::MakeRail() {
             QPoint(menu_button->width() + 8, menu_button->height() - size.height())));
     });
 
-    // The community and support links sit at the bottom, above the menu.
-    QToolButton* discord = RailButton(QStringLiteral("community"), tr("Fritchii Discord"));
-    connect(discord, &QToolButton::clicked, this, [] { OpenDiscord(); });
-    QToolButton* donate = RailButton(QStringLiteral("heart"), tr("Donate"));
-    connect(donate, &QToolButton::clicked, this, [] { OpenDonate(); });
-
+    // Discord and Donate are on the home page itself (MakePage), with their names.
     layout->addWidget(library_button);
     layout->addWidget(settings);
     layout->addWidget(help);
     layout->addStretch(1);
-    layout->addWidget(discord);
-    layout->addWidget(donate);
     layout->addWidget(menu_button);
     return rail;
 }
@@ -268,8 +262,37 @@ QWidget* Home::MakePage() {
     });
 
     auto* layout = new QVBoxLayout(page);
-    layout->setContentsMargins(56, 52, 56, 36);
+    layout->setContentsMargins(56, 24, 56, 36);
     layout->setSpacing(0);
+
+    // Discord and Donate in plain sight at the top right, with their names (2026-11-10: the
+    // rail's bare icons were easy to miss).
+    auto* links = new QHBoxLayout;
+    links->setSpacing(10);
+    links->addStretch(1);
+    const auto link = [this](const QString& icon, const QString& text, void (*open)()) {
+        auto* button = new QPushButton(Icon(icon, 18), text, page);
+        button->setObjectName(QStringLiteral("FritchiiLink"));
+        button->setIconSize(QSize(18, 18));
+        button->setCursor(Qt::PointingHandCursor);
+        button->setFocusPolicy(Qt::NoFocus);
+        connect(button, &QPushButton::clicked, this, [open] { open(); });
+        return button;
+    };
+    // v5.8.3: the Saves window (export, import, copy between Fritchii, Eden and Lichii).
+    auto* saves = new QPushButton(Icon(QStringLiteral("list"), 18), tr("Saves"), page);
+    saves->setObjectName(QStringLiteral("FritchiiLink"));
+    saves->setIconSize(QSize(18, 18));
+    saves->setCursor(Qt::PointingHandCursor);
+    saves->setFocusPolicy(Qt::NoFocus);
+    connect(saves, &QPushButton::clicked, this, [this] {
+        ShowSavesWindow(window, hooks.emulation_running);
+    });
+    links->addWidget(saves);
+    links->addWidget(link(QStringLiteral("community"), tr("Discord"), &OpenDiscord));
+    links->addWidget(link(QStringLiteral("heart"), tr("Donate"), &OpenDonate));
+    layout->addLayout(links);
+    layout->addSpacing(28);
 
     auto* hero = new QHBoxLayout;
     hero->setSpacing(36);

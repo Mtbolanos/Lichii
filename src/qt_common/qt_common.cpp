@@ -60,7 +60,7 @@ const QStringList supported_file_extensions = {QStringLiteral("nro"), QStringLit
                                                QStringLiteral("nca"), QStringLiteral("xci"),
                                                QStringLiteral("xcz"), QStringLiteral("nsp"),
                                                QStringLiteral("nsz"), QStringLiteral("nup"),
-                                               QStringLiteral("kip")};
+                                               QStringLiteral("nx"),  QStringLiteral("kip")};
 
 Core::Frontend::WindowSystemType GetWindowSystemType() {
     // Determine WSI type based on Qt platform.

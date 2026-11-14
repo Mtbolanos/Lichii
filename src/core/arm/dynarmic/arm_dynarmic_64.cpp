@@ -10,6 +10,7 @@
 #include <immintrin.h>
 #endif
 #include "common/settings.h"
+#include "common/nx2_hitch.h"
 #include "core/arm/dynarmic/arm_dynarmic.h"
 #include "core/arm/dynarmic/arm_dynarmic_64.h"
 #include "core/arm/dynarmic/dynarmic_exclusive_monitor.h"
@@ -57,6 +58,9 @@ Dynarmic::A64::Vector DynarmicCallbacks64::MemoryRead128(u64 vaddr) {
 std::optional<u32> DynarmicCallbacks64::MemoryReadCode(u64 vaddr) {
     if (!m_memory.IsValidVirtualAddressRange(vaddr, sizeof(u32)))
         return std::nullopt;
+    if (direct_code_reads) {
+        return m_memory.Read32(vaddr);
+    }
     auto const aligned_vaddr = vaddr & ~Core::Memory::YUZU_PAGEMASK;
     if (last_code_addr != aligned_vaddr) {
         m_memory.ReadBlock(aligned_vaddr, &cached_code_page, sizeof(cached_code_page));
@@ -456,6 +460,19 @@ void ArmDynarmic64::MakeJit(Common::PageTable* page_table, std::size_t address_s
         config.fastmem_pointer = std::nullopt;
         config.fastmem_exclusive_access = false;
     }
+    // The IR verification pass only asserts, and builds a hash map per compiled block.
+    // EDEN_NX2_JIT_FAST_COMPILE=0 keeps it.
+    static const bool fast_compile = [] {
+        const char* value = std::getenv("EDEN_NX2_JIT_FAST_COMPILE");
+        const bool enabled = value == nullptr || value[0] != '0';
+        LOG_INFO(Core_ARM, "EDEN_NX2_JIT_FAST_COMPILE: IR verification {}",
+                 enabled ? "skipped" : "kept");
+        return enabled;
+    }();
+    if (fast_compile && Settings::values.cpu_accuracy.GetValue() != Settings::CpuAccuracy::Debugging &&
+        Settings::values.cpu_accuracy.GetValue() != Settings::CpuAccuracy::Paranoid) {
+        config.optimizations |= Dynarmic::OptimizationFlag::DisableVerification;
+    }
     m_jit.emplace(config);
 }
 
@@ -552,6 +569,22 @@ void ArmDynarmic64::SignalInterrupt(Kernel::KThread* thread) {
 void ArmDynarmic64::ClearInstructionCache() {
     m_cb->last_code_addr = u64(-1);
     m_jit->ClearCache();
+}
+
+std::size_t ArmDynarmic64::WarmCompile(std::span<const u64> keys, const std::atomic<bool>& stop) {
+    m_cb->direct_code_reads = true;
+    Common::Nx2Hitch::t_warming = true;
+    std::size_t done = 0;
+    for (const u64 key : keys) {
+        if (stop.load(std::memory_order_acquire)) {
+            break;
+        }
+        static_cast<void>(m_jit->PrecompileBlock(key));
+        ++done;
+    }
+    Common::Nx2Hitch::t_warming = false;
+    m_cb->direct_code_reads = false;
+    return done;
 }
 
 void ArmDynarmic64::InvalidateCacheRange(u64 addr, std::size_t size) {

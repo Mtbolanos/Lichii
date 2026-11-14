@@ -2,6 +2,8 @@
 
 #include "yuzu/fritchii/fritchii_ui.h"
 
+#include <algorithm>
+#include <array>
 #include <map>
 #include <string_view>
 
@@ -21,6 +23,8 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
+#include <QProcess>
 #include <QPalette>
 #include <QPixmap>
 #include <QProxyStyle>
@@ -31,6 +35,9 @@
 
 #include "common/fs/fs_paths.h"
 #include "common/fs/path_util.h"
+#include "frontend_common/profile_import.h"
+#include "yuzu/fritchii/saves_window.h"
+#include "yuzu/user_data_migration.h"
 #include "common/logging.h"
 #include "common/scm_rev.h"
 #include "common/settings.h"
@@ -270,6 +277,18 @@ void RestructureMenus(Ui::MainWindow& ui, QMainWindow& window, const MenuHooks& 
     QObject::connect(donate, &QAction::triggered, &window, [] { OpenDonate(); });
     ui.menu_Help->insertAction(first_help, discord);
     ui.menu_Help->insertAction(first_help, donate);
+    // v5.8.1: copy a profile again after the first launch's automatic import (a player whose
+    // newest saves were in Lichii 150+'s folder got the older eden copy).
+    auto* copy_data = new QAction(tr("&Copy Data from Eden or Lichii..."), &window);
+    QObject::connect(copy_data, &QAction::triggered, &window, [&window] { CopyDataFromOldFolder(window); });
+    ui.menu_Help->insertAction(first_help, copy_data);
+    // v5.8.3: export, import and copy saves between Fritchii, Eden and Lichii.
+    auto* saves = new QAction(tr("Sa&ves..."), &window);
+    QObject::connect(saves, &QAction::triggered, &window, [&window] {
+        ShowSavesWindow(&window,
+                        [] { return QtCommon::system && QtCommon::system->IsPoweredOn(); });
+    });
+    ui.menu_Help->insertAction(copy_data, saves);
 
     // Plain names.
     ui.menu_recent_files->setTitle(tr("Open &Recent"));
@@ -531,6 +550,41 @@ void OpenDiscord() {
     QDesktopServices::openUrl(QUrl(QString::fromLatin1(DiscordInvite)));
 }
 
+void CopyDataFromOldFolder(QMainWindow& window) {
+    namespace fs = std::filesystem;
+    using namespace Common::FS;
+    if (IsPortableMode()) {
+        QMessageBox::information(&window, QStringLiteral("Fritchii"),
+                                 QObject::tr("This Fritchii keeps its data in the user folder next to "
+                                    "lichii.exe."));
+        return;
+    }
+    const bool any = std::ranges::any_of(
+        std::array{LegacyEdenDir, LichiiDir, YuzuDir, SuyuDir, SudachiDir, CitronDir},
+        [](EmuPath path) { return fs::is_directory(GetLegacyPath(path)); });
+    if (!any) {
+        QMessageBox::information(&window, QStringLiteral("Fritchii"),
+                                 QObject::tr("No eden or lichii folder was found in %APPDATA%."));
+        return;
+    }
+    // The same dialog as the first launch (v5.8.2): which folder, and saves / settings / mods.
+    const auto choice = UserDataMigrator::AskImport(&window, true);
+    if (!choice) {
+        return;
+    }
+    try {
+        FrontendCommon::RequestProfileImport(choice->Serialize());
+    } catch (const std::exception& error) {
+        QMessageBox::warning(&window, QStringLiteral("Fritchii"), QString::fromUtf8(error.what()));
+        return;
+    }
+    // The copy runs when Fritchii starts, before anything reads the settings.
+    QObject::connect(qApp, &QCoreApplication::aboutToQuit, qApp, [] {
+        QProcess::startDetached(QCoreApplication::applicationFilePath(), {});
+    });
+    window.close();
+}
+
 void OpenDonate() {
     QDesktopServices::openUrl(QUrl(QString::fromLatin1(DonateLink)));
 }
@@ -550,7 +604,10 @@ QStringList OcarinaGameOverrides() {
     const QString suffix = QStringLiteral("\\use_global=false");
     while (!file.atEnd()) {
         const QString line = QString::fromUtf8(file.readLine()).trimmed();
-        if (line.endsWith(suffix)) {
+        // The memory layout is Fritchii's own while a Switch 2 game runs (12 GB, core.cpp), and
+        // saving Game Settings during play could store it as OoT's: never the player's choice,
+        // so it doesn't count (players read the banner as "my settings changed", 2026-11-11).
+        if (line.endsWith(suffix) && !line.contains(QStringLiteral("memory_layout_mode"))) {
             names << line.chopped(suffix.size());
         }
     }

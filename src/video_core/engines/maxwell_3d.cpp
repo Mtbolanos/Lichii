@@ -911,6 +911,14 @@ void Maxwell3D::ProcessQueryCondition() {
         return;
     }
     const GPUVAddr condition_address{regs.render_enable.Address()};
+    if (VideoCore::Nx2Debug::Experiment(53) != 0 &&
+        regs.render_enable.mode >= Regs::RenderEnable::Mode::Conditional) {
+        // EXP53: the front left the Compare words to this thread. Report words wait in the query
+        // cache until a fence, and the caches belong to the thread running this (the split's
+        // back): write them out before they are compared.
+        memory_manager.FlushRegion(condition_address, sizeof(Regs::ReportSemaphore::Compare),
+                                   VideoCommon::CacheType::QueryCache);
+    }
     Regs::ReportSemaphore::Compare cmp{};
     bool operands_read = false;
     switch (regs.render_enable_override) {
@@ -1113,6 +1121,9 @@ struct Maxwell3D::FrontState {
     Regs::ShadowRamControl control{};
     u32 executing_macro{};
     std::vector<u32> parameters;
+    /// EXP53: per macro, 0 unknown, 1 a render-enable predicate, 2 something else.
+    std::vector<u8> predicate_macros;
+    u64 predicate_generation{~u64{0}};
     std::vector<u32> dma_words; ///< FrontDmaReadEarly's words
     u64 calls{};
     /// A method the draw manager handles was sent since the back last ran DrawDeferred: only
@@ -1783,6 +1794,14 @@ void Maxwell3D::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split
         }
         trace_text += " writes";
     }
+    // EDEN_NX2_EXP53 (live, 0 = off; port of Eglantine d3612f82b1 by kraibse): NVN's conditional
+    // render macro reads the six Compare words at an address and sets render_enable.mode from
+    // them, which drained the split on every call (our largest front wait, "macro dma read").
+    // For such a macro the front skips the read, feeds six zero words and writes the address
+    // with mode IfNotEqual: the back evaluates the same condition in order.
+    const bool predicate = VideoCore::Nx2Debug::Experiment(53) != 0 &&
+                           fs.parameters.size() == 3 && fs.parameters[0] == 0 &&
+                           IsPredicateMacro(fs, method);
     {
         VideoCommon::Nx2Profile::Scope profile_scope{VideoCommon::Nx2Profile::Zone::Macro};
         engine.native_interpreter.active_dram = &native_data_ram;
@@ -1797,10 +1816,31 @@ void Maxwell3D::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split
             if (address >= MacroRegistersStart) {
                 return false;
             }
+            if (predicate && address == MAXWELL3D_REG_INDEX(render_enable.mode)) {
+                FrontWrite(split, fs, MAXWELL3D_REG_INDEX(render_enable.address_high),
+                           fs.regs[0x154] & 0x1ffffff, true, true);
+                FrontWrite(split, fs, MAXWELL3D_REG_INDEX(render_enable.address_low),
+                           fs.regs[0x155], true, true);
+                FrontWrite(split, fs, address,
+                           static_cast<u32>(Regs::RenderEnable::Mode::IfNotEqual), true, true);
+                return true;
+            }
             FrontWrite(split, fs, address, value, true, true);
             // MME_DMA_READ (into data RAM) and MME_DMA_READ_FIFOED (into the load FIFO).
             if (address == 0x157 || address == 0x158) {
-                FrontDmaRead(split, fs, method, address, value);
+                if (predicate && address == 0x158) {
+                    // The back reads the words when it evaluates the condition: the macro only
+                    // has to consume six.
+                    fs.parameters.insert(fs.parameters.end(), value, 0U);
+                    static std::atomic<u64> skipped{};
+                    if (const u64 n = skipped.fetch_add(1, std::memory_order_relaxed);
+                        n == 0 || (n + 1) % 100000 == 0) {
+                        LOG_INFO(HW_GPU, "Conditional render macro (EXP53): {} reads left to the back",
+                                 n + 1);
+                    }
+                } else {
+                    FrontDmaRead(split, fs, method, address, value);
+                }
             }
             return true;
         };
@@ -1833,6 +1873,76 @@ void Maxwell3D::FrontRunMacro(Core::System& system, VideoCommon::GpuSplit& split
     if (FrontVerifyEnabled() && (++fs.calls & 4095) == 0) [[unlikely]] {
         FrontVerify(split, fs);
     }
+}
+
+bool Maxwell3D::IsPredicateMacro(FrontState& fs, u32 method) {
+#ifdef ARCHITECTURE_x86_64
+    auto& engine = GetNativeMacroEngine();
+    const auto positions = GetNativeMacroPositions();
+    if (positions.empty() || engine.native_execution_failed) {
+        return false;
+    }
+    const size_t index = ((method - MacroRegistersStart) >> 1) % positions.size();
+    if (fs.predicate_generation != engine.native_code_generation ||
+        fs.predicate_macros.size() != positions.size()) {
+        fs.predicate_generation = engine.native_code_generation;
+        fs.predicate_macros.assign(positions.size(), 0);
+    }
+    if (fs.predicate_macros[index] != 0) {
+        return fs.predicate_macros[index] == 1;
+    }
+    // Dry run against a copy of the data RAM, feeding test words when the macro asks for six. It
+    // must write exactly the DMA address, the read of six words and render_enable.mode, and the
+    // mode must be what IfNotEqual makes of the Compare words for every test vector.
+    constexpr u32 address_high = 0x21, address_low = 0x13d60da0;
+    constexpr std::array<std::array<u32, 6>, 8> vectors{{
+        {0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 1, 0}, {1, 0, 0, 0, 1, 0},
+        {0, 1, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}, {5, 0, 0, 0, 0, 0}, {2, 3, 7, 9, 2, 3},
+    }};
+    if (!engine.native_jit) {
+        engine.native_jit = std::make_shared<TuringMacroJit>();
+    }
+    engine.native_jit->Prepare(engine.native_code, engine.native_code_generation);
+    bool matches = true;
+    std::array<u32, vectors.size()> modes{};
+    for (size_t i = 0; i < vectors.size() && matches; ++i) {
+        std::vector<u32> parameters{0, address_high, address_low};
+        std::vector<u32> scratch_ram(native_data_ram.begin(), native_data_ram.end());
+        std::vector<std::pair<u32, u32>> writes;
+        const auto result = engine.native_jit->Execute(
+            positions[index], parameters, std::span<u32>{scratch_ram},
+            [&fs](u32 address) { return address < Regs::NUM_REGS ? fs.regs[address] : 0U; },
+            [&](u32 address, u32 value) {
+                if (address >= MacroRegistersStart || writes.size() >= 16) {
+                    return false;
+                }
+                writes.emplace_back(address, value);
+                if (address == 0x158 && value == 6) {
+                    parameters.insert(parameters.end(), vectors[i].begin(), vectors[i].end());
+                }
+                return true;
+            });
+        matches = result.success && writes.size() == 4 && writes[0].first == 0x154 &&
+                  writes[0].second == address_high && writes[1].first == 0x155 &&
+                  writes[1].second == address_low && writes[2] == std::pair<u32, u32>{0x158, 6} &&
+                  writes[3].first == MAXWELL3D_REG_INDEX(render_enable.mode);
+        if (matches) {
+            const auto& w = vectors[i];
+            modes[i] = writes[3].second;
+            matches = modes[i] == ((w[0] != w[4] || w[1] != w[5]) ? 1U : 0U);
+        }
+    }
+    fs.predicate_macros[index] = matches ? 1 : 2;
+    LOG_INFO(HW_GPU, "Native macro {:#x}: {} (EXP53; modes for the test vectors: {})", method,
+             matches ? "render-enable predicate, the back evaluates IfNotEqual"
+                     : "not a render-enable predicate (or not IfNotEqual), runs as before",
+             fmt::join(modes, " "));
+    return matches;
+#else
+    static_cast<void>(fs);
+    static_cast<void>(method);
+    return false;
+#endif
 }
 
 bool Maxwell3D::FrontMacroCountsDraw(Core::System& system, VideoCommon::GpuSplit& split,

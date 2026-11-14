@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <thread>
 
@@ -16,9 +17,13 @@
 #endif
 #include <cstring>
 #include <string>
+#include <vector>
+
+#include <fmt/format.h>
 
 #include "common/dkb_cpu_trace.h"
 #include "common/logging.h"
+#include "common/nx2_hitch.h"
 #include "common/nx2_timeline.h"
 #include "common/settings.h"
 #include "common/thread.h"
@@ -35,6 +40,72 @@
 namespace VideoCommon {
 
 namespace {
+
+// Every front wait for the back, by site, always on (fable52_answer_13 section 3: the macro DMA
+// read drains were half the front's wait in the Stalchild fight and had no line). Per site: how
+// many, their time, and the ring words the back had left when each began ("behind": more words
+// is more queued work, the same words taking longer is a slower back). Front thread only. Logged
+// every 5 s with the cache lock waits per thread role (Nx2Hitch::g_lock_waits).
+struct SiteWaitStats {
+    std::array<u64, static_cast<size_t>(DrainSite::Count)> count{};
+    std::array<u64, static_cast<size_t>(DrainSite::Count)> ns{};
+    std::array<u64, static_cast<size_t>(DrainSite::Count)> behind{};
+    std::array<u64, static_cast<size_t>(Common::Nx2Hitch::Role::Count)> lock_ns{};
+    std::array<u64, static_cast<size_t>(Common::Nx2Hitch::Role::Count)> lock_count{};
+    u64 since{};
+};
+SiteWaitStats g_site_waits;
+
+void NoteSiteWait(DrainSite site, u64 behind, u64 ns) {
+    auto& stats = g_site_waits;
+    const auto i = static_cast<size_t>(site);
+    ++stats.count[i];
+    stats.ns[i] += ns;
+    stats.behind[i] += behind;
+    const u64 now = Common::Nx2Hitch::NowNs();
+    if (stats.since == 0) {
+        stats.since = now;
+        return;
+    }
+    const double window = static_cast<double>(now - stats.since) / 1e9;
+    if (window < 5.0) {
+        return;
+    }
+    std::vector<size_t> order;
+    for (size_t s = 0; s < stats.count.size(); ++s) {
+        if (stats.count[s] != 0) {
+            order.push_back(s);
+        }
+    }
+    std::ranges::sort(order, [&](size_t a, size_t b) { return stats.ns[a] > stats.ns[b]; });
+    std::string sites;
+    for (const size_t s : order) {
+        sites += fmt::format("{}{} {:.0f}/s {:.1f} ms/s behind {:.0f}", sites.empty() ? "" : "; ",
+                             drain_site_names[s], static_cast<double>(stats.count[s]) / window,
+                             static_cast<double>(stats.ns[s]) / 1e6 / window,
+                             static_cast<double>(stats.behind[s]) /
+                                 static_cast<double>(stats.count[s]));
+    }
+    std::array<double, static_cast<size_t>(Common::Nx2Hitch::Role::Count)> lock_ms{};
+    std::array<double, static_cast<size_t>(Common::Nx2Hitch::Role::Count)> lock_rate{};
+    for (size_t r = 0; r < lock_ms.size(); ++r) {
+        const u64 total_ns = Common::Nx2Hitch::g_lock_waits.ns[r].load(std::memory_order_relaxed);
+        const u64 total = Common::Nx2Hitch::g_lock_waits.count[r].load(std::memory_order_relaxed);
+        lock_ms[r] = static_cast<double>(total_ns - stats.lock_ns[r]) / 1e6 / window;
+        lock_rate[r] = static_cast<double>(total - stats.lock_count[r]) / window;
+        stats.lock_ns[r] = total_ns;
+        stats.lock_count[r] = total;
+    }
+    LOG_INFO(HW_GPU,
+             "Front waits for the back by site (ring words behind at the start): {}; cache lock "
+             "waits: guest cores {:.1f} ms/s ({:.0f}/s), GPU back {:.1f} ms/s ({:.0f}/s), GPU "
+             "front {:.1f} ms/s, other threads {:.1f} ms/s",
+             sites, lock_ms[1], lock_rate[1], lock_ms[3], lock_rate[3], lock_ms[2], lock_ms[0]);
+    stats.count = {};
+    stats.ns = {};
+    stats.behind = {};
+    stats.since = now;
+}
 
 void Pause() {
 #if defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
@@ -324,11 +395,14 @@ void GpuSplit::Drain(DrainSite site) {
     Common::Nx2Timeline::ArgSpan timeline_span{drain_site_names[static_cast<size_t>(site)],
                                                {"behind", write_position - consumed_cache}};
     const u64 start = Nx2Profile::Enabled() ? Nx2Profile::Ticks() : 0;
+    const u64 begin_ns = Common::Nx2Hitch::NowNs();
+    const u64 behind = write_position - consumed_cache;
     for (u32 spins = 0;; ++spins) {
         consumed_cache = consumed.load(std::memory_order_acquire);
         if (consumed_cache == write_position) {
             publish_every = 8;
             Nx2Profile::AddDrain(site, start);
+            NoteSiteWait(site, behind, Common::Nx2Hitch::NowNs() - begin_ns);
             return;
         }
         Backoff(spins, write_position);
@@ -810,11 +884,14 @@ bool GpuSplit::WaitFor(u64 target, DrainSite site) {
     wait_target.store(target, std::memory_order_seq_cst);
     Publish();
     const u64 start = Nx2Profile::Enabled() ? Nx2Profile::Ticks() : 0;
+    const u64 begin_ns = Common::Nx2Hitch::NowNs();
+    const u64 behind = target - consumed_cache;
     for (u32 spins = 0;; ++spins) {
         consumed_cache = consumed.load(std::memory_order_acquire);
         if (consumed_cache >= target) {
             wait_target.store(~u64{0}, std::memory_order_relaxed);
             Nx2Profile::AddDrain(site, start);
+            NoteSiteWait(site, behind, Common::Nx2Hitch::NowNs() - begin_ns);
             return true;
         }
         Backoff(spins, target);

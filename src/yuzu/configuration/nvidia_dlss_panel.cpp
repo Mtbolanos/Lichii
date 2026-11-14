@@ -372,8 +372,11 @@ void NvidiaDlssPanel::Refresh() {
     QString status;
     QString button;
     if (has_loader && has_model) {
-        status = Tr("<b>Ready.</b> Found %1 and %2.")
-                     .arg(Named(QStringLiteral("NVIDIA Streamline"), files.interposer_version), dlss);
+        status =
+            Tr("<b>Ready.</b> Found %1 and %2.<br>DLSS and the settings below apply only "
+               "when a game uses its own DLSS. While DLSS runs, the status bar shows DLSS, "
+               "its mode and its preset.")
+                .arg(Named(QStringLiteral("NVIDIA Streamline"), files.interposer_version), dlss);
     } else if (has_model) {
         status = Tr("<b>One file needed:</b> NVIDIA's Streamline loader (sl.interposer.dll). "
                     "%1 will be used. Until then, games use AMD FSR 3.1.")

@@ -15,6 +15,7 @@
 
 #include "common/assert.h"
 #include "common/logging.h"
+#include "common/nx2_hitch.h"
 #include "common/settings.h"
 #include "core/core.h"
 #include <optional>
@@ -818,7 +819,9 @@ static bool ReleaseFencesForReadable(DmaPusher& dma_pusher, const void* owner,
         ReleaseFences(dma_pusher);
         const bool result = met();
         ++stats.full;
-        stats.full_ns += FenceWriterStats::Nanoseconds(begin, Clock::now());
+        const u64 full_ns = FenceWriterStats::Nanoseconds(begin, Clock::now());
+        stats.full_ns += full_ns;
+        Common::Nx2Hitch::Add(Common::Nx2Hitch::Cause::FullDrain, full_ns);
         stats.full_met += result ? 1 : 0;
         stats.Tick();
         return result;
@@ -840,6 +843,7 @@ static bool ReleaseFencesForReadable(DmaPusher& dma_pusher, const void* owner,
         const bool result = met();
         ++stats.full;
         stats.full_ns += ns;
+        Common::Nx2Hitch::Add(Common::Nx2Hitch::Cause::FullDrain, ns);
         stats.full_met += result ? 1 : 0;
         stats.saved_ns += mode == 3 && met_there ? ns : 0;
         stats.Tick();

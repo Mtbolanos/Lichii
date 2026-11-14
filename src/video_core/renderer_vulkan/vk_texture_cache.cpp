@@ -2025,7 +2025,10 @@ bool TextureCacheRuntime::UpscaleWithDlss(Framebuffer* dst_framebuffer, ImageVie
             .barrier_aspect = ImageAspectMask(view.format),
         };
     };
-    const VkExtent2D extent = dst_framebuffer->RenderArea();
+    const bool native_resolution =
+        Settings::GetNvidiaDlssRuntimeSettings().quality == Settings::NvidiaDlssQuality::Native;
+    const VkExtent2D extent = native_resolution ? VkExtent2D{render_size[0], render_size[1]}
+                                                : dst_framebuffer->RenderArea();
     bool upscaled{};
     try {
         upscaled = dlss_upscaler->Upscale({
@@ -2051,7 +2054,8 @@ bool TextureCacheRuntime::UpscaleWithDlss(Framebuffer* dst_framebuffer, ImageVie
         return false;
     }
     DrawUpscaledOutput(dst_framebuffer, dlss_upscaler->OutputView(), dlss_upscaler->OutputImage(),
-                       dlss_upscaler->PointSampler());
+                       native_resolution ? dlss_upscaler->LinearSampler()
+                                         : dlss_upscaler->PointSampler());
     static bool logged{};
     if (!logged) {
         logged = true;
@@ -2964,7 +2968,11 @@ void TextureCacheRuntime::PoolImage(const ImagePoolKey& key, vk::Image image, u6
     });
     image_pool_bytes += bytes;
     ++image_pool_given;
-    TrimImagePool(ImagePoolMaxBytes);
+    TrimImagePool(ImagePoolCap());
+}
+
+u64 TextureCacheRuntime::ImagePoolCap() {
+    return VideoCore::Nx2Debug::Experiment(42) >= 2 ? ImagePoolMaxBytesDedicated : ImagePoolMaxBytes;
 }
 
 void TextureCacheRuntime::TrimImagePool(u64 max_bytes) {
@@ -3160,10 +3168,15 @@ void Image::ReleaseToPool() {
         if (!key.valid || !image || image.IsUnbacked()) {
             return;
         }
-        // Dedicated allocations (block 0) and memory placed in host memory over budget are
-        // freed as before.
+        // Memory placed in host memory over budget is freed as before. Dedicated allocations
+        // (block 0) too with EXP42=1; EXP42=2 pools them as well (2026-11-10: in the Stalchild
+        // fight 2,295 images a 600 frames asked the pool and only 309 were ever given back, the
+        // big render targets such as a 1280x720 one remade up to 282 times being dedicated).
+        // The image keeps its own allocation either way.
         const vk::Image::MemoryBlock block = image.GetMemoryBlock();
-        if (block.block == 0 || block.size < MinPooledBytes || !image.IsDeviceLocal()) {
+        const bool dedicated = block.block == 0;
+        if ((dedicated && VideoCore::Nx2Debug::Experiment(42) < 2) || block.size < MinPooledBytes ||
+            !image.IsDeviceLocal()) {
             return;
         }
         if (ENABLE_MSAA_RESOLVE_CONSUME) {

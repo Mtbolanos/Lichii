@@ -78,6 +78,19 @@ public:
         return capturing && sampled;
     }
 
+    /// The debug server's capture_frame, mid-game and without EDEN_NX2_FRAME_DUMP at boot
+    /// (2026-11-10: the owner found stretched terrain on screen, and a relaunch would lose it).
+    /// Captures the next frame into `dir`; `buffers` records every draw and dispatch's uniform
+    /// and storage buffers (as EDEN_NX2_FRAME_DUMP_SAMPLED does), `host` also the host buffer's
+    /// copy of guest-sourced ones (as EDEN_NX2_FRAME_DUMP_HOST). FinishCapture(id) is called once
+    /// every file is written. Returns false while another capture runs.
+    bool RequestNow(u64 id, const std::filesystem::path& dir, bool buffers, bool host);
+
+    /// The running capture also reads the host copies of guest-sourced buffers.
+    [[nodiscard]] bool HostCopies() const noexcept {
+        return capturing && host_copies;
+    }
+
     /// Reads back the textures of the current draw not yet seen in this pass. Returns true when
     /// copies were recorded, which ends the current render pass.
     bool NoteSampled(std::span<const Sampled> textures);
@@ -180,6 +193,8 @@ private:
     void WriteBuffer(const Job& job);
     void WriteFile(const std::string& name, std::span<const u8> data);
     void Rearm();
+    /// Ends the writer (every queued file written) and clears the capture's state.
+    void ResetAfterCapture();
 
     const Device& device;
     MemoryAllocator& memory_allocator;
@@ -202,6 +217,10 @@ private:
     /// EDEN_NX2_FRAME_DUMP_PAIR: each file-triggered capture is followed by one of the next frame.
     bool pair{};
     bool pair_next{};
+    /// RequestNow: capture at the next frame end, then FinishCapture(request_id).
+    bool request_now{};
+    u64 request_id{};
+    bool host_copies{};
     double trigger_seconds{};
     std::chrono::steady_clock::time_point start;
     u64 frame{};

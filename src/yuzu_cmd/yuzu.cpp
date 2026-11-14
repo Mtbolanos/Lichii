@@ -49,6 +49,7 @@
 #include "core/hle/service/filesystem/filesystem.h"
 #include "core/loader/loader.h"
 #include "frontend_common/config.h"
+#include "frontend_common/profile_import.h"
 #include "input_common/drivers/keyboard.h"
 #include "input_common/main.h"
 #include "network/network.h"
@@ -567,8 +568,6 @@ extern "C" SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
     // SDL calls SDL_AppIterate back to back by default, which kept a host core at 100% polling
     // input; 240 Hz is plenty for input and the key script.
     SDL_SetHint(SDL_HINT_MAIN_CALLBACK_RATE, "240");
-    SdlState* state = new SdlState();
-    *appstate = state;
 
 #ifdef _WIN32
     if (AttachConsole(ATTACH_PARENT_PROCESS)) {
@@ -585,6 +584,16 @@ extern "C" SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
         setrlimit(RLIMIT_NOFILE, &rl);
     }
 #endif
+
+    try {
+        FrontendCommon::CheckLegacyProfileBeforeConfig();
+    } catch (const std::exception& exception) {
+        fmt::print(stderr, "{}\n", exception.what());
+        return SDL_APP_FAILURE;
+    }
+
+    SdlState* state = new SdlState();
+    *appstate = state;
 
     Common::Log::Initialize();
     Common::Log::SetColorConsoleBackendEnabled(true);
@@ -673,6 +682,10 @@ extern "C" SDL_AppResult SDL_AppInit(void **appstate, int argc, char **argv) {
 #endif
 
     state->system.SetContentProvider(std::make_unique<FileSys::ContentProviderUnion>());
+    // Holds the updates and DLC an NX archive brings, as the Qt frontend does.
+    static FileSys::ManualContentProvider manual_provider;
+    state->system.RegisterContentProvider(FileSys::ContentProviderUnionSlot::FrontendManual,
+                                          &manual_provider);
     state->system.SetFilesystem(std::make_shared<FileSys::RealVfsFilesystem>());
     state->system.GetFileSystemController().CreateFactories(*state->system.GetFilesystem());
     state->system.GetUserChannel().clear();

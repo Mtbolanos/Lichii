@@ -160,6 +160,21 @@ void ConfigureSystem::Setup(const ConfigurationShared::Builder& builder) {
             checkbox_rtc = widget->checkbox;
         }
 
+        // Players changed it for OoT and thought the game ignored them (2026-11-11): say once,
+        // when they touch it, that Switch 2 games pick 12 GB on their own.
+        if (setting->Id() == Settings::values.memory_layout_mode.Id() && widget->combobox) {
+            connect(widget->combobox, &QComboBox::activated, this, [this] {
+                static bool told = false;
+                if (!told) {
+                    told = true;
+                    QMessageBox::information(
+                        this, tr("Memory Layout"),
+                        tr("Switch 2 games, like Ocarina of Time, always use 12 GB while they run. "
+                           "This setting only changes Switch 1 games."));
+                }
+            });
+        }
+
         if (setting->Id() == Settings::values.custom_rtc.Id()) {
             date_rtc = widget->date_time_edit;
         }

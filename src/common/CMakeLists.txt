@@ -47,6 +47,8 @@ add_library(
     dkb_cpu_trace.h
     jit_symbols.cpp
     jit_symbols.h
+    nx2_hitch.cpp
+    nx2_hitch.h
     nx2_sampler.cpp
     nx2_sampler.h
     nx2_gpu_write_listener.h
@@ -70,8 +72,12 @@ add_library(
     fs/fs_types.h
     fs/fs_util.cpp
     fs/fs_util.h
+    fs/file_lock.cpp
+    fs/file_lock.h
     fs/path_util.cpp
     fs/path_util.h
+    fs/profile_migration.cpp
+    fs/profile_migration.h
     hash.h
     heap_tracker.cpp
     heap_tracker.h

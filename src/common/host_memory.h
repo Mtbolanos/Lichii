@@ -68,6 +68,18 @@ public:
     /// the working set, like HintCold. Returns {resident bytes looked at, bytes trimmed}.
     std::pair<size_t, size_t> TrimZeroPages() const;
 
+    /// The last TrimZeroPages pass's phases (2026-11-10: 10-14 ms host map/unmap/protect stalls in
+    /// kill hitches while a pass ran; which phase holds the address space): the working set query,
+    /// reading the pages, and the VirtualUnlock calls (and how many).
+    struct ZeroTrimPhases {
+        u64 query_us{};
+        u64 scan_us{};
+        u64 unlock_us{};
+        u64 unlock_runs{};
+        u64 longest_unlock_us{};
+    };
+    [[nodiscard]] static ZeroTrimPhases LastZeroTrimPhases() noexcept;
+
     /// Bytes ClearBackingRegion has filled with zeros (memset) since start.
     static u64 ZeroFilledBytes() noexcept;
 

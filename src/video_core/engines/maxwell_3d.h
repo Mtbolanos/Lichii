@@ -3417,6 +3417,10 @@ public:
     bool FrontMacroCountsDraw(Core::System& system, VideoCommon::GpuSplit& split, u32 method,
                               u32 count);
 private:
+    /// EXP53 (Eglantine d3612f82b1, kraibse): whether the macro at `method` is NVN's
+    /// conditional render, which DMA-reads six Compare words and only sets render_enable.mode
+    /// from them as IfNotEqual does (dry runs on copies, cached per macro and code generation).
+    bool IsPredicateMacro(FrontState& fs, u32 method);
     void FrontTrackInstanceLoop(FrontState& state, u32 method, u32 value);
     bool FrontSkipsLoopWrite(FrontState& state, u32 method, u32 value, bool shadow_kept);
     void FrontTrackIndexDraws(FrontState& state, u32 method);

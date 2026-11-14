@@ -192,12 +192,14 @@ u32 PatchMain(PatchManagerTestContext& context, const FileSys::PatchManager::Bui
     return WordAt(context.Manager(title_id).PatchNSO(MakeMain(build_id, word), name));
 }
 
-constexpr size_t OcarinaCave = 0x3C46200;
+constexpr size_t OcarinaDark = 0x3C46200; // Dark's routine
+constexpr size_t OcarinaCave = 0x3C46E00; // ours, at the free end of that page
 constexpr size_t OcarinaWaterHook = 0x475F8;
 constexpr u32 WaterFcvtzs = 0x1E380009; // fcvtzs w9, s0
 
 // Ocarina's main as the high refresh rate tests need it: the water renderer's fcvtzs (the ripple
-// hook's original), a BSS that holds the routine's state, and 0x200 zero bytes of cave.
+// hook's original), a BSS that holds the routine's state, and zero bytes from Dark's routine to
+// the end of its page.
 std::vector<u8> MakeOcarinaMain() {
     constexpr size_t Code = sizeof(Loader::NSOHeader);
     auto nso = MakeMain(OcarinaBuildId, NopInstruction);
@@ -217,6 +219,7 @@ void WriteOotHighRefreshCode(std::span<u8> code, const FileSys::OotHighRefreshCo
     using Parts = FileSys::OotHighRefreshCode;
     std::ranges::copy(parts.call, code.begin() + Parts::CallOffset);
     std::ranges::copy(parts.water, code.begin() + Parts::WaterOffset);
+    std::ranges::copy(parts.dark, code.begin() + Parts::DarkOffset);
     std::ranges::copy(parts.cave, code.begin() + Parts::CaveOffset);
 }
 
@@ -320,15 +323,17 @@ TEST_CASE("Built-in patches preserve user overrides on already-patched input", "
     REQUIRE(std::ranges::equal(patched, expected));
 }
 
-TEST_CASE("High refresh rate built-in replaces Dark's routine only while its setting is on",
+TEST_CASE("High refresh rate built-in calls its own routine only while its setting is on",
           "[patch_manager]") {
     constexpr std::string_view HighRefresh = "High refresh rate (built-in, experimental)";
     constexpr std::string_view DynamicFps = "Dynamic FPS by Dark (built-in)";
     constexpr size_t Code = sizeof(Loader::NSOHeader);
-    constexpr size_t Routine = Code + 0x3C46200;
+    constexpr size_t Dark = Code + OcarinaDark;
+    constexpr size_t Routine = Code + OcarinaCave;
     constexpr size_t CallOffset = Code + 0x6E6CC4;
-    constexpr std::array<u8, 4> DynamicCall{0x4F, 0x7D, 0xD5, 0x94};
-    constexpr u32 DarkThreshold = 0x3F83D70A; // Dark's routine +0x74: 1.03f
+    constexpr u32 DynamicCall = 0x94D57D4F;     // bl 0x3c46200 (Dark's routine)
+    constexpr u32 HighRefreshCall = 0x94D5804F; // bl 0x3c46e00 (ours)
+    constexpr u32 DarkThreshold = 0x3F83D70A;   // Dark's routine +0x74: 1.03f
     const auto word_at = [](const std::vector<u8>& nso, size_t offset) {
         u32 word;
         std::memcpy(&word, nso.data() + offset, sizeof(word));
@@ -337,6 +342,13 @@ TEST_CASE("High refresh rate built-in replaces Dark's routine only while its set
     const auto listed = [](const FileSys::PatchManager& manager, std::string_view name) {
         const auto patches = manager.GetPatches();
         return std::ranges::find(patches, name, &FileSys::Patch::name) != patches.end();
+    };
+    // Dark's Dynamic FPS: his call and routine, not the high refresh mode (the water ripple
+    // built-in may or may not be there next to it).
+    const auto dark_only = [&](const std::vector<u8>& patched) {
+        return word_at(patched, CallOffset) == DynamicCall &&
+               word_at(patched, Dark + 0x74) == DarkThreshold &&
+               !FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code));
     };
     struct RestoreSetting {
         ~RestoreSetting() {
@@ -347,24 +359,47 @@ TEST_CASE("High refresh rate built-in replaces Dark's routine only while its set
     PatchManagerTestContext context;
     auto nso = MakeOcarinaMain();
 
-    SECTION("Off: Dark's routine as before, nothing past it, not listed") {
+    SECTION("Off: Dark's routine, with the water ripple built-in next to it, high refresh not listed") {
         Settings::values.oot_high_refresh.SetValue(false);
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(std::equal(DynamicCall.begin(), DynamicCall.end(), patched.begin() + CallOffset));
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
-        for (size_t offset = 0x78; offset < 0x200; offset += 4) {
+        REQUIRE(dark_only(patched));
+        for (size_t offset = Dark + 0x78; offset < Routine; offset += 4) {
+            REQUIRE(word_at(patched, offset) == 0);
+        }
+        // v5.8: the ripple accumulator and its hook with Dark's mode too (zortos293/Lichii#1180).
+        REQUIRE(word_at(patched, Code + OcarinaWaterHook) == 0x14EFFE26); // b 0x3c46e90
+        REQUIRE(word_at(patched, Routine + 0x90) == 0xB00092C9);          // adrp x9, 0x4e9f000
+        REQUIRE(word_at(patched, Routine + 0x10C) == 0x171001BC);         // b 0x475fc
+        for (size_t offset = 0x110; offset < 0x200; offset += 4) {
             REQUIRE(word_at(patched, Routine + offset) == 0);
         }
-        REQUIRE(word_at(patched, Code + OcarinaWaterHook) == WaterFcvtzs);
-        REQUIRE_FALSE(FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code)));
         REQUIRE_FALSE(listed(context.Manager(), HighRefresh));
         REQUIRE(listed(context.Manager(), DynamicFps));
+        REQUIRE(listed(context.Manager(), "Water ripples at any frame rate (built-in)"));
     }
 
-    SECTION("On: the high refresh routine, with its speed scale word") {
+    SECTION("Off, with the water ripple built-in off in Add-Ons: Dark's routine alone, as before") {
+        Settings::values.oot_high_refresh.SetValue(false);
+        Settings::values.disabled_addons[OcarinaTitleId] = {
+            std::string{"Water ripples at any frame rate (built-in)"}};
+        const auto patched = context.Manager().PatchNSO(nso, "main");
+        Settings::values.disabled_addons.erase(OcarinaTitleId);
+        REQUIRE(dark_only(patched));
+        REQUIRE(word_at(patched, Code + OcarinaWaterHook) == WaterFcvtzs);
+        for (size_t offset = Dark + 0x78; offset < Routine + 0x200; offset += 4) {
+            REQUIRE(word_at(patched, offset) == 0);
+        }
+    }
+
+    SECTION("On: the call to the high refresh routine, with its speed scale word") {
         Settings::values.oot_high_refresh.SetValue(true);
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(std::equal(DynamicCall.begin(), DynamicCall.end(), patched.begin() + CallOffset));
+        REQUIRE(word_at(patched, CallOffset) == HighRefreshCall);
+        // Dark's routine stays, nothing after it (another mod's spot).
+        REQUIRE(word_at(patched, Dark + 0x74) == DarkThreshold);
+        for (size_t offset = Dark + 0x78; offset < Routine; offset += 4) {
+            REQUIRE(word_at(patched, offset) == 0);
+        }
         REQUIRE(word_at(patched, Routine + 0x18) == 0xB40002CC); // cbz x12, +0x70 (Dark's)
         REQUIRE(word_at(patched, Routine + 0x6C) == 0x14000002); // b +0x74
         REQUIRE(word_at(patched, Routine + 0x70) == 0xD65F03C0); // ret
@@ -373,33 +408,47 @@ TEST_CASE("High refresh rate built-in replaces Dark's routine only while its set
         REQUIRE(word_at(patched, Routine + 0x88) == 0x3F800000); // 1.0f
         REQUIRE(word_at(patched, Routine + 0x8C) == 0);
         // The water ripple accumulator (zortos293/Lichii#1152) right after it, and its hook.
-        REQUIRE(word_at(patched, Code + OcarinaWaterHook) == 0x14EFFB26); // b 0x3c46290
+        REQUIRE(word_at(patched, Code + OcarinaWaterHook) == 0x14EFFE26); // b 0x3c46e90
         REQUIRE(word_at(patched, Routine + 0x90) == 0xB00092C9);  // adrp x9, 0x4e9f000
         REQUIRE(word_at(patched, Routine + 0x94) == 0x91388129);  // add x9, x9, #0xe20
         REQUIRE(word_at(patched, Routine + 0x108) == 0x1E380029); // fcvtzs w9, s1
-        REQUIRE(word_at(patched, Routine + 0x10C) == 0x171004BC); // b 0x475fc
+        REQUIRE(word_at(patched, Routine + 0x10C) == 0x171001BC); // b 0x475fc
         for (size_t offset = 0x110; offset < 0x200; offset += 4) {
             REQUIRE(word_at(patched, Routine + offset) == 0);
         }
         REQUIRE(FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code)) ==
-                std::optional<size_t>{0x3C46288});
+                std::optional<size_t>{0x3C46E88});
         REQUIRE(listed(context.Manager(), HighRefresh));
+    }
+
+    SECTION("On, with another mod's code right after Dark's routine: still on") {
+        // The Hyrule Cheat Menu writes main+0x3C46280..0x3C46398 (2026-11-10).
+        Settings::values.oot_high_refresh.SetValue(true);
+        nso[Dark + 0x80] = 1;
+        nso[Dark + 0x190] = 1;
+        const auto patched = context.Manager().PatchNSO(nso, "main");
+        REQUIRE(word_at(patched, CallOffset) == HighRefreshCall);
+        REQUIRE(patched[Dark + 0x80] == 1);
+        REQUIRE(patched[Dark + 0x190] == 1);
+        REQUIRE(FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code)) ==
+                std::optional<size_t>{0x3C46E88});
     }
 
     SECTION("On, with an accumulator word in use: Dark's routine") {
         Settings::values.oot_high_refresh.SetValue(true);
         nso[Routine + 0x10C] = 1;
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
+        REQUIRE(word_at(patched, CallOffset) == DynamicCall);
         REQUIRE(word_at(patched, Code + OcarinaWaterHook) == WaterFcvtzs);
+        REQUIRE(patched[Routine + 0x10C] == 1);
         REQUIRE_FALSE(FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code)));
     }
 
-    SECTION("On, with another word at the water hook: Dark's routine") {
+    SECTION("On, with another word at the water hook: Dark's routine, no ripple built-in") {
         Settings::values.oot_high_refresh.SetValue(true);
         std::memcpy(nso.data() + Code + OcarinaWaterHook, &NopInstruction, sizeof(u32));
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
+        REQUIRE(dark_only(patched));
         REQUIRE(word_at(patched, Code + OcarinaWaterHook) == NopInstruction);
         REQUIRE(word_at(patched, Routine + 0x90) == 0);
     }
@@ -411,25 +460,15 @@ TEST_CASE("High refresh rate built-in replaces Dark's routine only while its set
         header.segments[2].bss_size = 0x4E9FE00 + 0x9F - 0x4100000; // one byte short
         std::memcpy(nso.data(), &header, sizeof(header));
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
+        REQUIRE(dark_only(patched));
         REQUIRE(word_at(patched, Code + OcarinaWaterHook) == WaterFcvtzs);
-    }
-
-    SECTION("On, with the words past Dark's routine in use: Dark's routine") {
-        Settings::values.oot_high_refresh.SetValue(true);
-        nso[Routine + 0x80] = 1;
-        const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
-        REQUIRE(word_at(patched, Routine + 0x80) == 1);
-        REQUIRE_FALSE(FileSys::OotHighRefreshScaleOffset(std::span{patched}.subspan(Code)));
     }
 
     SECTION("On, but off in Add-Ons: Dark's routine") {
         Settings::values.oot_high_refresh.SetValue(true);
         Settings::values.disabled_addons[OcarinaTitleId] = {std::string{HighRefresh}};
         const auto patched = context.Manager().PatchNSO(nso, "main");
-        REQUIRE(word_at(patched, Routine + 0x74) == DarkThreshold);
-        REQUIRE(word_at(patched, Routine + 0x78) == 0);
+        REQUIRE(dark_only(patched));
     }
 }
 
@@ -466,7 +505,7 @@ TEST_CASE("High refresh rate mode switches live between the two boot layouts",
         WriteOotHighRefreshCode(std::span{module}.subspan(Code), *switched_on);
         REQUIRE(module == on);
         REQUIRE(FileSys::OotHighRefreshScaleOffset(std::span<const u8>{module}.subspan(Code)) ==
-                std::optional<size_t>{0x3C46288});
+                std::optional<size_t>{0x3C46E88});
 
         const auto switched_off = FileSys::SwitchOotHighRefreshCode(*switched_on, false);
         REQUIRE(switched_off);
@@ -503,9 +542,12 @@ TEST_CASE("High refresh rate mode switches live between the two boot layouts",
                    !FileSys::SwitchOotHighRefreshCode(parts, true) &&
                    !FileSys::SwitchOotHighRefreshCode(parts, false);
         };
-        auto used_cave = *off_parts; // a word past Dark's routine in use
+        auto used_cave = *off_parts; // a word of our cave in use (another mod's code)
         used_cave.cave[0x100] = 1;
         REQUIRE(refused(used_cave));
+        auto changed_dark = *on_parts; // Dark's routine changed: switching off would call it
+        changed_dark.dark[0x40] ^= 1;
+        REQUIRE(refused(changed_dark));
         auto stray_scale = *off_parts; // Off holds no speed scale word
         stray_scale.cave[Scale + 3] = 0x3F;
         REQUIRE(refused(stray_scale));

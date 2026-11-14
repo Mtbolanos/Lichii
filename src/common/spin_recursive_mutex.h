@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <thread>
 
+#include "common/nx2_hitch.h"
+
 #if defined(_M_X64) || defined(_M_IX86) || defined(__x86_64__) || defined(__i386__)
 #include <immintrin.h>
 #endif
@@ -72,7 +74,14 @@ private:
 #endif
     }
 
+    // Timed per thread role for the drain sites line (fable52_answer_13 section 3).
     void LockContended() {
+        const std::uint64_t begin = Nx2Hitch::NowNs();
+        LockContendedUntimed();
+        Nx2Hitch::AddLockWait(Nx2Hitch::NowNs() - begin);
+    }
+
+    void LockContendedUntimed() {
         for (int spin = 0; spin < SpinCount; ++spin) {
             Pause();
             if (state.load(std::memory_order_relaxed) == 0) {

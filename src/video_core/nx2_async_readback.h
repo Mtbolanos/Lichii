@@ -9,6 +9,7 @@
 
 #include "common/common_types.h"
 #include "common/logging.h"
+#include "common/nx2_hitch.h"
 
 // EDEN_NX2_EXP49, async read-back (port of zortos293/Lichii#1028's core, 0b83798bf6): a guest CPU
 // read of GPU-written buffer memory (GPU::OnCPURead) has the GPU thread record and submit the
@@ -67,6 +68,7 @@ inline void Add(std::atomic<u64>& counter, u64 amount) {
 inline void CountRead(Read kind, u64 ns) {
     Add(g_counters.reads[static_cast<size_t>(kind)], 1);
     Add(g_counters.read_ns[static_cast<size_t>(kind)], ns);
+    Common::Nx2Hitch::Add(Common::Nx2Hitch::Cause::ReadBack, ns);
 }
 
 /// BufferCache::FinishReadDownloads waited ns for the host GPU.

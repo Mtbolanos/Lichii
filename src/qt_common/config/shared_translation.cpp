@@ -64,9 +64,9 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
            tr("This option increases CPU emulation thread use from 1 to the maximum of 4.\n"
               "This is mainly a debug option and shouldn't be disabled."));
     INSERT(Settings, memory_layout_mode, tr("Memory Layout"),
-           tr("Increases the amount of emulated RAM.\nDoesn't affect performance/stability but may "
-              "allow HD texture "
-              "mods to load."));
+           tr("Switch 2 games always use 12 GB while they run, whatever this says: it only "
+              "applies to Switch 1 games.\nIncreases the amount of emulated RAM. Doesn't affect "
+              "performance/stability but may allow HD texture mods to load."));
     INSERT(Settings, use_speed_limit, QString(), QString());
     INSERT(Settings, current_speed_mode, QString(), QString());
     INSERT(Settings, speed_limit, tr("Limit Speed Percent"),
@@ -166,6 +166,10 @@ std::unique_ptr<TranslationMap> InitializeTranslations(QObject* parent) {
               "EDEN_NX2_DLSS_REPLACEMENT=dlss. Without that override, its spatial workaround "
               "remains active.\nIn The Legend of Zelda: Ocarina of Time it replaces the game's "
               "upscaler at 1x resolution scale.\nTakes effect when a game starts."));
+    INSERT(Settings, nvidia_dlss_quality, tr("DLSS quality:"),
+           tr("Automatic picks the mode from the game's own resolution. Native (DLAA) keeps the "
+              "game's resolution and only smooths it. Other modes apply when they fit the game's "
+              "resolution, otherwise Automatic is used. Changes apply while playing."));
     INSERT(Settings, anti_aliasing, tr("Anti-Aliasing Method:"),
            tr("The anti-aliasing method to use.\nSMAA offers the best quality.\nFXAA "
               "can produce a more stable picture in lower resolutions."));
@@ -464,6 +468,13 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent) {
                               PAIR(SpirvOptimizeMode, OnLoad, tr("On Load")),
                               PAIR(SpirvOptimizeMode, Always, tr("Always")),
                           }});
+    translations->insert({Settings::EnumMetadata<Settings::NvidiaDlssQuality>::Index(),
+                          {PAIR(NvidiaDlssQuality, Automatic, tr("Automatic")),
+                           PAIR(NvidiaDlssQuality, Native, tr("Native (DLAA)")),
+                           PAIR(NvidiaDlssQuality, Quality, tr("Quality")),
+                           PAIR(NvidiaDlssQuality, Balanced, tr("Balanced")),
+                           PAIR(NvidiaDlssQuality, Performance, tr("Performance")),
+                           PAIR(NvidiaDlssQuality, UltraPerformance, tr("Ultra Performance"))}});
     translations->insert({Settings::EnumMetadata<Settings::AstcDecodeMode>::Index(),
                           {
                               PAIR(AstcDecodeMode, Cpu, tr("CPU")),
@@ -742,7 +753,8 @@ std::unique_ptr<ComboboxTranslationMap> ComboboxEnumeration(QObject* parent) {
                               PAIR(MemoryLayout, Memory_6Gb, tr("6GB DRAM (Unsafe)")),
                               PAIR(MemoryLayout, Memory_8Gb, tr("8GB DRAM")),
                               PAIR(MemoryLayout, Memory_10Gb, tr("10GB DRAM (Unsafe)")),
-                              PAIR(MemoryLayout, Memory_12Gb, tr("12GB DRAM (Unsafe)")),
+                              // Switch 2 games use it on their own while they run (core.cpp): not "unsafe" for them.
+                              PAIR(MemoryLayout, Memory_12Gb, tr("12GB DRAM (Switch 2)")),
                           }});
     translations->insert({Settings::EnumMetadata<Settings::ConsoleMode>::Index(),
                           {

@@ -251,6 +251,7 @@ add_library(video_core STATIC
     renderer_vulkan/vk_rasterizer.cpp
     renderer_vulkan/vk_rasterizer.h
     renderer_vulkan/submission_policy.h
+    renderer_vulkan/upload_batch.h
     renderer_vulkan/vk_render_pass_cache.cpp
     renderer_vulkan/vk_render_pass_cache.h
     renderer_vulkan/vk_resource_pool.cpp
@@ -320,6 +321,7 @@ add_library(video_core STATIC
     texture_cache/decode_bc.cpp
     texture_cache/decode_bc.h
     texture_cache/descriptor_table.h
+    texture_cache/host_memory_limit.h
     texture_cache/formatter.cpp
     texture_cache/formatter.h
     texture_cache/format_lookup_table.cpp
@@ -435,6 +437,31 @@ if (ENABLE_RESHADE)
     target_link_libraries(video_core PRIVATE reshadefx::reshadefx)
     target_compile_definitions(video_core PUBLIC HAS_RESHADE)
 endif()
+
+# "Preparing shaders" is stamped with a hash of what decides the driver's compiled pipelines (the
+# shader recompiler, pipeline creation, the precompile step), not the release version
+# (CMakeModules/Nx2ShaderStamp.cmake): releases that change no shader skip the step.
+file(GLOB_RECURSE NX2_SHADER_STAMP_INPUTS CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/shader_recompiler/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/shader_recompiler/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/renderer_vulkan/fixed_pipeline_state.*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/renderer_vulkan/vk_graphics_pipeline.*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/renderer_vulkan/vk_compute_pipeline.*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/nx2_precompile.*")
+string(REPLACE ";" "\n" NX2_SHADER_STAMP_LIST "${NX2_SHADER_STAMP_INPUTS}")
+file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp_inputs.txt"
+     CONTENT "${NX2_SHADER_STAMP_LIST}\n")
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp.h"
+    COMMAND ${CMAKE_COMMAND} "-DINPUT_LIST=${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp_inputs.txt"
+            "-DOUT=${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp.h"
+            -P "${PROJECT_SOURCE_DIR}/CMakeModules/Nx2ShaderStamp.cmake"
+    DEPENDS ${NX2_SHADER_STAMP_INPUTS} "${PROJECT_SOURCE_DIR}/CMakeModules/Nx2ShaderStamp.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp_inputs.txt"
+    COMMENT "Hashing the shader translator for the Preparing shaders stamp"
+    VERBATIM)
+target_sources(video_core PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/nx2_shader_stamp.h")
+target_include_directories(video_core PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 if (ENABLE_OPENGL)
     target_sources(video_core PRIVATE

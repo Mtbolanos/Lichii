@@ -67,6 +67,8 @@ inline constexpr const char* DiscordInvite = "https://discord.gg/fritchii";
 inline constexpr const char* DonateLink = "https://paypal.me/frizti";
 void OpenDiscord();
 void OpenDonate();
+/// Help > Copy Data from Eden or Lichii (v5.8.1): asks, then restarts into the import.
+void CopyDataFromOldFolder(QMainWindow& window);
 
 /// Settings backups in config/backups/<yyyy-MM-dd HHmmss>: qt-config.ini, frizti.ini and the
 /// per-game configs (custom/). Copies the current ones and keeps the newest 10; returns the

@@ -711,6 +711,15 @@ private:
     std::vector<std::pair<ImageId, u64>> cold_watch; ///< Image, frame_tick it was put on
     ::Common::unordered_set<ImageId> cold_watch_set;
     u64 cold_deleted{};       ///< Since the last report
+    /// Images made since the last cold sweep report, per (format, width), with their heights
+    /// (fable52_answer_13 section 6: in the Stalchild fight new render target sizes one pixel
+    /// apart, 528x513 to 528x527, kept making images). Logged with the cold sweep line.
+    struct MadeShapes {
+        u64 made{};
+        std::vector<u32> heights; ///< Distinct, at most 64 kept
+    };
+    std::map<std::pair<u32, u32>, MadeShapes> made_shapes;
+    void NoteMadeShape(const ImageInfo& info);
     u64 cold_kept_guarded{};  ///< Dropped from the watch: GPU-written and guarded
     u64 cold_superseded{};    ///< EXP58: guarded but superseded and old, deleted
     /// EXP58: whether a newer render target of another shape covers this image's memory.

@@ -515,8 +515,9 @@ jobs:
           done
 
       # A self-contained app bundle: macdeployqt copies Qt and every other Homebrew library both
-      # programs load into the bundle, then the leftover Homebrew search paths are removed so a
-      # machine with Homebrew still uses the bundled copies. Ad-hoc signed, not notarized.
+      # programs load into the bundle, then the leftover Homebrew and build-tree search paths are
+      # removed so a machine with Homebrew still uses the bundled copies. Ad-hoc signed, not
+      # notarized.
       - name: Package macOS app
         if: startsWith(matrix.platform, 'macos')
         shell: bash
@@ -535,7 +536,8 @@ jobs:
             -exec sh -c 'file -b "$1" | grep -q Mach-O' _ {} \; -print)
           for binary in $binaries; do
             otool -l "$binary" | awk '/cmd LC_RPATH/ {getline; getline; print $2}' |
-              { grep -E '^/(opt/homebrew|usr/local)/' || true; } | while read -r rpath; do
+              { grep -E -e '^/(opt/homebrew|usr/local)/' -e "^$GITHUB_WORKSPACE/" || true; } |
+              while read -r rpath; do
                 install_name_tool -delete_rpath "$rpath" "$binary" 2> /dev/null
               done
           done
@@ -545,9 +547,9 @@ jobs:
               "$app/Contents/MacOS/$program" 2> /dev/null
           done
           leaks=$(for binary in $binaries; do
-            otool -L "$binary" | grep -E '^\s+/(opt/homebrew|usr/local)/'
+            otool -L "$binary" | grep -E -e '^\s+/(opt/homebrew|usr/local)/' -e "^\s+$GITHUB_WORKSPACE/"
             otool -l "$binary" | awk '/cmd LC_RPATH/ {getline; getline; print $2}' |
-              grep -E '^/(opt/homebrew|usr/local)/'
+              grep -E -e '^/(opt/homebrew|usr/local)/' -e "^$GITHUB_WORKSPACE/"
           done || true)
           if [ -n "$leaks" ]; then
             echo "References still pointing outside the bundle:"

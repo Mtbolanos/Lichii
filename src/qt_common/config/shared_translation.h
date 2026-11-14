@@ -33,6 +33,28 @@ static const std::map<Settings::AntiAliasing, QString> anti_aliasing_texts_map =
     {Settings::AntiAliasing::Smaa, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "SMAA"))},
 };
 
+static const std::map<Settings::NvidiaDlssQuality, QString> nvidia_dlss_quality_texts_map = {
+    {Settings::NvidiaDlssQuality::Automatic,
+     QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Auto"))},
+    {Settings::NvidiaDlssQuality::Native, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "DLAA"))},
+    {Settings::NvidiaDlssQuality::Quality,
+     QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Quality"))},
+    {Settings::NvidiaDlssQuality::Balanced,
+     QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Balanced"))},
+    {Settings::NvidiaDlssQuality::Performance,
+     QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Performance"))},
+    {Settings::NvidiaDlssQuality::UltraPerformance,
+     QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Ultra Performance"))},
+};
+
+static const std::map<Settings::DlssPreset, QString> nvidia_dlss_preset_texts_map = {
+    {Settings::DlssPreset::Default, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "AUTO"))},
+    {Settings::DlssPreset::J, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "J"))},
+    {Settings::DlssPreset::K, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "K"))},
+    {Settings::DlssPreset::L, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "L"))},
+    {Settings::DlssPreset::M, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "M"))},
+};
+
 static const std::map<Settings::FrameGenType, QString> frame_gen_type_texts_map = {
     {Settings::FrameGenType::Lsfg, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "LSFG"))},
     {Settings::FrameGenType::Fsr3, QStringLiteral(QT_TRANSLATE_NOOP("MainWindow", "Optical Flow"))},

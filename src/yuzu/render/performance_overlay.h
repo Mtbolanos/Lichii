@@ -16,6 +16,7 @@ namespace Ui {
 class PerformanceOverlay;
 }
 
+class QLabel;
 class QLineSeries;
 class QChart;
 class QChartView;
@@ -67,6 +68,8 @@ private:
     QChartView* m_fpsChartView = nullptr;
     QValueAxis* m_fpsX = nullptr;
     QValueAxis* m_fpsY = nullptr;
+
+    QLabel* m_dlssLabel = nullptr;
 
 signals:
     void closed();

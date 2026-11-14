@@ -58,6 +58,7 @@ class QPushButton;
 class QProgressDialog;
 class NupProgressDialog;
 class ShaderWarmDialog;
+class NxTools;
 class QSlider;
 class QHBoxLayout;
 class WaitTreeWidget;
@@ -184,6 +185,11 @@ public:
     void AcceptDropEvent(QDropEvent* event);
 
     std::filesystem::path GetShortcutPath(QtCommon::Game::ShortcutTarget target);
+
+    /// What NVIDIA DLSS ran as since the last status bar update, empty when it didn't run
+    [[nodiscard]] const QString& DlssStatusText() const {
+        return dlss_status_text;
+    }
 
 signals:
 
@@ -470,6 +476,8 @@ private slots:
 #endif
 
 private:
+    void OnGameListNxTool(const std::string& game_path, void (NxTools::*tool)(const std::string&));
+    void OnGameListEditNxMetadata(const std::string& game_path);
     void RemovePlayTimeData(u64 program_id);
     bool SelectRomFSDumpTarget(const FileSys::ContentProvider&, u64 program_id,
                                u64* selected_title_id, u8* selected_content_record_type);
@@ -574,6 +582,7 @@ private:
     QLabel* res_scale_label = nullptr;
     QLabel* emu_speed_label = nullptr;
     QLabel* game_fps_label = nullptr;
+    QLabel* dlss_status_label = nullptr;
     QLabel* emu_frametime_label = nullptr;
     QLabel* tas_label = nullptr;
     QLabel* firmware_label = nullptr;
@@ -585,6 +594,8 @@ private:
     QPushButton* filter_status_button = nullptr;
     QPushButton* aa_status_button = nullptr;
     QPushButton* post_shader_status_button = nullptr;
+    u64 dlss_evaluations = 0;
+    QString dlss_status_text;
     VolumeButton* volume_button = nullptr;
     QWidget* volume_popup = nullptr;
     QSlider* volume_slider = nullptr;
@@ -639,6 +650,8 @@ private:
     QPointer<ShaderWarmDialog> shader_warm_dialog;
     QAction* action_prepare_shaders_now = nullptr;
     QPointer<QProgressDialog> shader_warm_run_dialog;
+    NxTools* nx_tools = nullptr;
+    bool nx_metadata_write_in_progress = false;
     std::string nup_source_path;
 
     // Last game booted, used for multi-process apps

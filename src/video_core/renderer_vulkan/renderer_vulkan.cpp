@@ -43,6 +43,7 @@
 #include "video_core/vulkan_common/vulkan_surface.h"
 #include "video_core/vulkan_common/vulkan_wrapper.h"
 #ifdef EGLANTINE_STREAMLINE
+#include "video_core/renderer_vulkan/vk_streamline_dlss.h"
 #include "video_core/vulkan_common/streamline.h"
 #endif
 #ifdef __ANDROID__
@@ -412,5 +413,11 @@ void RendererVulkan::RenderAppletCaptureLayer(
     blit_applet.DrawToFrame(device, rasterizer, &applet_frame, capture_layers, VideoCore::Capture::Layout, 1,
                             CaptureFormat);
 }
+
+#ifdef EGLANTINE_STREAMLINE
+VideoCore::DlssStatus RendererVulkan::GetDlssStatus() const {
+    return StreamlineDlssUpscaler::Status();
+}
+#endif
 
 } // namespace Vulkan

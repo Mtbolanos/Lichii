@@ -22,6 +22,7 @@
 #include "common/nx2_sample_profile.h"
 #include "common/assert.h"
 #include "common/thread.h"
+#include "common/nx2_hitch.h"
 #include "common/thread_pinning.h"
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -668,6 +669,7 @@ void SetCurrentThreadPriority(ThreadPriority new_priority) {
 
 void SetCurrentThreadName(const char* name) {
     Nx2SampleProfile::OnThreadNamed(name);
+    Nx2Hitch::RegisterThread(name);
 #ifdef _MSC_VER
     // Sets the debugger-visible name of the current thread.
     if (auto pf = (decltype(&SetThreadDescription))(void*)GetProcAddress(GetModuleHandle(TEXT("KernelBase.dll")), "SetThreadDescription"); pf)

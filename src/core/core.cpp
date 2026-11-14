@@ -66,6 +66,7 @@
 #include "core/hle/service/sm/sm.h"
 #include "core/internal_network/network.h"
 #include "core/loader/loader.h"
+#include "core/loader/nx.h"
 #include "core/memory.h"
 #include "core/memory/cheat_engine.h"
 #include "core/perf_stats.h"
@@ -146,6 +147,9 @@ bool IsSwitch2Program(const FileSys::VirtualFile& file, u64 program_id, std::siz
                metadata.IsSwitch2();
     }
     const auto type = file != nullptr ? Loader::IdentifyFile(file) : Loader::FileType::Unknown;
+    if (type == Loader::FileType::NX) {
+        return Loader::AppLoader_NX::ReadPlatform(file, program_id) == 2;
+    }
     if (type == Loader::FileType::XCI || type == Loader::FileType::XCZ) {
         const FileSys::XCI xci{file, program_id, program_index};
         if (xci.GetStatus() != Loader::ResultStatus::Success) {
@@ -241,14 +245,22 @@ struct System::Impl {
             return;
         }
 
+        // The settings and time services start on the emulated cores, which only run once the
+        // game has finished loading (shaders included). Waiting for them here froze the UI
+        // thread for the whole loading screen when settings were applied during it. If they
+        // are not up yet there is nothing to refresh: they read the current settings when
+        // they start.
+        auto& service_manager = system.ServiceManager();
         auto settings_service =
-            system.ServiceManager().GetService<Service::Set::ISystemSettingsServer>("set:sys",
-                                                                                    true);
+            service_manager.GetService<Service::Set::ISystemSettingsServer>("set:sys");
         auto static_service_a =
-            system.ServiceManager().GetService<Service::Glue::Time::StaticService>("time:a", true);
-
+            service_manager.GetService<Service::Glue::Time::StaticService>("time:a");
         auto static_service_s =
-            system.ServiceManager().GetService<Service::PSC::Time::StaticService>("time:s", true);
+            service_manager.GetService<Service::PSC::Time::StaticService>("time:s");
+        if (!settings_service || !static_service_a || !static_service_s) {
+            LOG_INFO(Core, "Time services not started yet, they will use the current settings");
+            return;
+        }
 
         std::shared_ptr<Service::PSC::Time::SystemClock> user_clock;
         static_service_a->GetStandardUserSystemClock(&user_clock);

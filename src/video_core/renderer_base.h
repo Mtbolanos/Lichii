@@ -12,6 +12,7 @@
 
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/gpu.h"
 #include "video_core/rasterizer_interface.h"
@@ -22,6 +23,14 @@ class GraphicsContext;
 } // namespace Core::Frontend
 
 namespace VideoCore {
+
+struct DlssStatus {
+    u64 evaluations{};
+    /// The last evaluation's settings: the mode it ran in, and the mode and preset the user chose
+    Settings::NvidiaDlssQuality mode{};
+    Settings::NvidiaDlssQuality requested{};
+    Settings::DlssPreset preset{};
+};
 
 struct RendererSettings {
     // Screenshot
@@ -50,6 +59,11 @@ public:
     [[nodiscard]] virtual RasterizerInterface* ReadRasterizer() = 0;
 
     [[nodiscard]] virtual std::string GetDeviceVendor() const = 0;
+
+    /// How many NVIDIA DLSS evaluations ran so far and the mode of the last one
+    [[nodiscard]] virtual DlssStatus GetDlssStatus() const {
+        return {};
+    }
 
     // Getter/setter functions:
     // ------------------------

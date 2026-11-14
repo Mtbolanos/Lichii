@@ -4,15 +4,32 @@ e.g. E:\OotRemakeEmulation\release\fritchii-vX\notes.md) here before the release
 download instructions at the top are dropped in the app. While this file holds only this comment,
 no "What's new" window pops up after an update (Help > What's New says there are no notes yet).
 -->
-## ⬇️ Download this file: **`Fritchii-v5.6-Windows-x64.zip`**
+## ⬇️ Download this file: **`Fritchii-v5.7-Windows-x64.zip`**
 
-On Fritchii v4 to v5.5 you don't need to download anything: it offers this update when you open it. Otherwise unzip it anywhere and run `Fritchii-v5.6\lichii.exe`. Don't download "Source code (zip)" or "Source code (tar.gz)": they contain no emulator.
+On Fritchii v4 to v5.6 you don't need to download anything: it offers this update when you open it. Otherwise unzip it anywhere and run `Fritchii-v5.7\lichii.exe`. Don't download "Source code (zip)" or "Source code (tar.gz)": they contain no emulator.
 
 ---
 
-Fritchii v5.6.
+Fritchii v5.7.
 
-**Heads up: "Preparing shaders" runs once more** (around 15 minutes on an 8-core CPU), on every GPU, because of the AMD horizon fix below and a new detail Fritchii now stores about each shader. After that it's straight into the game again. The first minute or two after it can also be a bit slower while the driver settles.
+#### New
+- **.nx games** (fab918's NXFormat). Fritchii opens `.nx` archives like any other game, with their updates and DLC. To make one, right-click a game in the list and pick **Convert to NX...** (from NUP, NSP, XCI or a dump folder; NSP and XCI updates and DLC in the same folder go in too). **Manage NX Archive** adds or removes updates and DLC later. Everything runs inside Fritchii, no extra files needed (zortos293/Lichii#923, #1078 and #1232 by fab918).
+
+#### Fixed
+- **Stretched or glowing geometry and white areas after area changes** should be gone. When the game freed some GPU memory and reused the same address later, the emulator kept showing the GPU the old memory, which by then held other data, so a mesh could read a pack of game files as its vertices until a restart (zortos293/Lichii#1199 and follow-ups by PantACRO4life, 99ivs and zortos293). If you still see one, use Help > Export Log and post it in the Issues channel.
+- **Ctrl+U (high refresh) works with the Hyrule Cheat Menu mod installed.** Fritchii's patch moved to a spot the mod doesn't use, and the mod's code stays untouched.
+- **Kakariko graveyard:** two objects the game draws were skipped (zortos293/Lichii#279, #1186 and #1181).
+- **No more out-of-memory crash on PCs with 16 GB of RAM:** the texture cache now also stays within what Windows can hand out, not just what the GPU has (zortos293/Lichii#1210).
+
+#### Faster and smoother
+- **About 5 fps more in fights** (51.9 to 56.9 in a Stalchild fight on an RTX 4080): when the game reads back something the GPU made, the emulator's GPU thread no longer stops and waits for the graphics card (the core of zortos293/Lichii#1028).
+- **Less stutter right after area changes.** OoT runs on 6 emulated CPU cores and each compiled the same game code for itself after a load; idle cores now do it ahead of time.
+- **Less VRAM and more free RAM:** the texture cache cleans up from about 7.5 GB at most, so VRAM stays around 6 GB on big cards instead of climbing to 10 GB. Windows counts that memory against your RAM too, so area loads stop stuttering when the PC runs low. Cards with less VRAM keep their own lower limit.
+- **Shorter hitches on loads and kills:** game file reads are no longer slowed to 40 MB/s, and the background memory cleanup waits while the game is loading.
+- **Help > Export Log now says what caused each stutter**, so stutter reports are much easier to track down.
+- Fritchii's tuned settings are applied once more with this update; you can change anything afterwards.
+
+### In v5.6
 
 #### Fixed
 - **The huge glowing triangles ("light beams") are much rarer.** In Kokiri Forest, Kakariko, the graveyard and Hyrule Field they used to grow over a session. One cause is fixed: a compute shader wrote further than the emulator tracked, and the game read old data back from there. Every compute shader is now checked once, and tracked fully if it writes further. No fps cost. They can still show up in long sessions: if you see one, use Help > Export Log and post it in the Issues channel.

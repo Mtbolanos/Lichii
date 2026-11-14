@@ -220,6 +220,8 @@ add_executable(yuzu
     fritchii/perf_overlay.h
     fritchii/precompile_gate.cpp
     fritchii/precompile_gate.h
+    fritchii/saves_window.cpp
+    fritchii/saves_window.h
     fritchii/whats_new.cpp
     fritchii/whats_new.h
     util/export_log.cpp
@@ -268,7 +270,7 @@ add_executable(yuzu
 set_target_properties(yuzu PROPERTIES OUTPUT_NAME "lichii")
 
 # Shipped next to the executable: the NX2 switches a GUI launch cannot set another way. Read at
-# startup (LoadNx2Switches in main.cpp); a user copy in %APPDATA%\eden overrides it.
+# startup (LoadNx2Switches in main.cpp); a user copy in %APPDATA%\lichii overrides it.
 add_custom_command(TARGET yuzu POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${PROJECT_SOURCE_DIR}/dist/nx2_switches.txt" "$<TARGET_FILE_DIR:yuzu>/nx2_switches.txt"
@@ -510,4 +512,10 @@ endif()
 # Remember that the linker is incredibly stupid.
 target_link_libraries(yuzu PRIVATE OpenSSL::SSL OpenSSL::Crypto SDL3::SDL3)
 
+# NX archive conversion and editing (nx_tools.cpp) runs nxformat in the process, linked statically.
+if (TARGET nxformat::static_nozstd)
+    target_sources(yuzu PRIVATE nx_tools.h nx_tools.cpp)
+    target_link_libraries(yuzu PRIVATE nxformat::static_nozstd)
+    target_compile_definitions(yuzu PRIVATE LICHII_NX_TOOLS)
+endif()
 create_target_directory_groups(yuzu)

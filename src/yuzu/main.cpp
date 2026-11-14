@@ -8,6 +8,9 @@
 #include <string>
 
 #include <QApplication>
+#include <QMessageBox>
+#include <cstdlib>
+#include <exception>
 
 #include "common/fs/fs_paths.h"
 #include "common/fs/path_util.h"
@@ -128,7 +131,7 @@ static Qt::HighDpiScaleFactorRoundingPolicy GetHighDpiRoundingPolicy() {
 // set. nx2_switches.txt holds "NAME=VALUE" lines, one per line, '#' comments. A variable already
 // in the real environment always wins, so a launcher script can still override one run; between
 // files the later one wins, so the copy next to the executable (shipped with the build) can be
-// overridden by %APPDATA%\eden\nx2_switches.txt without editing the one that gets replaced.
+// overridden by %APPDATA%\fritchii\nx2_switches.txt without editing the one that gets replaced.
 static void ParseSwitchFile(const std::filesystem::path& path,
                             std::map<std::string, std::string>& entries) {
     std::ifstream file{path};
@@ -188,6 +191,17 @@ constexpr std::pair<const char*, const char*> BuiltinSwitches[] = {
     {"EDEN_NX2_UBO_INPLACE", "1"},        {"EDEN_NX2_PIPELINE_CLEAN", "1"},
     {"EDEN_NX2_LIST_WAIT_SKIP", "1"},     {"EDEN_NX2_PREFLUSH", "1"},
     {"EDEN_NX2_SEM_FAST", "2"},
+    // No 40 MB/s pacing of game file reads (upstream's fix for video freezes in other games):
+    // OoT's videos play fine without it and it slept the game at loads and kills (2026-11-10).
+    {"EDEN_NX2_READ_THROTTLE", "0"},
+    // The texture cache collects from 7.5 GiB at most (a ceiling: smaller cards keep their own
+    // thresholds). Owner's call for v5.7 after the 2026-11-10 playtests (VRAM 10 -> ~6 GB, more
+    // RAM free, no new stutter).
+    {"EDEN_NX2_TC_CEILING_MIB", "7680"},
+    // Idle CPU cores compile ahead the game code another core compiled (each of OoT's 6 cores
+    // has its own recompiler). Owner's call for v5.7 after the 2026-11-10 playtests: Kakariko
+    // felt much better; repeat compiles after reloads 294 -> 8 ms in the night tests.
+    {"EDEN_NX2_JIT_WARM", "1"},
 };
 
 static void LoadNx2Switches(const char* argv0) {
@@ -200,11 +214,17 @@ static void LoadNx2Switches(const char* argv0) {
         ParseSwitchFile(exe_dir / "nx2_switches.txt", entries);
     }
 #ifdef _WIN32
-    const auto config_dir = Common::FS::GetAppDataRoamingDirectory() / EDEN_DIR;
+    const auto app_data = Common::FS::GetAppDataRoamingDirectory();
 #else
-    const auto config_dir = Common::FS::GetDataDirectory("XDG_CONFIG_HOME") / EDEN_DIR;
+    const auto app_data = Common::FS::GetDataDirectory("XDG_CONFIG_HOME");
 #endif
-    ParseSwitchFile(config_dir / "nx2_switches.txt", entries);
+    // Before the first launch's import has copied it, the player's file is still in the old
+    // folder (Fritchii v5.8 moved from eden to fritchii).
+    auto user_file = app_data / EDEN_DIR / "nx2_switches.txt";
+    if (!std::filesystem::exists(user_file)) {
+        user_file = app_data / EDEN_LEGACY_DIR / "nx2_switches.txt";
+    }
+    ParseSwitchFile(user_file, entries);
     for (const auto& [name, value] : entries) {
         if (std::getenv(name.c_str()) != nullptr) {
             continue;
@@ -365,10 +385,15 @@ int main(int argc, char* argv[]) {
     // generating shaders
     setlocale(LC_ALL, "C");
 
-    MainWindow main_window{has_broken_vulkan};
-    // After settings have been loaded by GMainWindow, apply the filter
-    main_window.show();
-
-    app.connect(&app, &QGuiApplication::applicationStateChanged, &main_window, &MainWindow::OnAppFocusStateChanged);
-    return app.exec();
+    try {
+        MainWindow main_window{has_broken_vulkan};
+        main_window.show();
+        app.connect(&app, &QGuiApplication::applicationStateChanged, &main_window,
+                    &MainWindow::OnAppFocusStateChanged);
+        return app.exec();
+    } catch (const std::exception& exception) {
+        QMessageBox::critical(nullptr, QObject::tr("Fritchii startup stopped"),
+                              QString::fromUtf8(exception.what()));
+        return EXIT_FAILURE;
+    }
 }

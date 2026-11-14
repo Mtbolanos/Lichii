@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <optional>
+
 #include "common/common_types.h"
 
 namespace Common {
@@ -23,6 +25,11 @@ struct MemoryInfo {
 
 /// This process's memory and the system's commit, for the memory log line (zeros where unknown;
 /// only Windows fills them in).
+/// Commit the system can still hand out, in bytes: its commit limit (RAM plus the page files)
+/// minus what is committed. No value where the host reports no such limit (anything but Windows).
+/// From zortos293/Lichii#1210.
+[[nodiscard]] std::optional<u64> GetSystemCommitRoom();
+
 struct ProcessMemoryUsage {
     u64 working_set{};
     u64 peak_working_set{};
