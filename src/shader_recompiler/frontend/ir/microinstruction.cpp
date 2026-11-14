@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -78,6 +77,9 @@ bool Inst::MayHaveSideEffects() const noexcept {
     case Opcode::Barrier:
     case Opcode::WorkgroupMemoryBarrier:
     case Opcode::DeviceMemoryBarrier:
+    case Opcode::BarrierVoteInit:
+    case Opcode::BarrierVote:
+    case Opcode::VotedBarrier:
     case Opcode::EmitVertex:
     case Opcode::EndPrimitive:
     case Opcode::SetAttribute:

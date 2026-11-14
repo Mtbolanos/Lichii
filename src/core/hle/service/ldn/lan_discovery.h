@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
@@ -25,8 +24,10 @@
 #include "common/logging.h"
 #include "common/socket_types.h"
 #include "core/hle/result.h"
+#include "core/hle/service/ldn/direct_lan.h"
 #include "core/hle/service/ldn/ldn_results.h"
 #include "core/hle/service/ldn/ldn_types.h"
+#include "core/internal_network/network_interface.h"
 #include "network/network.h"
 
 namespace Service::LDN {
@@ -82,8 +83,14 @@ public:
                    u16 local_communication_version);
     Result Disconnect();
 
-    Result Initialize(LanEventFunc lan_event_ = empty_func, bool listening = true);
+    /// With a direct_lan_interface, packets go over that interface's LAN instead of the joined room.
+    Result Initialize(LanEventFunc lan_event_ = empty_func,
+                      const std::optional<Network::NetworkInterface>& direct_lan_interface = {});
     Result Finalize();
+
+    bool IsDirectLan() const {
+        return direct_lan.has_value();
+    }
 
     void ReceivePacket(const Network::LDNPacket& packet);
 
@@ -139,5 +146,6 @@ protected:
     std::optional<Ipv4Address> host_ip;
 
     LanEventFunc lan_event;
+    std::optional<DirectLan> direct_lan;
 };
 } // namespace Service::LDN

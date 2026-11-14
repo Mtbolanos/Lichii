@@ -19,12 +19,16 @@
 #include <vector>
 
 #include "common/common_types.h"
+#include "video_core/nx2_debug_control.h"
+#include "video_core/shader_cache.h"
 #include "video_core/surface.h"
 #include "video_core/vulkan_common/vulkan_wrapper.h"
 
 namespace Vulkan {
 
+class ComputePipeline;
 class Device;
+class GraphicsPipeline;
 class ImageView;
 class MemoryAllocator;
 class Sampler;
@@ -42,7 +46,7 @@ public:
     void Configure(std::string_view at, std::filesystem::path trigger_file, bool sampled);
     /// Captures the next frame for the debug server, which is told `id`. False while a capture
     /// runs.
-    bool Arm(bool sampled, bool buffers, u64 id);
+    bool Arm(bool sampled, bool buffers, u64 id, bool shaders = false);
     /// Once per presented frame: whether a capture starts with the next frame or has ended.
     Step Tick(double elapsed_seconds);
     /// The capture Tick started could not begin.
@@ -58,6 +62,10 @@ public:
     [[nodiscard]] bool Buffers() const noexcept {
         return buffers;
     }
+    /// Whether the programs, SPIR-V and keys of the frame's pipelines are recorded.
+    [[nodiscard]] bool Shaders() const noexcept {
+        return shaders;
+    }
     [[nodiscard]] u64 Frame() const noexcept {
         return frame;
     }
@@ -72,6 +80,7 @@ private:
     bool enabled{};
     bool sampled{};
     bool buffers{};
+    bool shaders{};
     bool capturing{};
     bool done{};
     std::filesystem::path trigger_file;
@@ -136,6 +145,16 @@ public:
         return schedule.Capturing() && schedule.Buffers();
     }
 
+    /// Whether a shader capture runs and this pipeline was not recorded yet this frame.
+    [[nodiscard]] bool WantsShaders(const void* pipeline) const;
+    /// Records a pipeline's key, SPIR-V and native programs under shaders/.
+    void NoteGraphicsShaders(const GraphicsPipeline& pipeline,
+                             std::span<const VideoCommon::CapturedProgram> programs);
+    /// Records a compute pipeline's SPIR-V, program and the QMD of its first dispatch.
+    void NoteComputeShaders(const ComputePipeline& pipeline,
+                            const std::optional<VideoCommon::CapturedProgram>& program,
+                            std::span<const u8> qmd);
+
     /// Reads back the textures of the current draw not yet seen in this pass. Returns true when
     /// copies were recorded, which ends the current render pass.
     bool NoteSampled(std::span<const Sampled> textures);
@@ -161,9 +180,10 @@ public:
     /// Waits for pending readbacks and writes them once they pass the staging budget.
     void DrainIfFull();
     void TickFrame();
-    /// Captures the next frame into `directory` for the debug server, which is told `id` once
-    /// the manifest is complete. Works without EDEN_NX2_FRAME_DUMP.
-    void Arm(std::filesystem::path directory, bool sampled, bool buffers, u64 id);
+    /// Captures the next frame into the request's directory for the debug server or a bug
+    /// bundle, which is told the request's id once the manifest is complete. Works without
+    /// EDEN_NX2_FRAME_DUMP.
+    void Arm(VideoCore::Nx2Debug::CaptureRequest request);
 
 private:
     enum class DepthEncoding { None, Unorm16, Unorm24, Float32 };
@@ -194,12 +214,16 @@ private:
     };
 
     /// Work for the writer thread: an image readback (`name` set), buffer bytes (`raw`), a
-    /// finished manifest line, or the summary.
+    /// file under shaders/ (`file` set, `zstd` when its data must be decompressed first), a
+    /// finished manifest line (`shader_line` for shaders.jsonl), or the summary.
     struct Job {
         Target target{};
         std::string name;
         std::string tags;
         std::vector<u8> data;
+        std::string file;
+        bool zstd{};
+        bool shader_line{};
         bool raw{};
         bool summary{};
         bool truncated{};
@@ -217,6 +241,8 @@ private:
     void Write(const Job& job);
     void WriteBuffer(const Job& job);
     void WriteFile(const std::string& name, std::span<const u8> data);
+    /// Queues a program's files once per frame and returns its shaders.jsonl entry.
+    std::string NoteProgram(const VideoCommon::CapturedProgram& program);
     void StopWriter();
 
     const Device& device;
@@ -225,10 +251,15 @@ private:
 
     FrameDumpSchedule schedule;
     bool truncated{};
+    bool write_raw{true};
+    size_t size_cap{};
+    u32 preview_max{};
+    bool preview_jpeg{};
     std::filesystem::path directory;
     std::chrono::steady_clock::time_point start;
 
     std::ofstream manifest;
+    std::ofstream shader_manifest;
     std::vector<Readback> readbacks;
     size_t pending_bytes{};
     size_t recorded_bytes{};
@@ -246,6 +277,9 @@ private:
     std::vector<std::tuple<u64, bool, u32, u64, u32>> seen_buffers;
     /// Content hashes of the buffer files written; writer thread only.
     std::vector<u64> written_buffers;
+    /// Pipelines and program file names recorded under shaders/ this frame.
+    std::vector<const void*> shader_pipelines;
+    std::vector<std::string> shader_programs;
     u32 pass_index{};
     u32 pass_first_draw{};
     u32 draws{};

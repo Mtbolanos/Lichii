@@ -63,6 +63,20 @@ void EmitX64::EmitInvalid(EmitContext&, IR::Inst* inst) {
 void EmitX64::EmitVoid(EmitContext&, IR::Inst*) {
 }
 
+bool IsZeroExtendedU32Producer(const IR::Inst* inst) noexcept {
+    switch (inst->GetOpcode()) {
+    case IR::Opcode::A64GetW:              // mov r32, [mem]
+    case IR::Opcode::A64ReadMemory32:      // mov r32, [mem]; the fallbacks zero-extend
+    case IR::Opcode::LeastSignificantWord: // mov r32, r32
+    case IR::Opcode::Add32:                // add/adc/lea r32
+    case IR::Opcode::Sub32:                // sub/sbb/add/lea r32
+    case IR::Opcode::ConditionalSelect32:  // cmovcc r32 always clears the upper half
+        return true;
+    default:
+        return false;
+    }
+}
+
 void EmitX64::EmitIdentity(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     if (!args[0].IsImmediate()) {
@@ -127,7 +141,11 @@ void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc) {
     for (int i = 0; i < 16; i++) {
         code.movaps(xword[rsp + offsetof(RegisterData, xmms) + 2 * sizeof(u64) * i], Xbyak::Xmm{i});
     }
-    code.lea(rax, ptr[rsp + sizeof(RegisterData) + offsetof(StackLayout, spill)]);
+    if (const auto offset = reg_alloc.SpillJitOffset()) {
+        code.lea(rax, ptr[code.ABI_JIT_PTR + *offset]);
+    } else {
+        code.lea(rax, ptr[rsp + sizeof(RegisterData) + ABI_SHADOW_SPACE + offsetof(StackLayout, spill)]);
+    }
     code.mov(qword[rsp + offsetof(RegisterData, spill)], rax);
 
     reg_alloc.EmitVerboseDebuggingOutput(code);
@@ -295,9 +313,16 @@ void EmitX64::EmitAddCycles(size_t cycles) {
 Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
     Xbyak::Label pass;
 
-    code.mov(eax, dword[code.ABI_JIT_PTR + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
-
-    code.LoadRequiredFlagsForCondFromRax(cond);
+    if (code.nzcv_live_pos != nullptr && code.nzcv_live_pos == code.getCurr()) {
+        // The host flags still hold the guest NZCV with CF in ARM polarity, as after sahf.
+        if (cond == IR::Cond::HI || cond == IR::Cond::LS) {
+            code.cmc();
+        }
+        code.nzcv_live_pos = nullptr;
+    } else {
+        code.mov(eax, dword[code.ABI_JIT_PTR + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
+        code.LoadRequiredFlagsForCondFromRax(cond);
+    }
 
     switch (cond) {
     case IR::Cond::EQ:
@@ -349,7 +374,10 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
 }
 
 EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& descriptor, CodePtr entrypoint, size_t size) {
-    PerfMapRegister(entrypoint, code.getCurr(), LocationDescriptorToFriendlyName(descriptor));
+    // Each register takes a process-wide lock and reads the environment: not without a perf map.
+    if (PerfMapEnabled()) {
+        PerfMapRegister(entrypoint, code.getCurr(), LocationDescriptorToFriendlyName(descriptor));
+    }
     Patch(descriptor, entrypoint);
 
     BlockDescriptor block_desc{entrypoint, size};
@@ -418,7 +446,7 @@ void EmitX64::ClearCache() {
     block_descriptors.clear();
     patch_information.clear();
 
-    PerfMapClear();
+    PerfMapClear(code.GetCodeBegin(), code.getCode() + code.GetTotalCodeSize());
 }
 
 void EmitX64::InvalidateBasicBlocks(const ::Common::unordered_set<IR::LocationDescriptor>& locations) {

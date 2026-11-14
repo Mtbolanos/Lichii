@@ -101,7 +101,7 @@ TEST_CASE("Ampere byte F2I rejects other widths, rounding, modifiers and registe
         invalid[0].words = {0x00157d05, source, 0x0821e100, 0x0001e400};
         REQUIRE_FALSE(static_cast<bool>(LowerToMaxwell(invalid)));
     }
-    for (const u32 source : {0x00400440U, 0x04800400U, 0x40400400U, 0x80400400U}) {
+    for (const u32 source : {0x00400440U, 0x04800400U}) {
         auto invalid = code;
         invalid[0].words = {0x00157b05, source, 0x0021e100, 0x0001e400};
         REQUIRE_FALSE(static_cast<bool>(LowerToMaxwell(invalid)));

@@ -8,9 +8,15 @@
 
 #include <array>
 #include <atomic>
+#include <optional>
 
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 #include "video_core/vulkan_common/vulkan_wrapper.h"
+
+namespace VideoCore {
+struct DlssStatus;
+}
 
 namespace Vulkan {
 
@@ -41,6 +47,18 @@ public:
         bool reset;
         bool depth_inverted = true;
         bool hdr = true; ///< Linear HDR colour. False for tonemapped, perceptually encoded colour.
+        /// The depth image's size when it is larger than the render size (the scene lies in its
+        /// top left corner); zero for the render size.
+        VkExtent2D depth_size{};
+        /// The scene camera, for DLSS Frame Generation. Row-major matrices that take a column
+        /// vector, unjittered, with OpenGL clip depth (-1 to 1) and clip y up: the
+        /// view-projection and the motion vectors' clip-to-previous-clip. Without it the frame
+        /// gets no frame generation.
+        struct Camera {
+            std::array<f32, 16> view_projection;
+            std::array<f32, 16> clip_to_previous_clip;
+        };
+        std::optional<Camera> camera;
     };
 
     /// Throws vk::Exception when Streamline has no DLSS for this device.
@@ -56,6 +74,9 @@ public:
         return failed.load();
     }
 
+    /// Evaluations that succeeded in this process, for the status bar.
+    [[nodiscard]] static VideoCore::DlssStatus Status();
+
     [[nodiscard]] VkImage OutputImage() const noexcept {
         return *output_image;
     }
@@ -66,6 +87,9 @@ public:
     [[nodiscard]] VkSampler PointSampler() const noexcept {
         return *point_sampler;
     }
+    [[nodiscard]] VkSampler LinearSampler() const noexcept {
+        return *linear_sampler;
+    }
 
 private:
     void CreateOutput(VkExtent2D upscale_size);
@@ -75,14 +99,20 @@ private:
     MemoryAllocator& memory_allocator;
     void* set_options{}; ///< slDLSSSetOptions
     void* get_state{};   ///< slDLSSGetState
+    void* get_optimal_settings{};
     VkExtent2D render_extent{};
     VkExtent2D upscale_extent{};
     bool hdr_input = true;
+    Settings::NvidiaDlssQuality quality_mode{};
+    Settings::NvidiaDlssPreset model_preset{};
+    Settings::NvidiaDlssQuality evaluated_mode{}; ///< Recorded on the scheduler's worker
     u32 frame_index{};
     vk::Image output_image;
     vk::ImageView output_view;
     vk::Sampler point_sampler;
+    vk::Sampler linear_sampler;
     std::atomic<bool> failed{};
+    std::atomic<bool> vram_warned{};
 };
 
 } // namespace Vulkan

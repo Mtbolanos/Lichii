@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -244,6 +243,7 @@ void Load(VkDevice device, DeviceDispatch& dld) noexcept {
     X(vkResetFences);
     X(vkResetQueryPool);
     X(vkSetDebugUtilsObjectNameEXT);
+    X(vkSetHdrMetadataEXT);
     X(vkSetDebugUtilsObjectTagEXT);
     X(vkUnmapMemory);
     X(vkUpdateDescriptorSetWithTemplate);

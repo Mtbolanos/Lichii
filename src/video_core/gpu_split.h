@@ -16,6 +16,8 @@
 #include <unordered_map>
 
 #include "common/common_types.h"
+#include "common/container/unordered_map.h"
+#include "video_core/nx2_fast_draw.h"
 
 namespace Core {
 class System;
@@ -55,7 +57,8 @@ enum class DrainSite : u32 {
 };
 
 /// How semaphore acquires and the polls of suspended ones were decided, counted with
-/// EDEN_NX2_GPU_PROFILE or EDEN_NX2_ACQUIRE_VERIFY and logged every 10 s (GpuSplit::ReportAcquire).
+/// EDEN_NX2_GPU_PROFILE, EDEN_NX2_ACQUIRE_VERIFY, EDEN_NX2_ACQUIRE_STATS or
+/// EDEN_NX2_GUEST_THREAD_STATS and logged every 10 s (GpuSplit::ReportAcquire).
 struct AcquireStats {
     std::atomic<u64> passed{};    ///< Acquires and polls met without a drain
     std::atomic<u64> by_queued{}; ///< Of passed: met by a release the back had not run yet
@@ -65,10 +68,20 @@ struct AcquireStats {
     std::atomic<u64> drain_settings{};  ///< ...the split or the accuracy settings ask for it
     std::atomic<u64> drain_word{};      ///< ...the word is unmapped or on a GPU-written page
     std::atomic<u64> drain_queued{};    ///< ...a queued release to it is unknown or doesn't meet it
+    std::atomic<u64> queued_unknown{};  ///< Of drain_queued: its value is unknown (a reduction)
+    std::atomic<u64> queued_unknown_met{}; ///< ...and the word in memory already meets the acquire
+    std::atomic<u64> trigger_not_met{};    ///< Acquire methods not met without a drain (NotMet)
+    std::atomic<u64> trigger_not_met_twice{}; ///< ...still not met after it: fences drain again
     std::atomic<u64> valve_drains{}; ///< Of drained: polls of an unmet acquire, once per 1 ms
     std::atomic<u64> polls{};     ///< Polls that keep waiting without a drain
     std::atomic<u64> acquire_polls{}; ///< Polls of suspended channels waiting on an acquire
     std::atomic<u64> list_polls{};    ///< ...and on a command list copy the GPU writes
+    std::atomic<u64> front_polls{};   ///< GPU thread waits for them in hardware (gpu_thread.cpp)
+    std::atomic<u64> front_sleeps{};  ///< ...and in the OS
+    std::atomic<u64> front_woken{};   ///< Of those: ended by a wake (Nx2PendingWake)
+    std::atomic<u64> front_stored{};  ///< ...by a store to a word a channel waits on (WordStored)
+    std::atomic<u64> front_found_polling{}; ///< Channels found moving by a timed-out hardware wait
+    std::atomic<u64> front_found_late{};    ///< ...and by a timed-out OS wait, after the poll
     std::atomic<u64> early_publishes{}; ///< Publishes to a back that waits for work (Commit)
     std::atomic<u64> settles{};   ///< Idle hooks asked of a back that ran everything (SettleIdleBack)
     std::atomic<u64> back_waits{};      ///< The back ran out of work
@@ -77,10 +90,12 @@ struct AcquireStats {
     std::atomic<u64> mismatches{}; ///< VERIFY: passed, yet the word after a drain doesn't meet it
     std::atomic<u64> unlanded{};   ///< VERIFY: met by a queued release not in memory after a drain
     std::atomic<u64> late{};       ///< VERIFY: a poll kept waiting, yet a drain meets it
+    /// The front's waits for its back (Drain, WaitFor, a full ring) and their time, by site
+    std::array<std::atomic<u64>, static_cast<size_t>(DrainSite::Count)> site_drains{};
+    std::array<std::atomic<u64>, static_cast<size_t>(DrainSite::Count)> site_drain_ns{};
 };
 inline AcquireStats g_acquire_stats;
-/// Whether g_acquire_stats counts (EDEN_NX2_GPU_PROFILE or EDEN_NX2_ACQUIRE_VERIFY), as of the
-/// split's last start.
+/// Whether g_acquire_stats counts, as of the split's last start.
 inline bool g_acquire_counting{};
 /// EDEN_NX2_ACQUIRE_VERIFY=1: acquires decided without a drain drain anyway and compare.
 inline bool g_acquire_verify{};
@@ -134,10 +149,18 @@ public:
     static void MarkGpuThread() {
         on_gpu_thread = true;
     }
+    /// Whether the calling thread is the GPU thread (see MarkGpuThread).
+    [[nodiscard]] static bool OnGpuThread() {
+        return on_gpu_thread;
+    }
     /// Whether the calling thread owns the Vulkan scheduler: the back while it runs, else the
     /// GPU thread. Other threads (CPU cores, services) must not record or submit work.
     [[nodiscard]] static bool OwnsScheduler() {
         return Get().BackRunning() ? on_back_thread : on_gpu_thread;
+    }
+    /// Draw state belongs to the split back thread, or the sole GPU scheduler owner.
+    [[nodiscard]] static bool CanReuseDrawState() {
+        return OnBackThread() || OwnsScheduler();
     }
     /// Called on the back before it sleeps waiting for work (the rasterizer submits deferred work).
     void SetIdleHook(void (*hook)(void*), void* argument) {
@@ -201,6 +224,30 @@ public:
         }
     }
 
+    /// A Maxwell3D state register write (not in execution_mask) from the front, shadow RAM
+    /// applied (not in replay) and changing the front's copy of the register. Writes in a row go
+    /// to the back as one entry once another entry follows or the front publishes or waits; the
+    /// back stores them and sets their dirty flags at once (Maxwell3D::WriteStateRegisters).
+    /// `flags`: the dirty flags the register sets; `breaks`: changing it ends fast draw reuse;
+    /// `anywhere`: the back may issue a deferred draw with it, which can write guest memory
+    /// anywhere. Port of Damfortx's state blocks (76548f0bf1), after #717's StateDelta.
+    void StateWrite(Tegra::Engines::EngineInterface* engine, u32 method, u32 value,
+                    std::array<u8, 2> flags, bool breaks, bool anywhere) {
+        if (engine != state_engine || state_count == MaxStateWrites) {
+            FlushState();
+            state_engine = engine;
+        }
+        state_writes[state_count++] = u64{method} | (u64{value} << 32);
+        for (const u8 flag : flags) {
+            state_flags[flag / 64] |= u64{1} << (flag % 64);
+        }
+        if (breaks) {
+            state_break = method;
+            state_breaks = true;
+        }
+        state_anywhere = state_anywhere || anywhere;
+    }
+
     /// Defer flag: the call doesn't end fast draw reuse (nx2_fast_draw.h).
     static constexpr u64 FastDrawNeutral = 1 << 7;
 
@@ -247,6 +294,9 @@ public:
     template <typename Func>
     void Run(const Func& func, DrainSite site = DrainSite::Other) {
         if (on_back_thread || !active) {
+            if (!on_back_thread) {
+                Nx2FastDraw::BreakUnsplit(Nx2FastDraw::Reason::Call);
+            }
             func();
             return;
         }
@@ -265,6 +315,10 @@ public:
     /// runs its idle hook (the deferred submit) and sleeps now instead of spinning for more, as it
     /// did when every poll drained (Drain asks for the hook), but without the wait.
     void SettleIdleBack() {
+        if (state_count != 0) {
+            Publish();
+            return;
+        }
         if (hook_requested.load(std::memory_order_relaxed) || BackQuiet() ||
             consumed.load(std::memory_order_acquire) != write_position) {
             return;
@@ -277,7 +331,8 @@ public:
     /// Waits until the back executed everything sent so far.
     void Drain(DrainSite site = DrainSite::Other);
     /// The ring position after the entries sent so far, for WaitUntil.
-    [[nodiscard]] u64 Position() const {
+    [[nodiscard]] u64 Position() {
+        FlushState();
         return write_position;
     }
     /// Waits until the back executed the entries sent before `position`. Returns whether any of
@@ -340,10 +395,15 @@ private:
         Method, ///< Bits 8-23 method, 32-63 argument; flags IsLast, HasSegment (word 1)
         Multi,  ///< Bits 8-23 method, 32-63 amount; word 1 methods pending, [segment], words
         Call,   ///< Bits 8-31 payload size in words; word 1 thunk, then the payload
+        State,  ///< Bits 8-23 last method that breaks, 32-63 count; flag HasBreak; words 1-4
+                ///< dirty flags; then (method | value << 32) per write (StateWrite)
     };
     static constexpr u64 IsLast = 1 << 4;
     static constexpr u64 HasSegment = 1 << 5;
     static constexpr u64 Direct = 1 << 6; ///< Method: call it even if not executable (macros)
+    static constexpr u64 HasBreak = 1 << 4; ///< State: a write ends fast draw reuse
+    static constexpr size_t StateFlagWords = 4;
+    static constexpr u32 MaxStateWrites = 128;
 
     static constexpr size_t RingWords = size_t{1} << 20; // 8 MiB
     static constexpr size_t RingMask = RingWords - 1;
@@ -380,8 +440,17 @@ private:
                                  static_cast<size_t>(payload[function_words])});
     }
 
+    /// Sends the state writes gathered so far (before any other entry, publish or wait).
+    void FlushState() {
+        if (state_count != 0) {
+            FlushStateSlow();
+        }
+    }
+    void FlushStateSlow();
+
     /// Room for an entry of `words` at the write position (never across the ring's end).
     u64* Reserve(size_t words) {
+        FlushState();
         const size_t index = write_position & RingMask;
         if (index + words <= RingWords && write_position + words - consumed_cache <= RingWords)
             [[likely]] {
@@ -407,6 +476,7 @@ private:
     }
     void WaitForSpace(size_t words);
     void SelectEngine(Tegra::Engines::EngineInterface* engine) {
+        FlushState();
         if (engine != front_engine) [[unlikely]] {
             SwitchEngine(engine);
         }
@@ -434,8 +504,10 @@ private:
     bool front_macros{};
     std::unique_ptr<u64[]> ring;
 
-    // Front side.
-    u64 write_position{};
+    // Front side, in its own 128-byte block (x86 prefetchers pull 64-byte lines in pairs): the
+    // back writes back_engine on every engine switch, and next to these fields that made the
+    // front miss the cache on almost every ring write (found by SerkiGohan).
+    alignas(128) u64 write_position{};
     u64 last_writer_position{};
     u64 last_sync_position{};
     u64 synced_writer_position{};
@@ -445,7 +517,7 @@ private:
         bool known;
     };
     /// The front's NoteSemaphoreWrite, by word address.
-    std::unordered_map<u64, SemaphoreWrite> semaphore_writes;
+    Common::unordered_map<u64, SemaphoreWrite> semaphore_writes;
     size_t semaphore_writes_limit = 1024; ///< Forget what the back ran past this many
     /// After the last entry that may write guest memory anywhere (NoteAnyWrite), the last one
     /// NoteWrite placed, and the last placed write in each slot's granules.
@@ -457,9 +529,17 @@ private:
     /// Words between publishes: small right after a drain, while the back has nothing to do.
     size_t publish_every{PublishEvery};
     Tegra::Engines::EngineInterface* front_engine{};
+    /// The state writes being gathered (StateWrite).
+    Tegra::Engines::EngineInterface* state_engine{};
+    u32 state_count{};
+    u32 state_break{};
+    bool state_breaks{};
+    bool state_anywhere{};
+    std::array<u64, StateFlagWords> state_flags{};
+    std::array<u64, MaxStateWrites> state_writes{};
 
-    // Back side.
-    Tegra::Engines::EngineInterface* back_engine{};
+    // Back side, in its own block.
+    alignas(128) Tegra::Engines::EngineInterface* back_engine{};
 
     /// Whether the back is done with the Vulkan scheduler until it gets more work: set after its
     /// idle hook ran, cleared before it executes entries.

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -28,8 +27,8 @@ public:
     explicit HIDCore(Kernel::KernelCore& kernel);
     ~HIDCore();
 
-    YUZU_NON_COPYABLE(HIDCore);
-    YUZU_NON_MOVEABLE(HIDCore);
+    LICHII_NON_COPYABLE(HIDCore);
+    LICHII_NON_MOVEABLE(HIDCore);
 
     EmulatedController* GetEmulatedController(NpadIdType npad_id_type);
     const EmulatedController* GetEmulatedController(NpadIdType npad_id_type) const;

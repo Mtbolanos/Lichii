@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ConfigureNetwork</class>
+ <widget class="QWidget" name="ConfigureNetwork">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>433</width>
+    <height>561</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="accessibleName">
+   <string>Network</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="QGroupBox" name="groupBox_2">
+       <property name="title">
+        <string>General</string>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="1" column="1">
+         <widget class="QComboBox" name="network_interface"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>Network Interface</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2">
+         <widget class="QCheckBox" name="airplane_mode">
+          <property name="text">
+           <string>Enable Airplane Mode</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QCheckBox" name="lan_play">
+          <property name="toolTip">
+           <string>Plays local wireless games with other Lichii instances or ldn_mitm consoles on the same network, without a room. If you are in a room when a game starts local play, the room is used instead.</string>
+          </property>
+          <property name="text">
+           <string>LAN play</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="redirect_group">
+       <property name="title">
+        <string>Host redirect</string>
+       </property>
+       <layout class="QGridLayout" name="redirect_layout">
+        <item row="0" column="0" colspan="3">
+         <widget class="QCheckBox" name="online_service_redirect">
+          <property name="text">
+           <string>Redirect host names to a server you run</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="3">
+         <widget class="QLabel" name="redirect_description">
+          <property name="text">
+           <string>For a server you run yourself. While this is on, the host names below and their subdomains resolve to 127.0.0.1, and connections to 127.0.0.1 on port 443 go to the server address. The CA certificate is trusted for every secure connection a game makes. Changes take effect when a game starts.</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="redirect_hosts_label">
+          <property name="text">
+           <string>Host names</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" colspan="2">
+         <widget class="QLineEdit" name="redirect_hosts">
+          <property name="toolTip">
+           <string>Comma-separated host names, for example a.example, b.example. Each also covers its subdomains.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="redirect_server_label">
+          <property name="text">
+           <string>Server address</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1" colspan="2">
+         <widget class="QLineEdit" name="redirect_server">
+          <property name="toolTip">
+           <string>IPv4 address and port of your server, for example 192.168.1.20:8443. Leave it empty if your server listens on this PC on port 443.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="redirect_ca_label">
+          <property name="text">
+           <string>CA certificate</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLineEdit" name="redirect_ca">
+          <property name="toolTip">
+           <string>The CA certificate (DER, at most 64 KiB) that signed your server's certificate. Optional.</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QPushButton" name="redirect_ca_browse">
+          <property name="text">
+           <string>Browse...</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="3">
+         <widget class="QCheckBox" name="redirect_loopback_only">
+          <property name="toolTip">
+           <string>Other host names don't resolve, and games can reach only this PC and the server address. Multiplayer rooms are not affected.</string>
+          </property>
+          <property name="text">
+           <string>Block all other network access</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="nextendo_group">
+       <property name="title">
+        <string>Nextendo Network</string>
+       </property>
+       <layout class="QGridLayout" name="nextendo_layout">
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="nextendo_enabled">
+          <property name="text">
+           <string>Play online through Nextendo Network</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QLabel" name="nextendo_description">
+          <property name="text">
+           <string>Nextendo Network is a community service that replaces Nintendo's online servers for Switch 1 games. When this is on, those games connect to Nextendo instead of Nintendo and send your Nextendo account token to it. Airplane mode is turned off.</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="nextendo_client_id_label">
+          <property name="text">
+           <string>Client ID</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="nextendo_client_id"/>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <widget class="QLabel" name="nextendo_status">
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <layout class="QHBoxLayout" name="nextendo_buttons">
+          <item>
+           <widget class="QPushButton" name="nextendo_sign_in">
+            <property name="text">
+             <string>Sign in to Nextendo</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="nextendo_sign_out">
+            <property name="text">
+             <string>Sign out</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

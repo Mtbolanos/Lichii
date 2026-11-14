@@ -93,13 +93,22 @@ FirmwareManager::InstallKeys(std::string location, std::string extension) {
 
     for (const auto &key_file : source_key_files) {
         std::filesystem::path destination_key_file = keys_dir / key_file.filename();
+        // Picking the keys already installed (a file inside the keys folder) names the same file
+        // twice: copy_file then fails with "File exists" even with overwrite_existing, and its
+        // throwing overload aborted the emulator. The file is already where it belongs.
+        std::error_code error;
+        if (std::filesystem::equivalent(key_file, destination_key_file, error)) {
+            continue;
+        }
         if (!std::filesystem::copy_file(key_file,
                                         destination_key_file,
-                                        std::filesystem::copy_options::overwrite_existing)) {
+                                        std::filesystem::copy_options::overwrite_existing,
+                                        error)) {
             LOG_ERROR(Frontend,
-                      "Failed to copy file {} to {}",
+                      "Failed to copy file {} to {}: {}",
                       key_file.string(),
-                      destination_key_file.string());
+                      destination_key_file.string(),
+                      error.message());
             return ErrorFailedCopy;
         }
     }

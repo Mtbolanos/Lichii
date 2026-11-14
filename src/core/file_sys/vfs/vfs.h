@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -39,8 +38,8 @@ enum class VfsEntryType {
 // functionality, they will need to override.
 class VfsFilesystem {
 public:
-    YUZU_NON_COPYABLE(VfsFilesystem);
-    YUZU_NON_MOVEABLE(VfsFilesystem);
+    LICHII_NON_COPYABLE(VfsFilesystem);
+    LICHII_NON_MOVEABLE(VfsFilesystem);
 
     explicit VfsFilesystem(VirtualDir root);
     virtual ~VfsFilesystem();
@@ -90,8 +89,8 @@ protected:
 // A class representing a file in an abstract filesystem.
 class VfsFile {
 public:
-    YUZU_NON_COPYABLE(VfsFile);
-    YUZU_NON_MOVEABLE(VfsFile);
+    LICHII_NON_COPYABLE(VfsFile);
+    LICHII_NON_MOVEABLE(VfsFile);
 
     VfsFile() = default;
     virtual ~VfsFile();
@@ -193,8 +192,8 @@ public:
 // A class representing a directory in an abstract filesystem.
 class VfsDirectory {
 public:
-    YUZU_NON_COPYABLE(VfsDirectory);
-    YUZU_NON_MOVEABLE(VfsDirectory);
+    LICHII_NON_COPYABLE(VfsDirectory);
+    LICHII_NON_MOVEABLE(VfsDirectory);
 
     VfsDirectory() = default;
     virtual ~VfsDirectory();

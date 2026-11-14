@@ -1,15 +1,16 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
+#include <array>
 #include <cinttypes>
 #include <cstring>
 #include <span>
 #include <vector>
 
+#include "common/alignment.h"
 #include "common/common_funcs.h"
 #include "common/game_presets.h"
 #include "common/hex_util.h"
@@ -46,7 +47,7 @@ struct MODHeader {
 static_assert(sizeof(MODHeader) == 0x1c, "MODHeader has incorrect size.");
 
 constexpr u32 PageAlignSize(u32 size) {
-    return static_cast<u32>((size + Core::Memory::YUZU_PAGEMASK) & ~Core::Memory::YUZU_PAGEMASK);
+    return static_cast<u32>((size + Core::Memory::LICHII_PAGEMASK) & ~Core::Memory::LICHII_PAGEMASK);
 }
 } // Anonymous namespace
 
@@ -192,14 +193,25 @@ std::optional<VAddr> AppLoader_NSO::LoadModule(Kernel::KProcess& process, Core::
     }
 
     // Mario Kart World selects a 1- or 2-vblank frame mode in its main loop. Force its native
-    // 30 FPS mode, or let it choose dynamically using the whole frame time (CPU + GPU wait).
-    // Match the instruction sequence instead of relying on a title-version-specific address.
+    // 30 FPS mode, or let it choose dynamically. In dynamic mode the game keeps a time account
+    // (frame cost - interval * 16.67 ms) and advances 1 or 2 steps per frame, so it stays in real
+    // time as long as the cost it reads is the real frame time: use the whole frame time and skip
+    // the game's own wait for the second vblank, or every 2-step frame reads as 33 ms and the game
+    // never leaves 30 FPS (found by SerkiGohan). Presents are then paced with interval 1.
+    // Match the instruction sequences instead of relying on a title-version-specific address.
+    // 60 FPS forces mode 1 (one 1/60 s step a frame): a slow frame plays in slow motion. With the
+    // 30 FPS fallback, the mode load becomes a call to `ldr w8, <word>; ret` in the padding after
+    // .text, a word nx2:vi2 switches between 1 and 2 (one 1/30 s step a frame) at runtime: 60
+    // while frames make it, 30 at full speed while they don't.
     const bool mkw_dynamic = Settings::values.mkw_dynamic_fps.GetValue();
+    const bool mkw_60 = !mkw_dynamic && Settings::values.mkw_60fps.GetValue();
+    const bool mkw_60_switching = mkw_60 && Settings::values.mkw_60fps_fallback.GetValue();
     bool mkw_dynamic_fps_patch_applied = false;
-    if ((mkw_dynamic || Settings::values.mkw_30fps.GetValue()) && name == "main" &&
+    u64 mkw_mode_word_offset = 0;
+    if ((mkw_dynamic || mkw_60 || Settings::values.mkw_30fps.GetValue()) && name == "main" &&
         process.GetProgramId() == Settings::MarioKartWorldProgramId) {
         constexpr u32 ModeLoadInsn = 0xB9421268; // ldr w8, [x19, #0x210]
-        const u32 mode = mkw_dynamic ? 0U : 2U;
+        const u32 mode = mkw_dynamic ? 0U : mkw_60 ? 1U : 2U;
         const u32 mode_instruction = 0x52800008U | (mode << 5); // mov w8, #mode
         const auto& text = nso_header.segments[0];
         u8* const code = codeset.memory.data() + module_start + text.location;
@@ -237,22 +249,121 @@ std::optional<VAddr> AppLoader_NSO::LoadModule(Kernel::KProcess& process, Core::
             }
         }
 
-        if (mode_matches == 1 && (!mkw_dynamic || frame_time_matches == 1)) {
+        // The vsync function waits until 0.99 * interval / 60 s after the frame start:
+        // ldr w8, [x19, #0x88] ; cmp w8, #2 ; b.lo <done> ; ucvtf ; mov w8, #60.0f
+        size_t vblank_wait_site = 0;
+        size_t vblank_wait_matches = 0;
+        if (mkw_dynamic) {
+            for (size_t i = 0; i + 4 < count; ++i) {
+                if (word(i) == 0xB9408A68 && word(i + 1) == 0x7100091F &&
+                    (word(i + 2) & 0xFF00001F) == 0x54000003 && word(i + 4) == 0x52A84E08) {
+                    vblank_wait_site = i + 2;
+                    ++vblank_wait_matches;
+                }
+            }
+        }
+
+        // The padding between .text and the next segment is mapped with .text and is zero.
+        const size_t cave = Common::AlignUp(text.location + text.size, sizeof(u32));
+        const bool cave_fits =
+            nso_header.segments.size() > 1 && cave + 12 <= nso_header.segments[1].location &&
+            std::all_of(code + (cave - text.location), code + (cave - text.location) + 12,
+                        [](u8 byte) { return byte == 0; });
+
+        if (mode_matches == 1 && mkw_60_switching && cave_fits) {
+            const std::array<u32, 3> stub{0x18000048U, // ldr w8, #8 (the mode word below)
+                                          0xD65F03C0U, // ret
+                                          1U};         // mode, switched by nx2:vi2
+            std::memcpy(code + (cave - text.location), stub.data(), sizeof(stub));
+            const s64 delta = (static_cast<s64>(cave) -
+                               static_cast<s64>(text.location + mode_site * sizeof(u32))) / 4;
+            const u32 call = 0x94000000U | (static_cast<u32>(delta) & 0x03FFFFFFU); // bl stub
+            std::memcpy(code + mode_site * sizeof(u32), &call, sizeof(call));
+            mkw_mode_word_offset = cave + 8;
+            LOG_INFO(Loader, "Mario Kart World: 60 FPS mode enabled, 30 at full speed when slow "
+                             "(main+{:#x}, mode word main+{:#x})",
+                     text.location + mode_site * sizeof(u32), cave + 8);
+        } else if (mode_matches == 1 && !mkw_60_switching &&
+                   (!mkw_dynamic || (frame_time_matches == 1 && vblank_wait_matches == 1))) {
             std::memcpy(code + mode_site * sizeof(u32), &mode_instruction,
                         sizeof(mode_instruction));
             if (mkw_dynamic) {
                 const u32 whole_frame_time = 0xF9407660 | (word(frame_time_site) & 0x1F);
                 std::memcpy(code + frame_time_site * sizeof(u32), &whole_frame_time,
                             sizeof(whole_frame_time));
+                // b.lo -> b to the same target.
+                const s32 offset = static_cast<s32>(word(vblank_wait_site) << 8) >> 13;
+                const u32 branch = 0x14000000U | (static_cast<u32>(offset) & 0x03FFFFFFU);
+                std::memcpy(code + vblank_wait_site * sizeof(u32), &branch, sizeof(branch));
                 mkw_dynamic_fps_patch_applied = true;
             }
             LOG_INFO(Loader, "Mario Kart World: {} FPS mode enabled (main+{:#x})",
-                     mkw_dynamic ? "dynamic" : "30",
+                     mkw_dynamic ? "dynamic" : mkw_60 ? "60" : "30",
                      text.location + mode_site * sizeof(u32));
         } else {
             LOG_WARNING(Loader,
-                        "Mario Kart World FPS patch skipped (mode matches {}, frame-time matches {})",
-                        mode_matches, frame_time_matches);
+                        "Mario Kart World FPS patch skipped (mode matches {}, frame-time matches "
+                        "{}, vblank-wait matches {}, room after .text {})",
+                        mode_matches, frame_time_matches, vblank_wait_matches, cave_fits);
+        }
+    }
+
+    // Hyrule Warriors' frame interval (core/hle/service/nx2_frame_interval.h). Its only copy into
+    // the global is
+    //   adrp x9, got; ...; ldr x9, [x9, #got]; ...; adrp x8, global; add x8, x8, #global;
+    //   ldr w19, [x9]; str w19, [x8]
+    // Nothing is patched; the present path writes both words with hyrule_dynamic_fps or
+    // hyrule_30fps.
+    u64 frame_interval_offset = 0;
+    u64 frame_interval_source_offset = 0;
+    if (name == "main" && process.GetProgramId() == Settings::HyruleWarriorsProgramId) {
+        const auto& text = nso_header.segments[0];
+        const u8* const image = codeset.memory.data() + module_start;
+        const u64 image_end = codeset.memory.size() - module_start;
+        const auto word = [image](u64 offset) {
+            u32 value;
+            std::memcpy(&value, image + offset, sizeof(value));
+            return value;
+        };
+        const auto fits = [image_end](u64 offset, u64 size) {
+            return image_end >= size && offset <= image_end - size;
+        };
+        const auto adrp_page = [](u64 pc, u32 insn) {
+            s64 pages = static_cast<s64>((((insn >> 5) & 0x7FFFF) << 2) | ((insn >> 29) & 3));
+            if (pages & (s64{1} << 20)) {
+                pages -= s64{1} << 21;
+            }
+            return (pc & ~u64{0xFFF}) + static_cast<u64>(pages * 0x1000);
+        };
+        size_t matches = 0;
+        for (u64 pc = text.location + 32; pc + 8 <= text.location + text.size; pc += 4) {
+            if (word(pc) != 0xB9400133 || word(pc + 4) != 0xB9000113) { // ldr w19, [x9]; str w19, [x8]
+                continue;
+            }
+            const u32 adrp_global = word(pc - 8);
+            const u32 add_global = word(pc - 4);
+            const u32 adrp_got = word(pc - 32);
+            const u32 ldr_got = word(pc - 24);
+            if ((adrp_global & 0x9F00001F) != 0x90000008 || (add_global & 0xFFC003FF) != 0x91000108 ||
+                (adrp_got & 0x9F00001F) != 0x90000009 || (ldr_got & 0xFFC003FF) != 0xF9400129) {
+                continue;
+            }
+            ++matches;
+            frame_interval_offset = adrp_page(pc - 8, adrp_global) + ((add_global >> 10) & 0xFFF);
+            const u64 got = adrp_page(pc - 32, adrp_got) + ((ldr_got >> 10) & 0xFFF) * 8;
+            frame_interval_source_offset = 0;
+            if (fits(got, sizeof(u64))) {
+                // Not relocated yet: the entry still holds the module-relative address.
+                std::memcpy(&frame_interval_source_offset, image + got, sizeof(u64));
+            }
+        }
+        if (matches == 1 && fits(frame_interval_offset, sizeof(u32)) &&
+            frame_interval_source_offset != 0 && fits(frame_interval_source_offset, sizeof(u32))) {
+            LOG_INFO(Loader, "Hyrule Warriors frame interval at main+{:#x} (from main+{:#x})",
+                     frame_interval_offset, frame_interval_source_offset);
+        } else {
+            LOG_WARNING(Loader, "Hyrule Warriors frame interval not found ({} matches)", matches);
+            frame_interval_offset = frame_interval_source_offset = 0;
         }
     }
 
@@ -343,6 +454,12 @@ std::optional<VAddr> AppLoader_NSO::LoadModule(Kernel::KProcess& process, Core::
     process.LoadModule(system.Kernel(), std::move(codeset), load_base);
     if (name == "main" && process.GetProgramId() == Settings::MarioKartWorldProgramId) {
         process.SetMkwDynamicFpsPatchApplied(mkw_dynamic_fps_patch_applied);
+        process.SetMkwFrameModeAddress(
+            mkw_mode_word_offset != 0 ? load_base + module_start + mkw_mode_word_offset : 0);
+    }
+    if (frame_interval_offset != 0) {
+        process.SetFrameIntervalAddresses(load_base + module_start + frame_interval_offset,
+                                          load_base + module_start + frame_interval_source_offset);
     }
     return load_base + image_size;
 }

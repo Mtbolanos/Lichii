@@ -11,7 +11,7 @@
 #include <fmt/ranges.h>
 #include "common/httplib.h"
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
 #include <openssl/cert.h>
 #endif
 
@@ -77,7 +77,7 @@ struct Client::Impl {
             cli->set_connection_timeout(TIMEOUT_SECONDS);
             cli->set_read_timeout(TIMEOUT_SECONDS);
             cli->set_write_timeout(TIMEOUT_SECONDS);
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
             cli->load_ca_cert_store(kCert, sizeof(kCert));
 #endif
         }

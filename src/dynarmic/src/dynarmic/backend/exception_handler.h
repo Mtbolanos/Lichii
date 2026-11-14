@@ -75,7 +75,8 @@ public:
 #endif
 
     bool SupportsFastmem() const noexcept;
-    void SetFastmemCallback(std::function<FakeCall(u64)> cb);
+    /// The callback returns nullopt when the faulting PC is not a fastmem access.
+    void SetFastmemCallback(std::function<std::optional<FakeCall>(u64)> cb);
 
 private:
     struct Impl;

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <utility>
@@ -67,8 +66,24 @@ void PopulateRecords(std::vector<Record>& records, QWindow* window) try {
         bool has_broken_compute{
             Vulkan::Device::CheckBrokenCompute(driverID, properties.properties.driverVersion)};
 
+#if defined(__linux__) && !defined(__ANDROID__)
+        VkPhysicalDeviceShaderIntegerDotProductProperties dot_properties{};
+        dot_properties.sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES;
+        if (properties.properties.apiVersion >= VK_API_VERSION_1_3) {
+            VkPhysicalDeviceProperties2 dot_query{};
+            dot_query.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+            dot_query.pNext = &dot_properties;
+            dld.vkGetPhysicalDeviceProperties2(physical_device, &dot_query);
+        }
+        const bool fsr4_capable = VideoCommon::IsFsr4PortGpu(
+            properties.properties.vendorID, properties.properties.deviceID,
+            driverID == VK_DRIVER_ID_MESA_RADV,
+            dot_properties.integerDotProduct4x8BitPackedMixedSignednessAccelerated != VK_FALSE);
+#else
         const bool fsr4_capable = VideoCommon::IsFsr4CapableGpu(
             properties.properties.vendorID, driverID == VK_DRIVER_ID_AMD_PROPRIETARY, name);
+#endif
 
         std::string driver_string = Vulkan::vk::GetDriverName(driver_properties);
 

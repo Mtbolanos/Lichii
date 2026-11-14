@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <map>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -39,7 +40,11 @@ void ForEachRecommendedSetting(Values& settings, Func&& func) {
     entry(settings.precache_shaders, PrecacheShaders::Off);
     entry(settings.use_video_framerate, false);
     entry(settings.mkw_30fps, false);
+    entry(settings.mkw_60fps, false);
+    entry(settings.mkw_60fps_fallback, true);
     entry(settings.mkw_dynamic_fps, false);
+    entry(settings.hyrule_dynamic_fps, false);
+    entry(settings.hyrule_30fps, false);
     entry(settings.use_reactive_flushing, true);
     entry(settings.barrier_feedback_loops, true);
     entry(settings.enable_buffer_history, false);
@@ -80,22 +85,33 @@ void ForEachRecommendedSetting(Values& settings, Func&& func) {
     entry(settings.use_custom_cpu_ticks, false);
 }
 
-/// A global setting that changed, with its values as BasicSetting::ToString gives them.
+/// A setting that changed, with its values as BasicSetting::ToString gives them. game names the
+/// per-game config (user/config/custom/<game>.ini) whose value changed; it is empty for a global
+/// value.
 struct RecommendedSettingChange {
     const BasicSetting* setting;
     std::string previous;
     std::string current;
+    std::string game;
 };
 
 /// Writes the recommended values to the global settings and returns the ones that changed.
-/// Per-game values, and whether a setting uses its per-game value, stay as they are. When
-/// something changed, recommended_settings_backup takes the previous value of every recommended
-/// setting it does not hold yet. A value it holds stays until it is restored, so applying twice
-/// does not lose the values from before the first time.
+/// The in-memory per-game values, and whether a setting uses its per-game value, stay as they
+/// are; FrontendCommon::ApplyRecommendedSettings resets the per-game configs on disk.
+/// recommended_settings_backup takes the previous value of every recommended setting it does not
+/// hold yet. A value it holds stays until it is restored, so applying twice does not lose the
+/// values from before the first time.
 std::vector<RecommendedSettingChange> ApplyRecommendedSettings(Values& settings);
 
 /// Puts back the global values recommended_settings_backup holds, clears it and returns the
 /// settings that changed. Only settings in the recommended table are restored.
 std::vector<RecommendedSettingChange> RestorePreviousSettings(Values& settings);
+
+/// Parses a backup of "label:value,label:value", with values as BasicSetting::ToString gives
+/// them. Entries without a value are dropped.
+std::map<std::string, std::string> ParseRecommendedSettingsBackup(const std::string& backup);
+
+/// Writes values back in the form ParseRecommendedSettingsBackup reads.
+std::string FormatRecommendedSettingsBackup(const std::map<std::string, std::string>& entries);
 
 } // namespace Settings

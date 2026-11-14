@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-FileCopyrightText: Copyright 2013 Dolphin Emulator Project / 2015 Citra Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -117,7 +116,7 @@ const CPUCaps g_cpu_caps = [] {
     CPUCaps caps = {};
 
     // Assumes the CPU supports the CPUID instruction. Those that don't would likely not support
-    // yuzu at all anyway
+    // Lichii at all anyway
     int cpu_id[4];
 
     // Detect CPU's CPUID capabilities and grab manufacturer string

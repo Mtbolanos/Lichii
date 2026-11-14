@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <optional>
 #include <span>
 
 #include "common/assert.h"
@@ -63,12 +63,46 @@ struct BuiltinPatch {
     size_t state_size = 0;
     // Another built-in this one contains; it is skipped once this one is applied.
     std::string_view replaces{};
+    // Applies only with NVIDIA DLSS on at this quality in docked mode, and is not listed in
+    // Add-Ons.
+    std::optional<Settings::NvidiaDlssQuality> dlss_quality{};
 };
+
+constexpr std::string_view MAX_RESOLUTION_NAME = "Max Resolution (built-in)";
 
 constexpr std::array<u8, 4> MAX_RESOLUTION_ORIGINAL{0xE8, 0x41, 0x00, 0x36};
 constexpr std::array<u8, 4> MAX_RESOLUTION_BRANCH{0x0F, 0x02, 0x00, 0x14};
 constexpr std::array MAX_RESOLUTION_RECORDS{
     BuiltinPatchRecord{0x805BD0, MAX_RESOLUTION_BRANCH, MAX_RESOLUTION_ORIGINAL},
+};
+
+// ProfessorTee's render scales (#903): Max Resolution's fixed-scale path returns 1.0 of 2560x1440
+// (main+0x806420: mov w9, #0x3f800000), which DLSS takes to 4K as Quality. The lower scales give
+// the other modes' render sizes.
+constexpr std::array<u8, 4> RENDER_SCALE_ONE{0x09, 0xF0, 0xA7, 0x52};         // 1.0
+constexpr std::array<u8, 4> RENDER_SCALE_BALANCED{0xE9, 0xEB, 0xA7, 0x52};    // 0.871, 2276x1280
+constexpr std::array<u8, 4> RENDER_SCALE_PERFORMANCE{0x09, 0xE8, 0xA7, 0x52}; // 0.75, 1920x1080
+constexpr std::array<u8, 4> RENDER_SCALE_ULTRA{0x09, 0xE0, 0xA7, 0x52};       // 0.5, 1280x720
+constexpr std::array RENDER_BALANCED_RECORDS{
+    BuiltinPatchRecord{0x806420, RENDER_SCALE_BALANCED, RENDER_SCALE_ONE},
+};
+constexpr std::array RENDER_PERFORMANCE_RECORDS{
+    BuiltinPatchRecord{0x806420, RENDER_SCALE_PERFORMANCE, RENDER_SCALE_ONE},
+};
+constexpr std::array RENDER_ULTRA_RECORDS{
+    BuiltinPatchRecord{0x806420, RENDER_SCALE_ULTRA, RENDER_SCALE_ONE},
+};
+
+// RsMan-Dev's texture pool patch: stp x8, x9, [sp, #0x10] stores the graphics allocator's
+// initial pool size (x8); the call doubles it first (lsl x8, x8, #1 ; stp ; ret).
+constexpr std::array<u8, 4> TEXTURE_POOL_ORIGINAL{0xE8, 0x27, 0x01, 0xA9};
+constexpr std::array<u8, 4> TEXTURE_POOL_CALL{0xD5, 0x6F, 0xC0, 0x94};
+constexpr std::array<u8, 12> TEXTURE_POOL_ROUTINE{
+    0x08, 0xF9, 0x7F, 0xD3, 0xE8, 0x27, 0x01, 0xA9, 0xC0, 0x03, 0x5F, 0xD6,
+};
+constexpr std::array TEXTURE_POOL_RECORDS{
+    BuiltinPatchRecord{0xC2A36C, TEXTURE_POOL_CALL, TEXTURE_POOL_ORIGINAL},
+    BuiltinPatchRecord{0x3C462C0, TEXTURE_POOL_ROUTINE, {}, true},
 };
 
 constexpr std::array<u8, 4> DYNAMIC_FPS_ORIGINAL{0x28, 0x18, 0x20, 0x1E};
@@ -95,24 +129,266 @@ constexpr std::array<u8, 128> FPS_UNLOCK_ROUTINE{
     0x0A, 0xD7, 0xA3, 0x3C, 0x00, 0x00, 0xC0, 0x40,
 };
 #undef DYNAMIC_FPS_ROUTINE_HEAD
+// The water ripple simulation runs iterations * (int)step passes per frame, so any step below 1.0
+// runs none: the ripples freeze and the grid shifts that follow the player are lost. With these
+// the pass count follows the step through an accumulator, with at least one pass while time moves.
+constexpr std::array<u8, 4> WATER_STEPS_ORIGINAL{0x09, 0x00, 0x38, 0x1E};
+constexpr std::array<u8, 4> WATER_STEPS_CALL{0x42, 0xFB, 0xEF, 0x94}; // bl main+0x3C46300
+constexpr std::array<u8, 4> WATER_MUL_ORIGINAL{0x08, 0x7D, 0x09, 0x1B};
+constexpr std::array<u8, 4> WATER_MUL_NOP{0x1F, 0x20, 0x03, 0xD5};
+// In: w8 iterations, s0 step, x21 the water object. Out: w8 passes. Each water object keeps its own
+// remainder: 8 slots of {u64 object, f32 remainder, pad} at state + 0x10 and the next slot to reuse
+// at state + 0x90, taken in turn when no slot has the object. Uses x9-x12 and s0-s2, which the game
+// doesn't read again before writing them.
+constexpr std::array<u8, 148> WATER_STEPS_ROUTINE{
+    0x01, 0x01, 0x22, 0x1E, 0x00, 0x08, 0x21, 0x1E, 0x08, 0x20, 0x20, 0x1E, 0x0D, 0x04, 0x00,
+    0x54, 0xC9, 0x92, 0x00, 0xB0, 0x29, 0x41, 0x38, 0x91, 0x2A, 0x01, 0x02, 0x91, 0xEB, 0x03,
+    0x09, 0xAA, 0x6C, 0x01, 0x40, 0xF9, 0x9F, 0x01, 0x15, 0xEB, 0x60, 0x01, 0x00, 0x54, 0x6B,
+    0x41, 0x00, 0x91, 0x7F, 0x01, 0x0A, 0xEB, 0x61, 0xFF, 0xFF, 0x54, 0x4C, 0x01, 0x40, 0xB9,
+    0x2B, 0x51, 0x2C, 0x8B, 0x75, 0x01, 0x00, 0xF9, 0x7F, 0x09, 0x00, 0xB9, 0x8C, 0x05, 0x00,
+    0x11, 0x8C, 0x09, 0x00, 0x12, 0x4C, 0x01, 0x00, 0xB9, 0x61, 0x09, 0x40, 0xBD, 0x00, 0x28,
+    0x21, 0x1E, 0x01, 0x10, 0x2C, 0x1E, 0x02, 0x28, 0x21, 0x1E, 0x48, 0x00, 0x38, 0x1E, 0x1F,
+    0x05, 0x00, 0x71, 0x4A, 0x00, 0x00, 0x54, 0x28, 0x00, 0x80, 0x52, 0x01, 0x01, 0x22, 0x1E,
+    0x00, 0x38, 0x21, 0x1E, 0x01, 0x10, 0x3C, 0x1E, 0x00, 0x48, 0x21, 0x1E, 0x60, 0x09, 0x00,
+    0xBD, 0xC0, 0x03, 0x5F, 0xD6, 0xE8, 0x03, 0x1F, 0x2A, 0xC0, 0x03, 0x5F, 0xD6,
+};
+// The game's sound engine assumes at least one whole 60 fps step per update: its fade and delay
+// timers and parameter ramps count updates from the step it is given each frame. Below a whole
+// step (FPS Unlock above 60 fps) some sounds are never released when an area unloads; they pile
+// up until the game's voice budget is full, and then most new sounds and the music stop until a
+// restart (#716, #1092). So above 60 fps FPS Unlock runs the sound manager job (main+0x415300,
+// phase in w2; phase 0 reads the step and updates the engine, phase 1 follows) at 60 Hz: its entry
+// goes to SOUND_GATE, which in phase 0 adds the step to an accumulator (timer state + 0xA0) and
+// runs the job only once a whole step has built up, else returns; the other phases follow that
+// frame's decision (flag at state + 0xA4). At 60 fps and below it runs every frame as before. The
+// job's step load (main+0x415334) goes to SOUND_FEED, max(step, 1.0), so the engine always gets
+// whole steps and sound still follows real time.
+constexpr std::array<u8, 4> SOUND_ENTRY_ORIGINAL{0x7F, 0x23, 0x03, 0xD5}; // pacibsp
+constexpr std::array<u8, 4> SOUND_ENTRY_BRANCH{0x40, 0xC5, 0xE0, 0x14};   // b main+0x3C46800
+constexpr std::array<u8, 4> SOUND_STEP_ORIGINAL{0x00, 0x11, 0x40, 0xBD};  // ldr s0, [x8, #0x10]
+constexpr std::array<u8, 4> SOUND_STEP_CALL{0xD3, 0xC3, 0xE0, 0x94};      // bl main+0x3C46280
+// adrp x16, state ; add x16, x16, #0xea0 ; cbnz w2, other ; adrp x9, time ; ldr x9, [x9, #0x890] ;
+// ldr x9, [x9] ; ldr s16, [x9, #0x10] ; fmov s17, #1.0 ; fcmp s16, s17 ; b.ge every_frame ;
+// ldr s18, [x16] ; fadd s18, s18, s16 ; fcmp s18, s17 ; b.lt wait ; fsub s18, s18, s17 ;
+// str s18, [x16] ; mov w9, #1 ; str w9, [x16, #4] ; b run ;
+// wait: str s18, [x16] ; str wzr, [x16, #4] ; ret ;
+// every_frame: nop (a remainder built up below a whole step carries over) ; mov w9, #1 ;
+// str w9, [x16, #4] ; b run ;
+// other: ldr w9, [x16, #4] ; cbz w9, skip ; run: pacibsp ; b main+0x415304 ; skip: ret
+// x9, x16 and s16-s18 are free at the job's entry.
+constexpr std::array<u8, 124> SOUND_GATE{
+    0xD0, 0x92, 0x00, 0xB0, 0x10, 0x82, 0x3A, 0x91, 0x02, 0x03, 0x00, 0x35, 0xC9, 0x81, 0x00, 0x90,
+    0x29, 0x49, 0x44, 0xF9, 0x29, 0x01, 0x40, 0xF9, 0x30, 0x11, 0x40, 0xBD, 0x11, 0x10, 0x2E, 0x1E,
+    0x00, 0x22, 0x31, 0x1E, 0xAA, 0x01, 0x00, 0x54, 0x12, 0x02, 0x40, 0xBD, 0x52, 0x2A, 0x30, 0x1E,
+    0x40, 0x22, 0x31, 0x1E, 0xCB, 0x00, 0x00, 0x54, 0x52, 0x3A, 0x31, 0x1E, 0x12, 0x02, 0x00, 0xBD,
+    0x29, 0x00, 0x80, 0x52, 0x09, 0x06, 0x00, 0xB9, 0x0A, 0x00, 0x00, 0x14, 0x12, 0x02, 0x00, 0xBD,
+    0x1F, 0x06, 0x00, 0xB9, 0xC0, 0x03, 0x5F, 0xD6, 0x1F, 0x20, 0x03, 0xD5, 0x29, 0x00, 0x80, 0x52,
+    0x09, 0x06, 0x00, 0xB9, 0x03, 0x00, 0x00, 0x14, 0x09, 0x06, 0x40, 0xB9, 0x69, 0x00, 0x00, 0x34,
+    0x7F, 0x23, 0x03, 0xD5, 0xA4, 0x3A, 0x1F, 0x17, 0xC0, 0x03, 0x5F, 0xD6,
+};
+// ldr s0, [x8, #0x10] ; fmov s16, #1.0 ; fmaxnm s0, s0, s16 ; ret
+constexpr std::array<u8, 16> SOUND_FEED{
+    0x00, 0x11, 0x40, 0xBD, 0x10, 0x10, 0x2E, 0x1E, 0x00, 0x68, 0x30, 0x1E, 0xC0, 0x03, 0x5F, 0xD6,
+};
 constexpr std::array DYNAMIC_FPS_RECORDS{
     BuiltinPatchRecord{0x6E6CC4, DYNAMIC_FPS_CALL, DYNAMIC_FPS_ORIGINAL},
     BuiltinPatchRecord{0x3C46200, DYNAMIC_FPS_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x475F8, WATER_STEPS_CALL, WATER_STEPS_ORIGINAL},
+    BuiltinPatchRecord{0x4760C, WATER_MUL_NOP, WATER_MUL_ORIGINAL},
+    BuiltinPatchRecord{0x3C46300, WATER_STEPS_ROUTINE, {}, true},
+};
+
+// Truncated steps stall the pickup window count-up and ocarina playback tick above 60 fps.
+// The step rate manager counts down by max(round(step), 1) each frame and runs fast;
+// the ambient wave phase counts frames. Accumulate fractional steps per counter instead.
+// Helper: x13 = counter address, s0 = step; w13 = ticks. Sixteen slots keep one remainder
+// per counter; new or evicted slots return max(trunc(step), 1). Uses x13-x16 and NZCV,
+// preserves q0/q1; stubs save x13-x16 and LR. Hitstop replaces s0, ambient reloads it.
+constexpr std::array<u8, 4> STEP_HUD_ORIGINAL{
+    0x0C, 0x00, 0x38, 0x1E,
+};
+constexpr std::array<u8, 4> STEP_HUD_HOOK{
+    0x80, 0x79, 0xC7, 0x14,
+};
+// add x13, x19, #0x360 ; bl helper ; mov w12, w13 ; b 0xA68304
+constexpr std::array<u8, 40> STEP_HUD_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x6D, 0x82,
+    0x0D, 0x91, 0x1C, 0x00, 0x00, 0x94, 0xEC, 0x03, 0x0D, 0x2A, 0xFE, 0x13, 0x40, 0xF9,
+    0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0x78, 0x86, 0x38, 0x17,
+};
+constexpr std::array<u8, 4> STEP_REPLAY_ORIGINAL{
+    0x08, 0x00, 0x39, 0x1E,
+};
+constexpr std::array<u8, 4> STEP_REPLAY_HOOK{
+    0x46, 0xCD, 0x26, 0x14,
+};
+// add x13, x19, x20 ; bl helper ; mov w8, w13 ; b 0x3293414
+constexpr std::array<u8, 40> STEP_REPLAY_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x6D, 0x02,
+    0x14, 0x8B, 0x12, 0x00, 0x00, 0x94, 0xE8, 0x03, 0x0D, 0x2A, 0xFE, 0x13, 0x40, 0xF9,
+    0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0xB2, 0x32, 0xD9, 0x17,
+};
+constexpr std::array<u8, 44> STEP_HITSTOP_ORIGINAL{
+    0x00, 0xB9, 0xA1, 0x5E, 0x09, 0x01, 0x38, 0x1E, 0x00, 0xD8, 0x21, 0x5E, 0x00, 0x39,
+    0x20, 0x1E, 0x00, 0x20, 0x30, 0x1E, 0xAA, 0x17, 0x00, 0x54, 0x00, 0x20, 0x31, 0x1E,
+    0x09, 0x18, 0x00, 0x54, 0x0A, 0x9B, 0x40, 0xB9, 0x3F, 0x05, 0x00, 0x71, 0x29, 0xC5,
+    0x9F, 0x1A,
+};
+constexpr std::array<u8, 44> STEP_HITSTOP_HOOK{
+    0xBA, 0xCD, 0x33, 0x14, 0x09, 0x01, 0x38, 0x1E, 0x00, 0xD8, 0x21, 0x5E, 0x00, 0x39,
+    0x20, 0x1E, 0x00, 0x20, 0x30, 0x1E, 0xAA, 0x17, 0x00, 0x54, 0x00, 0x20, 0x31, 0x1E,
+    0x09, 0x18, 0x00, 0x54, 0x0A, 0x9B, 0x40, 0xB9, 0x3F, 0x05, 0x00, 0x71, 0x29, 0xC5,
+    0x9F, 0x1A,
+};
+// add x13, x24, #0x98 ; fmov s0, s8 ; bl helper ; mov w9, w13 ; ldr w10, [x24, #0x98] ; b 0x2F53294
+constexpr std::array<u8, 48> STEP_HITSTOP_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x0D, 0x63,
+    0x02, 0x91, 0x00, 0x41, 0x20, 0x1E, 0x07, 0x00, 0x00, 0x94, 0xE9, 0x03, 0x0D, 0x2A,
+    0xFE, 0x13, 0x40, 0xF9, 0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0x0A, 0x9B,
+    0x40, 0xB9, 0x46, 0x32, 0xCC, 0x17,
+};
+constexpr std::array<u8, 128> STEP_SHARED_ROUTINE{
+    0xE0, 0x07, 0xBF, 0xAD, 0xCE, 0x92, 0x00, 0xB0, 0xCE, 0x01, 0x3B, 0x91, 0x0F, 0x02,
+    0x80, 0x52, 0xD0, 0x01, 0x40, 0xF9, 0x1F, 0x02, 0x0D, 0xEB, 0x40, 0x02, 0x00, 0x54,
+    0x70, 0x01, 0x00, 0xB4, 0xCE, 0x41, 0x00, 0x91, 0xEF, 0x05, 0x00, 0x71, 0x41, 0xFF,
+    0xFF, 0x54, 0xCE, 0x41, 0x04, 0xD1, 0xD0, 0x01, 0x40, 0xB9, 0x0F, 0x06, 0x00, 0x11,
+    0xEF, 0x0D, 0x00, 0x12, 0xCF, 0x01, 0x00, 0xB9, 0xCE, 0x41, 0x00, 0x91, 0xCE, 0x11,
+    0x10, 0x8B, 0xCD, 0x01, 0x00, 0xF9, 0xDF, 0x09, 0x00, 0xB9, 0x0D, 0x00, 0x38, 0x1E,
+    0xBF, 0x05, 0x00, 0x71, 0xAD, 0xA5, 0x9F, 0x1A, 0x07, 0x00, 0x00, 0x14, 0xC1, 0x09,
+    0x40, 0xBD, 0x00, 0x28, 0x21, 0x1E, 0x01, 0xC0, 0x25, 0x1E, 0x00, 0x38, 0x21, 0x1E,
+    0xC0, 0x09, 0x00, 0xBD, 0x2D, 0x00, 0x38, 0x1E, 0xE0, 0x07, 0xC1, 0xAC, 0xC0, 0x03,
+    0x5F, 0xD6,
+};
+constexpr std::array<u8, 4> STEP_AMBIENT_ORIGINAL{
+    0x7A, 0x07, 0x00, 0x11,
+};
+constexpr std::array<u8, 4> STEP_AMBIENT_HOOK{
+    0x3B, 0x1C, 0xDC, 0x14,
+};
+// add x13, x28, x1, lsl #2 ; load raw step ; bl helper ; add w26, w27, w13 ; ldr s0, [x0, #0x18] ; b 0x53F918
+constexpr std::array<u8, 60> STEP_AMBIENT_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x8D, 0x0B,
+    0x01, 0x8B, 0xCE, 0x81, 0x00, 0x90, 0xCE, 0x49, 0x44, 0xF9, 0xCE, 0x01, 0x40, 0xF9,
+    0xC0, 0x11, 0x40, 0xBD, 0xD8, 0xFF, 0xFF, 0x97, 0x7A, 0x03, 0x0D, 0x0B, 0x00, 0x18,
+    0x40, 0xBD, 0xFE, 0x13, 0x40, 0xF9, 0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8,
+    0xB8, 0xE3, 0x23, 0x17,
+};
+
+// The character controller takes a tenth of its ground's velocity once the frame rate is over
+// 100 (b.gt after fcmp with 100.0, in three places), so a moving platform leaves the player behind.
+constexpr std::array<u8, 4> GROUND_VELOCITY_ORIGINAL_A{
+    0x6C, 0x19, 0x00, 0x54,
+};
+constexpr std::array<u8, 4> GROUND_VELOCITY_ORIGINAL_B{
+    0x2C, 0x1E, 0x00, 0x54,
+};
+constexpr std::array<u8, 4> GROUND_VELOCITY_ORIGINAL_C{
+    0xCC, 0x17, 0x00, 0x54,
+};
+constexpr std::array<u8, 4> GROUND_VELOCITY_NOP{
+    0x1F, 0x20, 0x03, 0xD5,
+};
+// A turn action (main+0x261E8E0, ExecuteASApproachStickX; Gohma steers with it) ends by clamping
+// its turn speed, kept per 60 Hz frame, to the change it applied times the frame step. The change
+// already carries the step, so below a step of 1 the speed decays by step^2 every frame. The routine
+// divides by the step there instead and runs the game's two instructions at a step of 1 and above.
+// The routine replaces both fmul (0x261EB18 and 0x261EB1C) and returns to 0x261EB20, so the hook
+// guards both; the second instruction stays in place, unreached.
+constexpr std::array<u8, 8> TURN_SPEED_ORIGINAL{0x01, 0x08, 0x21, 0x1E, 0x00, 0x08, 0x28, 0x1E};
+constexpr std::array<u8, 8> TURN_SPEED_HOOK{0xCA, 0x9F, 0x58, 0x14, 0x00, 0x08, 0x28, 0x1E};
+// fmov s1, #1.0 ; fcmp s8, s1 ; b.ge +0x10 ; fdiv s0, s0, s8 ; fneg s1, s0 ; b 0x261EB20 ;
+// ldr s1, [sp, #0xc] ; fmul s1, s0, s1 ; fmul s0, s0, s8 ; b 0x261EB20
+constexpr std::array<u8, 40> TURN_SPEED_ROUTINE{
+    0x01, 0x10, 0x2E, 0x1E, 0x00, 0x21, 0x21, 0x1E, 0x8A, 0x00, 0x00, 0x54, 0x00, 0x18,
+    0x28, 0x1E, 0x01, 0x40, 0x21, 0x1E, 0x33, 0x60, 0xA7, 0x17, 0xE1, 0x0F, 0x40, 0xBD,
+    0x01, 0x08, 0x21, 0x1E, 0x00, 0x08, 0x28, 0x1E, 0x2F, 0x60, 0xA7, 0x17,
+};
+// A movie player counts its updates with a picture shown (+0x2F8, one more each), and a cutscene
+// that plays a movie takes that count as its timeline frame: its voices, overlays and its end are
+// placed by it. The picture and the sound follow the clock, so at any other frame rate than 60 the
+// cues drift from them (sages' lines over each other at 30 or 120 fps, #1474, #1572). The count
+// takes whole ticks of the step through the shared helper instead, keyed by the counter's address.
+// Same site as Hookshot's movie frame count (issue 1742).
+constexpr std::array<u8, 4> MOVIE_FRAMES_ORIGINAL{0x08, 0x05, 0x00, 0x11}; // add w8, w8, #1
+constexpr std::array<u8, 4> MOVIE_FRAMES_HOOK{0xAA, 0xA8, 0x03, 0x14};     // b main+0x3C46A70
+// add x13, x20, #0x2f8 ; load raw step ; bl helper ; add w8, w8, w13 ; b 0x3B5C7CC
+constexpr std::array<u8, 56> MOVIE_FRAMES_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x8D, 0xE2,
+    0x0B, 0x91, 0xCE, 0x81, 0x00, 0x90, 0xCE, 0x49, 0x44, 0xF9, 0xCE, 0x01, 0x40, 0xF9,
+    0xC0, 0x11, 0x40, 0xBD, 0xBC, 0xFF, 0xFF, 0x97, 0x08, 0x01, 0x0D, 0x0B, 0xFE, 0x13,
+    0x40, 0xF9, 0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0x4A, 0x57, 0xFC, 0x17,
+};
+// Scarecrow's Song recording keeps each note's and gap's length in the elapsed counter that
+// playback (0x3293410 above) advances, and adds trunc(step) to it in two more places: while a note
+// or gap is held (0x3296B08) and when the last note is timed (0x32926C8). With FPS Unlock the step
+// sits around 1.0 at 60 fps and below it above 60, so the cut is often 0: lengths come out short or
+// zero, and the song stops after its first note (#1730). Both take whole ticks for that counter
+// from the shared helper instead. Hookshot found the two sites (f_832b6840 and f_832b2690).
+constexpr std::array<u8, 4> SCARECROW_CUT_ORIGINAL{0x08, 0x00, 0x39, 0x1E}; // fcvtzu w8, s0
+constexpr std::array<u8, 4> SCARECROW_RECORD_HOOK{0xEA, 0xBF, 0x26, 0x14};  // b main+0x3C46AB0
+constexpr std::array<u8, 4> SCARECROW_LAST_HOOK{0x04, 0xD1, 0x26, 0x14};    // b main+0x3C46AD8
+// mov x13, x9 ; bl helper ; mov w8, w13 ; b 0x3296B0C
+constexpr std::array<u8, 40> SCARECROW_RECORD_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0xED, 0x03,
+    0x09, 0xAA, 0xB0, 0xFF, 0xFF, 0x97, 0xE8, 0x03, 0x0D, 0x2A, 0xFE, 0x13, 0x40, 0xF9,
+    0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0x0E, 0x40, 0xD9, 0x17,
+};
+// add x13, x20, #0x5fc ; bl helper ; mov w8, w13 ; b 0x32926CC
+constexpr std::array<u8, 40> SCARECROW_LAST_ROUTINE{
+    0xED, 0x3B, 0xBD, 0xA9, 0xEF, 0x43, 0x01, 0xA9, 0xFE, 0x13, 0x00, 0xF9, 0x8D, 0xF2,
+    0x17, 0x91, 0xA6, 0xFF, 0xFF, 0x97, 0xE8, 0x03, 0x0D, 0x2A, 0xFE, 0x13, 0x40, 0xF9,
+    0xEF, 0x43, 0x41, 0xA9, 0xED, 0x3B, 0xC3, 0xA8, 0xF4, 0x2E, 0xD9, 0x17,
 };
 constexpr std::array FPS_UNLOCK_RECORDS{
     BuiltinPatchRecord{0x6E6CC4, DYNAMIC_FPS_CALL, DYNAMIC_FPS_ORIGINAL},
     BuiltinPatchRecord{0x3C46200, FPS_UNLOCK_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x475F8, WATER_STEPS_CALL, WATER_STEPS_ORIGINAL},
+    BuiltinPatchRecord{0x4760C, WATER_MUL_NOP, WATER_MUL_ORIGINAL},
+    BuiltinPatchRecord{0x3C46300, WATER_STEPS_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x415300, SOUND_ENTRY_BRANCH, SOUND_ENTRY_ORIGINAL},
+    BuiltinPatchRecord{0x415334, SOUND_STEP_CALL, SOUND_STEP_ORIGINAL},
+    BuiltinPatchRecord{0x3C46800, SOUND_GATE, {}, true},
+    BuiltinPatchRecord{0x3C46280, SOUND_FEED, {}, true},
+    BuiltinPatchRecord{0xA68300, STEP_HUD_HOOK, STEP_HUD_ORIGINAL},
+    BuiltinPatchRecord{0x3C46900, STEP_HUD_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x3293410, STEP_REPLAY_HOOK, STEP_REPLAY_ORIGINAL},
+    BuiltinPatchRecord{0x3C46928, STEP_REPLAY_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x2F53268, STEP_HITSTOP_HOOK, STEP_HITSTOP_ORIGINAL},
+    BuiltinPatchRecord{0x3C46950, STEP_HITSTOP_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x53F914, STEP_AMBIENT_HOOK, STEP_AMBIENT_ORIGINAL},
+    BuiltinPatchRecord{0x3C46A00, STEP_AMBIENT_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x3C46980, STEP_SHARED_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x13A070, GROUND_VELOCITY_NOP, GROUND_VELOCITY_ORIGINAL_A},
+    BuiltinPatchRecord{0x13D710, GROUND_VELOCITY_NOP, GROUND_VELOCITY_ORIGINAL_B},
+    BuiltinPatchRecord{0x389AC2C, GROUND_VELOCITY_NOP, GROUND_VELOCITY_ORIGINAL_C},
+    BuiltinPatchRecord{0x261EB18, TURN_SPEED_HOOK, TURN_SPEED_ORIGINAL},
+    BuiltinPatchRecord{0x3C46A40, TURN_SPEED_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x3B5C7C8, MOVIE_FRAMES_HOOK, MOVIE_FRAMES_ORIGINAL},
+    BuiltinPatchRecord{0x3C46A70, MOVIE_FRAMES_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x3296B08, SCARECROW_RECORD_HOOK, SCARECROW_CUT_ORIGINAL},
+    BuiltinPatchRecord{0x3C46AB0, SCARECROW_RECORD_ROUTINE, {}, true},
+    BuiltinPatchRecord{0x32926C8, SCARECROW_LAST_HOOK, SCARECROW_CUT_ORIGINAL},
+    BuiltinPatchRecord{0x3C46AD8, SCARECROW_LAST_ROUTINE, {}, true},
 };
 
 constexpr std::array BUILTIN_PATCHES{
     // Ocarina of Time takes its "dynamic resolution disabled" path, so the 3D renders at full scale
     // instead of following the GPU-time controller down to its 480p floor.
     BuiltinPatch{
-        .name = "Max Resolution (built-in)",
+        .name = MAX_RESOLUTION_NAME,
         .title_id = 0x0400486024DEC000,
         .module = "main",
         .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
         .records = MAX_RESOLUTION_RECORDS,
+    },
+    // With Max Resolution the guard house outgrows the initial pool and dereferences a null
+    // allocation.
+    BuiltinPatch{
+        .name = "Texture Pool x2 (built-in)",
+        .title_id = 0x0400486024DEC000,
+        .module = "main",
+        .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
+        .records = TEXTURE_POOL_RECORDS,
     },
     // Dark's routine with a tail that also lowers the step above 60 fps, so the game keeps real
     // speed at any frame rate limit (Settings frame_rate_limit).
@@ -123,7 +399,9 @@ constexpr std::array BUILTIN_PATCHES{
         .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
         .records = FPS_UNLOCK_RECORDS,
         .state_offset = 0x4E9FE00,
-        .state_size = 16,
+        // Timer state at 0, the water slots to 0x98, the sound gate at 0xA0, the step counters
+        // from 0xB0.
+        .state_size = 0x1C0,
         .replaces = "Dynamic FPS by Dark (built-in)",
     },
     BuiltinPatch{
@@ -133,7 +411,33 @@ constexpr std::array BUILTIN_PATCHES{
         .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
         .records = DYNAMIC_FPS_RECORDS,
         .state_offset = 0x4E9FE00,
-        .state_size = 16,
+        .state_size = 0x98,
+    },
+    // The NVIDIA DLSS quality lowers Ocarina's render resolution under Max Resolution, since DLSS
+    // replaces the game's own 1440p -> 4K upscale and takes whatever the game renders.
+    BuiltinPatch{
+        .name = "DLSS Balanced render scale (built-in)",
+        .title_id = 0x0400486024DEC000,
+        .module = "main",
+        .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
+        .records = RENDER_BALANCED_RECORDS,
+        .dlss_quality = Settings::NvidiaDlssQuality::Balanced,
+    },
+    BuiltinPatch{
+        .name = "DLSS Performance render scale (built-in)",
+        .title_id = 0x0400486024DEC000,
+        .module = "main",
+        .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
+        .records = RENDER_PERFORMANCE_RECORDS,
+        .dlss_quality = Settings::NvidiaDlssQuality::Performance,
+    },
+    BuiltinPatch{
+        .name = "DLSS Ultra Performance render scale (built-in)",
+        .title_id = 0x0400486024DEC000,
+        .module = "main",
+        .build_id = "E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348",
+        .records = RENDER_ULTRA_RECORDS,
+        .dlss_quality = Settings::NvidiaDlssQuality::UltraPerformance,
     },
 };
 
@@ -249,7 +553,7 @@ std::string GetUpdateVersionStringFromSlot(const ContentProvider* provider, u64 
     NACP nacp{nacp_file};
     return nacp.GetVersionString();
 }
-YUZU_NO_INLINE std::optional<u64> GetParentApplicationId(const ContentProvider* provider, u64 title_id) {
+LICHII_NO_INLINE std::optional<u64> GetParentApplicationId(const ContentProvider* provider, u64 title_id) {
     return provider == nullptr ? std::nullopt : provider->GetParentApplicationId(title_id);
 }
 } // Anonymous namespace
@@ -287,7 +591,7 @@ std::vector<std::string> PatchManager::GetDisabledAddons() const {
     return disabled;
 }
 
-VirtualDir PatchManager::PatchExeFS(VirtualDir exefs) const {
+VirtualDir PatchManager::PatchExeFS(VirtualDir exefs, bool apply_update) const {
     LOG_INFO(Loader, "Patching ExeFS for title_id={:016X}", title_id);
 
     if (exefs == nullptr)
@@ -415,9 +719,17 @@ VirtualDir PatchManager::PatchExeFS(VirtualDir exefs) const {
     }
 
     if (!update_disabled && update != nullptr && update->GetExeFS() != nullptr) {
-        LOG_INFO(Loader, "    ExeFS: Update ({}) applied successfully",
-                 FormatTitleVersion(content_provider.GetEntryVersion(update_tid).value_or(0)));
-        exefs = update->GetExeFS();
+        const auto version =
+            FormatTitleVersion(content_provider.GetEntryVersion(update_tid).value_or(0));
+        if (apply_update) {
+            LOG_INFO(Loader, "    ExeFS: Update ({}) applied successfully", version);
+            exefs = update->GetExeFS();
+        } else {
+            LOG_WARNING(Loader,
+                        "    ExeFS: Ignoring installed update ({}) for {:016X}: the container "
+                        "carries its own program and RomFS",
+                        version, title_id);
+        }
     }
 
     // LayeredExeFS
@@ -443,8 +755,10 @@ VirtualDir PatchManager::PatchExeFS(VirtualDir exefs) const {
             continue;
 
         auto exefs_dir = FindSubdirectoryCaseless(subdir, "exefs");
-        if (exefs_dir != nullptr)
+        if (exefs_dir != nullptr) {
+            LOG_INFO(Loader, "    ExeFS: LayeredExeFS mod {} (exefs)", subdir->GetName());
             layers.push_back(std::move(exefs_dir));
+        }
     }
     layers.push_back(exefs);
 
@@ -497,6 +811,9 @@ std::vector<VirtualFile> PatchManager::CollectPatches(const std::vector<VirtualD
 }
 
 std::vector<u8> PatchManager::PatchNSO(const std::vector<u8>& nso, const std::string& name) const {
+    if (name == "main") {
+        Settings::SetAppliedOcarinaRenderScale(std::nullopt);
+    }
     if (nso.size() < sizeof(Loader::NSOHeader)) {
         return nso;
     }
@@ -569,6 +886,18 @@ std::vector<u8> PatchManager::PatchNSO(const std::vector<u8>& nso, const std::st
             LOG_INFO(Loader, "    - Skipping \"{}\": included in an applied built-in patch",
                      patch.name);
             continue;
+        }
+        if (patch.dlss_quality) {
+#ifdef EGLANTINE_STREAMLINE
+            const bool wanted = Settings::OcarinaDlssRenderScale() == patch.dlss_quality &&
+                                std::find(disabled.cbegin(), disabled.cend(),
+                                          MAX_RESOLUTION_NAME) == disabled.cend();
+#else
+            constexpr bool wanted = false;
+#endif
+            if (!wanted) {
+                continue;
+            }
         }
         if (patch.build_id != build_id) {
             LOG_INFO(Loader, "    - Skipping \"{}\": build id {} is not {}", patch.name, build_id,
@@ -654,6 +983,9 @@ std::vector<u8> PatchManager::PatchNSO(const std::vector<u8>& nso, const std::st
                  patch.records.size(), name);
         if (!patch.replaces.empty()) {
             replaced.push_back(patch.replaces);
+        }
+        if (patch.dlss_quality) {
+            Settings::SetAppliedOcarinaRenderScale(patch.dlss_quality);
         }
     }
 
@@ -754,6 +1086,7 @@ void PatchManager::ApplyLayeredFS(VirtualFile& romfs, ContentRecordType type) co
 
     std::vector<VirtualDir> layers;
     std::vector<VirtualDir> layers_ext;
+    std::vector<std::string> mods;
     layers.reserve(patch_dirs.size() + 1);
     layers_ext.reserve(patch_dirs.size() + 1);
     for (const auto& subdir : patch_dirs) {
@@ -761,23 +1094,20 @@ void PatchManager::ApplyLayeredFS(VirtualFile& romfs, ContentRecordType type) co
             continue;
         }
 
-        auto romfs_dir = FindSubdirectoryCaseless(subdir, "romfs");
-        if (romfs_dir != nullptr)
-            layers.emplace_back(std::make_shared<CachedVfsDirectory>(std::move(romfs_dir)));
-
+        const auto layer = [&](std::vector<VirtualDir>& out, std::string_view kind) {
+            auto dir = FindSubdirectoryCaseless(subdir, kind);
+            if (dir == nullptr) {
+                return;
+            }
+            out.emplace_back(std::make_shared<CachedVfsDirectory>(std::move(dir)));
+            mods.push_back(fmt::format("{} ({})", subdir->GetName(), kind));
+        };
+        layer(layers, "romfs");
         // Support for romfslite introduced in Atmosphere 1.9.5
-        auto romfslite_dir = FindSubdirectoryCaseless(subdir, "romfslite");
-        if (romfslite_dir != nullptr)
-            layers.emplace_back(std::make_shared<CachedVfsDirectory>(std::move(romfslite_dir)));
-
-        auto ext_dir = FindSubdirectoryCaseless(subdir, "romfs_ext");
-        if (ext_dir != nullptr)
-            layers_ext.emplace_back(std::make_shared<CachedVfsDirectory>(std::move(ext_dir)));
-
+        layer(layers, "romfslite");
+        layer(layers_ext, "romfs_ext");
         if (type == ContentRecordType::HtmlDocument) {
-            auto manual_dir = FindSubdirectoryCaseless(subdir, "manual_html");
-            if (manual_dir != nullptr)
-                layers.emplace_back(std::make_shared<CachedVfsDirectory>(std::move(manual_dir)));
+            layer(layers, "manual_html");
         }
     }
 
@@ -805,6 +1135,9 @@ void PatchManager::ApplyLayeredFS(VirtualFile& romfs, ContentRecordType type) co
     }
 
     LOG_INFO(Loader, "    RomFS: LayeredFS patches applied successfully");
+    for (const auto& mod : mods) {
+        LOG_INFO(Loader, "    RomFS: LayeredFS mod {}", mod);
+    }
     romfs = std::move(packed);
 }
 
@@ -1213,7 +1546,7 @@ std::vector<Patch> PatchManager::GetPatches(VirtualFile update_raw) const {
     }
 
     for (const auto& patch : BUILTIN_PATCHES) {
-        if (patch.title_id != title_id) {
+        if (patch.title_id != title_id || patch.dlss_quality) {
             continue;
         }
         const auto is_disabled = [&](std::string_view name) {
@@ -1358,7 +1691,10 @@ PatchManager::Metadata PatchManager::ParseControlNCA(const NCA& nca) const {
         return {};
     }
 
-    const auto romfs = PatchRomFS(&nca, base_romfs, ContentRecordType::Control);
+    return ParseControlRomFS(PatchRomFS(&nca, base_romfs, ContentRecordType::Control));
+}
+
+PatchManager::Metadata PatchManager::ParseControlRomFS(const VirtualFile& romfs) {
     if (romfs == nullptr) {
         return {};
     }

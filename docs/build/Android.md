@@ -40,7 +40,7 @@ Eden by default will be cloned into:
 4. Navigate to `eden/src/android`.
 5. Then Build with `./gradlew assembleRelWithDebInfo`.
 6. To build the optimised build use `./gradlew assembleGenshinSpoofRelWithDebInfo`.
-7. You can pass extra variables to cmake via `-PYUZU_ANDROID_ARGS="-D..."`
+7. You can pass extra variables to cmake via `-PLICHII_ANDROID_ARGS="-D..."`
 
 Remember to have a Java SDK installed if not already, on Debian and similar this is done with `sudo apt install openjdk-17-jdk`.
 

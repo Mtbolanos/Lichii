@@ -55,7 +55,7 @@ if (USE_DISCORD_PRESENCE)
     )
     target_link_libraries(qt_common PUBLIC DiscordRPC::discord-rpc httplib::httplib)
 
-    if (YUZU_USE_BUNDLED_OPENSSL)
+    if (LICHII_USE_BUNDLED_OPENSSL)
         target_link_libraries(qt_common PUBLIC OpenSSL::SSL OpenSSL::Crypto)
     endif()
 

@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "common/common_types.h"
@@ -820,6 +819,10 @@ public:
 
     bool IsVibrationEnabled() override {
         return input_engine->IsVibrationEnabled(identifier);
+    }
+
+    bool IsVibrationStreamed() override {
+        return input_engine->IsVibrationStreamed(identifier);
     }
 
     Common::Input::DriverResult SetPollingMode(Common::Input::PollingMode polling_mode) override {

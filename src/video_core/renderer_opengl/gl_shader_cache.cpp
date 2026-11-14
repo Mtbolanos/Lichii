@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <atomic>
@@ -262,6 +261,7 @@ ShaderCache::ShaderCache(Tegra::MaxwellDeviceMemoryManager& device_memory_,
         .max_descriptor_set_storage_images = Shader::HostTranslateInfo::DEFAULT_DESCRIPTOR_LIMIT,
         .max_descriptor_set_input_attachements =
             Shader::HostTranslateInfo::DEFAULT_DESCRIPTOR_LIMIT,
+        .max_compute_shared_memory_size = device.GetMaxComputeSharedMemorySize(),
         .support_float64 = true,
         .support_float16 = false,
         .support_int64 = device.HasShaderInt64(),

@@ -20,6 +20,11 @@ VirtualFile OpenDecryptedNca(VirtualFile nca, std::string& error);
 /// secure partition, with every NCA replaced by its decrypted view. Nothing is written to disk.
 VirtualFile OpenDecryptedPackage(VirtualFile package, std::string& error);
 
+/// A decrypted gamecard image (DXCI) view of an XCI: the same bytes, with the magic DXCI and
+/// every NCA outside the update partition replaced by its decrypted view. The update partition
+/// (the console firmware) is kept as it is. Nothing is written to disk.
+VirtualFile OpenDecryptedGamecard(VirtualFile image, std::string& error);
+
 /// A read-only PFS0 (NSP layout) holding `files` in order, without copying their bytes.
 VirtualFile BuildPartitionFile(std::string name, const std::vector<VirtualFile>& files);
 

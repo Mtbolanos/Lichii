@@ -11,7 +11,10 @@
 #include <array>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "common/common_types.h"
 #include "common/x64/xbyak.h"
@@ -35,6 +38,9 @@ struct RunCodeCallbacks {
     ArgCallback AddTicks;
     ArgCallback GetTicksRemaining;
     bool enable_cycle_counting;
+    /// Offset of a u64 in the JIT state holding the host stack pointer to restore whenever
+    /// control is back in the dispatcher (A64 host_call_return); none when rsp never moves.
+    std::optional<u32> host_stack_base_offset = std::nullopt;
 };
 
 class BlockOfCode final : public Xbyak::CodeGenerator {
@@ -168,11 +174,54 @@ public:
 
     bool HasHostFeature(HostFeature feature) const noexcept;
 
+    // Flag reuse (A64 reuse_host_flags). The host flags equal the guest NZCV (x64 layout, CF in
+    // ARM polarity) while getCurr() == nzcv_live_pos. nzcv_flags_pos/inst: the flags of the Add/Sub
+    // that defined nzcv_flags_inst (a GetNZCVFromOp) are live while getCurr() == nzcv_flags_pos.
+    const void* nzcv_live_pos = nullptr;
+    const void* nzcv_flags_pos = nullptr;
+    const void* nzcv_flags_inst = nullptr;
+
+    // Address folding (A64 fold_address_offsets), per block: Add64(base, disp) instructions whose
+    // only use is the address of a fastmem access. The Add is not emitted (its value is the base);
+    // the access adds disp in its addressing mode.
+    std::vector<std::pair<const void*, s32>> folded_address_adds;
+
+    /// A64 elide_redundant_zext.
+    bool elide_redundant_zext = false;
+
+    /// Far code (A64 far_code): the last far_size bytes of the code space hold cold code. Call
+    /// before PreludeComplete. Does nothing where the code space needs W^X switching.
+    void EnableFarCode(size_t far_size);
+    bool HasFarCode() const { return far_code_begin != nullptr; }
+    void SwitchToFarCode();
+    void SwitchToNearCode();
+    std::optional<s32> FoldedAddressDisp(const void* inst) const {
+        for (const auto& [add, disp] : folded_address_adds) {
+            if (add == inst) {
+                return disp;
+            }
+        }
+        return std::nullopt;
+    }
+
 private:
     using RunCodeFuncType = HaltReason (*)(void*, CodePtr);
     static constexpr size_t MXCSR_ALREADY_EXITED = 1 << 0;
     static constexpr size_t FORCE_RETURN = 1 << 1;
 
+    // The commit and far-code state is declared before constant_pool on purpose: the ConstantPool
+    // constructor already calls EnsureMemoryCommitted, which reads these, so they have to be
+    // initialised first (members are initialised in declaration order).
+#ifdef _WIN32
+    size_t committed_size = 0;
+#endif
+    const u8* far_code_begin = nullptr;
+    const u8* far_code_ptr = nullptr;
+    const u8* near_code_ptr = nullptr;
+    bool in_far_code = false;
+#ifdef _WIN32
+    size_t far_committed_end = 0;
+#endif
     ConstantPool constant_pool;
     JitStateInfo jsi;
     std::array<const void*, 4> return_from_run_code;
@@ -180,9 +229,6 @@ private:
     RunCodeFuncType step_code = nullptr;
     RunCodeCallbacks cb;
     CodePtr code_begin = nullptr;
-#ifdef _WIN32
-    size_t committed_size = 0;
-#endif
     bool prelude_complete = false;
 
     void GenRunCode(std::function<void(BlockOfCode&)> rcp);

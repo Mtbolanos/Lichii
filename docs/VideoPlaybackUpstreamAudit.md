@@ -49,7 +49,7 @@ selection passes eight cases and 1,089 assertions.
 cmake -S . -B build -G Ninja \
   -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-  -DENABLE_QT=OFF -DYUZU_CMD=ON -DYUZU_TESTS=ON -DENABLE_WERROR=OFF
+  -DENABLE_QT=OFF -DLICHII_CMD=ON -DLICHII_TESTS=ON -DENABLE_WERROR=OFF
 cmake --build build --parallel "$(nproc)"
 ctest --test-dir build --output-on-failure -V
 build/bin/tests '[h264],[nx2_mapping]'

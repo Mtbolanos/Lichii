@@ -150,7 +150,7 @@ unchanged, three initial transition tests failed. With the fix and an added
 late-transition case, all six tests and 82 assertions pass. No game was run for
 this investigation.
 
-Before the next upstream merge, the atomic-and-pacing tree built both `yuzu-cmd`
+Before the next upstream merge, the atomic-and-pacing tree built both `lichii-cmd`
 and `tests` with Clang 20 and Ninja using all eight available cores. All 496 test
 cases passed with frame tracing disabled and with `EDEN_DKB_FRAME_TRACE=1`.
 The combined atomic/pacing filter passed 10 cases and 13,800 assertions.

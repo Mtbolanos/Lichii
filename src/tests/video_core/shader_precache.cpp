@@ -7,8 +7,10 @@
 #include <fstream>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <catch2/catch_test_macros.hpp>
+#include <fmt/format.h>
 
 #include "shader_recompiler/exception.h"
 #include "video_core/renderer_vulkan/vk_pipeline_cache.h"
@@ -89,27 +91,79 @@ TEST_CASE("ShaderPrecache: the marker matches only the same file and driver", "[
     REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1235, 0x2206, 53)));
     REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2207, 53)));
     REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 54)));
+    // Another variant (an update that changed the SPIR-V) builds the programs again.
+    REQUIRE_FALSE(
+        marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53, 0x77)));
+
+    // Built again with the same contents: still done.
+    WriteBytes(warm, "precache");
+    REQUIRE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53)));
+
+    // The same size with other contents: only the content hash tells them apart.
+    WriteBytes(warm, "precachf");
+    REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53)));
 
     WriteBytes(warm, "a rebuilt precache");
     REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53)));
 }
 
-TEST_CASE("ShaderPrecache: precached pipelines are kept per driver", "[video_core]") {
+TEST_CASE("ShaderPrecache: a rebuild with the same contents keeps the marker", "[video_core]") {
     TempDir dir;
-    const auto file = dir.path / "precache-graphics.bin";
-    const ShaderWarm::DriverStamp stamp{0x1234, 0x2206, 53};
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, stamp).empty());
+    const auto warm = dir.path / "warm-compute.bin";
+    const auto rebuilt = dir.path / "warm-compute.tmp";
+    WriteBytes(warm, "precache");
+    REQUIRE(ShaderWarm::WriteWarmMarker(
+        warm, *ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53)));
 
-    const std::unordered_set<u64> hashes{1, 0xfedcba9876543210ULL, 42};
-    REQUIRE(ShaderWarm::WritePrecachedPipelines(file, stamp, hashes));
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, stamp) == hashes);
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, {0x1235, 0x2206, 53}).empty());
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, {0x1234, 0x2207, 53}).empty());
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, {0x1234, 0x2206, 54}).empty());
+    WriteBytes(rebuilt, "precache");
+    ShaderWarm::DropStaleWarmMarker(warm, rebuilt);
+    REQUIRE(ShaderWarm::ReadWarmMarker(warm).has_value());
 
-    // A truncated file keeps the hashes it holds in full.
-    std::filesystem::resize_file(file, std::filesystem::file_size(file) - 4);
-    REQUIRE(ShaderWarm::ReadPrecachedPipelines(file, stamp).size() == 2);
+    WriteBytes(rebuilt, "a rebuilt precache");
+    ShaderWarm::DropStaleWarmMarker(warm, rebuilt);
+    REQUIRE_FALSE(std::filesystem::exists(ShaderWarm::WarmMarkerPath(warm)));
+
+    // No marker left and nothing to replace the file with: nothing to do.
+    ShaderWarm::DropStaleWarmMarker(warm, dir.path / "missing.tmp");
+    REQUIRE_FALSE(ShaderWarm::ReadWarmMarker(warm).has_value());
+}
+
+TEST_CASE("ShaderPrecache: the marker matches only the same variant", "[video_core]") {
+    TempDir dir;
+    const auto warm = dir.path / "warm-compute.bin";
+    WriteBytes(warm, "precache");
+    const u64 variant = 0xfedcba9876543210ULL;
+    const auto stamp = ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53, variant);
+    REQUIRE(stamp.has_value());
+    REQUIRE(ShaderWarm::WriteWarmMarker(warm, *stamp));
+
+    const auto marker = ShaderWarm::ReadWarmMarker(warm);
+    REQUIRE(marker.has_value());
+    REQUIRE(marker->variant == variant);
+    REQUIRE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 0, 0x1234, 0x2206, 53, variant)));
+    REQUIRE_FALSE(
+        marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53, variant + 1)));
+    REQUIRE_FALSE(marker->Matches(*ShaderWarm::CurrentWarmStamp(warm, 12, 0x1234, 0x2206, 53)));
+    REQUIRE(ShaderWarm::EmissionStamp() != 0);
+}
+
+TEST_CASE("ShaderPrecache: a marker of an older format is not read", "[video_core]") {
+    TempDir dir;
+    const auto warm = dir.path / "warm-compute.bin";
+    WriteBytes(warm, "precache");
+    // Size, last-write time, entries, driver, device and cache version, then the line end.
+    WriteBytes(ShaderWarm::WarmMarkerPath(warm), "8 133981234567890000 12 4660 8710 53\n");
+    REQUIRE_FALSE(ShaderWarm::ReadWarmMarker(warm).has_value());
+    // The same with a variant but no format tag.
+    WriteBytes(ShaderWarm::WarmMarkerPath(warm),
+               "8 133981234567890000 12 4660 8710 53 18364758544493064720\n");
+    REQUIRE_FALSE(ShaderWarm::ReadWarmMarker(warm).has_value());
+    // Tagged v2 but cut short.
+    WriteBytes(ShaderWarm::WarmMarkerPath(warm), "v2 8 1234 12 4660 8710 53\n");
+    REQUIRE_FALSE(ShaderWarm::ReadWarmMarker(warm).has_value());
+
+    REQUIRE(ShaderWarm::WriteWarmMarker(warm, *ShaderWarm::CurrentWarmStamp(warm, 12, 1, 2, 3)));
+    REQUIRE(ShaderWarm::ReadWarmMarker(warm).has_value());
 }
 
 TEST_CASE("ShaderPrecache: the entry count belongs to a file of one size", "[video_core]") {
@@ -123,6 +177,39 @@ TEST_CASE("ShaderPrecache: the entry count belongs to a file of one size", "[vid
 
     WriteBytes(warm, "01234567890");
     REQUIRE(ShaderWarm::ReadWarmCount(warm) == 0);
+}
+
+TEST_CASE("ShaderPrecache: a file from an older builder or another cache version is stale",
+          "[video_core]") {
+    TempDir dir;
+    const auto warm = dir.path / "warm-compute.bin";
+    REQUIRE(ShaderWarm::WarmFilesStale(warm).has_value());
+
+    const auto header = [](u32 version) {
+        std::string bytes(VideoCommon::PipelineCacheMagic.begin(),
+                          VideoCommon::PipelineCacheMagic.end());
+        bytes.append(reinterpret_cast<const char*>(&version), sizeof(version));
+        return bytes;
+    };
+    WriteBytes(warm, header(ShaderWarm::WarmCacheVersion));
+    const auto count = ShaderWarm::WarmCountPath(warm);
+    // Count files written before the builder version was recorded have two fields.
+    WriteBytes(count, "0 12\n");
+    REQUIRE(ShaderWarm::WarmFilesStale(warm).has_value());
+    WriteBytes(count, fmt::format("0 12 {}\n", ShaderWarm::WarmBuilderVersion - 1));
+    REQUIRE(ShaderWarm::WarmFilesStale(warm).has_value());
+    WriteBytes(count, fmt::format("0 12 {}\n", ShaderWarm::WarmBuilderVersion));
+    REQUIRE_FALSE(ShaderWarm::WarmFilesStale(warm).has_value());
+
+    WriteBytes(count, fmt::format("0 13 {}\n", ShaderWarm::WarmBuilderVersion));
+    REQUIRE(ShaderWarm::WarmFilesStale(warm).has_value());
+    WriteBytes(count, fmt::format("0 12 {}\n", ShaderWarm::WarmBuilderVersion));
+    // The emulator loads a file of a compatible older version, so it is not built again.
+    const auto& compatible = VideoCommon::CompatibleVulkanPipelineCacheVersions;
+    WriteBytes(warm, header(compatible.front()));
+    REQUIRE_FALSE(ShaderWarm::WarmFilesStale(warm).has_value());
+    WriteBytes(warm, header(compatible.back() - 1));
+    REQUIRE(ShaderWarm::WarmFilesStale(warm).has_value());
 }
 
 TEST_CASE("ShaderPrecache: a compute entry reads back like a pipeline cache entry",
@@ -194,19 +281,37 @@ TEST_CASE("ShaderPrecache: every container the archive walker reads is discovere
                              "Pack/Shaders.release.sarc", "Shader/Loose.bnsh",
                              "Shader/Loose.bnsh.zs", "Shader/Bundle.cgsb", "Shader/Bundle.cgsb.zs",
                              "Shader/Program.shn", "Shader/Program.shn.zs", "Shader/Archive.sharcb",
-                             "Shader/Archive.sharcb.zs", "Shader/UPPER.BNSH", "Effect/Fx.bfsha.zs"}) {
+                             "Shader/Archive.sharcb.zs", "Shader/UPPER.BNSH", "Effect/Fx.bfsha.zs",
+                             "Shaders/Model.bfsha.zst"}) {
         INFO(path);
         REQUIRE(ClassifyGameFile(path) == GameFileKind::ShaderArchive);
     }
     REQUIRE(ClassifyGameFile("Effect/Fx.nin_ounce_nvn2.vsetb.byml.zs") == GameFileKind::Effect);
+    REQUIRE(ClassifyGameFile("Effect/static.Nin_Ounce_NVN2.esetb.byml.zs") == GameFileKind::Effect);
+    REQUIRE(ClassifyGameFile("Effect/Fx.ESETB.BYML.ZS") == GameFileKind::Effect);
+    REQUIRE(ClassifyGameFile("Effect/Particle/Magic.ptcl.zst") == GameFileKind::Effect);
+    REQUIRE(ClassifyGameFile("Effect/Particle/Magic.ptcl") == GameFileKind::Effect);
     REQUIRE(ClassifyGameFile("Pack/ZsDic.pack.zs") == GameFileKind::ZstdDictionaries);
-    for (const char* path :
-         {"Effect/Sub/Fx.vsetb.byml.zs", "Model/Fx.vsetb.byml.zs", "Effect/Fx.vsetb.byml",
-          "Model/Tex.bntx.zs", "Model/Mesh.bfres.zs", "Asset/assets_a000.dat",
-          "Bin/Nvn2-upper_left.ndsr", "Shader/notes.shn.txt", "Shader/bnsh"}) {
+    for (const char* path : {"Effect/Sub/Fx.vsetb.byml.zs", "Model/Fx.vsetb.byml.zs",
+                             "Effect/Fx.vsetb.byml", "Effect/Sub/Fx.esetb.byml.zs",
+                             "Model/Tex.bntx.zs", "Model/Mesh.bfres.zs", "Asset/assets_a000.dat",
+                             "Bin/Nvn2-upper_left.ndsr", "Shader/notes.shn.txt", "Shader/bnsh"}) {
         INFO(path);
         REQUIRE(ClassifyGameFile(path) == GameFileKind::Other);
     }
+}
+
+TEST_CASE("ShaderPrecache: a particle effect without shader programs is not an error",
+          "[video_core]") {
+    std::vector<u8> effect(64, 0);
+    std::memcpy(effect.data(), "VFXB", 4);
+    size_t records = 0;
+    size_t errors = 0;
+    REQUIRE_NOTHROW(ShaderWarm::WalkArchive(
+        effect, "Magic.ptcl", nullptr, [&](const ShaderWarm::ShaderRecord&) { ++records; },
+        [&](const std::string&) { ++errors; }));
+    REQUIRE(records == 0);
+    REQUIRE(errors == 0);
 }
 
 TEST_CASE("ShaderPrecache: programs that cannot be lowered are refused", "[video_core]") {

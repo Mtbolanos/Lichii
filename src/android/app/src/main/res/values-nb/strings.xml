@@ -233,8 +233,8 @@
     <string name="install_game_content_success_install">%1$d installert</string>
     <string name="install_game_content_success_overwrite">%1$d overskrevet</string>
     <string name="custom_driver_not_supported">Egendefinert driver støttes ikke</string>
-    <string name="manage_yuzu_data">Administrer eden-data</string>
-    <string name="manage_yuzu_data_description">Importer/eksporter firmware, nøkler osv.</string>
+    <string name="manage_lichii_data">Administrer eden-data</string>
+    <string name="manage_lichii_data_description">Importer/eksporter firmware, nøkler osv.</string>
     <string name="game_folders">Spillmapper</string>
     <string name="deep_scan">Dyp skanning</string>
     <string name="add_game_folder">Legg til spillmappe</string>
@@ -480,8 +480,7 @@
     <string name="verify_failure">Integritetsverifisering mislyktes!</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">ROM-en din er kryptert</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[Følg veiledningene for å dumpe <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">spillkort</a> eller <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">digitale titler</a> på nytt.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[Vennligst sørg for at <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> filen er installert slik at spillene kan dekrypteres.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[Vennligst sørg for at prod.keys filen er installert slik at spillene kan dekrypteres.]]></string>
     <string name="loader_error_video_core">Det oppstod en feil ved initialisering av videokjernen</string>
     <string name="loader_error_video_core_description">Dette skyldes vanligvis en inkompatibel GPU-driver. Installering av en tilpasset GPU-driver kan løse problemet.</string>
     <string name="loader_error_file_not_found">ROM-filen finnes ikke</string>

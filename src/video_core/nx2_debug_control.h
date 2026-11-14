@@ -24,6 +24,16 @@ struct CaptureRequest {
     bool sampled;
     /// The uniform and storage buffers of every draw and dispatch, and dispatch group counts.
     bool buffers;
+    /// The native programs, SPIR-V and pipeline keys of every pipeline the frame uses.
+    bool shaders{};
+    /// Whether each image is also written raw (.raw.zst) beside its PNG preview.
+    bool raw{true};
+    /// Bytes the readbacks may take, 0 for the default 2 GiB.
+    u64 size_cap{};
+    /// Longest side of the image previews, 0 for full size.
+    u32 preview_max{};
+    /// JPEG previews (`preview` in the manifest) instead of PNG ones (`png`), to fit a bundle.
+    bool preview_jpeg{};
 };
 
 struct CaptureResult {

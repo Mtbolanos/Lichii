@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <mutex>
+#include <vector>
 
 #include <openssl/bio.h>
 #include <openssl/err.h>
@@ -13,13 +13,16 @@
 
 #include "common/fs/file.h"
 #include "common/hex_util.h"
+#include "common/nextendo.h"
 #include "common/string_util.h"
 
+#include "core/hle/service/sockets/nextendo_redirect.h"
 #include "core/hle/service/ssl/ssl_backend.h"
+#include "core/internal_network/local_redirect.h"
 #include "core/internal_network/network.h"
 #include "core/internal_network/sockets.h"
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
 #include <openssl/cert.h>
 #endif
 
@@ -45,7 +48,7 @@ void OneTimeInit();
 void OneTimeInitLogFile();
 bool OneTimeInitBIO();
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
 // This is ported from httplib
 struct scope_exit {
   explicit scope_exit(std::function<void(void)> &&f)
@@ -115,15 +118,52 @@ inline void LoadCaCertStore(SSL_CTX* ctx, const char* ca_cert, std::size_t size)
 }
 #endif
 
+/// The roots a connection verifies against while the host redirect's CA (online_redirect_ca) is
+/// trusted: the usual ones plus that CA. Built the first time a connection wants it after the CA
+/// changed. Connections get it through SSL_set1_verify_cert_store, which keeps a reference, so
+/// the CA follows the setting each time a game starts and is never added to the context's own
+/// store. Null when the CA can't be loaded (logged once per CA): connections then verify against
+/// the context's store alone.
+X509_STORE* TestCaStore(const std::vector<u8>& der_data) {
+    static std::mutex mutex;
+    static std::vector<u8> built_for;
+    static X509_STORE* store = nullptr;
+    std::scoped_lock lock{mutex};
+    if (der_data == built_for) {
+        return store;
+    }
+    X509_STORE_free(store);
+    store = nullptr;
+    built_for = der_data;
+    // The same roots as the context's store (OneTimeInit).
+#ifdef LICHII_BUNDLED_OPENSSL
+    X509_STORE* roots = CreateCaCertStore(kCert, sizeof(kCert));
+#else
+    X509_STORE* roots = X509_STORE_new();
+#endif
+    if (roots != nullptr && X509_STORE_set_default_paths(roots) != 1) {
+        X509_STORE_free(roots);
+        roots = nullptr;
+    }
+    const unsigned char* der = der_data.data();
+    X509* const ca = d2i_X509(nullptr, &der, static_cast<long>(der_data.size()));
+    if (roots != nullptr && ca != nullptr && X509_STORE_add_cert(roots, ca) == 1) {
+        store = roots;
+        LOG_INFO(Service_SSL, "Trusting the host redirect's CA certificate");
+    } else {
+        X509_STORE_free(roots);
+        LOG_ERROR(Service_SSL, "The host redirect's CA certificate could not be loaded; ignored");
+        CheckOpenSSLErrors();
+    }
+    X509_free(ca);
+    return store;
+}
+
 } // namespace
 
 class SSLConnectionBackendOpenSSL final : public SSLConnectionBackend {
 public:
     Result Init() {
-        // on bundled OpenSSL, load ca cert store
-#ifdef YUZU_BUNDLED_OPENSSL
-        LoadCaCertStore(ssl_ctx, kCert, sizeof(kCert));
-#endif
         std::call_once(one_time_init_flag, OneTimeInit);
 
         if (!one_time_init_success) {
@@ -136,6 +176,16 @@ public:
         if (!ssl) {
             LOG_ERROR(Service_SSL, "SSL_new failed");
             return CheckOpenSSLErrors();
+        }
+
+        // Empty unless the host redirect is on with a CA. A CA that can't be loaded is ignored:
+        // the context's store then verifies the connection.
+        if (const auto test_ca = Network::LocalRedirect::TestCa(); !test_ca.empty()) {
+            X509_STORE* const store = TestCaStore(test_ca);
+            if (store != nullptr && SSL_set1_verify_cert_store(ssl, store) != 1) {
+                LOG_ERROR(Service_SSL, "SSL_set1_verify_cert_store failed");
+                return CheckOpenSSLErrors();
+            }
         }
 
         SSL_set_connect_state(ssl);
@@ -157,7 +207,25 @@ public:
         socket = std::move(socket_in);
     }
 
-    Result SetHostName(const char* hostname) override {
+    Result SetHostName(const char* hostname_in) override {
+        // NSD host names carry "%" for the environment, and some titles pass the redirected
+        // address itself; Nextendo needs the real name for SNI (citron-nextendo).
+        std::string host = hostname_in;
+        if (Common::Nextendo::OnlinePlayActive()) {
+            host = Sockets::Nextendo::ExpandNsdHost(std::move(host));
+        }
+        if (Common::Nextendo::OnlinePlayActive() && socket) {
+            const auto [peer, err] = socket->GetPeerName();
+            if (err == Network::Errno::SUCCESS) {
+                const std::string ip = Network::IPv4AddressToString(peer.ip);
+                if (host.empty() || host == ip) {
+                    if (std::string known = Sockets::Nextendo::HostForAddress(ip); !known.empty()) {
+                        host = std::move(known);
+                    }
+                }
+            }
+        }
+        const char* hostname = host.c_str();
         if (!skip_cert_verification) {
             if (!SSL_set1_host(ssl, hostname)) {
                 LOG_ERROR(Service_SSL, "SSL_set1_host({}) failed", hostname);
@@ -197,6 +265,19 @@ public:
     }
 
     Result DoHandshake() override {
+        // A guest that connects to a redirected Nextendo address without a host name still
+        // needs SNI, because Nextendo routes its :443 servers by name (citron-nextendo).
+        if (socket && !SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name)) {
+            const auto [peer, err] = socket->GetPeerName();
+            if (err == Network::Errno::SUCCESS) {
+                const std::string host = Sockets::Nextendo::HostForAddress(
+                    Network::IPv4AddressToString(peer.ip));
+                if (!host.empty()) {
+                    SSL_set_tlsext_host_name(ssl, host.c_str());
+                }
+            }
+        }
+
         SSL_set_verify_result(ssl, X509_V_OK);
         const int ret = SSL_do_handshake(ssl);
 
@@ -437,6 +518,12 @@ void OneTimeInit() {
         CheckOpenSSLErrors();
         return;
     }
+
+    // Bundled OpenSSL: the bundled CA certificates, before the default verify paths are added
+    // to the same store.
+#ifdef LICHII_BUNDLED_OPENSSL
+    LoadCaCertStore(ssl_ctx, kCert, sizeof(kCert));
+#endif
 
     SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, nullptr);
 

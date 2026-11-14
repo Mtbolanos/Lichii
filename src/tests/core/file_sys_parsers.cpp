@@ -10,11 +10,14 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "core/crypto/key_manager.h"
 #include "core/file_sys/card_image.h"
+#include "core/file_sys/content_archive.h"
 #include "core/file_sys/errors.h"
 #include "core/file_sys/fssystem/fssystem_bucket_tree.h"
 #include "core/file_sys/fssystem/fssystem_compression_configuration.h"
@@ -64,6 +67,26 @@ std::vector<u8> MakePfs0(const std::vector<std::string>& names) {
         Put(out, 0x10 + i * 0x18 + 0x10, name_offsets[i]);
     }
     out.insert(out.end(), strtab.begin(), strtab.end());
+    return out;
+}
+
+// PFS0 holding the given files, like an NSP.
+std::vector<u8> MakePfs0WithFiles(const std::vector<std::pair<std::string, std::vector<u8>>>& files) {
+    std::vector<std::string> names;
+    for (const auto& file : files) {
+        names.push_back(file.first);
+    }
+    auto out = MakePfs0(names);
+    u64 offset = 0;
+    for (size_t i = 0; i < files.size(); ++i) {
+        const u64 size = files[i].second.size();
+        Put(out, 0x10 + i * 0x18, offset);
+        Put(out, 0x10 + i * 0x18 + 8, size);
+        offset += size;
+    }
+    for (const auto& file : files) {
+        out.insert(out.end(), file.second.begin(), file.second.end());
+    }
     return out;
 }
 
@@ -299,6 +322,32 @@ TEST_CASE("NCA with an AES-XTS section opens a storage", "[core][file_sys]") {
     REQUIRE(nca.Open() == ResultSuccess);
 }
 
+TEST_CASE("NCA without a header key reports the missing key", "[core][file_sys]") {
+    if (Core::Crypto::KeyManager::Instance().HasKey(Core::Crypto::S256KeyType::Header)) {
+        SKIP("A header key is installed");
+    }
+    const NCA nca{MakeFile(std::vector<u8>(0xC00, 0xA5))};
+    CHECK(nca.GetStatus() == Loader::ResultStatus::ErrorMissingHeaderKey);
+}
+
+TEST_CASE("NSP that cannot be decrypted reports the missing key", "[core][file_sys]") {
+    if (Core::Crypto::KeyManager::Instance().HasKey(Core::Crypto::S256KeyType::Header)) {
+        SKIP("A header key is installed");
+    }
+    const auto nsp = MakeFile(MakePfs0WithFiles(
+        {{"0123456789abcdef0123456789abcdef.cnmt.nca", std::vector<u8>(0xC00, 0xA5)}}));
+    CHECK_FALSE(Loader::IsBootableGameContainer(nsp, Loader::FileType::NSP));
+    CHECK(Loader::GetContainerProgramStatus(nsp, Loader::FileType::NSP) ==
+          Loader::ResultStatus::ErrorMissingHeaderKey);
+}
+
+TEST_CASE("NSP without programs reports no missing key", "[core][file_sys]") {
+    const auto nsp = MakeFile(MakePfs0WithFiles({{"readme.txt", std::vector<u8>(0x10)}}));
+    CHECK_FALSE(Loader::IsBootableGameContainer(nsp, Loader::FileType::NSP));
+    CHECK(Loader::GetContainerProgramStatus(nsp, Loader::FileType::NSP) ==
+          Loader::ResultStatus::ErrorNSPMissingProgramNCA);
+}
+
 TEST_CASE("NCA rejects a file shorter than its header", "[core][file_sys]") {
     auto reader = std::make_shared<NcaReader>();
     REQUIRE(reader->Initialize(MakeFile(std::vector<u8>(0x100)), GetCryptoConfiguration(),
@@ -422,6 +471,55 @@ TEST_CASE("NCA rejects a hash region larger than the file behind an indirect lay
     sha.hash_layer_region[0].size = s64{1} << 36;
     sha.hash_layer_region[1].offset = s64{1} << 37;
     REQUIRE(nca.Open() == ResultNcaBaseStorageOutOfRangeC);
+}
+
+// A decrypted NCA with its ExeFS at the start and its logo partition 2 MiB in, as in a program
+// NCA. Reaching the logo of a solid NCZ means decoding everything before it.
+TEST_CASE("NCA opens a section only when it is used", "[core][file_sys]") {
+    constexpr u32 LogoSector = 0x1006;
+    std::vector<u8> bytes(0xC00);
+    NcaHeader header{};
+    header.magic = NcaHeader::MagicDecrypted;
+    header.content_type = NcaHeader::ContentType::Program;
+    header.sdk_addon_version = 0x000C0000;
+    header.fs_info[0].start_sector = 6;
+    header.fs_info[0].end_sector = 0x26;
+    header.fs_info[1].start_sector = LogoSector;
+    header.fs_info[1].end_sector = LogoSector + 0x20;
+    std::memcpy(bytes.data(), &header, sizeof(header));
+    NcaFsHeader fs{};
+    fs.version = 2;
+    fs.fs_type = NcaFsHeader::FsType::PartitionFs;
+    fs.hash_type = NcaFsHeader::HashType::None;
+    fs.encryption_type = NcaFsHeader::EncryptionType::None;
+    std::memcpy(bytes.data() + sizeof(header), &fs, sizeof(fs));
+    std::memcpy(bytes.data() + sizeof(header) + sizeof(fs), &fs, sizeof(fs));
+
+    const auto exefs = MakePfs0WithFiles({{"main", std::vector<u8>(0x10)}, {"main.npdm", {}}});
+    const auto logo =
+        MakePfs0WithFiles({{"NintendoLogo.png", std::vector<u8>(0x10)}, {"StartupMovie.gif", {}}});
+    bytes.resize(size_t{LogoSector + 0x20} * 0x200);
+    std::copy(exefs.begin(), exefs.end(), bytes.begin() + 0xC00);
+    std::copy(logo.begin(), logo.end(), bytes.begin() + size_t{LogoSector} * 0x200);
+
+    class FarthestRead final : public VectorVfsFile {
+    public:
+        explicit FarthestRead(std::vector<u8> data) : VectorVfsFile(std::move(data), "test.nca") {}
+        std::size_t Read(u8* out, std::size_t size, std::size_t offset) const override {
+            farthest = std::max(farthest, offset + size);
+            return VectorVfsFile::Read(out, size, offset);
+        }
+        mutable std::size_t farthest{};
+    };
+    const auto file = std::make_shared<FarthestRead>(std::move(bytes));
+    const NCA nca{file};
+    REQUIRE(nca.GetStatus() == Loader::ResultStatus::Success);
+    REQUIRE(nca.GetExeFS() != nullptr);
+    CHECK(file->farthest <= size_t{LogoSector} * 0x200);
+
+    REQUIRE(nca.GetLogoPartition() != nullptr);
+    CHECK(file->farthest > size_t{LogoSector} * 0x200);
+    CHECK(nca.GetSubdirectories().size() == 2);
 }
 
 // A card image whose root HFS0 holds empty partitions with the given names.

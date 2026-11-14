@@ -48,6 +48,8 @@ public:
     void AddDirEntry(GameListDir* entry_items);
     void AddEntry(const QList<QStandardItem*>& entry_items, GameListDir* parent);
     void DonePopulating(const QStringList& watch_list);
+    /// Shows the size of a loose dump's folder in every row of that game (favorites included).
+    void SetFolderSize(const QString& game_path, u64 size_bytes);
 
     void PopulateAsync(QVector<UISettings::GameDir>& game_dirs);
     void WorkerEvent();

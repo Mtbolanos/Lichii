@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "traces": [
+    {
+      "id": "sample",
+      "source": "generated",
+      "description": "eden-cli --gpu-trace-sample: CPU-written block-linear images and 3D engine clears, recorded again from present 1 and replayed",
+      "roundtrip_from": 1,
+      "expected": {
+        "lavapipe": [
+          "e6d005b99ead6522f0390ef10d72f652",
+          "9117f2aef194bdb35c9838954f3b2e84",
+          "e61f758196bbcb294d0d0b5436154ff1",
+          "25534de13047d44ee06567c1d33ab1a0"
+        ]
+      }
+    }
+  ]
+}

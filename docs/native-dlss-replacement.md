@@ -1,7 +1,7 @@
 # Game-DLSS replacement
 
 The Vulkan renderer can replace a recognized game-DLSS evaluation with NVIDIA DLSS on
-Windows, then AMD FSR 3.1.4 if NVIDIA DLSS is disabled or unavailable. FSR uses AMD's
+Windows, then AMD FSR 3.1.6 if NVIDIA DLSS is disabled or unavailable. FSR uses AMD's
 eight temporal-upscaling passes, including depth, motion, history and optional RCAS.
 This is separate from the presentation filters that scale the finished window image.
 
@@ -98,6 +98,25 @@ the game keeps its own pass whenever DLSS is off, unavailable or fails to start.
   stays created and takes over if the files are missing or don't check out, AMD's runtime offers
   no FSR 4 for the GPU, the context can't be created or a dispatch fails. The log says which, and
   shows `Ocarina FSR 4 evaluated` while it runs.
+- FSR 4 on Linux (RADV, off by default): "Use FSR 4 (fsr4-vk community Vulkan port) in place of
+  FSR 3.1" feeds the same inputs to [fsr4-vk](https://github.com/Astyyyyy/fsr4-vk) (GPL-3.0), a
+  community Vulkan port of FSR 4.1.1 built from AMD's weights and shaders. It is not AMD's
+  official FSR 4. The release workflow builds it with `tools/fsr4-vk/build.sh`, which pins the
+  fsr4-vk commit and the SHA-256 of AMD's signed `amd_fidelityfx_upscaler_dx12.dll` of FidelityFX
+  SDK 2.3.0 it extracts them from (listed under MIT in the SDK's `license.md`). Both x86-64 Linux
+  packages carry `usr/lib/amd_fidelityfx_upscaler_vk.so` and, in `usr/share/licenses/fsr4-vk`,
+  fsr4-vk's licences and AMD's SDK licence. The aarch64 packages don't: fsr4-vk's shader
+  conversion fails its own asset check on arm64 hosts. A build without it loads the library from the user
+  folder's `fidelityfx` folder. The setting is shown for RDNA 2 and newer Radeons on RADV
+  (`VideoCommon::IsFsr4PortGpu`). At boot `VideoCommon::CheckFsr4Port` checks what fsr4-vk's
+  shaders use on the created device (descriptor buffers, synchronization2, 32-lane compute
+  subgroups, 8/16-bit arithmetic with integer dot products, linear compute derivatives) and picks
+  the network: FP8 with FP16/FP8 cooperative matrices, `shaderFloat8` and the matrix conversions
+  of `VK_NV_cooperative_matrix2` (RADV exposes it only with its `radv_cooperative_matrix2_nv`
+  option), INT8 otherwise. Lichii asks fsr4-vk for that model by version. The extra device
+  features are enabled only while the setting is on with RADV. Anything missing, a missing
+  library or a failed context or dispatch leaves FSR 3.1 running, and the log names the active
+  upscaler and why. Ported from #915's loader; untested on AMD hardware so far.
 - #644 (`82494c4820`, `74a2d20c90`, `4352c06bbf`) supplies the effects capture, used by FSR only
   (DLSS gets no bias mask and runs as before). FSR uses its R16F current/history bias as both
   reactive and transparency/composition masks; missing capture uses zero masks, not stale
@@ -137,8 +156,9 @@ from the upstream implementation remain available for diagnostic comparisons.
 ## Build and distribution
 
 FSR needs no external runtime. Keep `externals/FidelityFX-SDK/LICENSE.txt` and its attribution
-with distributions. The vendored files are unmodified AMD MIT sources from FidelityFX SDK
-v1.1.4, commit `c6efa6bf7f2027b3ec94f28578bb5965eabb9e55`.
+with distributions. The vendored files are unmodified AMD MIT sources: the FSR 3.1.6 GPU code
+from AMD FSR SDK v2.4.0, commit `7539ae8b6568ad29ed78a753404351daf3b5cca7`, and the GLSL passes
+and callbacks from FidelityFX SDK v1.1.4, commit `c6efa6bf7f2027b3ec94f28578bb5965eabb9e55`.
 
 For the optional Windows NVIDIA path, obtain only the MIT Streamline headers and license
 from NVIDIA-RTX/Streamline tag `v2.14.16`, commit

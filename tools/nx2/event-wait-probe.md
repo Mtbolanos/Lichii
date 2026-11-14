@@ -1,7 +1,7 @@
 # Windows Event wait verification
 
 `event_wait_probe` links the production `Common::Event` implementation. It is
-built on Windows x86-64 when `YUZU_TESTS=ON`:
+built on Windows x86-64 when `LICHII_TESTS=ON`:
 
 ```sh
 cmake --build <build> --target event_wait_probe --parallel 12

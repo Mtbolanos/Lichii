@@ -13,7 +13,7 @@ NCA headers are normally encrypted. The NCA reader also accepts a plaintext head
 ```sh
 cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
-    -DLICHII_FUZZERS=ON -DENABLE_WERROR=OFF -DENABLE_QT=OFF -DYUZU_CMD=OFF -DYUZU_ROOM=OFF
+    -DLICHII_FUZZERS=ON -DENABLE_WERROR=OFF -DENABLE_QT=OFF -DLICHII_CMD=OFF -DLICHII_ROOM=OFF
 cmake --build build-fuzz --target fuzz_partition_romfs fuzz_nca fuzz_package
 mkdir -p corpus/nca && ASAN_OPTIONS=detect_leaks=0 \
     build-fuzz/bin/fuzz_nca -rss_limit_mb=3072 -malloc_limit_mb=3072 -timeout=25 corpus/nca seeds/
@@ -21,4 +21,4 @@ mkdir -p corpus/nca && ASAN_OPTIONS=detect_leaks=0 \
 
 Seed the corpus with small files you made yourself, never with game dumps. A crash writes `crash-<sha1>` to the working directory. To replay it, pass the file to the harness: `build-fuzz/bin/fuzz_nca crash-<sha1>`. Turn each fixed crash into a case in `src/tests/core/file_sys_parsers.cpp` that builds the input from scratch.
 
-With `-DYUZU_TESTS=ON`, the same build directory also builds `tests` under the sanitizers.
+With `-DLICHII_TESTS=ON`, the same build directory also builds `tests` under the sanitizers.

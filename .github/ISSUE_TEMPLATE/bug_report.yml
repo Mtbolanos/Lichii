@@ -1,0 +1,166 @@
+name: Bug report
+description: A game crashes, freezes, renders wrong, runs slowly or misbehaves in Lichii
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One bug per report, please. Search the open issues first, and try the [latest build](https://github.com/zortos293/lichii/releases/latest) if you can.
+        Reports without a log usually can't be worked on, so the log field is required.
+
+  - type: input
+    id: build
+    attributes:
+      label: Lichii build
+      description: "The build number from Help → About, or the first line of eden_log.txt (`Lichii Version: ... | nx2-build-177`)."
+      placeholder: "e.g. build 177"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - Crash or freeze
+        - Graphics look wrong
+        - Slow or stuttering
+        - Gameplay, audio or input
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: game
+    attributes:
+      label: Game
+      options:
+        - "The Legend of Zelda: Ocarina of Time"
+        - Mario Kart World
+        - Donkey Kong Bananza
+        - Kirby Air Riders
+        - Pokémon Pokopia
+        - Fire Emblem
+        - Splatoon Raiders
+        - Hyrule Warriors
+        - Mario Tennis Fever
+        - Yoshi and the Mysterious Book
+        - Welcome Tour
+        - A Switch 1 game
+        - Other / not listed
+    validations:
+      required: true
+
+  - type: input
+    id: game_other
+    attributes:
+      label: Game name and version
+      description: Needed for Switch 1 and unlisted games. The version is shown in the game list.
+
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: Graphics card
+      options:
+        - NVIDIA RTX 50 series
+        - NVIDIA RTX 40 series
+        - NVIDIA RTX 30 series or older
+        - AMD RX 9000 series
+        - AMD RX 7000 series
+        - AMD RX 6000 series or older
+        - Intel Arc
+        - Integrated graphics INTEL
+        - Integrated graphics AMD
+        - Apple silicon
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: gpu_driver
+    attributes:
+      label: GPU model and driver version
+      placeholder: "e.g. RTX 4070, NVIDIA 581.57 / RX 7800 XT, Adrenalin 25.10.1 / Steam Deck, Mesa 25.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - Linux
+        - SteamOS
+        - macOS
+        - Android
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Regression
+      options:
+        - label: This is a regression (it worked in an older build)
+
+  - type: input
+    id: last_good
+    attributes:
+      label: Last known working build
+      description: Only fill this in if it's a regression.
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings you changed
+      description: Anything not at its default, globally or in the game's properties (resolution scale, frames ahead, upscaler, frame generation, mods, cheats).
+      placeholder: "e.g. 2x resolution, FSR 3 frame generation, 60 fps mod"
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Where in the game it happens and what you did just before, and how often (every time, sometimes, once).
+      placeholder: "1. Load the save in Kakariko\n2. Walk to the windmill\n3. ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log file
+      description: |
+        Drag and drop eden_log.txt here. In Lichii, open File → Open Lichii Folders → Log Folder.
+        Upload it right after the problem happens and before you start Lichii again: eden_log.txt is the latest session and eden_log.txt.old the one before. Zip it if GitHub says it's too big.
+      placeholder: Drop eden_log.txt here
+    validations:
+      required: true
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Video or screenshot
+      description: Drag and drop a short video or a screenshot that shows the problem. For a crash with nothing to see, write "none".
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and found no duplicate
+          required: true
+        - label: My game is dumped from my own console
+          required: true

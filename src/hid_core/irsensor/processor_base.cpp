@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "hid_core/irsensor/processor_base.h"

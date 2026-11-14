@@ -242,21 +242,18 @@
     <string name="select_games_folder_description">يسمح لـ Eden بملء قائمة الألعاب</string>
     <string name="add_games_warning">تخطي تحديد مجلد الألعاب؟</string>
     <string name="add_games_warning_description">لن يتم عرض الألعاب في قائمة الألعاب إذا لم يتم تحديد مجلد.</string>
-    <string name="add_games_warning_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-games</string>
     <string name="home_search_games">البحث عن ألعاب</string>
     <string name="search_settings">إعدادات البحث</string>
     <string name="install_prod_keys">تثبيت prod.keys</string>
     <string name="install_prod_keys_description">مطلوب لفك تشفير ألعاب البيع بالتجزئة</string>
     <string name="install_prod_keys_warning">تخطي إضافة المفاتيح؟</string>
     <string name="install_prod_keys_warning_description">يلزم وجود مفاتيح صالحة لمحاكاة ألعاب البيع بالتجزئة. لن تعمل سوى التطبيقات المحلية إذا واصلت.</string>
-    <string name="install_prod_keys_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="install_firmware_warning">تخطي إضافة الفيرموير؟</string>
     <string name="emulator_data">إعداد بيانات المحاكي</string>
     <string name="emulator_data_description">يلزم وجود مفاتيح حتى يعمل المحاكي، ويوصى باستخدام الفيرموير ويكون ضروريًا لاستخدام تطبيق القائمة الرئيسية.</string>
     <string name="permissions">منح الأذونات</string>
     <string name="permissions_description">منح أذونات اختيارية لاستخدام ميزات محددة في المحاكي</string>
     <string name="install_firmware_warning_description">العديد من الألعاب تتطلب الوصول إلى الفيرموير لتشغيل بشكل صحيح.</string>
-    <string name="install_firmware_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="notifications">الإشعارات</string>
     <string name="notifications_description">امنح الإذن بالإشعار باستخدام الزر أدناه.</string>
     <string name="permission_denied">تم رفض الإذن</string>
@@ -413,11 +410,10 @@
     <string name="install_game_content_success">تم تثبيت محتوى (محتويات) اللعبة بنجاح</string>
     <string name="install_game_content_success_install">%1$d تم التثبيت بنجاح</string>
     <string name="install_game_content_success_overwrite">%1$d تمت الكتابة فوقه بنجاح</string>
-    <string name="install_game_content_help_link">https://yuzu-mirror.github.io/help/quickstart/#dumping-installed-updates</string>
     <string name="custom_driver_not_supported">برامج التشغيل المخصصة غير مدعومة</string>
     <string name="custom_driver_not_supported_description">لا يتم دعم تحميل برنامج التشغيل المخصص حاليًا لهذا الجهاز.\nتحقق من هذا الخيار مرة أخرى في المستقبل لمعرفة ما إذا تمت إضافة الدعم!</string>
-    <string name="manage_yuzu_data">إدارة بيانات Eden</string>
-    <string name="manage_yuzu_data_description">استيراد/تصدير فيرموير والمفاتيح وبيانات المستخدم والمزيد</string>
+    <string name="manage_lichii_data">إدارة بيانات Eden</string>
+    <string name="manage_lichii_data_description">استيراد/تصدير فيرموير والمفاتيح وبيانات المستخدم والمزيد</string>
     <string name="game_folders">مجلدات اللعبة</string>
     <string name="deep_scan">فحص عميق</string>
     <string name="add_game_folder">إضافة مجلد اللعبة</string>
@@ -445,7 +441,6 @@
 
     <string name="keys_missing">مفاتيح التشفير مفقودة</string>
     <string name="keys_missing_description">لا يمكن فك تشفير الفيرموير والألعاب</string>
-    <string name="keys_missing_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-decryption-keys</string>
 
     <string name="uninstall_firmware">إزالة الفيرموير</string>
     <string name="uninstall_firmware_description">سيؤدي إزالة الفيرموير إلى حذفه من الجهاز وقد يؤثر على توافق الألعاب.</string>
@@ -466,7 +461,7 @@
     <string name="applets_description">تشغيل تطبيقات الصغيرة للنظام باستخدام الفيرموير المثبت</string>
     <string name="applets_error_firmware">الفيرموير غير مثبت</string>
     <string name="applets_error_applet">التطبيق الصغير غير متوفر</string>
-    <string name="applets_error_description"><![CDATA[يرجى التأكد من <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> ملف و <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-system-firmware\">الفيرموير</a> تم تثبيتها وحاول مرة أخرى.]]></string>
+    <string name="applets_error_description"><![CDATA[يرجى التأكد من prod.keys ملف و الفيرموير تم تثبيتها وحاول مرة أخرى.]]></string>
     <string name="album_applet">الألبوم</string>
     <string name="album_applet_description">عرض الصور المخزنة في مجلد لقطات شاشة المستخدم باستخدام عارض صور النظام</string>
     <string name="mii_edit_applet">تعديل Mii</string>
@@ -491,7 +486,7 @@
     <string name="user_data_description">استيراد/تصدير جميع بيانات التطبيق.\nعند استيراد بيانات المستخدم، سيتم حذف جميع بيانات المستخدم الموجودة!\nقد يُسبب استيراد البيانات من Citron بعض المشاكل. يُنصح باستيراد جميع البيانات المطلوبة يدويًا.</string>
     <string name="exporting_user_data">جارٍ تصدير بيانات المستخدم...</string>
     <string name="importing_user_data">جارٍ استيراد بيانات المستخدم...</string>
-    <string name="invalid_yuzu_backup">نسخة احتياطية Eden غير صالحة</string>
+    <string name="invalid_lichii_backup">نسخة احتياطية Eden غير صالحة</string>
     <string name="user_data_export_success">تم تصدير بيانات المستخدم بنجاح</string>
     <string name="user_data_import_success">تم استيراد بيانات المستخدم بنجاح</string>
     <string name="user_data_export_cancelled">تم إلغاء التصدير</string>
@@ -927,8 +922,7 @@
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">ROM الخاص بك مشفر</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[يرجى اتباع الإرشادات لإعادة نسخ  <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">بطاقات الألعاب </a> أو <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">الألعاب المثبتة</a>.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[تأكد من تثبيت <a href=\"https://yuzu-emu.org/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a>]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[تأكد من تثبيت prod.keys]]></string>
     <string name="loader_error_video_core">حدث خطأ أثناء تهيئة نواة الفيديو</string>
     <string name="loader_error_video_core_description">عادةً ما يكون هذا ناتجًا عن برنامج تشغيل وحدة معالجة الرسومات غير متوافق. قد يؤدي تثبيت برنامج تشغيل مخصص لوحدة معالجة الرسومات إلى حل هذه المشكلة.</string>
     <string name="loader_error_file_not_found">ملف ROM غير موجود</string>

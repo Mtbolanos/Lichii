@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -48,6 +49,10 @@ public:
     /// Like WaitFor, but always blocks in the OS. On Windows, WaitFor keeps the thread running
     /// in a hardware wait; this sleeps on a high-resolution waitable timer instead.
     bool SleepFor(const std::chrono::nanoseconds time);
+
+    /// Like WaitFor, but never blocks in the OS: waits in WaitForFlag, so a wake ends within
+    /// microseconds of the deadline. For short waits; the thread counts as running throughout.
+    bool SpinFor(const std::chrono::nanoseconds time);
 
     template<class Clock, class Duration>
     bool WaitUntil(const std::chrono::time_point<Clock, Duration> time) {
@@ -143,5 +148,28 @@ void PinCurrentThread(PinnedRole role);
 
 void RefreshThreadPolicies();
 void PollThreadPolicies();
+
+/// How long to poll before blocking next time, after a wait of `waited` that polled `poll`, with
+/// `limit` the longest poll. This is the cpuidle-haltpoll governor's rule (Linux,
+/// drivers/cpuidle/governors/haltpoll.c): a wait a longer poll would have caught doubles the poll,
+/// and one longer than the limit, which no poll catches, halves it. The poll never drops below an
+/// eighth of the limit, so the quickest wake-ups stay cheap.
+constexpr std::chrono::nanoseconds NextPollWindow(std::chrono::nanoseconds poll,
+                                                  std::chrono::nanoseconds waited,
+                                                  std::chrono::nanoseconds limit) {
+    if (waited <= poll) {
+        return poll;
+    }
+    if (waited <= limit) {
+        return std::min(poll * 2, limit);
+    }
+    return std::max(poll / 2, limit / 8);
+}
+
+/// Waits until flag is true or the deadline passes, and returns the flag. Where the CPU has a
+/// user-mode wait on an address (MWAITX on AMD, UMWAIT on Intel) the thread waits in it: a store to
+/// the flag's cache line ends the wait within a few hundred nanoseconds, and the core neither
+/// issues instructions nor enters the OS meanwhile. Other CPUs yield until then.
+bool WaitForFlag(const std::atomic<bool>& flag, std::chrono::steady_clock::time_point deadline);
 
 } // namespace Common

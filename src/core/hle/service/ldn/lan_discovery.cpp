@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "core/hle/service/ldn/lan_discovery.h"
@@ -315,7 +314,20 @@ Result LANDiscovery::Connect(const NetworkInfo& network_info_, const UserConfig&
     host_ip = node_host;
     network_info = network_info_;
     InitNodeStateChange();
-    SendPacket(Network::LDNPacketType::Connect, node_info, *host_ip);
+    if (direct_lan) {
+        // The host's handshake needs packet_mutex, and the TCP connect waits on the host
+        std::vector<u8> node_data(sizeof(node_info));
+        std::memcpy(node_data.data(), &node_info, sizeof(node_info));
+        lock.unlock();
+        const bool connected = direct_lan->ConnectToHost(node_host, node_data);
+        lock.lock();
+        if (!connected) {
+            host_ip.reset();
+            return ResultConnectionFailed;
+        }
+    } else {
+        SendPacket(Network::LDNPacketType::Connect, node_info, *host_ip);
+    }
 
     // The room callback needs packet_mutex to install the host's connection reply.
     const bool replied = connection_event.wait_for(lock, connection_timeout, [this] {
@@ -351,10 +363,20 @@ Result LANDiscovery::DisconnectImpl() {
     return ResultSuccess;
 }
 
-Result LANDiscovery::Initialize(LanEventFunc lan_event_, bool listening) {
+Result LANDiscovery::Initialize(
+    LanEventFunc lan_event_, const std::optional<Network::NetworkInterface>& direct_lan_interface) {
     std::scoped_lock lock{packet_mutex};
     if (inited) {
         return ResultSuccess;
+    }
+
+    if (direct_lan_interface) {
+        direct_lan.emplace([this](const Network::LDNPacket& packet) { ReceivePacket(packet); });
+        if (!direct_lan->Open(Network::TranslateIPv4(direct_lan_interface->ip_address),
+                              Network::TranslateIPv4(direct_lan_interface->subnet_mask))) {
+            direct_lan.reset();
+            return ResultAirplaneModeEnabled;
+        }
     }
 
     for (auto& station : stations) {
@@ -373,24 +395,30 @@ Result LANDiscovery::Initialize(LanEventFunc lan_event_, bool listening) {
 }
 
 Result LANDiscovery::Finalize() {
-    std::scoped_lock lock{packet_mutex};
-    Result rc = ResultSuccess;
+    {
+        std::scoped_lock lock{packet_mutex};
+        if (inited) {
+            if (state == State::AccessPointCreated) {
+                DestroyNetworkImpl();
+            }
+            if (state == State::StationConnected || host_ip) {
+                DisconnectImpl();
+            }
 
-    if (inited) {
-        if (state == State::AccessPointCreated) {
-            DestroyNetworkImpl();
-        }
-        if (state == State::StationConnected || host_ip) {
-            DisconnectImpl();
+            ResetStations();
+            inited = false;
         }
 
-        ResetStations();
-        inited = false;
+        SetState(State::None);
     }
 
-    SetState(State::None);
+    // Its worker delivers packets under packet_mutex.
+    if (direct_lan) {
+        direct_lan->Close();
+        direct_lan.reset();
+    }
 
-    return rc;
+    return ResultSuccess;
 }
 
 void LANDiscovery::ResetStations() {
@@ -445,6 +473,9 @@ void LANDiscovery::OnNetworkInfoChanged() {
 }
 
 Network::IPv4Address LANDiscovery::GetLocalIp() const {
+    if (direct_lan) {
+        return direct_lan->GetLocalIp();
+    }
     Network::IPv4Address local_ip{0xFF, 0xFF, 0xFF, 0xFF};
     if (auto room_member = Network::GetRoomMember().lock()) {
         if (room_member->IsConnected()) {
@@ -504,6 +535,10 @@ void LANDiscovery::SendBroadcast(Network::LDNPacketType type) {
 }
 
 void LANDiscovery::SendPacket(const Network::LDNPacket& packet) {
+    if (direct_lan) {
+        direct_lan->Send(packet);
+        return;
+    }
     if (auto room_member = Network::GetRoomMember().lock()) {
         if (room_member->IsConnected()) {
             room_member->SendLdnPacket(packet);

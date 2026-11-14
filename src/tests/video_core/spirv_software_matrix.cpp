@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <set>
 #include <span>
 #include <string>
 #include <vector>
@@ -499,6 +500,80 @@ void RequireVulkanMemoryModel(const std::vector<u32>& code) {
     REQUIRE(extension == (code[1] < 0x00010500));
 }
 
+struct WorkgroupMemoryOperands {
+    u32 loads{};
+    u32 stores{};
+    u32 cooperative_loads{};
+    u32 cooperative_stores{};
+    u32 barriers{};
+};
+
+// Under the Vulkan memory model a plain access is private and can't carry data between
+// invocations, so every workgroup memory access must be non-private and make itself available or
+// visible to the workgroup, and every barrier must make memory available and visible. A GLSL450
+// module carries none of these operands.
+WorkgroupMemoryOperands RequireWorkgroupMemoryOperands(const std::vector<u32>& code,
+                                                       bool vulkan_memory_model) {
+    constexpr u32 STORAGE_CLASS_WORKGROUP = 4;
+    constexpr u32 SCOPE_WORKGROUP = 2;
+    constexpr u32 MAKE_POINTER_AVAILABLE = 0x8, MAKE_POINTER_VISIBLE = 0x10,
+                  NON_PRIVATE_POINTER = 0x20;
+    constexpr u32 MAKE_AVAILABLE = 0x2000, MAKE_VISIBLE = 0x4000;
+    const auto constants = Constants(code);
+    std::set<u32> pointer_types;
+    for (const auto& words : Instructions(code, 32)) { // OpTypePointer
+        if (words[1] == STORAGE_CLASS_WORKGROUP) {
+            pointer_types.insert(words[0]);
+        }
+    }
+    std::set<u32> pointers;
+    for (const u32 opcode : {59U, 65U}) { // OpVariable, OpAccessChain
+        for (const auto& words : Instructions(code, opcode)) {
+            if (pointer_types.contains(words[0])) {
+                pointers.insert(words[1]);
+            }
+        }
+    }
+    WorkgroupMemoryOperands result;
+    struct Access {
+        u32 opcode;
+        size_t pointer;
+        size_t operands;
+        u32 availability;
+        u32 WorkgroupMemoryOperands::*count;
+    };
+    for (const Access& access : {
+             Access{Op::Load, 2, 3, MAKE_POINTER_VISIBLE, &WorkgroupMemoryOperands::loads},
+             Access{Op::Store, 0, 2, MAKE_POINTER_AVAILABLE, &WorkgroupMemoryOperands::stores},
+             Access{OP_COOPERATIVE_MATRIX_LOAD, 2, 5, MAKE_POINTER_VISIBLE,
+                    &WorkgroupMemoryOperands::cooperative_loads},
+             Access{OP_COOPERATIVE_MATRIX_STORE, 0, 4, MAKE_POINTER_AVAILABLE,
+                    &WorkgroupMemoryOperands::cooperative_stores}}) {
+        for (const auto& words : Instructions(code, access.opcode)) {
+            if (!pointers.contains(words[access.pointer])) {
+                continue;
+            }
+            ++(result.*access.count);
+            if (!vulkan_memory_model) {
+                REQUIRE(words.size() == access.operands);
+                continue;
+            }
+            REQUIRE(words.size() == access.operands + 2);
+            REQUIRE(words[access.operands] == (access.availability | NON_PRIVATE_POINTER));
+            REQUIRE(constants.at(words[access.operands + 1]) == SCOPE_WORKGROUP);
+        }
+    }
+    const u32 expected_semantics = vulkan_memory_model ? MAKE_AVAILABLE | MAKE_VISIBLE : 0;
+    for (const auto& [opcode, semantics] : {std::pair{224U, 2U}, std::pair{225U, 1U}}) {
+        for (const auto& words : Instructions(code, opcode)) { // OpControlBarrier, OpMemoryBarrier
+            REQUIRE((constants.at(words[semantics]) & (MAKE_AVAILABLE | MAKE_VISIBLE)) ==
+                    expected_semantics);
+            ++result.barriers;
+        }
+    }
+    return result;
+}
+
 } // namespace
 
 TEST_CASE("Cooperative HMMA replaces the K16 software helper", "[video_core][tensor][ampere]") {
@@ -535,6 +610,53 @@ TEST_CASE("Cooperative HMMA keeps barriers valid under the Vulkan memory model",
         REQUIRE(code[1] == version);
         RequireVulkanMemoryModel(code);
         REQUIRE(Instructions(code, OP_COOPERATIVE_MATRIX_MUL_ADD).size() == 1);
+    }
+}
+
+TEST_CASE("Cooperative HMMA keeps workgroup memory coherent under the Vulkan memory model",
+          "[video_core][tensor][ampere]") {
+    const auto emit = [](std::string_view variant, auto configure) {
+        TensorProgram fixture{1, 16};
+        fixture.profile.supported_spirv = 0x00010600;
+        fixture.program.shared_memory_size = 64;
+        configure(fixture.profile);
+        IR::IREmitter ir{fixture.block};
+        ir.WriteShared(32, ir.Imm32(4), ir.LaneId());
+        ir.Barrier();
+        static_cast<void>(ir.LoadShared(32, false, ir.Imm32(8)));
+        ir.WorkgroupMemoryBarrier();
+        ir.DeviceMemoryBarrier();
+        return fixture.Emit("workgroup-memory-" + std::string{variant});
+    };
+    SECTION("16x8x16") {
+        const auto code = emit("16x8x16", [](Profile& profile) {
+            profile.support_cooperative_hmma = true;
+        });
+        RequireVulkanMemoryModel(code);
+        const auto operands = RequireWorkgroupMemoryOperands(code, true);
+        REQUIRE(operands.loads == 1);
+        REQUIRE(operands.stores == 1);
+        REQUIRE(operands.barriers == 3);
+    }
+    SECTION("16x16x16") {
+        const auto code = emit("16x16x16", [](Profile& profile) {
+            profile.support_cooperative_hmma_16x16x16 = true;
+        });
+        RequireVulkanMemoryModel(code);
+        const auto operands = RequireWorkgroupMemoryOperands(code, true);
+        REQUIRE(operands.loads == 3);   // The guest's load and the lane's two D words.
+        REQUIRE(operands.stores == 11); // The guest's store and the lane's A, B and C words.
+        REQUIRE(operands.cooperative_loads == 3);
+        REQUIRE(operands.cooperative_stores == 1);
+        REQUIRE(operands.barriers == 5);
+    }
+    SECTION("software HMMA on GLSL450") {
+        const auto code = emit("software", [](Profile&) {});
+        REQUIRE_FALSE(HasCapability(code, CAPABILITY_VULKAN_MEMORY_MODEL));
+        const auto operands = RequireWorkgroupMemoryOperands(code, false);
+        REQUIRE(operands.loads == 1);
+        REQUIRE(operands.stores == 1);
+        REQUIRE(operands.barriers == 3);
     }
 }
 

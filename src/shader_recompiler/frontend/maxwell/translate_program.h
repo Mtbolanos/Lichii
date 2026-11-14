@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -25,6 +24,10 @@ namespace Shader::Maxwell {
                                                   const HostTranslateInfo& host_info);
 
 void ConvertLegacyToGeneric(IR::Program& program, const RuntimeInfo& runtime_info);
+
+// An emulated passthrough geometry shader copies every generic in its passthrough mask; drop the
+// ones the previous stage never writes so the output stays within the host's component limits.
+void TrimGeometryPassthrough(IR::Program& program, const VaryingState& previous_stores);
 
 // Maxwell v1 and older Nvidia cards don't support setting gl_Layer from non-geometry stages.
 // This creates a workaround by setting the layer as a generic output and creating a

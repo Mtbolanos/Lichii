@@ -68,8 +68,14 @@ public:
     /// the time to capture and look the program up, and to lower it after a hit was missed.
     void CountProgram(ProgramLookup lookup, u64 lookup_ns, u64 lowering_ns);
 
-    /// Queues the record of a program unless the log holds it from this build's lowering
+    /// Queues the record of a program unless the log holds it from this build's lowering, or
+    /// from another build's after KeepStalePrograms
     void RecordProgram(const ProgramRecord& record);
+
+    /// Leaves the records of another build's lowering in place for this session, when the boot
+    /// load didn't lower them again: the pipeline records built from them move to this build's
+    /// code only when a later boot load does
+    void KeepStalePrograms();
 
 private:
     /// A record of this build's lowering, its code moved out into `code`
@@ -86,6 +92,7 @@ private:
 
     std::mutex mutex;
     std::unordered_map<u64, u64> programs; ///< Record key -> lowering stamp
+    bool keep_stale{};                     ///< Under mutex
     /// Written by LoadPrograms only before `loaded_ready` is set, then never changed
     std::unordered_map<u64, LoadedProgram> loaded;
     std::atomic<bool> loaded_ready{};

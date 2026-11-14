@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -64,7 +63,7 @@ public:
     const std::string name;
     const std::vector<VkPresentModeKHR> vsync_support;
     const bool has_broken_compute;
-    const bool fsr4_capable; ///< VideoCommon::IsFsr4CapableGpu
+    const bool fsr4_capable; ///< VideoCommon::IsFsr4CapableGpu, IsFsr4PortGpu on Linux
 };
 
 // TODO(crueter): Port some configure_graphics.cpp stuff

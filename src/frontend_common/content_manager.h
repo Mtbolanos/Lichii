@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -20,6 +19,7 @@
 #include "core/hle/service/filesystem/filesystem.h"
 #include "core/loader/loader.h"
 #include "core/loader/nca.h"
+#include "frontend_common/content_copy.h"
 
 namespace ContentManager {
 
@@ -140,25 +140,7 @@ inline InstallResult InstallNSP(Core::System& system, FileSys::VfsFilesystem& vf
                                 const std::function<bool(size_t, size_t)>& callback) {
     const auto copy = [callback](const FileSys::VirtualFile& src, const FileSys::VirtualFile& dest,
                                  std::size_t block_size) {
-        if (src == nullptr || dest == nullptr) {
-            return false;
-        }
-        if (!dest->Resize(src->GetSize())) {
-            return false;
-        }
-
-        using namespace Common::Literals;
-        std::vector<u8> buffer(1_MiB);
-
-        for (std::size_t i = 0; i < src->GetSize(); i += buffer.size()) {
-            if (callback(src->GetSize(), i)) {
-                dest->Resize(0);
-                return false;
-            }
-            const auto read = src->Read(buffer.data(), buffer.size(), i);
-            dest->Write(buffer.data(), read, i);
-        }
-        return true;
+        return FrontendCommon::CopyInstallFile(src, dest, block_size, callback);
     };
 
     std::shared_ptr<FileSys::NSP> nsp;

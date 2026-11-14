@@ -8,7 +8,7 @@
     android:focusableInTouchMode="false"
     android:padding="4dp">
 
-    <org.yuzu.yuzu_emu.views.GradientBorderCardView
+    <io.github.zortos293.lichii.views.GradientBorderCardView
         android:id="@+id/card_game_grid"
         app:cardElevation="0dp"
         app:cardBackgroundColor="@color/eden_card_background"
@@ -64,6 +64,6 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </org.yuzu.yuzu_emu.views.GradientBorderCardView>
+    </io.github.zortos293.lichii.views.GradientBorderCardView>
 
 </FrameLayout>

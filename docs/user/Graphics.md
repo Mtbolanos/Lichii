@@ -4,6 +4,52 @@ Graphical enhancements and visual quality improvments. This doesn't cover textur
 
 ## Visual Enhancements
 
+### Native HDR output
+
+**HDR output is Off by default.** Set Graphics > HDR output to Auto to present the native HDR
+of Switch 2 games that have an HDR mode (Mario Kart World, Kirby Air Riders, Donkey Kong
+Bananza, Ocarina of Time and others). It does not add HDR to SDR-only games. It needs Vulkan.
+
+- **Off**: the game is always told the display is SDR.
+- **Auto**: HDR while Windows HDR ("Use HDR") is on for the monitor that shows the game. Other
+  hosts cannot tell, so Auto means SDR there.
+- **On**: HDR whenever the display driver offers an HDR swapchain format.
+
+While HDR output is on, Lichii presents an HDR swapchain: HDR10 (10-bit PQ BT.2020) or, with
+HDR format set to scRGB, a 16-bit float one. It uses the other one if the driver offers only
+that, and SDR if it offers neither. The game is told the display is HDR only while that
+swapchain really is HDR, with the monitor's peak luminance and its SDR content brightness as
+reference white (HDR Peak Luminance and HDR Reference White at 0). An HDR10 swapchain gets
+HDR10 metadata with that peak. Which images hold HDR follows that answer, not the pixel format:
+Fire Emblem: Fortune's Weave draws SDR into 10-bit images.
+
+SDR layers (games without HDR, system menus) are shown at the reference white on an HDR
+swapchain. An HDR image shown on an SDR swapchain, and every screenshot or capture of an HDR
+frame, is tone mapped to SDR: the reference white becomes SDR white and highlights roll off to
+the peak.
+
+While HDR is active, anti-aliasing, post-processing and FSR/SGSR/FSR 3 upscaling are off, and
+the window is scaled bilinearly. Upscalers that replace a game's own network (DLSS, FSR 3.1 in
+Ocarina of Time) run inside the game's frame and keep working. Frame generation (FSR 3 and LSFG)
+keeps working: it interpolates the HDR10 or scRGB frame as presented. It needs the GPU to write
+that format from a compute shader; where it can't, the status bar shows FG UNAVAILABLE and the log
+says why.
+
+On Windows, Auto follows changes during play: toggling Windows HDR, moving the window to
+another monitor, changing the SDR content brightness or running the Windows HDR Calibration app
+is picked up within half a second. Lichii switches the swapchain and asks the game to query the
+display again; games that listen switch between SDR and HDR images. Run the Windows HDR
+Calibration app for your monitor first: Windows reports the peak from the display's colour
+profile where one is set, else from its EDID, and the game tone maps to that peak.
+
+If HDR shows banding, try HDR format scRGB: some NVIDIA drivers band with a 10-bit swapchain in
+fullscreen.
+
+Windows Auto HDR applies to SDR output of DirectX 11 and 12 games and leaves an HDR swapchain
+alone. If you keep HDR output Off on an HDR desktop and Auto HDR engages for the emulator, turn
+Auto HDR off for `lichii.exe` / `eden-cli.exe` in Settings > System > Display > Graphics, so SDR
+frames are shown as SDR.
+
 ### Anti-aliasing
 
 Enhancements aimed at removing jagged lines/sharp edges and/or masking artifacts.

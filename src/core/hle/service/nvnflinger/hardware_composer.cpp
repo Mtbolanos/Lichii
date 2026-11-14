@@ -1,13 +1,14 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <optional>
 
 #include <boost/container/small_vector.hpp>
 
+#include "common/settings.h"
+#include "core/core.h"
 #include "core/hle/service/nvdrv/devices/nvdisp_disp0.h"
 #include "core/hle/service/nvnflinger/buffer_item.h"
 #include "core/hle/service/nvnflinger/buffer_item_consumer.h"
@@ -76,6 +77,7 @@ u32 HardwareComposer::ComposeLocked(f32* out_speed_scale, Display& display,
     // Determine the number of vsync periods to wait before composing again.
     std::optional<s32> swap_interval{};
     bool has_acquired_buffer{};
+    bool has_new_game_buffer{};
 
     // Acquire all necessary framebuffers.
     for (auto& layer : display.stack.layers) {
@@ -109,6 +111,7 @@ u32 HardwareComposer::ComposeLocked(f32* out_speed_scale, Display& display,
         // If we acquired a new buffer, we need to present.
         if (result == CacheStatus::BufferAcquired) {
             has_acquired_buffer = true;
+            has_new_game_buffer |= layer->visible && !layer->is_overlay;
         }
 
         const auto& buffer = m_framebuffers[consumer_id];
@@ -160,6 +163,10 @@ u32 HardwareComposer::ComposeLocked(f32* out_speed_scale, Display& display,
 
         // Composite.
         nvdisp.Composite(composition_stack);
+        // Count game frames, not overlay updates or repeated scans of a cached buffer.
+        if (has_new_game_buffer && !Settings::CurrentProgramIsSwitch2()) {
+            Core::RecordGuestPresent();
+        }
     }
 
     // Advance by 1 frame (60 FPS compositing)

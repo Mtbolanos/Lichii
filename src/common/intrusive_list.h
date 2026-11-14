@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -16,7 +15,7 @@ class IntrusiveListImpl;
 }
 
 class IntrusiveListNode {
-    YUZU_NON_COPYABLE(IntrusiveListNode);
+    LICHII_NON_COPYABLE(IntrusiveListNode);
 
 private:
     friend class impl::IntrusiveListImpl;
@@ -96,7 +95,7 @@ private:
 namespace impl {
 
 class IntrusiveListImpl {
-    YUZU_NON_COPYABLE(IntrusiveListImpl);
+    LICHII_NON_COPYABLE(IntrusiveListImpl);
 
 private:
     IntrusiveListNode m_root_node;
@@ -302,7 +301,7 @@ private:
 
 template <class T, class Traits>
 class IntrusiveList {
-    YUZU_NON_COPYABLE(IntrusiveList);
+    LICHII_NON_COPYABLE(IntrusiveList);
 
 private:
     impl::IntrusiveListImpl m_impl;

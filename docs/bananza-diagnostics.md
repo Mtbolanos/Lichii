@@ -132,9 +132,9 @@ The headless build configuration is:
 cmake -S . -B build -G Ninja \
   -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 \
   -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_QT=OFF \
-  -DYUZU_CMD=ON -DYUZU_TESTS=ON -DENABLE_LTO=OFF \
+  -DLICHII_CMD=ON -DLICHII_TESTS=ON -DENABLE_LTO=OFF \
   -DENABLE_WEB_SERVICE=OFF -DUSE_DISCORD_PRESENCE=OFF -DENABLE_WERROR=OFF
-cmake --build build --target yuzu-cmd tests --parallel "$(nproc)"
+cmake --build build --target lichii-cmd tests --parallel "$(nproc)"
 ctest --test-dir build --output-on-failure
 ```
 

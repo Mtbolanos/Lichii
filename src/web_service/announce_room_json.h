@@ -17,7 +17,7 @@ namespace WebService {
 
 /**
  * Implementation of AnnounceMultiplayerRoom::Backend that (de)serializes room information into/from
- * JSON, and submits/gets it to/from the yuzu web service
+ * JSON, and submits/gets it to/from the Lichii web service
  */
 class RoomJson : public AnnounceMultiplayerRoom::Backend {
 public:

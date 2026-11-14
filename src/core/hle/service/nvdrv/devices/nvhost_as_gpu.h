@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2021 yuzu Emulator Project
 // SPDX-FileCopyrightText: 2021 Skyline Team and Contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -197,8 +196,8 @@ private:
     std::mutex mutex; //!< Locks all AS operations
 
     struct VM {
-        static constexpr u32 YUZU_PAGESIZE{0x1000};
-        static constexpr u32 PAGE_SIZE_BITS{static_cast<u32>(std::countr_zero<u32>(YUZU_PAGESIZE))};
+        static constexpr u32 LICHII_PAGESIZE{0x1000};
+        static constexpr u32 PAGE_SIZE_BITS{static_cast<u32>(std::countr_zero<u32>(LICHII_PAGESIZE))};
 
         static constexpr u32 SUPPORTED_BIG_PAGE_SIZES{0x30000};
         static constexpr u32 DEFAULT_BIG_PAGE_SIZE{0x20000};

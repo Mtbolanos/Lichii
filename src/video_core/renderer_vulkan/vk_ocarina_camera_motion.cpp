@@ -19,6 +19,7 @@
 #include "video_core/host_shaders/ocarina_dlss_4k_composite_comp_spv.h"
 #include "video_core/host_shaders/ocarina_dlss_4k_reference_comp_spv.h"
 #include "video_core/host_shaders/ocarina_dlss_bias_comp_spv.h"
+#include "video_core/host_shaders/ocarina_dlss_effects_base_comp_spv.h"
 #include "video_core/host_shaders/ocarina_dlss_effects_comp_spv.h"
 #include "video_core/renderer_vulkan/vk_master_semaphore.h"
 #ifdef EGLANTINE_STREAMLINE
@@ -649,11 +650,21 @@ vk::ImageView CreateOcarinaView(const Device& device, VkImage image, VkFormat fo
     });
 }
 
+// DLSS Frame Generation copies the motion vectors when they are tagged.
+VkImageUsageFlags FrameGenCopyUsage() {
+#ifdef EGLANTINE_STREAMLINE
+    return Streamline::FrameGenSession() ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0;
+#else
+    return 0;
+#endif
+}
+
 struct OcarinaFrameSlot {
     OcarinaFrameSlot(const Device& device, MemoryAllocator& allocator, VkExtent2D extent_)
         : extent{extent_}, motion{CreateOcarinaImage(
                               allocator, extent, MOTION_FORMAT, VK_IMAGE_USAGE_STORAGE_BIT |
-                                  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)},
+                                  VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+                                  FrameGenCopyUsage())},
           motion_view{CreateOcarinaView(device, *motion, MOTION_FORMAT)},
           color{CreateOcarinaImage(allocator, extent, LIVE_COLOR_FORMAT,
                                    VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT)},
@@ -700,13 +711,13 @@ struct OcarinaEffects {
 } // namespace
 
 struct OcarinaUpscaler::Impl {
-    Impl(const Device& device_, Scheduler& scheduler_, DescriptorPool& pool,
+    Impl(const Device& device_, Scheduler& scheduler_, DescriptorPool& pool_,
          ComputePassDescriptorQueue& queue_, MemoryAllocator& allocator_, StagingBufferPool& staging,
          VideoCommon::OcarinaUpscaleBackend backend)
-        : device{device_}, scheduler{scheduler_}, queue{queue_}, allocator{allocator_}, pool{pool},
-          motion_pass{device, scheduler, pool},
-          color_pass{device, scheduler, pool},
-          output_pass{device, scheduler, pool, OCARINA_DLSS_OUTPUT_COMP_SPV} {
+        : device{device_}, scheduler{scheduler_}, queue{queue_}, allocator{allocator_}, pool{pool_},
+          motion_pass{device, scheduler, pool_},
+          color_pass{device, scheduler, pool_},
+          output_pass{device, scheduler, pool_, OCARINA_DLSS_OUTPUT_COMP_SPV} {
 #ifdef EGLANTINE_STREAMLINE
         if (backend == VideoCommon::OcarinaUpscaleBackend::Dlss) {
             dlss = std::make_unique<StreamlineDlssUpscaler>(device, scheduler, allocator);
@@ -726,7 +737,7 @@ struct OcarinaUpscaler::Impl {
         if (!Fsr3Upscaler::IsSupported(device)) {
             throw vk::Exception(VK_ERROR_FEATURE_NOT_PRESENT);
         }
-        fsr = std::make_unique<Fsr3Upscaler>(device, scheduler, allocator, staging, pool, queue,
+        fsr = std::make_unique<Fsr3Upscaler>(device, scheduler, allocator, staging, pool_, queue,
                                            Fsr3Upscaler::Profile::OcarinaLdr);
     }
 
@@ -866,7 +877,7 @@ void OcarinaUpscaler::SaveEffectsBase(VkImageView scene, VkExtent2D extent, u64 
     auto& state = *impl;
     if (!state.effects_base_pass) {
         state.effects_base_pass = std::make_unique<OcarinaEffectsPass<1>>(
-            state.device, state.scheduler, state.pool, OCARINA_DLSS_COLOR_COMP_SPV);
+            state.device, state.scheduler, state.pool, OCARINA_DLSS_EFFECTS_BASE_COMP_SPV);
         state.effects_mark_pass = std::make_unique<OcarinaEffectsPass<2>>(
             state.device, state.scheduler, state.pool, OCARINA_DLSS_EFFECTS_COMP_SPV);
         state.effects_bias_pass = std::make_unique<OcarinaEffectsPass<3>>(
@@ -921,7 +932,7 @@ bool OcarinaUpscaler::Record(VkImageView color, VkImageView depth, VkImageView t
                             VkExtent2D output_extent, VkExtent2D target_extent,
                             const Matrix& current, const Matrix& previous,
                             const OcarinaActorMesh& mesh, VkImage depth_image, u64 frame,
-                            std::array<f32, 2> jitter) {
+                            std::array<f32, 2> jitter, [[maybe_unused]] VkExtent2D depth_extent) {
     auto& state = *impl;
     if (state.last_frame == frame || state.Failed()) {
         return false;
@@ -1005,6 +1016,8 @@ bool OcarinaUpscaler::Record(VkImageView color, VkImageView depth, VkImageView t
             .reset = reset,
             .depth_inverted = false,
             .hdr = false,
+            .depth_size = depth_extent,
+            .camera = StreamlineDlssUpscaler::Inputs::Camera{current, *transform},
         })) {
         state.scheduler.InvalidateState();
         return false;
@@ -1104,9 +1117,12 @@ VideoCommon::OcarinaUpscaleBackend ResolveOcarinaUpscaler(const Device& device) 
 #ifdef EGLANTINE_STREAMLINE
     dlss_available = Streamline::IsDlssAvailable();
 #endif
+    // Balanced's scene is padded, which only DLSS takes.
+    const auto scale = Settings::AppliedOcarinaRenderScale();
+    const bool render_scaled = scale && *scale != Settings::NvidiaDlssQuality::Balanced;
     const auto backend = VideoCommon::SelectOcarinaUpscaler(
         Settings::values.ocarina_fsr.GetValue(), Settings::values.nvidia_dlss.GetValue(),
-        dlss_available, value ? value : "");
+        dlss_available, render_scaled, value ? value : "");
     if (backend == VideoCommon::OcarinaUpscaleBackend::Fsr && !Fsr3Upscaler::IsSupported(device)) {
         return VideoCommon::OcarinaUpscaleBackend::Native;
     }

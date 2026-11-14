@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-#include "yuzu/compatibility_report.h"
+#include "lichii/compatibility_report.h"
 
 #include <algorithm>
 #include <cstring>

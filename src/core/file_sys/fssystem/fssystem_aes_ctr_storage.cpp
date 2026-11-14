@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <boost/container/static_vector.hpp>
@@ -52,7 +51,9 @@ size_t AesCtrStorage::Read(u8* buffer, size_t size, size_t offset) const {
     ASSERT(Common::IsAligned(size, BlockSize));
 
     // Read the data.
-    m_base_storage->Read(buffer, size, offset);
+    if (m_base_storage->Read(buffer, size, offset) != size) {
+        return 0;
+    }
 
     // Setup the counter.
     std::array<u8, IvSize> ctr;

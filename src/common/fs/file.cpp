@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <vector>
@@ -287,9 +286,9 @@ void IOFile::Open(const fs::path& path, FileAccessMode mode, FileType type, File
     }
 }
 
-void IOFile::Close() {
+bool IOFile::Close() {
     if (!IsOpen()) {
-        return;
+        return true;
     }
 
     errno = 0;
@@ -303,6 +302,7 @@ void IOFile::Close() {
     }
 
     file = nullptr;
+    return close_result;
 }
 
 bool IOFile::IsOpen() const {

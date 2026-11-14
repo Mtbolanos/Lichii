@@ -268,6 +268,15 @@ class CliTests(unittest.TestCase):
         self.assertTrue(any("workgroup 1x1x1" in item for item in result["assumptions"]))
         self.validate()
 
+    def test_device_profile(self):
+        source = self.write("native.bin", NATIVE_EXIT)
+        profile = self.write("profile.json", json.dumps({"profile": {"supported_spirv": 0x00010600}}).encode())
+        result = self.run_cli(source, "--stage", "compute", "--device-profile", profile, "--output", self.output)
+        self.assertTrue(any("--device-profile" in item for item in result["assumptions"]))
+        self.assertEqual(struct.unpack_from("<I", self.output.read_bytes(), 4)[0], 0x00010600)
+        unknown = self.write("unknown.json", json.dumps({"host": {"no_such_field": True}}).encode())
+        self.run_cli(source, "--stage", "compute", "--device-profile", unknown, "--output", self.output, code=2)
+
     def test_exact_native_header_stages(self):
         for stage, name in enumerate(STAGES[:5]):
             with self.subTest(stage=name):

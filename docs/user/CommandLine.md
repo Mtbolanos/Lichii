@@ -37,7 +37,7 @@ Only the Qt frontend supports the following arguments:
 - `-i/--preferred-game-id`: The preferred game-id for this room.
 - `-u/--username`: The username used for announce.
 - `-t/--token`: The token used for announce.
-- `-a/--web-api-url`: yuzu Web API url.
+- `-a/--web-api-url`: Lichii Web API url.
 - `-b/--ban-list-file`: The file for storing the room ban list.
 - `-l/--log-file`: The file for storing the room log.
 - `-h/--help`: Display this help and exit.

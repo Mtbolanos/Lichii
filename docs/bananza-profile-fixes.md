@@ -77,7 +77,7 @@ enabled. #157's unmap-unsafe pointer cache is not imported.
 
 ## Integrated verification
 
-The resolved tree built `yuzu-cmd` and `tests` with Clang 20, Ninja and all eight
+The resolved tree built `lichii-cmd` and `tests` with Clang 20, Ninja and all eight
 available cores. All 529 test cases passed with frame tracing disabled and with
 `EDEN_DKB_FRAME_TRACE=1`. The atomic, pacing, descriptor and command-fetch filter
 passed 22 cases and 135,908 assertions.

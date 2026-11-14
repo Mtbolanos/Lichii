@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <algorithm>
 #include <atomic>
 #include <barrier>
 #include <chrono>
+#include <condition_variable>
+#include <cstdio>
+#include <mutex>
 #include <thread>
+#include <utility>
+#include <vector>
 #include <catch2/catch_test_macros.hpp>
 #include "common/event_wait.h"
 #include "common/thread.h"
@@ -224,4 +230,92 @@ TEST_CASE("Concurrent Event sleeps keep their deadlines and wake on Set", "[comm
     CHECK(short_elapsed >= 20ms);
     CHECK(long_result);
     CHECK(long_elapsed < 4s);
+}
+
+TEST_CASE("WaitForFlag times out unset and wakes on a store", "[common][event]") {
+    std::atomic<bool> flag{false};
+    auto start = std::chrono::steady_clock::now();
+    CHECK_FALSE(Common::WaitForFlag(flag, start + 2ms));
+    CHECK(std::chrono::steady_clock::now() - start >= 2ms);
+    CHECK_FALSE(Common::WaitForFlag(flag, start));
+
+    for (int i = 0; i < 20; ++i) {
+        flag = false;
+        std::jthread setter([&] {
+            std::this_thread::sleep_for(1ms);
+            flag.store(true, std::memory_order_release);
+        });
+        start = std::chrono::steady_clock::now();
+        CHECK(Common::WaitForFlag(flag, start + 5s));
+        CHECK(std::chrono::steady_clock::now() - start < 1s);
+    }
+    CHECK(Common::WaitForFlag(flag, std::chrono::steady_clock::now()));
+}
+
+TEST_CASE("Event::SpinFor times out unset and consumes a signal", "[common][event]") {
+    Common::Event event;
+    auto start = std::chrono::steady_clock::now();
+    CHECK_FALSE(event.SpinFor(2ms));
+    CHECK(std::chrono::steady_clock::now() - start >= 2ms);
+
+    event.Set();
+    CHECK(event.SpinFor(1s));
+    CHECK_FALSE(event.IsSet());
+
+    std::jthread setter([&] {
+        std::this_thread::sleep_for(1ms);
+        event.Set();
+    });
+    start = std::chrono::steady_clock::now();
+    CHECK(event.SpinFor(5s));
+    CHECK(std::chrono::steady_clock::now() - start < 1s);
+}
+
+// Wake-up latency of a store to a waiting thread: WaitForFlag against a condition variable.
+// tests "[.wait_for_flag_benchmark]" runs it.
+TEST_CASE("WaitForFlag wake latency", "[.wait_for_flag_benchmark]") {
+    constexpr int Rounds = 2000;
+    const auto measure = [](bool use_flag) {
+        std::atomic<bool> flag{false};
+        std::atomic<std::chrono::steady_clock::rep> stored{};
+        std::mutex mutex;
+        std::condition_variable cv;
+        std::vector<double> latencies;
+        latencies.reserve(Rounds);
+        std::barrier sync(2);
+        std::jthread waiter([&] {
+            for (int i = 0; i < Rounds; ++i) {
+                sync.arrive_and_wait();
+                if (use_flag) {
+                    REQUIRE(Common::WaitForFlag(flag, std::chrono::steady_clock::now() + 1s));
+                } else {
+                    std::unique_lock lk{mutex};
+                    cv.wait(lk, [&] { return flag.load(); });
+                }
+                const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+                latencies.push_back(static_cast<double>(now - stored.load()) / 1000.0);
+                flag = false;
+                sync.arrive_and_wait();
+            }
+        });
+        for (int i = 0; i < Rounds; ++i) {
+            sync.arrive_and_wait();
+            std::this_thread::sleep_for(50us);
+            {
+                std::scoped_lock lk{mutex};
+                stored = std::chrono::steady_clock::now().time_since_epoch().count();
+                flag = true;
+                cv.notify_one();
+            }
+            sync.arrive_and_wait();
+        }
+        waiter.join();
+        std::ranges::sort(latencies);
+        return std::pair{latencies[Rounds / 2], latencies[Rounds * 99 / 100]};
+    };
+    const auto [flag_p50, flag_p99] = measure(true);
+    const auto [cv_p50, cv_p99] = measure(false);
+    std::printf("wake latency (us): WaitForFlag p50 %.2f p99 %.2f, condition variable p50 %.2f "
+                "p99 %.2f\n",
+                flag_p50, flag_p99, cv_p50, cv_p99);
 }

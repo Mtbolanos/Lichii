@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -11,7 +10,7 @@
 #include "input_common/input_engine.h"
 
 /*
-To play back TAS scripts on Yuzu, select the folder with scripts in the configuration menu below
+To play back TAS scripts on Lichii, select the folder with scripts in the configuration menu below
 Tools -> Configure TAS. The file itself has normal text format and has to be called script0-1.txt
 for controller 1, script0-2.txt for controller 2 and so forth (with max. 8 players).
 
@@ -26,7 +25,7 @@ A script file has the same format as TAS-nx uses, so final files will look like 
 46 KEY_A 32767;0 0;0
 47 KEY_A 32767;0 0;0
 
-After placing the file at the correct location, it can be read into Yuzu with the (default) hotkey
+After placing the file at the correct location, it can be read into Lichii with the (default) hotkey
 CTRL+F6 (refresh). In the bottom left corner, it will display the amount of frames the script file
 has. Playback can be started or stopped using CTRL+F5.
 

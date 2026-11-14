@@ -1,14 +1,15 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <optional>
 #include <utility>
 
+#include "common/hex_util.h"
 #include "common/logging.h"
 #include <ranges>
 #include "core/crypto/aes_util.h"
@@ -38,7 +39,11 @@ NCA::NCA(VirtualFile file_, const NCA* base_nca, bool allow_missing_base)
 
     reader = std::make_shared<NcaReader>();
     if (Result rc = reader->Initialize(file, GetCryptoConfiguration(), GetNcaCompressionConfiguration()); R_FAILED(rc)) {
-        status = Loader::ResultStatus::ErrorBadNCAHeader;
+        // Without the header key every encrypted header reads as garbage, so a bad header
+        // usually means the keys were never installed.
+        status = keys.HasKey(Core::Crypto::S256KeyType::Header)
+                     ? Loader::ResultStatus::ErrorBadNCAHeader
+                     : Loader::ResultStatus::ErrorMissingHeaderKey;
         return;
     }
 
@@ -48,7 +53,14 @@ NCA::NCA(VirtualFile file_, const NCA* base_nca, bool allow_missing_base)
     // Ensure we have the proper key area keys to continue.
     const u8 master_key_id = MasterKeyIdForKeyGeneration(reader->GetKeyGeneration());
     if (!decrypted && !keys.HasKey(Core::Crypto::S128KeyType::KeyArea, master_key_id, reader->GetKeyIndex())) {
-        LOG_ERROR(Loader, "Cannot decrypt {}: keys for gen 0x{:02X}+ required.", file->GetName(), reader->GetKeyGeneration());
+        constexpr std::array<const char*, 3> key_area_names{"application", "ocean", "system"};
+        const u8 key_index = reader->GetKeyIndex();
+        LOG_ERROR(Loader,
+                  "Cannot decrypt {}: key_area_key_{}_{:02x} is missing from prod.keys (key "
+                  "generation {}). Keys dumped from older firmware than the game lack it.",
+                  file->GetName(),
+                  key_index < key_area_names.size() ? key_area_names[key_index] : "unknown",
+                  master_key_id, reader->GetKeyGeneration());
         status = Loader::ResultStatus::ErrorMissingKeyAreaKey;
         return;
     }
@@ -63,11 +75,17 @@ NCA::NCA(VirtualFile file_, const NCA* base_nca, bool allow_missing_base)
         auto titlekey =
             keys.GetKey(Core::Crypto::S128KeyType::Titlekey, rights_id_u128[1], rights_id_u128[0]);
         if (titlekey == Core::Crypto::Key128{}) {
+            LOG_ERROR(Loader, "Cannot decrypt {}: no title key for rights id {}", file->GetName(),
+                      Common::HexToString(rights_id));
             status = Loader::ResultStatus::ErrorMissingTitlekey;
             return;
         }
 
         if (!keys.HasKey(Core::Crypto::S128KeyType::Titlekek, master_key_id)) {
+            LOG_ERROR(Loader,
+                      "Cannot decrypt {}: titlekek_{:02x} is missing from prod.keys (key "
+                      "generation {}). Keys dumped from older firmware than the game lack it.",
+                      file->GetName(), master_key_id, reader->GetKeyGeneration());
             status = Loader::ResultStatus::ErrorMissingTitlekek;
             return;
         }
@@ -80,34 +98,18 @@ NCA::NCA(VirtualFile file_, const NCA* base_nca, bool allow_missing_base)
         reader->SetExternalDecryptionKey(titlekey.data(), titlekey.size());
     }
 
+    base_reader = base_nca ? base_nca->reader : nullptr;
     const s32 fs_count = reader->GetFsCount();
-    NcaFileSystemDriver fs(base_nca ? base_nca->reader : nullptr, reader);
-    std::vector<VirtualFile> filesystems(fs_count);
     for (s32 i = 0; i < fs_count; i++) {
         NcaFsHeaderReader header_reader;
-        if (Result rc = fs.OpenStorage(&filesystems[i], &header_reader, i); R_FAILED(rc)) {
+        if (!reader->HasFsInfo(i) || R_FAILED(header_reader.Initialize(*reader, i))) {
             status = Loader::ResultStatus::ErrorBadNCAHeader;
             return;
         }
 
-        if (header_reader.GetFsType() == NcaFsHeader::FsType::RomFs) {
-            files.push_back(filesystems[i]);
-            romfs = files.back();
-        }
-
-        if (header_reader.GetFsType() == NcaFsHeader::FsType::PartitionFs) {
-            auto npfs = std::make_shared<PartitionFilesystem>(filesystems[i]);
-            if (npfs->GetStatus() == Loader::ResultStatus::Success) {
-                dirs.push_back(npfs);
-                if (IsDirectoryExeFS(npfs)) {
-                    exefs = dirs.back();
-                } else if (IsDirectoryLogoPartition(npfs)) {
-                    logo = dirs.back();
-                } else {
-                    continue;
-                }
-            }
-        }
+        auto& section = sections.emplace_back();
+        section.index = i;
+        section.partition = header_reader.GetFsType() == NcaFsHeader::FsType::PartitionFs;
 
         // Decrypted updates keep their patch tables with encryption type None.
         const auto& patch_info = header_reader.GetPatchInfo();
@@ -130,9 +132,40 @@ Loader::ResultStatus NCA::GetStatus() const {
     return status;
 }
 
+void NCA::OpenSection(Section& section) const {
+    if (section.opened) {
+        return;
+    }
+    section.opened = true;
+    NcaFileSystemDriver fs(base_reader, reader);
+    NcaFsHeaderReader header_reader;
+    if (R_FAILED(fs.OpenStorage(&section.storage, &header_reader, section.index))) {
+        LOG_ERROR(Loader, "Cannot open section {} of {}", section.index, file->GetName());
+        section.storage = nullptr;
+        return;
+    }
+    if (section.partition) {
+        auto pfs = std::make_shared<PartitionFilesystem>(section.storage);
+        if (pfs->GetStatus() == Loader::ResultStatus::Success) {
+            section.partition_fs = std::move(pfs);
+        }
+    }
+}
+
 std::vector<VirtualFile> NCA::GetFiles() const {
     if (status != Loader::ResultStatus::Success) {
         return {};
+    }
+    std::scoped_lock lock{sections_mutex};
+    std::vector<VirtualFile> files;
+    for (auto& section : sections) {
+        if (section.partition) {
+            continue;
+        }
+        OpenSection(section);
+        if (section.storage) {
+            files.push_back(section.storage);
+        }
     }
     return files;
 }
@@ -140,6 +173,17 @@ std::vector<VirtualFile> NCA::GetFiles() const {
 std::vector<VirtualDir> NCA::GetSubdirectories() const {
     if (status != Loader::ResultStatus::Success) {
         return {};
+    }
+    std::scoped_lock lock{sections_mutex};
+    std::vector<VirtualDir> dirs;
+    for (auto& section : sections) {
+        if (!section.partition) {
+            continue;
+        }
+        OpenSection(section);
+        if (section.partition_fs) {
+            dirs.push_back(section.partition_fs);
+        }
     }
     return dirs;
 }
@@ -182,11 +226,32 @@ bool NCA::IsUpdate() const {
 }
 
 VirtualFile NCA::GetRomFS() const {
+    std::scoped_lock lock{sections_mutex};
+    VirtualFile romfs;
+    for (auto& section : sections) {
+        if (section.partition) {
+            continue;
+        }
+        OpenSection(section);
+        if (section.storage) {
+            romfs = section.storage;
+        }
+    }
     return romfs;
 }
 
 VirtualDir NCA::GetExeFS() const {
-    return exefs;
+    std::scoped_lock lock{sections_mutex};
+    for (auto& section : sections) {
+        if (!section.partition) {
+            continue;
+        }
+        OpenSection(section);
+        if (section.partition_fs && IsDirectoryExeFS(section.partition_fs)) {
+            return section.partition_fs;
+        }
+    }
+    return nullptr;
 }
 
 VirtualFile NCA::GetBaseFile() const {
@@ -194,7 +259,18 @@ VirtualFile NCA::GetBaseFile() const {
 }
 
 VirtualDir NCA::GetLogoPartition() const {
-    return logo;
+    std::scoped_lock lock{sections_mutex};
+    for (auto& section : sections) {
+        if (!section.partition) {
+            continue;
+        }
+        OpenSection(section);
+        if (section.partition_fs && !IsDirectoryExeFS(section.partition_fs) &&
+            IsDirectoryLogoPartition(section.partition_fs)) {
+            return section.partition_fs;
+        }
+    }
+    return nullptr;
 }
 
 } // namespace FileSys

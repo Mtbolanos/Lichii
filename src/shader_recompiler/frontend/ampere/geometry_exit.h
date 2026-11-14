@@ -138,6 +138,7 @@ GeometryExitEnvelope AnalyzeGeometryExit(const Code& code) {
         } else if (opcode == 0x805 || opcode == 0xab9 || opcode == 0x945) {
         } else if (opcode == 0x381 || opcode == 0x981) {
             const u32 address = bits(index, 24, 8), size = bits(index, 73, 3);
+            if (opcode == 0x381) read_predicate(7 - bits(index, 64, 3));
             if (address != 255) {
                 read_register(address);
                 read_register(address + 1);
@@ -171,6 +172,16 @@ GeometryExitEnvelope AnalyzeGeometryExit(const Code& code) {
             read_sources(true);
             write_register(bits(index, 16, 8));
             write_predicate(bits(index, 81, 3));
+        } else if (opcode == 0x321) {
+            // ALD: loads 1-4 components into Rd.. from the vertex in b, indexed by a unless RZ.
+            read_register(bits(index, 24, 8));
+            read_register(bits(index, 32, 8));
+            for (u32 i = 0; i <= bits(index, 74, 2); ++i) write_register(bits(index, 16, 8) + i);
+        } else if (opcode == 0x324 || opcode == 0x924) {
+            // OUT.EMIT/CUT: reads the output handle in a (and a register stream in b), writes the
+            // next handle to Rd.
+            read_sources(false);
+            write_register(bits(index, 16, 8));
         } else if (opcode == 0x322) {
             // AST: stores 1-4 components from operand b for the vertex in c; writes nothing.
             const u32 value = bits(index, 32, 8), components = bits(index, 74, 2) + 1;

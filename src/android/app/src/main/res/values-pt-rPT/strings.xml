@@ -243,8 +243,8 @@
     <string name="install_game_content_success_install">%1$d instalado com sucesso</string>
     <string name="install_game_content_success_overwrite">%1$d substituída com êxito</string>
     <string name="custom_driver_not_supported">Drivers personalizados não suportados</string>
-    <string name="manage_yuzu_data">Administrar dados Eden</string>
-    <string name="manage_yuzu_data_description">Importa/exporta firmware, chaves, dados do usuário e mais!</string>
+    <string name="manage_lichii_data">Administrar dados Eden</string>
+    <string name="manage_lichii_data_description">Importa/exporta firmware, chaves, dados do usuário e mais!</string>
     <string name="game_folders">Pastas de jogos</string>
     <string name="deep_scan">Varredura profunda</string>
     <string name="add_game_folder">Adicionar pasta de jogo</string>
@@ -306,7 +306,7 @@
     <string name="user_data">Dado de utilizados</string>
     <string name="exporting_user_data">A exportar dados de utilizados...</string>
     <string name="importing_user_data">A importar dados de utilizador...</string>
-    <string name="invalid_yuzu_backup">Backup Eden inválido</string>
+    <string name="invalid_lichii_backup">Backup Eden inválido</string>
     <string name="user_data_export_success">Dados de utilizados exportados com sucesso</string>
     <string name="user_data_import_success">Dados de utilizador importado com sucesso</string>
     <string name="user_data_export_cancelled">Exportação cancelada</string>
@@ -602,8 +602,7 @@ uma tentativa de mapeamento automático</string>
     <string name="verify_no_result_description">Os conteúdos do arquivo não foram verificados se são válidos</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">A tua ROM está encriptada</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[Siga os guias para voltar a fazer dump dos seus <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">cartões de jogo</a> ou <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">títulos digitais</a>.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[Por favor confirma que o teu ficheiro <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> está instalado para que os jogos possam ser desencriptados.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[Por favor confirma que o teu ficheiro prod.keys está instalado para que os jogos possam ser desencriptados.]]></string>
     <string name="loader_error_video_core">Ocorreu um erro ao iniciar o núcleo de vídeo.</string>
     <string name="loader_error_video_core_description">Isto é normalmente causado por um driver de GPU incompatível. Instalar um driver GPU pode resolver este problema.</string>
     <string name="loader_error_file_not_found">O ficheiro da ROM não existe</string>

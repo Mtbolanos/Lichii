@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -92,6 +91,8 @@ private:
     const PlayTime::PlayTimeManager& play_time_manager;
 
     QStringList watch_list;
+    /// Loose dumps found by this scan, sized after the list is shown.
+    std::vector<std::string> loose_dumps;
 
     std::mutex lock;
     std::condition_variable cv;

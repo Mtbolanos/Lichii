@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -192,6 +191,8 @@ enum class S128KeyType : u64 {
     HeaderKek,     //
     SDKek,         //
     RSAKek,        //
+    TSECRoot,      // f1=tsec root key index
+    MarikoKek,     //
 };
 
 enum class KeyAreaKeyType : u8 {
@@ -214,6 +215,8 @@ enum class SourceKeyType : u8 {
     KeyblobMAC,           //
     ETicketKek,           //
     ETicketKekek,         //
+    MasterKek,            // f2=crypto revision
+    MarikoMasterKek,      // f2=crypto revision
 };
 
 enum class SDKeyType : u8 {
@@ -322,6 +325,12 @@ private:
                         const std::array<u8, Size>& key);
 
     void DeriveGeneralPurposeKeys(std::size_t crypto_revision);
+
+    // Fills in every master key the loaded files lack but can be computed from, the way the
+    // console does it: a master kek from the TSEC root key (Erista) or the Mariko kek, then the
+    // master key from that kek. Then derives the general purpose keys of every generation whose
+    // master key is present but whose key area keys or titlekek are not.
+    void DeriveMissingMasterKeys();
 
     void DeriveETicketRSAKey();
 

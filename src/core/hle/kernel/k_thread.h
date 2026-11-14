@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -44,6 +43,10 @@ class System;
 } // namespace Core
 
 namespace Kernel {
+
+namespace Nx2ThreadStats {
+struct Counters;
+}
 
 class GlobalSchedulerContext;
 class KernelCore;
@@ -306,6 +309,11 @@ public:
 
     s64 GetCpuTime() const {
         return m_cpu_time;
+    }
+
+    /// EDEN_NX2_GUEST_THREAD_STATS: this thread's counters, made on first use.
+    std::atomic<Nx2ThreadStats::Counters*>& Nx2Stats() {
+        return m_nx2_stats;
     }
 
     s32 GetActiveCore() const {
@@ -903,6 +911,7 @@ private:
     s64 m_last_scheduled_tick{};
     std::vector<KThread*> m_pending_started_threads;
     std::atomic<bool> m_entered_kernel{false};
+    std::atomic<Nx2ThreadStats::Counters*> m_nx2_stats{};
     std::array<QueueEntry, Core::Hardware::NUM_CPU_CORES> m_per_core_priority_queue_entry{};
     KThreadQueue* m_wait_queue{};
     LockWithPriorityInheritanceInfoList m_held_lock_info_list{};

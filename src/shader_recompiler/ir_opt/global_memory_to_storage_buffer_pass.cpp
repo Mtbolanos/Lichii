@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -76,6 +75,10 @@ struct StorageInfo {
     /// instructions (the IR does not change while storage buffers are collected).
     std::unordered_map<const IR::Inst*, std::optional<StorageBufferAddr>> biased_tracks;
     std::unordered_map<const IR::Inst*, std::optional<StorageBufferAddr>> unbiased_tracks;
+    /// Instructions from which a search with (or without) the bias cannot succeed, so later
+    /// searches from other addresses skip what failed ones walked.
+    std::unordered_set<const IR::Inst*> biased_exhausted;
+    std::unordered_set<const IR::Inst*> unbiased_exhausted;
     std::unordered_map<const IR::Inst*, small_vector<StorageBufferAddr, 4>> native_candidates;
     /// Native accesses whose candidates include slots of a dynamically indexed pointer array.
     std::unordered_set<const IR::Inst*> native_dynamic;
@@ -404,7 +407,8 @@ std::optional<LowAddrInfo> TrackLowAddress(IR::Inst* inst) {
 }
 
 /// Tries to track the storage buffer address used by a global memory instruction
-std::optional<StorageBufferAddr> Track(const IR::Value& value, const Bias* bias) {
+std::optional<StorageBufferAddr> Track(const IR::Value& value, const Bias* bias,
+                                       std::unordered_set<const IR::Inst*>& exhausted) {
     const auto pred{[bias](const IR::Inst* inst) -> std::optional<StorageBufferAddr> {
         if (inst->GetOpcode() != IR::Opcode::GetCbufU32 &&
             inst->GetOpcode() != IR::Opcode::GetCbufU32x2) {
@@ -445,7 +449,7 @@ std::optional<StorageBufferAddr> Track(const IR::Value& value, const Bias* bias)
         }
         return operand;
     };
-    return BreadthFirstSearch(value, pred, stop_at_memory);
+    return BreadthFirstSearchPruned(value, pred, exhausted, stop_at_memory);
 }
 
 /// Finds the one constant buffer word added directly into the low address, which is the base
@@ -861,61 +865,80 @@ StorageBufferSet CollectIteratorWords(IR::Program& program) {
     std::unordered_set<const IR::Inst*> on_stack;
     std::vector<const IR::Inst*> stack;
     u32 next_index{};
-    const auto visit = [&](auto&& self, const IR::Inst* inst) -> void {
-        if (indices.contains(inst)) {
-            return;
-        }
+    struct VisitFrame {
+        const IR::Inst* inst;
+        size_t next_arg;
+    };
+    std::vector<VisitFrame> pending;
+    const auto enter = [&](const IR::Inst* inst) {
         const u32 index = next_index++;
         indices[inst] = lowlinks[inst] = index;
         stack.push_back(inst);
         on_stack.insert(inst);
-        const auto op = inst->GetOpcode();
-        if (op == IR::Opcode::IAdd32 || op == IR::Opcode::Phi || op == IR::Opcode::SelectU32) {
-            for (size_t arg = op == IR::Opcode::SelectU32 ? 1 : 0; arg < inst->NumArgs(); ++arg) {
-                if (inst->Arg(arg).IsImmediate()) {
+        pending.push_back({inst, inst->GetOpcode() == IR::Opcode::SelectU32 ? 1U : 0U});
+    };
+    const auto visit = [&](const IR::Inst* root) {
+        if (indices.contains(root)) {
+            return;
+        }
+        enter(root);
+        while (!pending.empty()) {
+            auto& frame = pending.back();
+            const IR::Inst* inst = frame.inst;
+            const auto op = inst->GetOpcode();
+            const bool follows_args = op == IR::Opcode::IAdd32 || op == IR::Opcode::Phi ||
+                                      op == IR::Opcode::SelectU32;
+            if (follows_args && frame.next_arg < inst->NumArgs()) {
+                const auto& arg = inst->Arg(frame.next_arg++);
+                if (arg.IsImmediate()) {
                     continue;
                 }
-                const IR::Inst* next = inst->Arg(arg).InstRecursive();
+                const IR::Inst* next = arg.InstRecursive();
                 if (!indices.contains(next)) {
-                    self(self, next);
-                    lowlinks[inst] = std::min(lowlinks[inst], lowlinks[next]);
+                    enter(next);
                 } else if (on_stack.contains(next)) {
                     lowlinks[inst] = std::min(lowlinks[inst], indices[next]);
                 }
-            }
-        }
-        if (lowlinks[inst] != index) {
-            return;
-        }
-        std::vector<const IR::Inst*> component;
-        const IR::Inst* member;
-        do {
-            member = stack.back();
-            stack.pop_back();
-            on_stack.erase(member);
-            component.push_back(member);
-        } while (member != inst);
-        if (component.size() < 2) {
-            return;
-        }
-        const std::unordered_set<const IR::Inst*> members(component.begin(), component.end());
-        for (const IR::Inst* add : component) {
-            if (add->GetOpcode() != IR::Opcode::IAdd32) {
                 continue;
             }
-            for (size_t arg = 0; arg < add->NumArgs(); ++arg) {
-                const auto& term = add->Arg(arg);
-                if (!term.IsImmediate() && members.contains(term.InstRecursive())) {
+            pending.pop_back();
+            if (!pending.empty()) {
+                const IR::Inst* parent = pending.back().inst;
+                lowlinks[parent] = std::min(lowlinks[parent], lowlinks[inst]);
+            }
+            if (lowlinks[inst] != indices[inst]) {
+                continue;
+            }
+            std::vector<const IR::Inst*> component;
+            const IR::Inst* member;
+            do {
+                member = stack.back();
+                stack.pop_back();
+                on_stack.erase(member);
+                component.push_back(member);
+            } while (member != inst);
+            if (component.size() < 2) {
+                continue;
+            }
+            const std::unordered_set<const IR::Inst*> members(component.begin(), component.end());
+            for (const IR::Inst* add : component) {
+                if (add->GetOpcode() != IR::Opcode::IAdd32) {
                     continue;
                 }
-                ForEachSummedWord(term, [&](StorageBufferAddr word, u32) { result.insert(word); });
+                for (size_t arg = 0; arg < add->NumArgs(); ++arg) {
+                    const auto& term = add->Arg(arg);
+                    if (!term.IsImmediate() && members.contains(term.InstRecursive())) {
+                        continue;
+                    }
+                    ForEachSummedWord(term, [&](StorageBufferAddr word, u32) { result.insert(word); });
+                }
             }
         }
     };
     for (IR::Block* block : program.post_order_blocks) {
         for (IR::Inst& inst : block->Instructions()) {
             if (inst.GetOpcode() == IR::Opcode::Phi) {
-                visit(visit, &inst);
+                visit(&inst);
             }
         }
     }
@@ -1439,15 +1462,15 @@ bool CollectStorageBuffers(IR::Block& block, IR::Inst& inst, StorageInfo& info, 
         }
         storage_buffer = paired_pointer;
     }
-    const auto cached_track = [&](const Bias* bias, auto& cache) {
+    const auto cached_track = [&](const Bias* bias, auto& cache, auto& exhausted) {
         if (low_addr.IsImmediate()) {
-            return Track(low_addr, bias);
+            return Track(low_addr, bias, exhausted);
         }
         const IR::Inst* const start{low_addr.InstRecursive()};
         if (const auto it = cache.find(start); it != cache.end()) {
             return it->second;
         }
-        const std::optional<StorageBufferAddr> result{Track(low_addr, bias)};
+        const std::optional<StorageBufferAddr> result{Track(low_addr, bias, exhausted)};
         cache.emplace(start, result);
         return result;
     };
@@ -1458,11 +1481,11 @@ bool CollectStorageBuffers(IR::Block& block, IR::Inst& inst, StorageInfo& info, 
         storage_buffer = TrackAddend(low_addr);
     }
     if (!storage_buffer) {
-        storage_buffer = cached_track(&nvn_bias, info.biased_tracks);
+        storage_buffer = cached_track(&nvn_bias, info.biased_tracks, info.biased_exhausted);
     }
     if (!storage_buffer) {
         // If it fails, track without a bias
-        storage_buffer = cached_track(nullptr, info.unbiased_tracks);
+        storage_buffer = cached_track(nullptr, info.unbiased_tracks, info.unbiased_exhausted);
         if (!storage_buffer) {
             // If that also fails, use NVN fallbacks
             LOG_WARNING(Shader, "Storage buffer failed to track, using global memory fallbacks");
@@ -2195,10 +2218,11 @@ size_t StorageBufferLimit(const HostTranslateInfo& host_info) {
     return limit;
 }
 
-void JoinStorageInfo(Info& base, Info& source, size_t limit) {
+std::vector<u32> JoinStorageInfo(Info& base, Info& source, size_t limit) {
     base.requires_coherent_global_memory |= source.requires_coherent_global_memory;
     base.native_global_bounds |= source.native_global_bounds;
     auto& descriptors = base.storage_buffers_descriptors;
+    std::vector<u32> bindings;
     for (auto& desc : source.storage_buffers_descriptors) {
         auto it{std::ranges::find_if(descriptors, [&desc](const auto& existing) {
             return desc.cbuf_index == existing.cbuf_index &&
@@ -2214,13 +2238,84 @@ void JoinStorageInfo(Info& base, Info& source, size_t limit) {
                 }
             }
             it->is_written |= desc.is_written;
+            bindings.push_back(static_cast<u32>(it - descriptors.begin()));
             continue;
         }
         if (descriptors.size() >= limit) {
             throw NotImplementedException("Binding {} storage buffers to a stage that binds {}",
                                           descriptors.size() + 1, limit);
         }
+        bindings.push_back(static_cast<u32>(descriptors.size()));
         descriptors.push_back(desc);
+    }
+    return bindings;
+}
+
+void RemapStorageBindings(IR::Program& program, std::span<const u32> bindings) {
+    for (IR::Block* const block : program.post_order_blocks) {
+        for (IR::Inst& inst : block->Instructions()) {
+            // Each takes the binding as its first argument (see GlobalToStorage and Replace).
+            switch (inst.GetOpcode()) {
+            case IR::Opcode::LoadStorageU8:
+            case IR::Opcode::LoadStorageS8:
+            case IR::Opcode::LoadStorageU16:
+            case IR::Opcode::LoadStorageS16:
+            case IR::Opcode::LoadStorage32:
+            case IR::Opcode::LoadStorage64:
+            case IR::Opcode::LoadStorage128:
+            case IR::Opcode::WriteStorageU8:
+            case IR::Opcode::WriteStorageS8:
+            case IR::Opcode::WriteStorageU16:
+            case IR::Opcode::WriteStorageS16:
+            case IR::Opcode::WriteStorage32:
+            case IR::Opcode::WriteStorage64:
+            case IR::Opcode::WriteStorage128:
+            case IR::Opcode::StorageAtomicIAdd32:
+            case IR::Opcode::StorageAtomicSMin32:
+            case IR::Opcode::StorageAtomicUMin32:
+            case IR::Opcode::StorageAtomicSMax32:
+            case IR::Opcode::StorageAtomicUMax32:
+            case IR::Opcode::StorageAtomicInc32:
+            case IR::Opcode::StorageAtomicDec32:
+            case IR::Opcode::StorageAtomicAnd32:
+            case IR::Opcode::StorageAtomicOr32:
+            case IR::Opcode::StorageAtomicXor32:
+            case IR::Opcode::StorageAtomicExchange32:
+            case IR::Opcode::StorageAtomicCompareExchange32:
+            case IR::Opcode::StorageAtomicIAdd64:
+            case IR::Opcode::StorageAtomicSMin64:
+            case IR::Opcode::StorageAtomicUMin64:
+            case IR::Opcode::StorageAtomicSMax64:
+            case IR::Opcode::StorageAtomicUMax64:
+            case IR::Opcode::StorageAtomicAnd64:
+            case IR::Opcode::StorageAtomicOr64:
+            case IR::Opcode::StorageAtomicXor64:
+            case IR::Opcode::StorageAtomicExchange64:
+            case IR::Opcode::StorageAtomicIAdd32x2:
+            case IR::Opcode::StorageAtomicSMin32x2:
+            case IR::Opcode::StorageAtomicUMin32x2:
+            case IR::Opcode::StorageAtomicSMax32x2:
+            case IR::Opcode::StorageAtomicUMax32x2:
+            case IR::Opcode::StorageAtomicAnd32x2:
+            case IR::Opcode::StorageAtomicOr32x2:
+            case IR::Opcode::StorageAtomicXor32x2:
+            case IR::Opcode::StorageAtomicExchange32x2:
+            case IR::Opcode::StorageAtomicAddF32:
+            case IR::Opcode::StorageAtomicAddF16x2:
+            case IR::Opcode::StorageAtomicAddF32x2:
+            case IR::Opcode::StorageAtomicMinF16x2:
+            case IR::Opcode::StorageAtomicMinF32x2:
+            case IR::Opcode::StorageAtomicMaxF16x2:
+            case IR::Opcode::StorageAtomicMaxF32x2:
+                break;
+            default:
+                continue;
+            }
+            const IR::Value binding{inst.Arg(0)};
+            if (binding.IsImmediate() && binding.U32() < bindings.size()) {
+                inst.SetArg(0, IR::Value{bindings[binding.U32()]});
+            }
+        }
     }
 }
 

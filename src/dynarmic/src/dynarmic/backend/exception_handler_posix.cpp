@@ -45,7 +45,7 @@ namespace {
 
 struct CodeBlockInfo {
     u64 size;
-    std::function<FakeCall(u64)> cb;
+    std::function<std::optional<FakeCall>(u64)> cb;
 };
 
 class SigHandler {
@@ -126,21 +126,24 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
     {
         std::shared_lock guard(sig_handler->code_block_infos_mutex);
         if (auto const iter = sig_handler->FindCodeBlockInfo(CTX_PC); iter != sig_handler->code_block_infos.end()) {
-            FakeCall fc = iter->second.cb(CTX_PC);
+            if (const auto fc = iter->second.cb(CTX_PC)) {
 #if defined(ARCHITECTURE_x86_64)
-            CTX_SP -= sizeof(u64);
-            *std::bit_cast<u64*>(CTX_SP) = fc.ret_rip;
-            CTX_PC = fc.call_rip;
+                CTX_SP -= sizeof(u64);
+                *std::bit_cast<u64*>(CTX_SP) = fc->ret_rip;
+                CTX_PC = fc->call_rip;
 #elif defined(ARCHITECTURE_arm64)
-            CTX_PC = fc.call_pc;
+                CTX_PC = fc->call_pc;
 #elif defined(ARCHITECTURE_riscv64)
-            CTX_PC = fc.call_sepc;
+                CTX_PC = fc->call_sepc;
 #elif defined(ARCHITECTURE_loongarch64)
-            CTX_PC = fc.call_pc;
+                CTX_PC = fc->call_pc;
 #else
-            ASSERT(false);
+                ASSERT(false);
 #endif
-            return;
+                return;
+            }
+            LOG_CRITICAL(Core, "{} in JIT code at pc {:#018x} (code block +{:#x}) is not a fastmem access; fault address {}",
+                         sig == SIGSEGV ? "SIGSEGV" : "SIGBUS", CTX_PC, CTX_PC - iter->first, info->si_addr);
         }
     }
     LOG_ERROR(Core, "Unhandled {} at {:#018x}\n", sig == SIGSEGV ? "SIGSEGV" : "SIGBUS", CTX_PC);
@@ -170,7 +173,7 @@ struct ExceptionHandler::Impl final {
         SigHandler::RegisterHandler();
     }
 
-    void SetCallback(std::function<FakeCall(u64)> cb) {
+    void SetCallback(std::function<std::optional<FakeCall>(u64)> cb) {
         sig_handler->AddCodeBlock(offset, CodeBlockInfo{
             .size = size,
             .cb = cb
@@ -213,7 +216,7 @@ bool ExceptionHandler::SupportsFastmem() const noexcept {
     return bool(impl) && sig_handler->SupportsFastmem();
 }
 
-void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
+void ExceptionHandler::SetFastmemCallback(std::function<std::optional<FakeCall>(u64)> cb) {
     impl->SetCallback(cb);
 }
 

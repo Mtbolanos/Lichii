@@ -12,7 +12,7 @@ Qt has "Translation Rules for Plurals", small example
     Building: 2 shaders
 ```
 
-For Yuzu the source language used is English, for all other languages handling of plurals is handled by Qt and the translation collaboration site. Handling plurals in the source language (English) requires special consideration.
+For Lichii the source language used is English, for all other languages handling of plurals is handled by Qt and the translation collaboration site. Handling plurals in the source language (English) requires special consideration.
 
 With CMake flag GENERATE_QT_TRANSLATION a generated_en.ts file is created from the source. It ignored by git (`.gitignore` in the project root). It is placed in this directory so that the relative refrences with the source code is correct.
 

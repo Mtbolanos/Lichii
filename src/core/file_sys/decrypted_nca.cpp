@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <map>
+#include <optional>
 
 #include <openssl/evp.h>
 
@@ -329,6 +331,57 @@ VirtualFile DecryptSection(const NcaReader& reader, const NcaFsHeaderReader& hea
     return pieces.Build(std::move(name), size, raw);
 }
 
+struct Hfs0Entry {
+    s64 offset; // In the gamecard image.
+    s64 size;
+    std::string name;
+};
+
+// The files of the HFS0 at `offset`, which must end at or before `end`.
+std::optional<std::vector<Hfs0Entry>> ReadHfs0(const VirtualFile& image, s64 offset, s64 end) {
+    std::array<u8, 0x10> head{};
+    if (offset < 0 || offset + 0x10 > end ||
+        image->ReadBytes(head.data(), head.size(), offset) != head.size() ||
+        std::memcmp(head.data(), "HFS0", 4) != 0) {
+        return std::nullopt;
+    }
+    u32 count{};
+    u32 strings_size{};
+    std::memcpy(&count, head.data() + 4, 4);
+    std::memcpy(&strings_size, head.data() + 8, 4);
+    constexpr std::size_t EntrySize = 0x40;
+    if (count > 0x10000 || strings_size > 0x100000) {
+        return std::nullopt;
+    }
+    const std::size_t table_size = count * EntrySize;
+    const s64 data = offset + 0x10 + static_cast<s64>(table_size + strings_size);
+    std::vector<u8> table(table_size + strings_size);
+    if (data > end || image->ReadBytes(table.data(), table.size(), offset + 0x10) != table.size()) {
+        return std::nullopt;
+    }
+    std::vector<Hfs0Entry> entries;
+    for (std::size_t i = 0; i < count; ++i) {
+        u64 relative{};
+        u64 size{};
+        u32 name_offset{};
+        std::memcpy(&relative, table.data() + i * EntrySize, 8);
+        std::memcpy(&size, table.data() + i * EntrySize + 8, 8);
+        std::memcpy(&name_offset, table.data() + i * EntrySize + 16, 4);
+        if (name_offset >= strings_size || relative > static_cast<u64>(end - data) ||
+            size > static_cast<u64>(end - data) - relative) {
+            return std::nullopt;
+        }
+        const auto* name = reinterpret_cast<const char*>(table.data() + table_size + name_offset);
+        const auto length = strnlen(name, strings_size - name_offset);
+        if (length == strings_size - name_offset) {
+            return std::nullopt;
+        }
+        entries.push_back(
+            {data + static_cast<s64>(relative), static_cast<s64>(size), std::string(name, length)});
+    }
+    return entries;
+}
+
 } // namespace
 
 VirtualFile BuildPartitionFile(std::string name, const std::vector<VirtualFile>& files) {
@@ -579,6 +632,90 @@ VirtualFile OpenDecryptedPackage(VirtualFile package, std::string& error) {
         }
     }
     return BuildPartitionFile(package->GetName(), files);
+}
+
+VirtualFile OpenDecryptedGamecard(VirtualFile image, std::string& error) {
+    std::array<u8, 0x138> header{};
+    if (image == nullptr || image->ReadBytes(header.data(), header.size(), 0) != header.size() ||
+        std::memcmp(header.data() + 0x100, "HEAD", 4) != 0) {
+        error = "not a gamecard image";
+        return nullptr;
+    }
+    const auto size = static_cast<s64>(image->GetSize());
+    u64 root{};
+    std::memcpy(&root, header.data() + 0x130, 8);
+    const auto partitions = root < static_cast<u64>(size)
+                                ? ReadHfs0(image, static_cast<s64>(root), size)
+                                : std::nullopt;
+    if (!partitions) {
+        error = "invalid gamecard partitions";
+        return nullptr;
+    }
+
+    // Offset in the image -> what replaces the bytes there, of the same size.
+    std::map<s64, VirtualFile> replaced;
+    replaced.emplace(0x100,
+                     std::make_shared<VectorVfsFile>(std::vector<u8>{'D', 'X', 'C', 'I'}, "magic"));
+    // The files of every partition but update, which is the console firmware and stays as it is.
+    std::vector<Hfs0Entry> files;
+    for (const auto& partition : *partitions) {
+        if (partition.name == "update") {
+            continue;
+        }
+        const auto entries = ReadHfs0(image, partition.offset, partition.offset + partition.size);
+        if (!entries) {
+            error = fmt::format("invalid {} partition", partition.name);
+            return nullptr;
+        }
+        files.insert(files.end(), entries->begin(), entries->end());
+    }
+    // Tickets first: an NCA may come before its ticket.
+    for (const auto& entry : files) {
+        if (entry.name.ends_with(".tik") &&
+            !Core::Crypto::KeyManager::Instance().AddTicket(Core::Crypto::Ticket::Read(
+                std::make_shared<OffsetVfsFile>(image, entry.size, entry.offset)))) {
+            LOG_WARNING(Common_Filesystem, "Could not load ticket {}", entry.name);
+        }
+    }
+    for (const auto& entry : files) {
+        if (entry.name.ends_with(".ncz")) {
+            error = "compressed NCZ content is not supported: decompress the package first";
+            return nullptr;
+        }
+        if (!entry.name.ends_with(".nca")) {
+            continue;
+        }
+        auto plain = OpenDecryptedNca(
+            std::make_shared<OffsetVfsFile>(image, entry.size, entry.offset, entry.name), error);
+        if (plain == nullptr) {
+            error = fmt::format("{}: {}", entry.name, error);
+            return nullptr;
+        }
+        // A sparse NCA grows when decrypted; it cannot keep its place in the image.
+        if (plain->GetSize() != static_cast<std::size_t>(entry.size)) {
+            error = fmt::format("{}: the decrypted NCA has another size (sparse NCA)", entry.name);
+            return nullptr;
+        }
+        replaced.insert_or_assign(entry.offset, std::move(plain));
+    }
+
+    std::vector<VirtualFile> parts;
+    s64 at = 0;
+    for (auto& [offset, file] : replaced) {
+        if (offset < at) {
+            error = "overlapping gamecard files";
+            return nullptr;
+        }
+        if (offset > at) {
+            parts.push_back(std::make_shared<OffsetVfsFile>(image, offset - at, at));
+        }
+        at = offset + static_cast<s64>(file->GetSize());
+        parts.push_back(std::move(file));
+    }
+    if (at < size) {
+        parts.push_back(std::make_shared<OffsetVfsFile>(image, size - at, at));
+    }
+    return ConcatenatedVfsFile::MakeConcatenatedFile(image->GetName(), std::move(parts));
 }
 
 } // namespace FileSys

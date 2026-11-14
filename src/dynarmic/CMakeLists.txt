@@ -34,7 +34,7 @@ option(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT "Enables support for systems that requ
 
 option(DYNARMIC_IGNORE_ASSERTS "Ignore asserts" ON)
 option(DYNARMIC_TESTS_USE_UNICORN "Enable fuzzing tests against unicorn" OFF)
-CMAKE_DEPENDENT_OPTION(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF "NOT YUZU_DISABLE_LLVM" OFF)
+CMAKE_DEPENDENT_OPTION(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF "NOT LICHII_DISABLE_LLVM" OFF)
 
 option(DYNARMIC_INSTALL "Install dynarmic headers and CMake files" OFF)
 option(DYNARMIC_USE_BUNDLED_EXTERNALS "Use all bundled externals (useful when e.g. cross-compiling)" OFF)

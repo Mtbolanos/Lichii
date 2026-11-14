@@ -4,7 +4,6 @@
 // SPDX-FileCopyrightText: Copyright 2024 Torzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -152,6 +151,10 @@ ENUM(ResolutionSetup, Res1_4X, Res1_2X, Res3_4X, Res1X, Res5_4X, Res3_2X, Res2X,
 ENUM(ScalingFilter, NearestNeighbor, Bilinear, Bicubic, Gaussian, Lanczos, ScaleForce, Fsr, Area, ZeroTangent, BSpline, Mitchell, Spline1, Mmpx, Sgsr, SgsrEdge, Fsr3);
 ENUM(AntiAliasing, None, Fxaa, Smaa);
 ENUM(OotAntiAliasing, Game, NoSharpening);
+ENUM(NvidiaDlssQuality, Automatic, Native, Quality, Balanced, Performance, UltraPerformance);
+ENUM(NvidiaDlssPreset, M, NvidiaDefault, E, F, J, K, L);
+ENUM(HdrMode, Off, On, Auto);
+ENUM(HdrSwapchain, Hdr10, Scrgb);
 ENUM(AspectRatio, R16_9, R4_3, R21_9, R16_10, Stretch);
 ENUM(ConsoleMode, Handheld, Docked);
 ENUM(AppletMode, HLE, LLE, Disabled);
@@ -165,7 +168,7 @@ ENUM(ExtendedDynamicState, Disabled, EDS1, EDS2, EDS3);
 ENUM(GpuLogLevel, Off, Errors, Standard, Verbose, All)
 ENUM(GameListMode, TreeView, GridView, CarouselView);
 ENUM(SpeedMode, Standard, Turbo, Slow);
-ENUM(FrameGenType, Lsfg, Fsr3);
+ENUM(FrameGenType, Lsfg, Fsr3, NvidiaDlssG);
 
 template <typename Type>
 inline std::string_view CanonicalizeEnum(Type id) {

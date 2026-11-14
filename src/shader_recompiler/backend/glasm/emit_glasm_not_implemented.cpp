@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "shader_recompiler/backend/glasm/emit_glasm_instructions.h"
@@ -8,6 +7,18 @@
 namespace Shader::Backend::GLASM {
 
 #define NotImplemented() throw NotImplementedException("GLASM instruction {}", __LINE__)
+
+void EmitBarrierVoteInit(EmitContext& ctx) {
+    NotImplemented();
+}
+
+void EmitBarrierVote(EmitContext& ctx) {
+    NotImplemented();
+}
+
+void EmitVotedBarrier(EmitContext& ctx) {
+    NotImplemented();
+}
 
 void EmitGetRegister(EmitContext& ctx) {
     NotImplemented();

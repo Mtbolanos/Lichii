@@ -19,8 +19,6 @@ namespace {
 constexpr u32 GUEST_WARP_LANES = 32;
 constexpr u32 LayoutRowMajor = 0;
 constexpr u32 LayoutColumnMajor = 1;
-// Subgroup scope, acquire-release on workgroup memory.
-constexpr u32 SubgroupBarrierSemantics = 0x8 | 0x100;
 
 // A cooperative matrix needs its whole subgroup: every row of the workgroup fills whole warps and
 // the pipeline is created with full subgroups. Cooperative matrices also need the Vulkan memory
@@ -35,7 +33,7 @@ bool SupportsCooperativeHmma(const IR::Program& program) {
 
 // Sirit lacks the cooperative matrix instructions. They are emitted as instructions with the same
 // word layout, and PatchCooperativeHmma replaces the opcodes after assembly: OpTypeStruct for the
-// types, OpSelect for the multiply-add, OpBitFieldUExtract for a load and a 5-word OpStore of a
+// types, OpSelect for the multiply-add, an OpLoad of a matrix for a load and a 7-word OpStore of a
 // multiply-add result for a store. The type operands are constants that no real structure has as
 // members. B and the accumulator are 16 rows by the given columns.
 CooperativeHmmaTypes DefineCooperativeHmmaTypes(Sirit::Module& module, Id u32_type, u32 columns,
@@ -113,7 +111,9 @@ Id SharedWord(EmitContext& ctx, Id index) {
 
 void SubgroupBarrier(EmitContext& ctx) {
     const Id scope{ctx.Const(static_cast<u32>(spv::Scope::Subgroup))};
-    ctx.OpControlBarrier(scope, scope, ctx.Const(SubgroupBarrierSemantics));
+    ctx.OpControlBarrier(scope, scope,
+                         ctx.BarrierSemantics(spv::MemorySemanticsMask::AcquireRelease |
+                                              spv::MemorySemanticsMask::WorkgroupMemory));
 }
 
 // One HMMA.16816.F16 (or .1688 with zero upper halves) of a 32-lane warp on 16x16x16 matrices: the
@@ -138,7 +138,7 @@ Id EmitCooperativeTensorMulAdd(EmitContext& ctx, const CooperativeHmmaTypes& typ
     const Id row_lo = add(ctx.OpShiftLeftLogical(u32ty, g, imm(3)), t);  // row g,   cols 2t
     const Id row_hi = add(row_lo, imm(64));                                // row g+8, cols 2t
     const auto store = [&](Id tile, Id word, Id value) {
-        ctx.OpStore(SharedWord(ctx, add(tile, word)), value);
+        ctx.StoreShared(SharedWord(ctx, add(tile, word)), value);
     };
     store(tile_a, row_lo, ctx.OpCompositeExtract(u32ty, a, 0));
     store(tile_a, row_hi, ctx.OpCompositeExtract(u32ty, a, 1));
@@ -153,26 +153,46 @@ Id EmitCooperativeTensorMulAdd(EmitContext& ctx, const CooperativeHmmaTypes& typ
     store(tile_c, row_hi, ctx.OpCompositeExtract(u32ty, c, 1));
     SubgroupBarrier(ctx);
     const Id stride = imm(8);
-    // OpCooperativeMatrixLoadKHR %type %pointer %layout %stride after PatchCooperativeHmma.
+    const auto visible = ctx.SharedMemoryAccess(spv::MemoryAccessMask::MakePointerVisible);
+    const auto available = ctx.SharedMemoryAccess(spv::MemoryAccessMask::MakePointerAvailable);
+    // OpCooperativeMatrixLoadKHR %type %pointer %layout %stride %memory_operands after
+    // PatchCooperativeHmma.
     const auto load = [&](Id type, Id tile, u32 layout) {
-        return ctx.OpBitFieldUExtract(type, SharedWord(ctx, tile), imm(layout), stride);
+        const std::array<Sirit::MemoryAccessLiteral, 4> operands{imm(layout).value, stride.value,
+                                                                 visible[0], visible[1]};
+        return ctx.OpLoad(type, SharedWord(ctx, tile),
+                          std::span<const Sirit::MemoryAccessLiteral>(operands));
     };
     const Id matrix_a = load(types.matrix_a, tile_a, LayoutRowMajor);
     const Id matrix_b = load(types.matrix_b, tile_b, LayoutColumnMajor);
     const Id matrix_c = load(types.matrix_c, tile_c, LayoutRowMajor);
     // OpCooperativeMatrixMulAddKHR and OpCooperativeMatrixStoreKHR %pointer %object %layout
-    // %stride after PatchCooperativeHmma.
+    // %stride %memory_operands after PatchCooperativeHmma.
     const Id matrix_d = ctx.OpSelect(types.matrix_c, matrix_a, matrix_b, matrix_c);
-    const std::array<Sirit::MemoryAccessLiteral, 2> store_operands{imm(LayoutRowMajor).value,
-                                                                   stride.value};
+    const std::array<Sirit::MemoryAccessLiteral, 4> store_operands{
+        imm(LayoutRowMajor).value, stride.value, available[0], available[1]};
     ctx.OpStore(SharedWord(ctx, tile_c), matrix_d,
                 std::span<const Sirit::MemoryAccessLiteral>(store_operands));
     SubgroupBarrier(ctx);
-    const Id d0 = ctx.OpLoad(u32ty, SharedWord(ctx, add(tile_c, row_lo)));
-    const Id d1 = ctx.OpLoad(u32ty, SharedWord(ctx, add(tile_c, row_hi)));
+    const Id d0 = ctx.LoadShared(u32ty, SharedWord(ctx, add(tile_c, row_lo)));
+    const Id d1 = ctx.LoadShared(u32ty, SharedWord(ctx, add(tile_c, row_hi)));
     return ctx.OpCompositeConstruct(ctx.U32[2], d0, d1);
 }
 } // Anonymous namespace
+
+bool UsesCooperativeHmma(const Profile& profile, const IR::Program& program) {
+    if (!profile.support_cooperative_hmma || !SupportsCooperativeHmma(program)) {
+        return false;
+    }
+    for (const auto* block : program.blocks) {
+        for (const auto& inst : block->Instructions()) {
+            if (inst.GetOpcode() == IR::Opcode::TensorMulAdd && inst.Flags<u32>() == 16) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 std::optional<u32> ReserveCooperativeHmmaScratch(const Profile& profile, IR::Program& program) {
     if (!profile.support_cooperative_hmma_16x16x16 || !SupportsCooperativeHmma(program)) {
@@ -201,6 +221,25 @@ std::optional<u32> ReserveCooperativeHmmaScratch(const Profile& profile, IR::Pro
     return scratch_offset / 4U;
 }
 
+namespace {
+// Whether the entry point can request fp16 round-to-nearest-even and denorm preserve, so that an
+// fp32 -> fp16 -> fp32 conversion rounds like the software rounding below. The two agree for
+// every non-NaN fp32 input; a NaN stays a NaN.
+bool CanRoundHalfNatively(const Profile& profile, const Info& info) {
+    if (!profile.support_float_controls || profile.has_broken_fp16_float_controls ||
+        !profile.support_fp16_rounding_rte || !profile.support_fp16_denorm_preserve ||
+        !profile.fp16_float_controls_independent_of_fp32 || info.uses_fp16_denorms_flush) {
+        return false;
+    }
+    if (profile.support_separate_denorm_behavior && profile.support_separate_rounding_mode) {
+        return true;
+    }
+    // fp64 has to take the same modes, which match how the guest treats fp64 by default.
+    return profile.fp16_float_controls_shared_with_fp64 && profile.support_fp64_rounding_rte &&
+           profile.support_fp64_denorm_preserve;
+}
+} // Anonymous namespace
+
 void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program) {
     if (ctx.tensor_scratch_word) {
         ctx.cooperative_hmma =
@@ -212,20 +251,17 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
         ctx.interfaces.push_back(ctx.tensor_subgroup_id);
         return;
     }
-    const bool cooperative{ctx.profile.support_cooperative_hmma && SupportsCooperativeHmma(program)};
+    if (UsesCooperativeHmma(ctx.profile, program)) {
+        ctx.cooperative_hmma =
+            DefineCooperativeHmmaTypes(ctx, ctx.U32[1], 8, ctx.profile.supported_spirv);
+    }
     std::array<bool, 2> needed{};
     for (const auto* block : program.blocks) {
         for (const auto& inst : block->Instructions()) {
             if (inst.GetOpcode() != IR::Opcode::TensorMulAdd || inst.Flags<u32>() == 0) continue;
             const u32 depth = inst.Flags<u32>();
             if (depth != 8 && depth != 16) throw LogicError("Invalid software HMMA depth");
-            if (depth == 16 && cooperative) {
-                if (!ctx.cooperative_hmma) {
-                    ctx.cooperative_hmma =
-                        DefineCooperativeHmmaTypes(ctx, ctx.U32[1], 8, ctx.profile.supported_spirv);
-                }
-                continue;
-            }
+            if (depth == 16 && ctx.cooperative_hmma) continue;
             needed[depth == 16] = true;
         }
     }
@@ -237,11 +273,24 @@ void DefineSoftwareMatrixFunctions(EmitContext& ctx, const IR::Program& program)
             ctx.profile.has_broken_spirv_subgroup_shuffle)
             throw NotImplementedException("Software HMMA requires subgroup shuffle support");
         const Id u32ty = ctx.U32[1], f32ty = ctx.F32[1];
+        ctx.native_half_rounding = CanRoundHalfNatively(ctx.profile, program.info);
+        const Id f16ty = ctx.native_half_rounding ? ctx.TypeFloat(16) : Id{};
+        if (ctx.native_half_rounding) {
+            ctx.AddCapability(spv::Capability::Float16);
+        }
         const auto imm = [&](u32 v) { return ctx.Const(v); };
         const auto add = [&](Id a, Id b) { return ctx.OpIAdd(u32ty, a, b); };
         const auto and_ = [&](Id a, u32 b) { return ctx.OpBitwiseAnd(u32ty, a, imm(b)); };
         const auto unpack = [&](Id v) { return ctx.OpUnpackHalf2x16(ctx.F32[2], v); };
         const auto round_half = [&](Id value) {
+            if (ctx.native_half_rounding) {
+                // Without NoContraction, RADV folds the conversion pair away and nothing rounds.
+                const Id half = ctx.OpFConvert(f16ty, value);
+                ctx.Decorate(half, spv::Decoration::NoContraction);
+                const Id widened = ctx.OpFConvert(f32ty, half);
+                ctx.Decorate(widened, spv::Decoration::NoContraction);
+                return widened;
+            }
             // Do not express the intermediate rounding as unpack(pack(value)): drivers may
             // eliminate that round trip. Round normal significands explicitly, ties to even;
             // half subnormals lie on the exactly representable 2^-24 grid.
@@ -382,9 +431,9 @@ void PatchCooperativeHmma(std::vector<u32>& code, const CooperativeHmmaTypes& ty
         } else if (opcode == spv::Op::OpSelect && code[offset + 1] == types.matrix_c.value) {
             replacement = spv::Op::OpCooperativeMatrixMulAddKHR;
             products.push_back(code[offset + 2]);
-        } else if (opcode == spv::Op::OpBitFieldUExtract && is_matrix(code[offset + 1])) {
+        } else if (opcode == spv::Op::OpLoad && is_matrix(code[offset + 1])) {
             replacement = spv::Op::OpCooperativeMatrixLoadKHR;
-        } else if (opcode == spv::Op::OpStore && word_count == 5 &&
+        } else if (opcode == spv::Op::OpStore && word_count == 7 &&
                    std::ranges::find(products, code[offset + 2]) != products.end()) {
             replacement = spv::Op::OpCooperativeMatrixStoreKHR;
         }

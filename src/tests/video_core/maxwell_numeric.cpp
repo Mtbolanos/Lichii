@@ -13,9 +13,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "shader_recompiler/backend/spirv/emit_spirv.h"
+#ifdef HAS_OPENGL
 #include "shader_recompiler/backend/glasm/emit_glasm.h"
 #include "shader_recompiler/backend/glsl/emit_glsl.h"
-#include "shader_recompiler/backend/spirv/emit_spirv.h"
+#endif
 #include "shader_recompiler/frontend/ir/program.h"
 #include "shader_recompiler/frontend/maxwell/translate/impl/impl.h"
 #include "shader_recompiler/ir_opt/passes.h"
@@ -435,7 +437,12 @@ TEST_CASE("Maxwell F2I byte destinations saturate and extend", "[shader][maxwell
 
 TEST_CASE("Maxwell byte conversions emit with native and lowered float64",
           "[shader][maxwell][numeric_backend]") {
-    for (u32 backend = 0; backend < 3; ++backend) {
+#ifdef HAS_OPENGL
+    constexpr u32 backends = 3;
+#else
+    constexpr u32 backends = 1;
+#endif
+    for (u32 backend = 0; backend < backends; ++backend) {
         for (bool float64 : {false, true}) {
             for (u32 format : {1U, 2U, 3U}) {
                 for (bool sign : {false, true}) {
@@ -479,13 +486,16 @@ TEST_CASE("Maxwell byte conversions emit with native and lowered float64",
                     profile.support_int64 = true;
                     if (backend == 0) {
                         REQUIRE_FALSE(Shader::Backend::SPIRV::EmitSPIRV(profile, program).empty());
-                    } else if (backend == 1) {
+                    }
+#ifdef HAS_OPENGL
+                    else if (backend == 1) {
                         REQUIRE_FALSE(Shader::Backend::GLSL::EmitGLSL(profile, program).empty());
                     } else {
                         Shader::RuntimeInfo runtime{};
                         runtime.glasm_use_storage_buffers = true;
                         REQUIRE_FALSE(Shader::Backend::GLASM::EmitGLASM(profile, runtime, program).empty());
                     }
+#endif
                 }
             }
         }

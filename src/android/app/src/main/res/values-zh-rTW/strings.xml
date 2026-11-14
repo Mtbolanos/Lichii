@@ -242,21 +242,18 @@
     <string name="select_games_folder_description">允許 Eden 尋找您的遊戲檔案</string>
     <string name="add_games_warning">跳過選擇遊戲資料夾？</string>
     <string name="add_games_warning_description">如果未選擇遊戲資料夾，遊戲將不會顯示在遊戲清單</string>
-    <string name="add_games_warning_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-games</string>
     <string name="home_search_games">搜尋遊戲</string>
     <string name="search_settings">搜尋設定</string>
     <string name="install_prod_keys">安裝 prod.keys</string>
     <string name="install_prod_keys_description">需要用來解密零售遊戲</string>
     <string name="install_prod_keys_warning">跳過安裝金鑰？</string>
     <string name="install_prod_keys_warning_description">模擬零售遊戲需要有效的金鑰，如果不安裝將僅有自製遊戲可以運作</string>
-    <string name="install_prod_keys_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="install_firmware_warning">跳過安裝韌體？</string>
     <string name="emulator_data">設定模擬器資料</string>
     <string name="emulator_data_description">模擬器需要金鑰才能正常執行，同時建議安裝韌體以啟動 QLaunch 小程式</string>
     <string name="permissions">授予權限</string>
     <string name="permissions_description">授予權限以使用模擬器的特定功能</string>
     <string name="install_firmware_warning_description">許多遊戲需要韌體才能正常運作</string>
-    <string name="install_firmware_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="notifications">通知</string>
     <string name="notifications_description">使用下方的按鈕授予通知權限</string>
     <string name="permission_denied">權限遭拒</string>
@@ -413,11 +410,10 @@
     <string name="install_game_content_success">遊戲內容已成功安裝</string>
     <string name="install_game_content_success_install">%1$d 安裝成功</string>
     <string name="install_game_content_success_overwrite">%1$d 覆寫成功</string>
-    <string name="install_game_content_help_link">https://yuzu-mirror.github.io/help/quickstart/#dumping-installed-updates</string>
     <string name="custom_driver_not_supported">您的裝置不支援自訂驅動程式</string>
     <string name="custom_driver_not_supported_description">此裝置不支援注入自訂驅動程式\n請以後再來查看是否已新增支援！</string>
-    <string name="manage_yuzu_data">管理 Eden 資料</string>
-    <string name="manage_yuzu_data_description">安裝韌體、金鑰，導入/導出使用者資料及安裝其它項目！</string>
+    <string name="manage_lichii_data">管理 Eden 資料</string>
+    <string name="manage_lichii_data_description">安裝韌體、金鑰，導入/導出使用者資料及安裝其它項目！</string>
     <string name="game_folders">遊戲資料夾</string>
     <string name="deep_scan">深度掃描</string>
     <string name="add_game_folder">新增遊戲資料夾</string>
@@ -435,7 +431,6 @@
 
     <string name="keys_missing">缺少 prod.keys</string>
     <string name="keys_missing_description">無法解密韌體和零售遊戲</string>
-    <string name="keys_missing_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-decryption-keys</string>
 
     <string name="uninstall_firmware">解除安裝韌體</string>
     <string name="uninstall_firmware_description">解除安裝韌體將從裝置中刪除它並可能影響遊戲相容性</string>
@@ -456,7 +451,7 @@
     <string name="applets_description">使用已安裝的韌體啟動系統小程式</string>
     <string name="applets_error_firmware">未安裝韌體</string>
     <string name="applets_error_applet">無法使用小程式</string>
-    <string name="applets_error_description"><![CDATA[請確定您的<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a>檔案和<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-system-firmware\">韌體</a>已安裝並重試]]></string>
+    <string name="applets_error_description"><![CDATA[請確定您的prod.keys檔案和韌體已安裝並重試]]></string>
     <string name="album_applet">相簿</string>
     <string name="album_applet_description">使用系統相片檢視器查看儲存在使用者螢幕截圖資料夾中的影像</string>
     <string name="mii_edit_applet">Mii 編輯</string>
@@ -481,7 +476,7 @@
     <string name="user_data_description">匯入/匯出所有應用程式資料\n\n匯入使用者資料時，現有的使用者資料將被取代！\n\n直接從 Citron 匯入使用者資料可能會出現問題，建議手動匯入所有所需資料</string>
     <string name="exporting_user_data">正在匯出使用者資料…</string>
     <string name="importing_user_data">正在匯入使用者資料…</string>
-    <string name="invalid_yuzu_backup">無效的 Eden 備份</string>
+    <string name="invalid_lichii_backup">無效的 Eden 備份</string>
     <string name="user_data_export_success">使用者資料匯出成功</string>
     <string name="user_data_import_success">使用者資料匯入成功</string>
     <string name="user_data_export_cancelled">匯出已取消</string>
@@ -917,8 +912,7 @@
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">您的 ROM 已加密</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[請按照指南重新轉儲您的<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">遊戲卡</a>或<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">數位版遊戲</a>。]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[請確保您的 <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> 檔案已安裝，讓遊戲可以正常解密]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[請確保您的 prod.keys 檔案已安裝，讓遊戲可以正常解密]]></string>
     <string name="loader_error_video_core">初始化視訊核心時發生錯誤</string>
     <string name="loader_error_video_core_description">這經常是因為不相容的 GPU 驅動程式造成，安裝自訂 GPU 驅動程式可能會解決此問題。</string>
     <string name="loader_error_file_not_found">ROM 檔案不存在</string>

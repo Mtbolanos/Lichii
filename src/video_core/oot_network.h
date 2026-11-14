@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <array>
 #include <atomic>
 #include <mutex>
 
@@ -12,12 +13,10 @@
 
 // The Legend of Zelda: Ocarina of Time's anti-aliasing. After tonemapping, the game runs a
 // single-frame tensor network on the tonemapped image and an output pass that sharpens the result
-// hard. With the "Ocarina of Time anti-aliasing" setting at No sharpening, the network is skipped
-// and its output pass is replaced by a copy of the tonemapped image
-// (docs/nx2/oot-network-bypass.md).
+// hard. The No sharpening setting replaces the output pass with a copy of the tonemapped image
+// and can also skip the update's network passes (docs/nx2/oot-network-bypass.md).
 //
-// Shader hashes, native program keys and constant buffer offsets are those of the game's main
-// with build id E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348; a game update needs them re-checked.
+// The update and the base game use different native output programs.
 namespace VideoCommon::OotNetwork {
 
 constexpr u64 ProgramId = 0x0400486024DEC000ULL;
@@ -26,6 +25,20 @@ constexpr u64 ProgramId = 0x0400486024DEC000ULL;
 constexpr u64 PrepassProgramKey = 0x8475d671e6967428ULL;
 constexpr u64 NetworkProgramKey = 0x42593194bb0b2b32ULL;
 constexpr u64 OutputProgramKey = 0xda6df3e54c716df2ULL;
+
+// Base v65536 output passes sample cb0+0xc0 and store to cb0+0xd0. Match them
+// before translation because the translator may reject their per-tap gathers.
+struct BaseOutputProgram {
+    u32 first_word;
+    u32 size;
+    u64 key;
+};
+
+constexpr std::array BaseOutputPrograms{
+    BaseOutputProgram{0x006b7919, 0x57a0, 0x1e49acb491d9fb59ULL},
+    BaseOutputProgram{0x00397919, 0x6430, 0x2142429c43740683ULL},
+    BaseOutputProgram{0x003c7919, 0x6690, 0xd01939a775921a6cULL},
+};
 
 /// Constant buffer 0 offset of the output pass's texture handle for the B10G11R11 image it writes
 /// (the scene image the rest of the frame uses).

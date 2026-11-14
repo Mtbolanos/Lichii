@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
@@ -195,12 +194,14 @@ private:
         u64 unknown, AppletResourceUserId aruid,
         InArray<Core::HID::VibrationDeviceHandle, BufferAttr_HipcPointer> vibration_handles,
         InArray<Core::HID::VibrationValue, BufferAttr_HipcPointer> vibration_values);
-    // 213 (32 bytes, aruid): sent per controller every frame by Kirby Air Riders (tens of
-    // thousands of auto stub log lines a run); no reply data. Accepted and dropped.
-    Result Unknown213();
-    // 220 (16 bytes, aruid): replies one byte (meaning unknown); answer 0 instead of leaving it to
-    // the message buffer's leftovers.
-    Result Unknown220(Out<u8> out);
+    // 213: one handle and value with a mode, sent per controller every frame by Kirby Air Riders.
+    // Its layout is only known from guesses, so the raw bytes are decoded in the handler.
+    Result SendVibrationValueInMode(std::array<u8, 0x18> raw, ClientAppletResourceUserId aruid);
+    // 220: whether the Switch 2 vibration device behind a handle is mounted, as 211 answers it for
+    // Switch 1 devices.
+    Result IsOunceVibrationDeviceMounted(Out<bool> out_is_mounted,
+                                         Core::HID::VibrationDeviceHandle vibration_device_handle,
+                                         ClientAppletResourceUserId aruid);
     Result ActivateConsoleSixAxisSensor(ClientAppletResourceUserId aruid);
     Result StartConsoleSixAxisSensor(Core::HID::ConsoleSixAxisSensorHandle console_sixaxis_handle,
                                      ClientAppletResourceUserId aruid);

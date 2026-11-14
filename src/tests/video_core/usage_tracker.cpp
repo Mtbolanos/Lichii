@@ -171,3 +171,41 @@ TEST_CASE("Usage tracker never misses an overlapping byte range",
         }
     }
 }
+
+TEST_CASE("Usage tracker resets leave every word as a fresh tracker's",
+          "[video_core][usage_tracker]") {
+    // Resets clear only the words tracked since the last one: compare every word with a tracker
+    // that saw only the tracks since then, over buffers up to 1.2 MiB and every range kind.
+    for (u64 seed = 1; seed <= 40; ++seed) {
+        std::mt19937_64 rng{seed};
+        const u64 buffer_size = 4096 * (1 + rng() % 300) + rng() % 4096;
+        VideoCommon::UsageTracker tracker{buffer_size};
+        VideoCommon::UsageTracker reference{buffer_size};
+        const auto range = [&] {
+            const u64 offset = rng() % buffer_size;
+            const u64 limit = buffer_size - offset;
+            const u64 kind = rng() % 4;
+            const u64 size = kind == 0   ? 1 + rng() % 64
+                             : kind == 1 ? 1 + rng() % 8192
+                             : kind == 2 ? 1 + rng() % (64 * 4096)
+                                         : limit;
+            return std::pair{offset, (std::min)(size, limit)};
+        };
+        for (int step = 0; step < 2000; ++step) {
+            const u64 op = rng() % 16;
+            if (op < 8) {
+                const auto [offset, size] = range();
+                tracker.Track(offset, size);
+                reference.Track(offset, size);
+            } else if (op < 9) {
+                tracker.Reset();
+                reference = VideoCommon::UsageTracker{buffer_size};
+                REQUIRE(std::ranges::all_of(tracker.Pages(), [](u64 word) { return word == 0; }));
+            } else {
+                const auto [offset, size] = range();
+                REQUIRE(tracker.IsUsed(offset, size) == reference.IsUsed(offset, size));
+            }
+            REQUIRE(std::ranges::equal(tracker.Pages(), reference.Pages()));
+        }
+    }
+}

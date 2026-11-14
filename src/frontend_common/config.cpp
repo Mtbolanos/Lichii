@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <cerrno>
+#include <cstdio>
 #include <filesystem>
 #include "common/fs/fs.h"
 #include "common/fs/path_util.h"
@@ -14,9 +16,16 @@
 #include "common/settings_common.h"
 #include "common/settings_enums.h"
 #include "config.h"
+#include "frontend_common/profile_import.h"
 
 #ifdef _WIN32
+#include <io.h>
+#include <process.h>
 #include "common/string_util.h"
+#else
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #endif
 
 #include <boost/algorithm/string/replace.hpp>
@@ -29,6 +38,7 @@ Config::Config(const ConfigType config_type)
     : type(config_type), global{config_type == ConfigType::GlobalConfig} {}
 
 void Config::Initialize(const std::string& config_name) {
+    FrontendCommon::CheckLegacyProfileBeforeConfig();
     const std::filesystem::path fs_config_loc = FS::GetEdenPath(FS::EdenPath::ConfigDir);
     const auto config_file = fmt::format("{}.ini", config_name);
 
@@ -54,6 +64,7 @@ void Config::Initialize(const std::string& config_name) {
 }
 
 void Config::Initialize(const std::optional<std::string> config_path) {
+    FrontendCommon::CheckLegacyProfileBeforeConfig();
     const std::filesystem::path default_sdl_config_path =
         FS::GetEdenPath(FS::EdenPath::ConfigDir) / "sdl2-config.ini";
     config_loc = config_path.value_or(FS::PathToUTF8String(default_sdl_config_path));
@@ -76,24 +87,94 @@ void Config::WriteToIni() const {
         break;
     }
     LOG_INFO(Config, "Writing {} configuration to: {}", config_type, config_loc);
-    FILE* fp = nullptr;
-#ifdef _WIN32
-    fp = _wfopen(Common::UTF8ToUTF16W(config_loc).data(), L"wb");
-#else
-    fp = fopen(config_loc.c_str(), "wb");
-#endif
 
+    // The config is written to a temporary file beside it, which replaces it only after a complete
+    // write: a process that ends during the save keeps the old config. A config behind a symlink
+    // is written at the link's target, and a config that exists but can't be written is kept.
+    std::error_code error;
+    std::filesystem::path target{FS::ToU8String(config_loc)};
+    for (int links = 0; links < 40 && std::filesystem::is_symlink(target, error); ++links) {
+        const std::filesystem::path link = std::filesystem::read_symlink(target, error);
+        if (error) {
+            break;
+        }
+        target = link.is_absolute() ? link : target.parent_path() / link;
+    }
+#ifdef _WIN32
+    const bool writable = _waccess(target.c_str(), 2) == 0;
+#else
+    const bool writable = access(target.c_str(), W_OK) == 0;
+#endif
+    if (!writable && errno != ENOENT) {
+        LOG_ERROR(Frontend, "Config file could not be saved: it can't be written");
+        return;
+    }
+    // A name of its own per save, created exclusively and owner-only, so overlapping saves don't
+    // write into each other's file and the contents are never readable by others.
+    // A name left by an earlier process with the same id is skipped, not removed.
+    static std::atomic<unsigned> save_serial{};
+    std::filesystem::path temporary;
+    FILE* fp = nullptr;
+    for (int attempt = 0; attempt < 16 && fp == nullptr; ++attempt) {
+        temporary = target;
+#ifdef _WIN32
+        temporary += fmt::format(".tmp.{}.{}", _getpid(), save_serial++);
+        fp = _wfopen(temporary.c_str(), L"wbx");
+#else
+        temporary += fmt::format(".tmp.{}.{}", getpid(), save_serial++);
+        const int fd = open(temporary.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+        fp = fd < 0 ? nullptr : fdopen(fd, "wb");
+        if (fd >= 0 && fp == nullptr) {
+            close(fd);
+            std::filesystem::remove(temporary, error);
+            break;
+        }
+#endif
+        if (fp == nullptr && errno != EEXIST) {
+            break;
+        }
+    }
     if (fp == nullptr) {
         LOG_ERROR(Frontend, "Config file could not be saved!");
         return;
     }
 
     CSimpleIniA::FileWriter writer(fp);
-    const SI_Error rc = config->Save(writer, false);
-    if (rc < 0) {
+    // FileWriter ignores fputs errors, so the stream's error flag is checked too
+    const bool written = config->Save(writer, false) >= 0 && !std::ferror(fp);
+    const bool closed = std::fclose(fp) == 0;
+    if (!written || !closed) {
         LOG_ERROR(Frontend, "Config file could not be saved!");
+        std::filesystem::remove(temporary, error);
+        return;
     }
-    fclose(fp);
+    const auto status = std::filesystem::status(target, error);
+    if (!error && std::filesystem::exists(status)) {
+#ifndef _WIN32
+        // The replacement keeps the config's group, so the mode copied below means the same. If the
+        // group can't be kept, the replacement is owner-only rather than open to another group.
+        auto permissions = status.permissions();
+        struct stat target_stat {};
+        if (stat(target.c_str(), &target_stat) != 0 ||
+            chown(temporary.c_str(), static_cast<uid_t>(-1), target_stat.st_gid) != 0) {
+            permissions &= std::filesystem::perms::owner_all;
+        }
+#else
+        const auto permissions = status.permissions();
+#endif
+        std::filesystem::permissions(temporary, permissions, error);
+        if (error) {
+            LOG_ERROR(Frontend, "Config file could not be saved: {}", error.message());
+            std::filesystem::remove(temporary, error);
+            return;
+        }
+    }
+    // Replaces the target if it exists (MoveFileExW with MOVEFILE_REPLACE_EXISTING on Windows)
+    std::filesystem::rename(temporary, target, error);
+    if (error) {
+        LOG_ERROR(Frontend, "Config file could not be saved: {}", error.message());
+        std::filesystem::remove(temporary, error);
+    }
 }
 
 void Config::SetUpIni() {
@@ -396,6 +477,8 @@ void Config::ReadRendererValues() {
     ReadCategory(Settings::Category::RendererHacks);
     ReadCategory(Settings::Category::RendererExtensions);
     ReadCategory(Settings::Category::RendererDebug);
+
+    Settings::RefreshNvidiaDlssRuntimeSettings();
 
     EndGroup();
 }

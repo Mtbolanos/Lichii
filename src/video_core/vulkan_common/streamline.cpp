@@ -5,23 +5,30 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdlib>
 #include <filesystem>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <fmt/format.h>
 
+#include "common/display_hdr.h"
 #include "common/fs/fs_util.h"
 #include "common/fs/path_util.h"
 #include "common/logging.h"
 #include "common/settings.h"
+#include "video_core/frame_gen_choice.h"
 #include "video_core/vulkan_common/streamline.h"
 #include "video_core/vulkan_common/streamline_api.h"
+#include "video_core/vulkan_common/streamline_frame_gen.h"
 
+#include <sl_helpers.h>
 #include <sl_security.h>
 
 #include <softpub.h>
@@ -38,6 +45,29 @@ constexpr const wchar_t* MODEL = L"nvngx_dlss.dll";
 // The first DLSS with preset K.
 constexpr u32 MIN_DLSS_MAJOR = 310;
 
+// What DLSS super resolution loads from the loader's folder besides the loader and the model:
+// sl.dlss.dll needs sl.common.dll.
+constexpr std::array<const char*, 2> DLSS_PLUGIN_FILES{"sl.common.dll", "sl.dlss.dll"};
+
+// Everything frame generation loads from the loader's folder. The SR plugins are here too: a local
+// sl.dlss_g.dll has to come with the sl.common.dll of its own release. Reflex on Vulkan goes
+// through NvLowLatencyVk.dll.
+constexpr std::array<const char*, 7> FRAME_GEN_FILES{
+    "sl.common.dll", "sl.dlss.dll",     "sl.dlss_g.dll",      "sl.reflex.dll",
+    "sl.pcl.dll",    "nvngx_dlssg.dll", "NvLowLatencyVk.dll",
+};
+
+struct FrameGenFeature {
+    sl::Feature feature;
+    const char* name;
+};
+
+constexpr std::array<FrameGenFeature, 3> FRAME_GEN_FEATURES{{
+    {sl::kFeatureDLSS_G, "DLSS-G (sl.dlss_g.dll)"},
+    {sl::kFeatureReflex, "Reflex (sl.reflex.dll)"},
+    {sl::kFeaturePCL, "PCL (sl.pcl.dll)"},
+}};
+
 using Version = std::array<u32, 4>;
 
 struct State {
@@ -47,6 +77,17 @@ struct State {
     std::wstring model_dir;
     std::vector<std::string> instance_extensions;
     std::vector<std::string> device_extensions;
+    std::vector<std::string> frame_gen_instance_extensions;
+    std::vector<std::string> frame_gen_device_extensions;
+    std::vector<std::string> frame_gen_device_features;
+    QueueCounts frame_gen_queues{};
+    /// OS, driver and GPU scheduling needs from the frame generation requirements, for the log.
+    std::string frame_gen_needs;
+    bool frame_gen_requested{};
+    bool frame_gen_pending{};
+    std::atomic<bool> frame_gen_available{};
+    std::mutex frame_gen_reason_mutex;
+    std::string frame_gen_reason;
     bool started{};
     bool attached{};
 };
@@ -213,6 +254,11 @@ bool Load(State& state, const std::filesystem::path& path) {
         Resolve(m, "slEvaluateFeature", api.evaluate_feature) &&
         Resolve(m, "slFreeResources", api.free_resources) &&
         Resolve(m, "slSetVulkanInfo", api.set_vulkan_info)) {
+        // Only frame generation uses these; it checks for them itself.
+        api.set_tag_for_frame =
+            reinterpret_cast<PFun_slSetTagForFrame*>(GetProcAddress(m, "slSetTagForFrame"));
+        api.set_feature_loaded =
+            reinterpret_cast<PFun_slSetFeatureLoaded*>(GetProcAddress(m, "slSetFeatureLoaded"));
         return true;
     }
     FreeLibrary(state.module);
@@ -227,6 +273,177 @@ std::vector<std::string> Names(uint32_t count, const char** names) {
         result.emplace_back(names[i]);
     }
     return result;
+}
+
+void AppendUnique(std::vector<std::string>& list, uint32_t count, const char** names) {
+    for (uint32_t i = 0; i < count; ++i) {
+        if (std::ranges::find(list, names[i]) == list.end()) {
+            list.emplace_back(names[i]);
+        }
+    }
+}
+
+std::string ResultText(sl::Result result) {
+    return fmt::format("{} ({})", sl::getResultAsStr(result), static_cast<int>(result));
+}
+
+void SetFrameGenReason(State& state, std::string reason) {
+    std::scoped_lock lock{state.frame_gen_reason_mutex};
+    state.frame_gen_reason = std::move(reason);
+}
+
+/// Why slIsFeatureSupported turned a frame generation feature down, in the user's terms.
+std::string UnsupportedText(sl::Result result) {
+    switch (result) {
+    case sl::Result::eErrorOSDisabledHWS:
+        return "Hardware-accelerated GPU scheduling is off in Windows' graphics settings";
+    case sl::Result::eErrorNoSupportedAdapterFound:
+    case sl::Result::eErrorAdapterNotSupported:
+        return "this GPU has no DLSS Frame Generation (GeForce RTX 40 series or newer)";
+    case sl::Result::eErrorDriverOutOfDate:
+        return "the NVIDIA driver is too old";
+    case sl::Result::eErrorOSOutOfDate:
+        return "Windows is too old";
+    default:
+        return fmt::format("Streamline result {}", ResultText(result));
+    }
+}
+
+/// What the frame generation plugins ask of the OS, the driver and Windows, for the log.
+std::string NeedsText(const sl::FeatureRequirements& requirements) {
+    std::string text;
+    const auto add = [&text](const std::string& part) {
+        text += (text.empty() ? "" : ", ") + part;
+    };
+    if (requirements.driverVersionRequired.major != 0) {
+        add(fmt::format("NVIDIA driver {} (found {})", requirements.driverVersionRequired.toStr(),
+                        requirements.driverVersionDetected.toStr()));
+    }
+    if (requirements.osVersionRequired.major != 0) {
+        add(fmt::format("Windows {} (found {})", requirements.osVersionRequired.toStr(),
+                        requirements.osVersionDetected.toStr()));
+    }
+    if (requirements.flags & sl::FeatureRequirementFlags::eHardwareSchedulingRequired) {
+        add("Hardware-accelerated GPU scheduling on");
+    }
+    if (requirements.flags & sl::FeatureRequirementFlags::eVSyncOffRequired) {
+        add("VSync off");
+    }
+    return text;
+}
+
+/// Collects what DLSS-G, Reflex and PCL need from the instance and device; false (logged) when
+/// one of them can't be used.
+bool LoadFrameGenRequirements(State& state) {
+    const Api& api = state.api;
+    std::vector<std::string> instance_extensions;
+    std::vector<std::string> device_extensions;
+    std::vector<std::string> device_features;
+    QueueCounts queues{};
+    std::string needs;
+    for (const FrameGenFeature& entry : FRAME_GEN_FEATURES) {
+        sl::FeatureRequirements requirements{};
+        if (const sl::Result result = api.get_feature_requirements(entry.feature, requirements);
+            result != sl::Result::eOk) {
+            const std::vector<std::string> missing = FindDlssFiles().frame_gen_missing;
+            std::string files;
+            for (const std::string& name : missing) {
+                files += (files.empty() ? "" : ", ") + name;
+            }
+            LOG_WARNING(Render_Vulkan,
+                        "NVIDIA DLSS Frame Generation is off: Streamline has no {}, result {}{}",
+                        entry.name, ResultText(result),
+                        files.empty() ? std::string{}
+                                      : fmt::format(" (missing from the loader's folder: {}; the "
+                                                    "Graphics settings can download them)",
+                                                    files));
+            SetFrameGenReason(state, files.empty()
+                                         ? fmt::format("Streamline has no {}", entry.name)
+                                         : fmt::format("missing {}", files));
+            return false;
+        }
+        const std::string feature_needs = NeedsText(requirements);
+        if (!(requirements.flags & sl::FeatureRequirementFlags::eVulkanSupported)) {
+            LOG_WARNING(Render_Vulkan,
+                        "NVIDIA DLSS Frame Generation is off: this {} has no Vulkan support",
+                        entry.name);
+            SetFrameGenReason(state, fmt::format("this {} has no Vulkan support", entry.name));
+            return false;
+        }
+        queues.graphics += requirements.vkNumGraphicsQueuesRequired;
+        queues.compute += requirements.vkNumComputeQueuesRequired;
+        AppendUnique(instance_extensions, requirements.vkNumInstanceExtensions,
+                     requirements.vkInstanceExtensions);
+        AppendUnique(device_extensions, requirements.vkNumDeviceExtensions,
+                     requirements.vkDeviceExtensions);
+        AppendUnique(device_features, requirements.vkNumFeatures12, requirements.vkFeatures12);
+        AppendUnique(device_features, requirements.vkNumFeatures13, requirements.vkFeatures13);
+        if (!feature_needs.empty()) {
+            needs += fmt::format("{}{}: {}", needs.empty() ? "" : "; ", entry.name, feature_needs);
+        }
+    }
+    state.frame_gen_instance_extensions = std::move(instance_extensions);
+    state.frame_gen_device_extensions = std::move(device_extensions);
+    state.frame_gen_device_features = std::move(device_features);
+    state.frame_gen_queues = queues;
+    state.frame_gen_needs = std::move(needs);
+    return true;
+}
+
+template <typename T>
+bool ResolveFeature(const Api& api, sl::Feature feature, const char* name, T*& function) {
+    void* address = nullptr;
+    const sl::Result result = api.get_feature_function(feature, name, address);
+    function = result == sl::Result::eOk ? reinterpret_cast<T*>(address) : nullptr;
+    if (!function) {
+        LOG_WARNING(Render_Vulkan, "Streamline has no {}, result {}", name, ResultText(result));
+    }
+    return function != nullptr;
+}
+
+/// Checks DLSS-G, Reflex and PCL on the attached device and fetches their functions.
+bool AttachFrameGen(State& state, const sl::AdapterInfo& adapter) {
+    Api& api = state.api;
+    for (const FrameGenFeature& entry : FRAME_GEN_FEATURES) {
+        if (const sl::Result result = api.is_feature_supported(entry.feature, adapter);
+            result != sl::Result::eOk) {
+            LOG_WARNING(Render_Vulkan,
+                        "NVIDIA DLSS Frame Generation is off: {} is not supported on this GPU, "
+                        "driver or Windows setup, result {}{}",
+                        entry.name, ResultText(result),
+                        state.frame_gen_needs.empty()
+                            ? std::string{}
+                            : fmt::format(" (needs {})", state.frame_gen_needs));
+            SetFrameGenReason(state, UnsupportedText(result));
+            return false;
+        }
+    }
+    if (!api.set_tag_for_frame) {
+        LOG_WARNING(Render_Vulkan,
+                    "NVIDIA DLSS Frame Generation is off: sl.interposer.dll has no slSetTagForFrame");
+        SetFrameGenReason(state, "sl.interposer.dll has no slSetTagForFrame");
+        return false;
+    }
+    if (ResolveFeature(api, sl::kFeatureDLSS_G, "slDLSSGSetOptions", api.dlssg_set_options) &&
+        ResolveFeature(api, sl::kFeatureDLSS_G, "slDLSSGGetState", api.dlssg_get_state) &&
+        ResolveFeature(api, sl::kFeatureReflex, "slReflexSetOptions", api.reflex_set_options) &&
+        ResolveFeature(api, sl::kFeatureReflex, "slReflexSleep", api.reflex_sleep) &&
+        ResolveFeature(api, sl::kFeatureReflex, "slReflexGetState", api.reflex_get_state) &&
+        ResolveFeature(api, sl::kFeaturePCL, "slPCLSetMarker", api.pcl_set_marker)) {
+        return true;
+    }
+    LOG_WARNING(Render_Vulkan, "NVIDIA DLSS Frame Generation is off: its functions are missing");
+    SetFrameGenReason(state, "Streamline lacks DLSS-G, Reflex or PCL functions");
+    return false;
+}
+
+void ClearFrameGenApi(Api& api) {
+    api.dlssg_set_options = nullptr;
+    api.dlssg_get_state = nullptr;
+    api.reflex_set_options = nullptr;
+    api.reflex_sleep = nullptr;
+    api.reflex_get_state = nullptr;
+    api.pcl_set_marker = nullptr;
 }
 
 } // Anonymous namespace
@@ -288,10 +505,53 @@ DlssFiles FindDlssFiles() {
     files.interposer_version = VersionText(files.interposer);
     files.model_version = VersionText(files.model);
     files.app_model_version = VersionText(files.app_model);
+    // A Streamline module loads only with the sl.common.dll and loader of its own release.
+    const auto check = [&files, &ec](std::span<const char* const> names,
+                                     std::vector<std::string>& missing) {
+        std::string streamline_version = files.interposer_version;
+        bool mixed = false;
+        for (const char* const name : names) {
+            const std::filesystem::path path = files.folder / name;
+            if (!std::filesystem::is_regular_file(path, ec)) {
+                missing.emplace_back(name);
+                continue;
+            }
+            if (!std::string_view{name}.starts_with("sl.")) {
+                continue;
+            }
+            const std::string version = VersionText(path);
+            if (streamline_version.empty()) {
+                streamline_version = version;
+            } else if (!version.empty() && version != streamline_version) {
+                mixed = true;
+            }
+        }
+        return mixed;
+    };
+    files.dlss_mixed = check(DLSS_PLUGIN_FILES, files.dlss_missing);
+    files.streamline_mixed = check(FRAME_GEN_FILES, files.frame_gen_missing);
     return files;
 }
 
-bool Start() {
+std::span<const char* const> DlssPluginFiles() {
+    return DLSS_PLUGIN_FILES;
+}
+
+std::span<const char* const> FrameGenFiles() {
+    return FRAME_GEN_FILES;
+}
+
+bool FrameGenRequested() {
+    return Settings::values.frame_gen_type.GetValue() == Settings::FrameGenType::NvidiaDlssG &&
+           VideoCore::BlockedDlssg({
+               .streamline = true,
+               .dlss = Settings::values.nvidia_dlss.GetValue(),
+               .program_id = Settings::GetCurrentProgramID(),
+               .loaded = true,
+           }) == VideoCore::DlssgBlock::None;
+}
+
+bool Start(void* window) {
     State& state = GetState();
     if (state.started) {
         return true;
@@ -299,6 +559,7 @@ bool Start() {
     if (!Settings::values.nvidia_dlss.GetValue()) {
         return false;
     }
+    SetFrameGenReason(state, "NVIDIA Streamline did not start; the log above says why");
     if (!state.module) {
         const DlssFiles files = FindDlssFiles();
         if (!files.model.empty() && !IsSignedByNvidia(files.model)) {
@@ -332,7 +593,13 @@ bool Start() {
     // Streamline's plugins come from the loader's folder or the NVIDIA app's downloads (OTA); the
     // DLSS model from the loader's folder, else the NVIDIA app's copy.
     const wchar_t* plugin_paths[] = {state.plugin_dir.c_str(), state.model_dir.c_str()};
-    const sl::Feature features[] = {sl::kFeatureDLSS};
+    state.frame_gen_requested = FrameGenRequested();
+    std::vector<sl::Feature> features{sl::kFeatureDLSS};
+    if (state.frame_gen_requested) {
+        for (const FrameGenFeature& entry : FRAME_GEN_FEATURES) {
+            features.push_back(entry.feature);
+        }
+    }
     sl::Preferences preferences{};
     preferences.logLevel = LogLevel() >= 2 ? sl::LogLevel::eVerbose : sl::LogLevel::eDefault;
     preferences.logMessageCallback = LogFromStreamline;
@@ -341,8 +608,12 @@ bool Start() {
     preferences.flags = sl::PreferenceFlags::eDisableCLStateTracking |
                         sl::PreferenceFlags::eUseManualHooking | sl::PreferenceFlags::eAllowOTA |
                         sl::PreferenceFlags::eLoadDownloadedPlugins;
-    preferences.featuresToLoad = features;
-    preferences.numFeaturesToLoad = 1;
+    if (state.frame_gen_requested) {
+        // DLSS-G's inputs are tagged per frame with slSetTagForFrame.
+        preferences.flags |= sl::PreferenceFlags::eUseFrameBasedResourceTagging;
+    }
+    preferences.featuresToLoad = features.data();
+    preferences.numFeaturesToLoad = static_cast<uint32_t>(features.size());
     preferences.engine = sl::EngineType::eCustom;
     preferences.engineVersion = "1.0";
     preferences.projectId = PROJECT_ID;
@@ -358,8 +629,9 @@ bool Start() {
     if (const sl::Result result = api.get_feature_requirements(sl::kFeatureDLSS, requirements);
         result != sl::Result::eOk) {
         LOG_WARNING(Render_Vulkan,
-                    "Streamline found no DLSS plugin (result {}); put sl.dlss.dll next to "
-                    "sl.interposer.dll or install the NVIDIA app. Using FSR 3.1",
+                    "Streamline found no DLSS plugin (result {}); put sl.common.dll and "
+                    "sl.dlss.dll next to sl.interposer.dll (the Graphics settings can download "
+                    "them) or install the NVIDIA app. Using FSR 3.1",
                     static_cast<int>(result));
         api.shutdown();
         return false;
@@ -374,12 +646,21 @@ bool Start() {
         Names(requirements.vkNumInstanceExtensions, requirements.vkInstanceExtensions);
     state.device_extensions =
         Names(requirements.vkNumDeviceExtensions, requirements.vkDeviceExtensions);
-    // The KHR and EXT buffer device address extensions can't both be enabled.
-    const auto& device_extensions = state.device_extensions;
-    if (std::ranges::find(device_extensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) !=
-        device_extensions.end()) {
-        std::erase(state.device_extensions, VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+    Common::DisplayHdrMonitor::Instance().Watch(window);
+    if (!state.frame_gen_requested) {
+        SetFrameGenReason(state, "it was not the frame generation type when the game started");
+    } else if (Settings::values.hdr_swapchain.GetValue() == Settings::HdrSwapchain::Scrgb &&
+               Common::ResolveHdrOutput(Common::DisplayHdrMonitor::Instance().Current(),
+                                        Settings::values.hdr_mode.GetValue(),
+                                        Settings::values.hdr_peak_luminance.GetValue(),
+                                        Settings::values.hdr_reference_white.GetValue())
+                   .enabled) {
+        state.frame_gen_requested = false;
+        SetFrameGenReason(state, "the HDR format is scRGB; set it to HDR10 to use it");
     }
+    state.frame_gen_pending = state.frame_gen_requested && LoadFrameGenRequirements(state);
+    state.frame_gen_available = false;
+    ResetFrameGen();
     sl::FeatureVersion version{};
     api.get_feature_version(sl::kFeatureDLSS, version);
     LOG_INFO(Render_Vulkan, "NVIDIA Streamline {} started from {} (DLSS {})",
@@ -397,16 +678,66 @@ bool WantsDevice() {
 
 std::vector<std::string> InstanceExtensions() {
     const State& state = GetState();
-    return state.started ? state.instance_extensions : std::vector<std::string>{};
+    if (!state.started) {
+        return {};
+    }
+    std::vector<std::string> extensions = state.instance_extensions;
+    if (state.frame_gen_pending) {
+        for (const std::string& name : state.frame_gen_instance_extensions) {
+            if (std::ranges::find(extensions, name) == extensions.end()) {
+                extensions.push_back(name);
+            }
+        }
+    }
+    return extensions;
 }
 
 std::vector<std::string> DeviceExtensions() {
     const State& state = GetState();
-    return state.started ? state.device_extensions : std::vector<std::string>{};
+    if (!state.started) {
+        return {};
+    }
+    std::vector<std::string> extensions = state.device_extensions;
+    if (state.frame_gen_pending) {
+        for (const std::string& name : state.frame_gen_device_extensions) {
+            if (std::ranges::find(extensions, name) == extensions.end()) {
+                extensions.push_back(name);
+            }
+        }
+    }
+    // The KHR and EXT buffer device address extensions can't both be enabled.
+    if (std::ranges::find(extensions, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) !=
+        extensions.end()) {
+        std::erase(extensions, VK_EXT_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
+    }
+    return extensions;
+}
+
+bool FrameGenPending() {
+    const State& state = GetState();
+    return state.started && !state.attached && state.frame_gen_pending;
+}
+
+void DropFrameGen(std::string_view reason) {
+    State& state = GetState();
+    if (!state.frame_gen_pending) {
+        return;
+    }
+    state.frame_gen_pending = false;
+    LOG_WARNING(Render_Vulkan, "NVIDIA DLSS Frame Generation is off: {}", reason);
+    SetFrameGenReason(state, std::string{reason});
+}
+
+QueueCounts ExtraQueues() {
+    return FrameGenPending() ? GetState().frame_gen_queues : QueueCounts{};
+}
+
+std::vector<std::string> FrameGenDeviceFeatures() {
+    return FrameGenPending() ? GetState().frame_gen_device_features : std::vector<std::string>{};
 }
 
 bool AttachDevice(VkInstance instance, VkPhysicalDevice physical, VkDevice device,
-                  u32 graphics_family, vk::DeviceDispatch& dld) {
+                  u32 graphics_family, u32 first_extra_queue, vk::DeviceDispatch& dld) {
     State& state = GetState();
     if (!WantsDevice()) {
         return false;
@@ -417,6 +748,13 @@ bool AttachDevice(VkInstance instance, VkPhysicalDevice physical, VkDevice devic
     info.physicalDevice = physical;
     info.computeQueueFamily = graphics_family;
     info.graphicsQueueFamily = graphics_family;
+    const QueueCounts queues = ExtraQueues();
+    if (queues.graphics != 0) {
+        info.graphicsQueueIndex = first_extra_queue;
+    }
+    if (queues.compute != 0) {
+        info.computeQueueIndex = first_extra_queue + queues.graphics;
+    }
     if (const sl::Result result = state.api.set_vulkan_info(info); result != sl::Result::eOk) {
         LOG_ERROR(Render_Vulkan, "Streamline did not take the Vulkan device (result {})",
                   static_cast<int>(result));
@@ -450,12 +788,103 @@ bool AttachDevice(VkInstance instance, VkPhysicalDevice physical, VkDevice devic
     hook(dld.vkDeviceWaitIdle, "vkDeviceWaitIdle");
     state.attached = true;
     LOG_INFO(Render_Vulkan, "NVIDIA DLSS is available through Streamline");
+
+    if (state.frame_gen_pending && AttachFrameGen(state, adapter)) {
+        state.frame_gen_available = true;
+        QueryFrameGenMax();
+        sl::FeatureVersion version{};
+        state.api.get_feature_version(sl::kFeatureDLSS_G, version);
+        LOG_INFO(Render_Vulkan,
+                 "Streamline: DLSS Frame Generation ready (DLSS-G {}, Reflex, PCL; {} graphics + "
+                 "{} compute queues; numFramesToGenerateMax {})",
+                 version.versionNGX ? version.versionNGX.toStr() : version.versionSL.toStr(),
+                 queues.graphics, queues.compute, FrameGenMaxGenerated());
+        // DLSS-G refuses to run without Reflex on.
+        sl::ReflexOptions reflex{};
+        reflex.mode = sl::ReflexMode::eLowLatency;
+        reflex.frameLimitUs = 0;
+        if (const sl::Result result = state.api.reflex_set_options(reflex);
+            result != sl::Result::eOk) {
+            LOG_WARNING(Render_Vulkan, "DLSS-G: slReflexSetOptions failed, result {}",
+                        ResultText(result));
+        }
+    } else if (state.frame_gen_requested) {
+        ClearFrameGenApi(state.api);
+        // A loaded DLSS-G puts its own swapchain behind the hooks; without frame generation the
+        // renderer keeps the driver's.
+        if (state.api.set_feature_loaded) {
+            state.api.set_feature_loaded(sl::kFeatureDLSS_G, false);
+        }
+        LOG_INFO(Render_Vulkan, "Streamline: DLSS Frame Generation is off; DLSS only");
+    }
+    state.frame_gen_pending = false;
     return true;
+}
+
+VkSurfaceKHR CreateFrameGenSurface(VkInstance instance, void* window) {
+    const State& state = GetState();
+    if (!FrameGenSession() || !window) {
+        return VK_NULL_HANDLE;
+    }
+    const auto create = reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
+        GetProcAddress(state.module, "vkCreateWin32SurfaceKHR"));
+    if (!create) {
+        LOG_WARNING(Render_Vulkan, "sl.interposer.dll has no vkCreateWin32SurfaceKHR");
+        return VK_NULL_HANDLE;
+    }
+    const VkWin32SurfaceCreateInfoKHR info{
+        .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .flags = 0,
+        .hinstance = nullptr,
+        .hwnd = static_cast<HWND>(window),
+    };
+    VkSurfaceKHR surface{};
+    if (const VkResult result = create(instance, &info, nullptr, &surface);
+        result != VK_SUCCESS) {
+        LOG_WARNING(Render_Vulkan, "Streamline's vkCreateWin32SurfaceKHR failed ({})",
+                    static_cast<int>(result));
+        return VK_NULL_HANDLE;
+    }
+    return surface;
+}
+
+void DisableFrameGen(std::string_view reason) {
+    State& state = GetState();
+    {
+        // The DLSS-G calls check FrameGenSession() under this lock, so none runs once the flag
+        // is clear. The function pointers stay for the threads past an unlocked check.
+        const auto lock = LockStreamline();
+        if (!state.frame_gen_available.exchange(false)) {
+            return;
+        }
+        if (state.api.set_feature_loaded) {
+            state.api.set_feature_loaded(sl::kFeatureDLSS_G, false);
+        }
+    }
+    LOG_WARNING(Render_Vulkan, "NVIDIA DLSS Frame Generation is off: {}", reason);
+    SetFrameGenReason(state, std::string{reason});
 }
 
 bool IsDlssAvailable() {
     const State& state = GetState();
     return state.started && state.attached;
+}
+
+bool FrameGenSession() {
+    const State& state = GetState();
+    return IsDlssAvailable() && state.frame_gen_available;
+}
+
+bool FrameGenActive() {
+    return FrameGenSession() && Settings::values.frame_gen.GetValue() &&
+           Settings::values.frame_gen_type.GetValue() == Settings::FrameGenType::NvidiaDlssG;
+}
+
+std::string FrameGenUnavailableReason() {
+    State& state = GetState();
+    std::scoped_lock lock{state.frame_gen_reason_mutex};
+    return state.frame_gen_reason;
 }
 
 void Stop() {
@@ -466,6 +895,10 @@ void Stop() {
     const sl::Result result = state.api.shutdown();
     state.started = false;
     state.attached = false;
+    state.frame_gen_pending = false;
+    state.frame_gen_available = false;
+    ClearFrameGenApi(state.api);
+    ResetFrameGen();
     LOG_INFO(Render_Vulkan, "NVIDIA Streamline stopped (result {})", static_cast<int>(result));
 }
 

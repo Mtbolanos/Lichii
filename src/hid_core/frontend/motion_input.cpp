@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <cmath>
@@ -14,7 +13,11 @@ namespace Core::HID {
 
 MotionInput::MotionInput() {
     // Initialize PID constants with default values
-    SetPID(0.3f, 0.005f, 0.0f);
+    // No integral term: it summed the error once per sample with no time scaling and no cap,
+    // so at high sample rates it wound up and swung the orientation for seconds, then snapped
+    // back when the error fell under the reset threshold. The proportional term alone keeps
+    // orientation locked to gravity.
+    SetPID(0.3f, 0.0f, 0.0f);
     SetGyroThreshold(ThresholdStandard);
     ResetQuaternion();
     ResetRotations();

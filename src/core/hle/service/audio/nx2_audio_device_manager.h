@@ -204,7 +204,11 @@ private:
         };
         put32(0x100, 3);
         put32(0x104, 2);
-        put32(0x108, 2);     // stereo
+        // Match the output channel count audren reports. Orbitals rejects a stereo device after
+        // GetActiveChannelCount said six and retries forever.
+        const bool surround =
+            !input && system.AudioCore().GetOutputSink().GetSystemChannels() == 6;
+        put32(0x108, surround ? 6 : 2);
         put32(0x10c, 48000); // Hz
         CopyName(block.data() + 0x110, input ? PhysicalInputDeviceName : PhysicalDeviceName);
         const u64 latency_ns = 10'000'000;

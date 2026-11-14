@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "core/core.h"
@@ -140,19 +139,19 @@ Result MapProcessCodeMemory(Core::System& system, Handle process_handle, u64 dst
               "src_address={:#016x}, size={:#016x}",
               process_handle, dst_address, src_address, size);
 
-    if (!Common::IsAligned(src_address, Core::Memory::YUZU_PAGESIZE)) {
+    if (!Common::IsAligned(src_address, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "src_address is not page-aligned (src_address={:#016X}).",
                   src_address);
         R_THROW(ResultInvalidAddress);
     }
 
-    if (!Common::IsAligned(dst_address, Core::Memory::YUZU_PAGESIZE)) {
+    if (!Common::IsAligned(dst_address, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "dst_address is not page-aligned (dst_address={:#016X}).",
                   dst_address);
         R_THROW(ResultInvalidAddress);
     }
 
-    if (size == 0 || !Common::IsAligned(size, Core::Memory::YUZU_PAGESIZE)) {
+    if (size == 0 || !Common::IsAligned(size, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "Size is zero or not page-aligned (size={:#016X})", size);
         R_THROW(ResultInvalidSize);
     }
@@ -201,19 +200,19 @@ Result UnmapProcessCodeMemory(Core::System& system, Handle process_handle, u64 d
               "size={:#016x}",
               process_handle, dst_address, src_address, size);
 
-    if (!Common::IsAligned(dst_address, Core::Memory::YUZU_PAGESIZE)) {
+    if (!Common::IsAligned(dst_address, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "dst_address is not page-aligned (dst_address={:#016X}).",
                   dst_address);
         R_THROW(ResultInvalidAddress);
     }
 
-    if (!Common::IsAligned(src_address, Core::Memory::YUZU_PAGESIZE)) {
+    if (!Common::IsAligned(src_address, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "src_address is not page-aligned (src_address={:#016X}).",
                   src_address);
         R_THROW(ResultInvalidAddress);
     }
 
-    if (size == 0 || !Common::IsAligned(size, Core::Memory::YUZU_PAGESIZE)) {
+    if (size == 0 || !Common::IsAligned(size, Core::Memory::LICHII_PAGESIZE)) {
         LOG_ERROR(Kernel_SVC, "Size is zero or not page-aligned (size={:#016X}).", size);
         R_THROW(ResultInvalidSize);
     }

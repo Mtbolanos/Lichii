@@ -19,6 +19,7 @@ add_executable(dynarmic_tests
     A64/a64.cpp
     A64/fibonacci.cpp
     A64/fp_min_max.cpp
+    A64/host_call_return.cpp
     A64/misaligned_page_table.cpp
     A64/test_invalidation.cpp
     A64/real_world.cpp
@@ -51,6 +52,7 @@ endif()
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic_tests PRIVATE xbyak::xbyak)
     target_architecture_specific_sources(dynarmic_tests "x86_64"
+        A64/emit_regressions.cpp
         x64_cpu_info.cpp
         native/preserve_xmm.cpp
     )

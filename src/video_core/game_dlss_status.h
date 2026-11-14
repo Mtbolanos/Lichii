@@ -43,6 +43,7 @@ struct GameDlssProbe {
     u32 mismatched{};      ///< Blocks whose output brightness is off the input's by more than half.
     u32 invalid_samples{}; ///< NaN or infinite output samples.
     f32 worst{};           ///< The largest relative brightness difference of a block.
+    f32 gain{1.0f};        ///< The output's overall brightness over the input's (its exposure).
 };
 
 } // namespace VideoCore

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <array>
@@ -60,13 +59,13 @@ public:
     {}
 
     std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) override {
-        static_assert(Core::Memory::YUZU_PAGESIZE == Dynarmic::CODE_PAGE_SIZE);
-        auto const aligned_vaddr = vaddr & ~Core::Memory::YUZU_PAGEMASK;
+        static_assert(Core::Memory::LICHII_PAGESIZE == Dynarmic::CODE_PAGE_SIZE);
+        auto const aligned_vaddr = vaddr & ~Core::Memory::LICHII_PAGEMASK;
         if (last_code_addr != aligned_vaddr) {
             cached_code_page = ReadMemory<Dynarmic::CodePage>(aligned_vaddr);
             last_code_addr = aligned_vaddr;
         }
-        return cached_code_page.inst[(vaddr & Core::Memory::YUZU_PAGEMASK) / sizeof(u32)];
+        return cached_code_page.inst[(vaddr & Core::Memory::LICHII_PAGEMASK) / sizeof(u32)];
     }
     void InstructionSynchronizationBarrierRaised() override {
         last_code_addr = u64(-1); //reset back, force refetch

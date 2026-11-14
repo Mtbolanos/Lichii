@@ -80,6 +80,10 @@ void PerfStats::EndSystemFrame() {
     system_frames += 1;
 
     previous_frame_length = frame_end - previous_frame_end;
+    if (frame_time_history_enabled) {
+        frame_time_history.Push(
+            frame_end, std::chrono::duration<float, std::milli>(previous_frame_length).count());
+    }
     previous_frame_end = frame_end;
 }
 
@@ -133,6 +137,62 @@ double PerfStats::GetLastFrameTimeScale() const {
 
     constexpr double FRAME_LENGTH = 1.0 / 60;
     return duration_cast<DoubleSecs>(previous_frame_length).count() / FRAME_LENGTH;
+}
+
+void PerfStats::SetFrameTimeHistoryEnabled(bool enabled) {
+    std::scoped_lock lock{object_mutex};
+    if (enabled && !frame_time_history_enabled) {
+        frame_time_history.Clear();
+    }
+    frame_time_history_enabled = enabled;
+}
+
+std::vector<FrameTimeHistory::Entry> PerfStats::GetRecentFrameTimes(Clock::duration window) const {
+    std::scoped_lock lock{object_mutex};
+    return frame_time_history.Recent(window);
+}
+
+std::optional<FrameTimeSummary> Summarize(std::span<const float> frame_times_ms) {
+    if (frame_times_ms.empty()) {
+        return std::nullopt;
+    }
+    std::vector<float> sorted(frame_times_ms.begin(), frame_times_ms.end());
+    std::ranges::sort(sorted);
+    const std::size_t middle = sorted.size() / 2;
+    return FrameTimeSummary{
+        .min_ms = sorted.front(),
+        .median_ms = sorted.size() % 2 != 0 ? sorted[middle]
+                                            : (sorted[middle - 1] + sorted[middle]) / 2.0f,
+        .max_ms = sorted.back(),
+    };
+}
+
+void FrameTimeHistory::Push(Clock::time_point end, float ms) {
+    entries[next] = {end, ms};
+    next = (next + 1) % Capacity;
+    count = std::min(count + 1, Capacity);
+}
+
+void FrameTimeHistory::Clear() {
+    next = 0;
+    count = 0;
+}
+
+std::vector<FrameTimeHistory::Entry> FrameTimeHistory::Recent(Clock::duration window) const {
+    std::vector<Entry> result;
+    if (count == 0) {
+        return result;
+    }
+    const std::size_t first = (next + Capacity - count) % Capacity;
+    const Clock::time_point newest = entries[(next + Capacity - 1) % Capacity].end;
+    result.reserve(count);
+    for (std::size_t i = 0; i < count; ++i) {
+        const Entry& entry = entries[(first + i) % Capacity];
+        if (newest - entry.end < window) {
+            result.push_back(entry);
+        }
+    }
+    return result;
 }
 
 void SpeedLimiter::DoSpeedLimiting(microseconds current_system_time_us) {

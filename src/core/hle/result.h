@@ -330,8 +330,8 @@ private:
 namespace ResultImpl {
 template <auto EvaluateResult, class F>
 class ScopedResultGuard {
-    YUZU_NON_COPYABLE(ScopedResultGuard);
-    YUZU_NON_MOVEABLE(ScopedResultGuard);
+    LICHII_NON_COPYABLE(ScopedResultGuard);
+    LICHII_NON_MOVEABLE(ScopedResultGuard);
 
 private:
     Result& m_ref;

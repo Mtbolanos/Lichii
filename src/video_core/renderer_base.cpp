@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "common/logging.h"
+#include "common/settings.h"
 #include "core/frontend/emu_window.h"
 #include "core/frontend/graphics_context.h"
 #include "video_core/renderer_base.h"
@@ -22,6 +23,7 @@ RendererBase::RendererBase(Core::Frontend::EmuWindow& window_,
 RendererBase::~RendererBase() = default;
 
 void RendererBase::RefreshBaseSettings() {
+    Settings::RefreshNvidiaDlssRuntimeSettings();
     UpdateCurrentFramebufferLayout();
 }
 

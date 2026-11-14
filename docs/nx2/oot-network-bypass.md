@@ -1,14 +1,13 @@
 # Ocarina of Time: bypassing the game's anti-aliasing network
 
 The Legend of Zelda: Ocarina of Time (`0400486024DEC000`) runs a tensor network on its tonemapped
-image followed by an output pass that sharpens hard. The "Ocarina of Time anti-aliasing" setting
-(`oot_anti_aliasing`: Game / No sharpening) can skip both and show the tonemapped image instead.
+image followed by an output pass that sharpens hard. The No sharpening option
+(`oot_anti_aliasing`) shows the tonemapped image and can also skip the update's network passes.
 
 ## What the game does
 
-Found with sampled frame dumps (`capture_frame` with `sampled`), a trace of the texture handles in
-the compute passes' constant buffer 0, and pixel statistics, in Kokiri Forest, docked, at 1x with
-the built-in Max Resolution patch.
+The update (1.1.1) was inspected in Kokiri Forest, docked at 1x with the built-in Max Resolution
+patch. Sampled frame dumps, constant-buffer traces and pixel statistics showed:
 
 - The 3D renders at the output size (2560x1440 docked), with no jitter and no motion vectors.
 - The tonemap pass (fragment shader `bded5ce917183214` outdoors, `3ac011bd2d772994` outdoors at
@@ -22,25 +21,31 @@ the built-in Max Resolution patch.
   overshoot up to 1.72 on bright edges. That is the halo users see.
 - Only the HUD and a plain copy for presentation follow the output pass.
 
+In the base game (1.0.0), the same tonemap can run below the output resolution. A frame dump in the
+Temple of Time showed a 1920x1080 tonemapped scene feeding a 2560x1440 output. The base game's
+output shaders use the same constant-buffer handle offsets as the update.
+
 ## What No sharpening does
 
-`ShaderCache::GetComputePipeline` asks `KeplerCompute::BypassOotNetwork` about every native compute
-dispatch (`DispatchReplaced` skips it):
-
-- the prepass and the network are skipped;
-- the output pass is replaced by an `AccelerateSurfaceCopy` of the tonemapped image into the output
-  pass's own target (point filter, same size; format, size and block-linear layout from the output
-  pass's texture descriptor at cb0+0xd0).
+- On 1.1.1, `ShaderCache::ComputeShader` calls `KeplerCompute::BypassOotNetwork`. The output
+  pass uses a same-size point copy. The prepass and network are skipped while the replacement works.
+- On 1.0.0, `KeplerCompute::BypassOotBaseNetwork` recognizes the known output programs from
+  `DispatchNativeCompute` before translation, which can reject their per-tap gathers. It uses a
+  bilinear copy that can scale the tonemap up to the output resolution. The base game's other
+  compute passes still run.
+- Both paths use `AccelerateSurfaceCopy` and get the output format, size and block-linear layout
+  from the output pass's texture descriptor at cb0+0xd0.
 
 The images are learned at run time, not hard-coded: the tonemapped image is render target 0 of the
 latest draw whose pipeline has a tonemap fragment shader
 (`RasterizerVulkan::TrackOotTonemappedImage`), and the output is whatever the output pass's handle
 selects. Nothing is replaced until the tonemapped image has been seen. The prepass and the network
-are skipped only while the output pass is being replaced: if the tonemapped image or the output
-descriptor is not a B10G11R11 block-linear image, their sizes differ, or the copy fails, the next
-frame runs the whole network natively again. The copy's source takes its block layout from the
-tonemap draw's render target. The state lives in the rasterizer (`OotNetwork::BypassState`) because the tonemap
-pass draws on the 3D engine and the network's passes do not all run on the same compute engine.
+are skipped only while the output pass is being replaced. The replacement requires two
+B10G11R11 block-linear images, and the input must fit the output dimensions (an exact match on
+1.1.1). If the copy fails, dispatch falls back to the game's shader. The copy's source takes
+its dimensions and block layout from the tonemap draw's render target. The state lives in the
+rasterizer (`OotNetwork::BypassState`) because the tonemap pass draws on the 3D engine and the
+network's passes do not all run on the same compute engine.
 
 NVIDIA DLSS takes precedence: while Ocarina DLSS is enabled ("Use NVIDIA DLSS in place of a
 game's DLSS" on, with DLSS available from Streamline), `RasterizerVulkan::OotNetworkBypass` returns
@@ -61,9 +66,9 @@ The game's constants (shader hashes, program keys, the cb0 offset) are in
 
 ## Caveats
 
-- Hashes, keys and the offset are specific to the game's main with build id
-  `E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348`; a game update needs them re-checked. With other
-  keys the bypass does nothing.
+- The known shader keys cover base 1.0.0 (main build ID
+  `33FA6C2C23848282A77E8B88A0A93F4887C55920`) and update 1.1.1
+  (`E0F3CCFAF50065AE4EA01EB5AEB13B1A45DA3348`). A different revision needs its shaders checked.
 - B10G11R11 has little precision in dark tones: without the network's smoothing some banding
   shows in deep shadows.
 - The heavy dispatch between the prepass and the network still runs; its result goes unused.

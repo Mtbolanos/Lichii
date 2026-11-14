@@ -240,21 +240,18 @@
     <string name="select_games_folder_description">Ermöglicht es Eden, die Spieleliste zu füllen.</string>
     <string name="add_games_warning">Auswahl des Spieleverzeichnisses überspringen?</string>
     <string name="add_games_warning_description">Spiele werden in der Spieleliste nicht angezeigt, wenn kein Ordner ausgewählt ist.</string>
-    <string name="add_games_warning_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-games</string>
     <string name="home_search_games">Spiele suchen</string>
     <string name="search_settings">Einstellungen suchen</string>
     <string name="install_prod_keys">prod.keys installieren</string>
     <string name="install_prod_keys_description">Zum Entschlüsseln von Spielen benötigt</string>
     <string name="install_prod_keys_warning">Hinzufügen der Schlüssel überspringen?</string>
     <string name="install_prod_keys_warning_description">Für die Emulation von Spielen sind gültige Schlüssel erforderlich. Wenn du fortfährst, funktionieren nur Homebrew-Anwendungen.</string>
-    <string name="install_prod_keys_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="install_firmware_warning">Das Hinzufügen der Firmware überspringen\?</string>
     <string name="emulator_data">Emulatordaten einrichten</string>
     <string name="emulator_data_description">Für die Funktion des Emulators werden Schlüssel benötigt, und Firmware ist empfohlen und für die Verwendung des QLaunch-Applets erforderlich.</string>
     <string name="permissions">Berechtigungen erteilen</string>
     <string name="permissions_description">Erteile optionale Berechtigungen zur Nutzung bestimmter Funktionen des Emulators.</string>
     <string name="install_firmware_warning_description">Viele Spiele benötigen Zugriff auf die Firmware, um richtig zu funktionieren.</string>
-    <string name="install_firmware_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="notifications">Benachrichtigungen</string>
     <string name="notifications_description">Erteile die Berechtigung für Benachrichtigungen über die untenstehende Schaltfläche.</string>
     <string name="permission_denied">Zugriff verweigert</string>
@@ -359,11 +356,10 @@ Wirklich fortfahren?</string>
     <string name="install_game_content_success">Spielinhalt(e) erfolgreich installiert</string>
     <string name="install_game_content_success_install">%1$d erfolgreich installiert</string>
     <string name="install_game_content_success_overwrite">%1$d erfolgreich überschrieben</string>
-    <string name="install_game_content_help_link">https://yuzu-mirror.github.io/help/quickstart/#dumping-installed-updates</string>
     <string name="custom_driver_not_supported">Benutzerdefinierte Treiber werden nicht unterstützt</string>
     <string name="custom_driver_not_supported_description">Das Laden von benutzerdefinierten Treibern wird für dieses Gerät momentan nicht unterstützt.\nSchau später einfach nochmal nach, ob die Unterstützung hinzugefügt wurde!</string>
-    <string name="manage_yuzu_data">Eden-Daten verwalten</string>
-    <string name="manage_yuzu_data_description">Importieren/Exportieren Sie Firmware, Schlüssel, Benutzerdaten und mehr!</string>
+    <string name="manage_lichii_data">Eden-Daten verwalten</string>
+    <string name="manage_lichii_data_description">Importieren/Exportieren Sie Firmware, Schlüssel, Benutzerdaten und mehr!</string>
     <string name="game_folders">Spielordner</string>
     <string name="deep_scan">Tiefer Scan</string>
     <string name="add_game_folder">Spielordner hinzufügen</string>
@@ -383,7 +379,6 @@ Wirklich fortfahren?</string>
 
     <string name="keys_missing">Schlüssel fehlen</string>
     <string name="keys_missing_description">Firmware und Spiele können nicht entschlüsselt werden</string>
-    <string name="keys_missing_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-decryption-keys</string>
 
     <string name="uninstall_firmware">Firmware deinstallieren</string>
     <string name="uninstall_firmware_description">Das Deinstallieren der Firmware entfernt sie vom Gerät und kann die Spielkompatibilität beeinträchtigen.</string>
@@ -428,7 +423,7 @@ Wirklich fortfahren?</string>
     <string name="user_data_description">Alle App-Daten importieren/exportieren\n\nBeim Importieren von Nutzerdaten werden alle existierenden Nutzerdaten gelöscht!\n\nDaten aus Citron zu importieren kann Probleme verursachen. Es wird empfohlen, alle benötigten Daten manuell zu importieren.</string>
     <string name="exporting_user_data">Benutzerdaten werden exportiert…</string>
     <string name="importing_user_data">Importiere Nutzerdaten...</string>
-    <string name="invalid_yuzu_backup">Ungültiges Eden-Backup</string>
+    <string name="invalid_lichii_backup">Ungültiges Eden-Backup</string>
     <string name="user_data_export_success">Nutzerdaten erfolgreich exportiert</string>
     <string name="user_data_import_success">Nutzerdaten erfolgreich importiert</string>
     <string name="user_data_export_cancelled">Export abgebrochen</string>
@@ -801,8 +796,7 @@ Wirklich fortfahren?</string>
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Das ROM ist verschlüsselt</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[Bitte folgen Sie den Anleitungen zum erneuten Dumpen Ihrer <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">Spielkarten</a> oder <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">digitalen Titel</a>.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[Bitte stelle sicher dass die <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> Datei installiert ist, damit Spiele entschlüsselt werden können.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[Bitte stelle sicher dass die prod.keys Datei installiert ist, damit Spiele entschlüsselt werden können.]]></string>
     <string name="loader_error_video_core">Bei der Initialisierung des Videokerns ist ein Fehler aufgetreten</string>
     <string name="loader_error_video_core_description">Dies wird normalerweise durch einen inkompatiblen GPU-Treiber verursacht. Die Installation eines passenden GPU-Treibers kann dieses Problem beheben.</string>
     <string name="loader_error_file_not_found">ROM-Datei existiert nicht</string>

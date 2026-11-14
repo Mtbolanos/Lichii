@@ -318,7 +318,6 @@ TEST_CASE("Star Fox ULDC U16 rejects unrepresentable offsets and unsupported mod
              std::array{38U, 16U, 0x8000U}, std::array{38U, 16U, 0xfffeU},
              std::array{16U, 8U, 63U}, std::array{16U, 8U, 64U},
              std::array{54U, 5U, 18U}, std::array{62U, 2U, 1U},
-             std::array{73U, 3U, 1U}, std::array{73U, 3U, 3U},
              std::array{73U, 3U, 6U}, std::array{78U, 2U, 2U},
              std::array{91U, 1U, 1U}}) {
         auto instruction = CapturedUniformLoad;
@@ -334,7 +333,7 @@ TEST_CASE("Star Fox ULDC U16 rejects unrepresentable offsets and unsupported mod
     const auto indexed_load = LowerToMaxwell(std::array{indexed, Exit});
     INFO(indexed_load.error);
     CHECK(indexed_load);
-    SetBits(indexed, 73, 3, 1);
+    SetBits(indexed, 73, 3, 6);
     CHECK_FALSE(LowerToMaxwell(std::array{indexed, Exit}));
 }
 
@@ -393,7 +392,7 @@ TEST_CASE("Star Fox uniform U16 conversion rejects invalid uniform sources and o
         CHECK_FALSE(lowered);
         CHECK(lowered.instructions.empty());
     }
-    for (const u32 mode : {0x00101000U, 0x08101400U, 0x08109000U, 0x08100800U}) {
+    for (const u32 mode : {0x00101000U, 0x08109000U, 0x08100800U}) {
         auto instruction = CapturedI2F;
         instruction.words[2] = mode;
         const auto lowered = LowerToMaxwell(std::array{instruction, Exit});

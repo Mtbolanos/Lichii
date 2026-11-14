@@ -37,7 +37,7 @@ cmake --build build/compatibility-report --parallel 4
 ctest --test-dir build/compatibility-report --output-on-failure
 ```
 
-The target also joins the normal Qt build when `YUZU_TESTS` is enabled. It uses the production Qt string-conversion definitions. Tests cover consent gates, catalog confirmation and pagination, stale responses, cancellation, double submission, exact allowed fields, retry identity, field errors, rate limits, malformed/oversized responses and unsafe receipt URLs. A loopback HTTP fixture checks actual Qt transport and ensures a seeded cookie is not sent. Neither fake transport nor loopback tests can send a production report.
+The target also joins the normal Qt build when `LICHII_TESTS` is enabled. It uses the production Qt string-conversion definitions. Tests cover consent gates, catalog confirmation and pagination, stale responses, cancellation, double submission, exact allowed fields, retry identity, field errors, rate limits, malformed/oversized responses and unsafe receipt URLs. A loopback HTTP fixture checks actual Qt transport and ensures a seeded cookie is not sent. Neither fake transport nor loopback tests can send a production report.
 
 For a synthetic dialog using only fake transport:
 

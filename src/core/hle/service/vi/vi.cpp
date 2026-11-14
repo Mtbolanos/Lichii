@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "core/core.h"
 #include "core/hle/service/server_manager.h"
+#include "core/hle/service/sm/sm.h"
 #include "core/hle/service/vi/application_root_service.h"
 #include "core/hle/service/vi/container.h"
 #include "core/hle/service/vi/manager_root_service.h"
@@ -15,6 +15,13 @@
 namespace Service::VI {
 
 void LoopProcess(Core::System& system, std::stop_token token) {
+    // The container needs these. dispdrv comes from the guest cores, which never start after a
+    // close during the boot shader load: vi then leaves instead of waiting on a closed boot.
+    auto& service_manager = system.ServiceManager();
+    if (!service_manager.WaitForService("dispdrv") || !service_manager.WaitForService("nvdrv:s")) {
+        return;
+    }
+
     const auto container = std::make_shared<Container>(system);
 
     auto server_manager = std::make_unique<ServerManager>(system);

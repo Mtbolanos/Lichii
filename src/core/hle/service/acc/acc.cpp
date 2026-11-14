@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -11,6 +10,7 @@
 #include "common/fs/file.h"
 #include "common/fs/path_util.h"
 #include "common/logging.h"
+#include "common/settings.h"
 #include <ranges>
 #include "common/stb.h"
 #include "common/string_util.h"
@@ -20,12 +20,15 @@
 #include "core/core_timing.h"
 #include "core/file_sys/control_metadata.h"
 #include "core/file_sys/patch_manager.h"
+#include "core/hle/kernel/k_event.h"
 #include "core/hle/service/acc/acc.h"
 #include "core/hle/service/acc/async_context.h"
 #include "core/hle/service/acc/errors.h"
+#include "core/hle/service/acc/nextendo_id_token.h"
 #include "core/hle/service/acc/profile_manager.h"
 #include "core/hle/service/cmif_serialization.h"
 #include "core/hle/service/glue/glue_manager.h"
+#include "core/hle/service/kernel_helpers.h"
 #include "core/hle/service/server_manager.h"
 #include "core/loader/loader.h"
 
@@ -653,6 +656,88 @@ public:
     }
 };
 
+// 6.0.0+. Only handed out while Nextendo Network is on, which treats every account as an
+// online subscriber (citron-nextendo, Ryujinx-Nextendo).
+class IAsyncNetworkServiceLicenseKindContext final
+    : public ServiceFramework<IAsyncNetworkServiceLicenseKindContext> {
+public:
+    explicit IAsyncNetworkServiceLicenseKindContext(Core::System& system_)
+        : ServiceFramework{system_, "IAsyncNetworkServiceLicenseKindContext"},
+          service_context{system_, "IAsyncNetworkServiceLicenseKindContext"} {
+        // clang-format off
+        static const FunctionInfo functions[] = {
+            {0, &IAsyncNetworkServiceLicenseKindContext::GetSystemEvent, "GetSystemEvent"},
+            {1, &IAsyncNetworkServiceLicenseKindContext::Cancel, "Cancel"},
+            {2, &IAsyncNetworkServiceLicenseKindContext::HasDone, "HasDone"},
+            {3, &IAsyncNetworkServiceLicenseKindContext::GetResult, "GetResult"},
+            {100, &IAsyncNetworkServiceLicenseKindContext::GetNetworkServiceLicenseKind, "GetNetworkServiceLicenseKind"},
+        };
+        // clang-format on
+
+        RegisterHandlers(functions);
+
+        completion_event =
+            service_context.CreateEvent("IAsyncNetworkServiceLicenseKindContext:Done");
+        completion_event->Signal(system_.Kernel());
+    }
+
+    ~IAsyncNetworkServiceLicenseKindContext() override {
+        service_context.CloseEvent(completion_event);
+    }
+
+private:
+    void GetSystemEvent(HLERequestContext& ctx) {
+        IPC::ResponseBuilder rb{ctx, 2, 1};
+        rb.Push(ResultSuccess);
+        rb.PushCopyObjects(ctx, completion_event->GetReadableEvent());
+    }
+
+    void Cancel(HLERequestContext& ctx) {
+        IPC::ResponseBuilder rb{ctx, 2};
+        rb.Push(ResultSuccess);
+    }
+
+    void HasDone(HLERequestContext& ctx) {
+        IPC::ResponseBuilder rb{ctx, 3};
+        rb.Push(ResultSuccess);
+        rb.Push(true);
+    }
+
+    void GetResult(HLERequestContext& ctx) {
+        IPC::ResponseBuilder rb{ctx, 2};
+        rb.Push(ResultSuccess);
+    }
+
+    void GetNetworkServiceLicenseKind(HLERequestContext& ctx) {
+        constexpr u32 Subscribed = 1;
+        IPC::ResponseBuilder rb{ctx, 3};
+        rb.Push(ResultSuccess);
+        rb.Push(Subscribed);
+    }
+
+    KernelHelpers::ServiceContext service_context;
+    Kernel::KEvent* completion_event{};
+};
+
+// While Nextendo Network is on, answers with the signed-in account's id token.
+static bool ReplyNextendoIdToken(Core::System& system, HLERequestContext& ctx) {
+    if (!Nextendo::LinkedAccount()) {
+        return false;
+    }
+    const auto account =
+        Common::Nextendo::EnsureGameToken(Settings::values.nextendo_client_id.GetValue());
+    if (!account) {
+        return false;
+    }
+    const std::size_t written =
+        Nextendo::WriteIdToken(ctx, Nextendo::BuildIdToken(system, *account));
+
+    IPC::ResponseBuilder rb{ctx, 3};
+    rb.Push(ResultSuccess);
+    rb.Push(static_cast<u32>(written));
+    return true;
+}
+
 class EnsureTokenIdCacheAsyncInterface final : public IAsyncContext {
 public:
     explicit EnsureTokenIdCacheAsyncInterface(Core::System& system_) : IAsyncContext{system_} {
@@ -661,6 +746,9 @@ public:
     ~EnsureTokenIdCacheAsyncInterface() = default;
 
     void LoadIdTokenCache(HLERequestContext& ctx) {
+        if (ReplyNextendoIdToken(system, ctx)) {
+            return;
+        }
         LOG_WARNING(Service_ACC, "(STUBBED) called");
 
         IPC::ResponseBuilder rb{ctx, 3};
@@ -698,7 +786,7 @@ public:
             {136, &IManagerForApplication::GetNintendoAccountUserResourceCacheForApplication, "GetNintendoAccountUserResourceCache"}, // 19.0.0+
             {150, &IManagerForApplication::StubReplyInterface, "CreateAuthorizationRequest"},
             {160, &IManagerForApplication::StoreOpenContext, "StoreOpenContext"},
-            {170, &IManagerForApplication::StubReplyInterface, "LoadNetworkServiceLicenseKindAsync"},
+            {170, &IManagerForApplication::LoadNetworkServiceLicenseKindAsync, "LoadNetworkServiceLicenseKindAsync"},
         };
         // clang-format on
 
@@ -712,12 +800,21 @@ private:
         rb.Push(ResultSuccess);
     }
 
+    // The signed-in Nextendo account's id while Nextendo Network is on, so the game server sees
+    // the same account its nx2 token names.
+    u64 NetworkServiceAccountId() const {
+        if (const auto account = Nextendo::LinkedAccount(); account && account->pid != 0) {
+            return account->pid;
+        }
+        return profile_manager->GetLastOpenedUser().Hash();
+    }
+
     void GetAccountId(HLERequestContext& ctx) {
         LOG_DEBUG(Service_ACC, "called");
 
         IPC::ResponseBuilder rb{ctx, 4};
         rb.Push(ResultSuccess);
-        rb.PushRaw<u64>(profile_manager->GetLastOpenedUser().Hash());
+        rb.PushRaw<u64>(NetworkServiceAccountId());
     }
 
     void EnsureIdTokenCacheAsync(HLERequestContext& ctx) {
@@ -735,6 +832,9 @@ private:
     }
 
     void LoadIdTokenCache(HLERequestContext& ctx) {
+        if (ReplyNextendoIdToken(system, ctx)) {
+            return;
+        }
         LOG_WARNING(Service_ACC, "(STUBBED) called");
 
         std::vector<u8> token_data(0x100);
@@ -760,7 +860,17 @@ private:
 
         IPC::ResponseBuilder rb{ctx, 4};
         rb.Push(ResultSuccess);
-        rb.PushRaw<u64>(profile_manager->GetLastOpenedUser().Hash());
+        rb.PushRaw<u64>(NetworkServiceAccountId());
+    }
+
+    void LoadNetworkServiceLicenseKindAsync(HLERequestContext& ctx) {
+        if (!Nextendo::LinkedAccount()) {
+            StubReplyInterface(ctx);
+            return;
+        }
+        IPC::ResponseBuilder rb{ctx, 2, 0, 1};
+        rb.Push(ResultSuccess);
+        rb.PushIpcInterface<IAsyncNetworkServiceLicenseKindContext>(ctx, system);
     }
 
     void StoreOpenContext(HLERequestContext& ctx) {
@@ -774,26 +884,6 @@ private:
 
     std::shared_ptr<EnsureTokenIdCacheAsyncInterface> ensure_token_id{};
     std::shared_ptr<ProfileManager> profile_manager;
-};
-
-// 6.0.0+
-class IAsyncNetworkServiceLicenseKindContext final
-    : public ServiceFramework<IAsyncNetworkServiceLicenseKindContext> {
-public:
-    explicit IAsyncNetworkServiceLicenseKindContext(Core::System& system_, Common::UUID)
-        : ServiceFramework{system_, "IAsyncNetworkServiceLicenseKindContext"} {
-        // clang-format off
-        static const FunctionInfo functions[] = {
-            {0, nullptr, "GetSystemEvent"},
-            {1, nullptr, "Cancel"},
-            {2, nullptr, "HasDone"},
-            {3, nullptr, "GetResult"},
-            {4, nullptr, "GetNetworkServiceLicenseKind"},
-        };
-        // clang-format on
-
-        RegisterHandlers(functions);
-    }
 };
 
 // 8.0.0+
@@ -970,7 +1060,7 @@ Result Module::Interface::InitializeApplicationInfoBase() {
     case FileSys::StorageId::NandSystem:
     case FileSys::StorageId::NandUser:
     case FileSys::StorageId::SdCard:
-    case FileSys::StorageId::None: // Yuzu specific, differs from hardware
+    case FileSys::StorageId::None: // Lichii specific, differs from hardware
         application_info.application_type = ApplicationType::Digital;
         break;
     default:

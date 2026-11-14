@@ -91,6 +91,35 @@ TEST_CASE("Debug server endpoints are loopback only", "[core][nx2_debug_server]"
     REQUIRE_FALSE(Core::Nx2Debug::ParseEndpoint("12ab", error));
 }
 
+TEST_CASE("Guest presents advance debug input across the timestamp ring boundary",
+          "[core][nx2_debug_server]") {
+    auto& count = Core::g_nx2_present_count;
+    auto& ring = Core::g_nx2_present_times_ns;
+    const u64 previous_count = count.load();
+    const u64 previous_zero = ring[0].load();
+    const u64 previous_one = ring[1].load();
+    SCOPE_EXIT {
+        count.store(previous_count);
+        ring[0].store(previous_zero);
+        ring[1].store(previous_one);
+    };
+    const u64 start = ring.size();
+    count.store(start - 1);
+    ring[0].store(0);
+    ring[1].store(0);
+    const std::vector<Core::Nx2Debug::InputStep> steps{
+        Core::Nx2Debug::ParseInputStep(json{{"buttons", {"L", "R"}}, {"frames", 1}})};
+    REQUIRE_FALSE(Core::Nx2Debug::InputAt(steps, start, count.load()));
+    Core::RecordGuestPresent();
+    const auto input = Core::Nx2Debug::InputAt(steps, start, count.load());
+    REQUIRE(input);
+    REQUIRE(input->buttons == (Core::HID::NpadButton::L | Core::HID::NpadButton::R));
+    REQUIRE(ring[0].load() > 0);
+    Core::RecordGuestPresent();
+    REQUIRE_FALSE(Core::Nx2Debug::InputAt(steps, start, count.load()));
+    REQUIRE(ring[1].load() >= ring[0].load());
+}
+
 TEST_CASE("Debug frame times measure intervals and retain the ring tail", "[core][nx2_debug_server]") {
     auto& ring = Core::g_nx2_present_times_ns;
     SCOPE_EXIT {

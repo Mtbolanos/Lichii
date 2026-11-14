@@ -89,7 +89,7 @@ The port adds the descriptor-size, null-list, GPU-range, and single-segment chec
 
 ## Verification
 
-On the final merge base `3483630`, Clang 20 and Ninja built both `yuzu-cmd` and `tests` using all eight cloud cores. The complete suite passed: **479 cases and 15,741,117 assertions**. The focused storage-buffer, Ampere, reset and asynchronous-draw run passed **149 cases and 7,915,720 assertions**. The native and legacy loaded-pointer variants both pass.
+On the final merge base `3483630`, Clang 20 and Ninja built both `lichii-cmd` and `tests` using all eight cloud cores. The complete suite passed: **479 cases and 15,741,117 assertions**. The focused storage-buffer, Ampere, reset and asynchronous-draw run passed **149 cases and 7,915,720 assertions**. The native and legacy loaded-pointer variants both pass.
 
 The trace opt-in, rate-limit and timestamp-wrap tests passed in six separate processes with the flag unset, empty, `0`, `1`, `10` and `true`: 3 cases and 15 assertions per process. An extracted behavior check also compared 5,832 CPU conditional-render decisions against the merge baseline under each of those settings; all matched. Vulkan predicate-operation bodies were unchanged after removing trace calls.
 

@@ -22,7 +22,7 @@ the old way there.
 | Demoted fragments stop writing where the guest's control flow says | Moving demotes to the end of the program over nested returns let helper lanes keep writing; AMD drew a black scene | Nested returns are counted before demotes move | [#127] |
 | Fragment subgroup shuffles | AMD's proprietary driver gets them wrong | Broadcast fallback on that driver | [#273] |
 | Depth-compare samples | Undefined on colour or integer images; AMD returned green | Depth-compare images stay floating point. Binding the null image for depth-compare samples of uncomparable images is proposed in the open PR | [#273]; [#354] (open) |
-| Native FP16 arithmetic | Turned off on AMD as a driver workaround | Turned off, with no override yet. An `EDEN_AMD_FP16=1` switch to keep it for testing is proposed in the open PR | [#378] (open) |
+| Native FP16 arithmetic | Turned off on AMD as a driver workaround | Turned off on every AMD driver. An `EDEN_AMD_FP16=1` test switch was closed unmerged; keeping FP16 needs a driver-version policy backed by DKCR and Ocarina of Time evidence | [#378] (closed) |
 
 Not specific to AMD, but easy to mistake for an AMD bug:
 

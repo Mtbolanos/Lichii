@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -10,7 +9,7 @@
 #include <fmt/format.h>
 #include "common/common_types.h"
 
-// This file contains yuzu's HLE API version constants.
+// This file contains Lichii's HLE API version constants.
 
 namespace HLE::ApiVersion {
 

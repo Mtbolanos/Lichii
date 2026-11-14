@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -97,6 +96,11 @@ static constexpr u64 MakeCbufKey(u32 index, u32 offset) {
 // environment of a record, the EnvironmentReadProperties of the host that made it. Older builds
 // load it as one more value.
 constexpr u64 READ_PROPERTIES_KEY{MakeCbufKey(~0U, 0)};
+
+// Another such value: present in records whose texture types were read as ReadTextureInfo reads
+// an empty descriptor now (a 2D texture). Records without it can hold a 1D type for the null
+// texture at handle 0 (issue #846).
+constexpr u64 NULL_TEXTURE_2D_KEY{MakeCbufKey(~0U, 1)};
 
 // The most values of a kind an environment of a record holds. Translation reads a few hundred at
 // most; a damaged count can't make a load allocate more than a few MB for them.
@@ -339,9 +343,9 @@ size_t GenericEnvironment::ReadSizeBytes() const noexcept {
 }
 
 bool GenericEnvironment::CanBeSerialized() const noexcept {
-    // The read properties are one more constant buffer value.
+    // The read properties and the null texture marker are two more constant buffer values.
     return !has_unbound_instructions &&
-           std::max({texture_types.size(), texture_pixel_formats.size(), cbuf_values.size() + 1,
+           std::max({texture_types.size(), texture_pixel_formats.size(), cbuf_values.size() + 2,
                      storage_pointer_types.size(), cbuf_replacements.size()}) <=
                MAX_RECORDED_VALUES;
 }
@@ -369,7 +373,7 @@ void GenericEnvironment::Serialize(std::ostream& file, u32 read_properties) cons
     const u64 code_size{static_cast<u64>(CachedSizeBytes())};
     const u64 num_texture_types{static_cast<u64>(texture_types.size())};
     const u64 num_texture_pixel_formats{static_cast<u64>(texture_pixel_formats.size())};
-    const u64 num_cbuf_values{static_cast<u64>(cbuf_values.size()) + 1};
+    const u64 num_cbuf_values{static_cast<u64>(cbuf_values.size()) + 2};
     const u64 num_storage_pointer_types{static_cast<u64>(storage_pointer_types.size())};
     const u64 num_cbuf_replacement_values{static_cast<u64>(cbuf_replacements.size())};
 
@@ -403,8 +407,11 @@ void GenericEnvironment::Serialize(std::ostream& file, u32 read_properties) cons
         file.write(reinterpret_cast<const char*>(&key), sizeof(key))
             .write(reinterpret_cast<const char*>(&type), sizeof(type));
     }
+    constexpr u32 null_texture_2d{1};
     file.write(reinterpret_cast<const char*>(&READ_PROPERTIES_KEY), sizeof(READ_PROPERTIES_KEY))
-        .write(reinterpret_cast<const char*>(&read_properties), sizeof(read_properties));
+        .write(reinterpret_cast<const char*>(&read_properties), sizeof(read_properties))
+        .write(reinterpret_cast<const char*>(&NULL_TEXTURE_2D_KEY), sizeof(NULL_TEXTURE_2D_KEY))
+        .write(reinterpret_cast<const char*>(&null_texture_2d), sizeof(null_texture_2d));
     for (const auto& [key, type] : storage_pointer_types) {
         file.write(reinterpret_cast<const char*>(&key), sizeof(key))
             .write(reinterpret_cast<const char*>(&type), sizeof(type));
@@ -469,6 +476,16 @@ Tegra::Texture::TICEntry GenericEnvironment::ReadTextureInfo(GPUVAddr tic_addr, 
     const u32 index{Tegra::Texture::TextureHeaderIndex(handle.first, tic_limit,
                                                        gpu_memory->UsesNativeTiling())};
     Tegra::Texture::TICEntry entry;
+    const auto null_2d_texture = [&entry] {
+        entry.raw.fill(0);
+        entry.format.Assign(Tegra::Texture::TextureFormat::A8B8G8R8);
+        entry.r_type.Assign(Tegra::Texture::ComponentType::UNORM);
+        entry.g_type.Assign(Tegra::Texture::ComponentType::UNORM);
+        entry.b_type.Assign(Tegra::Texture::ComponentType::UNORM);
+        entry.a_type.Assign(Tegra::Texture::ComponentType::UNORM);
+        entry.texture_type.Assign(Tegra::Texture::TextureType::Texture2D);
+        entry.normalized_coords.Assign(1);
+    };
     if (index > tic_limit) {
         // Past the pool, the bytes are not a descriptor: reading them gave the shader a random
         // texture type and format (garbage-format asserts, then crashes and device losses on AMD
@@ -480,14 +497,7 @@ Tegra::Texture::TICEntry GenericEnvironment::ReadTextureInfo(GPUVAddr tic_addr, 
                                 "(index {} > limit {}); using a null 2D texture",
                         raw, index, tic_limit);
         }
-        entry.raw.fill(0);
-        entry.format.Assign(Tegra::Texture::TextureFormat::A8B8G8R8);
-        entry.r_type.Assign(Tegra::Texture::ComponentType::UNORM);
-        entry.g_type.Assign(Tegra::Texture::ComponentType::UNORM);
-        entry.b_type.Assign(Tegra::Texture::ComponentType::UNORM);
-        entry.a_type.Assign(Tegra::Texture::ComponentType::UNORM);
-        entry.texture_type.Assign(Tegra::Texture::TextureType::Texture2D);
-        entry.normalized_coords.Assign(1);
+        null_2d_texture();
         return entry;
     }
     const GPUVAddr descriptor_addr{tic_addr + index * sizeof(Tegra::Texture::TICEntry)};
@@ -495,6 +505,16 @@ Tegra::Texture::TICEntry GenericEnvironment::ReadTextureInfo(GPUVAddr tic_addr, 
         gpu_memory->ReadBlockUnsafe(descriptor_addr, &entry, sizeof(entry));
     } else {
         gpu_memory->ReadBlock(descriptor_addr, &entry, sizeof(entry));
+    }
+    if (entry.raw == decltype(entry.raw){}) {
+        // An empty descriptor (the null texture, handle 0 in NVN games): a game can draw with it
+        // before it assigns the real texture, and the shader built for that draw is kept for the
+        // pipeline. Read as it is, the zeroes say "1D texture", so a size query of a texture that
+        // turns out 2D (it has no type of its own) got a null 1D view for good: Pokemon Legends
+        // Z-A's tonemap then samples one texel for the whole screen (issue #846). Compile for a
+        // plain 2D RGBA8 texture instead, as for an index past the pool.
+        null_2d_texture();
+        return entry;
     }
     if (entry.format.Value() == Tegra::Texture::TextureFormat{} &&
         std::getenv("EDEN_NX2_RENDER_TRACE")) {
@@ -1243,6 +1263,20 @@ void FileEnvironment::Deserialize(std::istream& file, std::streampos end) {
     if (const auto it{cbuf_values.find(READ_PROPERTIES_KEY)}; it != cbuf_values.end()) {
         recorded_read_properties = it->second;
         cbuf_values.erase(it);
+    }
+    if (const auto it{cbuf_values.find(NULL_TEXTURE_2D_KEY)}; it != cbuf_values.end()) {
+        cbuf_values.erase(it);
+    } else {
+        // An older build read every empty descriptor as 1D (issue #846), whatever its index, or
+        // the game binds a real 1D texture there: the record can't tell. Drop every 1D type, so
+        // that the pipeline is built again from the game (LacksRecordedValue).
+        for (auto it{texture_types.begin()}; it != texture_types.end();) {
+            if (it->second == Shader::TextureType::Color1D) {
+                it = texture_types.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
     for (size_t i = 0; i < num_storage_pointer_types; ++i) {
         u64 key;

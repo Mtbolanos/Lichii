@@ -6,6 +6,8 @@ New entries go under `## [Unreleased]`; `tools/ci/bump-version.sh` turns them in
 
 ## [Unreleased]
 
+- Fix unit-test linking when the OpenGL shader backends are disabled.
+
 ## [0.1.0]
 
 - Initial release candidate

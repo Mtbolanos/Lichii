@@ -29,6 +29,12 @@ constexpr size_t page_table_const_bits = 12;
 constexpr size_t page_table_const_size = 1 << page_table_const_bits;
 constexpr size_t page_table_const_mask = (1 << page_table_const_bits) - 1;
 
+/// Where cold deferred code goes: the far region when there is one.
+template<typename Ctx>
+std::vector<std::function<void()>>& ColdEmits(BlockOfCode& code, Ctx& ctx) {
+    return code.HasFarCode() ? ctx.far_deferred_emits : ctx.deferred_emits;
+}
+
 template<typename EmitContext>
 void EmitDetectMisalignedVAddr(BlockOfCode& code, EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, Xbyak::Reg64 tmp) {
     if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
@@ -60,7 +66,7 @@ void EmitDetectMisalignedVAddr(BlockOfCode& code, EmitContext& ctx, size_t bitsi
         code.jnz(*detect_boundary, code.T_NEAR);
         code.L(*resume);
 
-        ctx.deferred_emits.emplace_back([=, &code] {
+        ColdEmits(code, ctx).emplace_back([=, &code] {
             code.L(*detect_boundary);
             code.mov(tmp, vaddr);
             code.and_(tmp, page_align_mask);
@@ -246,73 +252,50 @@ template<>
 
 template<std::size_t bitsize>
 const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr, bool ordered) {
-    if (ordered) {
-        if constexpr (bitsize != 128) {
-            code.xor_(Xbyak::Reg32(value_idx), Xbyak::Reg32(value_idx));
-        } else {
-            code.xor_(eax, eax);
-            code.xor_(ebx, ebx);
-            code.xor_(ecx, ecx);
-            code.xor_(edx, edx);
-        }
+    // An x86 load is already ordered before later loads and stores (acquire), and ordered stores
+    // are xchg, which drains the store buffer: an ordered or exclusive load of up to 64 bits is a
+    // plain mov (from Lichii #161). A locked xadd took the cache line exclusively on every core
+    // that read it, and faulted on pages that are not writable.
+    if (ordered && bitsize == 128) {
+        code.xor_(eax, eax);
+        code.xor_(ebx, ebx);
+        code.xor_(ecx, ecx);
+        code.xor_(edx, edx);
 
         const void* fastmem_location = code.getCurr();
-        switch (bitsize) {
-        case 8:
-            code.lock();
-            code.xadd(code.byte[addr], Xbyak::Reg32(value_idx).cvt8());
-            break;
-        case 16:
-            code.lock();
-            code.xadd(word[addr], Xbyak::Reg64(value_idx).cvt16());
-            break;
-        case 32:
-            code.lock();
-            code.xadd(dword[addr], Xbyak::Reg64(value_idx).cvt32());
-            break;
-        case 64:
-            code.lock();
-            code.xadd(qword[addr], Xbyak::Reg64(value_idx));
-            break;
-        case 128:
-            code.lock();
-            code.cmpxchg16b(xword[addr]);
-            if (code.HasHostFeature(HostFeature::SSE41)) {
-                code.movq(Xbyak::Xmm(value_idx), rax);
-                code.pinsrq(Xbyak::Xmm(value_idx), rdx, 1);
-            } else {
-                code.movq(Xbyak::Xmm(value_idx), rax);
-                code.movq(xmm0, rdx);
-                code.punpcklqdq(Xbyak::Xmm(value_idx), xmm0);
-            }
-            break;
-        default:
-            UNREACHABLE();
-        }
-        return fastmem_location;
-    } else {
-        const void* fastmem_location = code.getCurr();
-        switch (bitsize) {
-        case 8:
-            code.movzx(Xbyak::Reg64(value_idx).cvt32(), code.byte[addr]);
-            break;
-        case 16:
-            code.movzx(Xbyak::Reg64(value_idx).cvt32(), word[addr]);
-            break;
-        case 32:
-            code.mov(Xbyak::Reg64(value_idx).cvt32(), dword[addr]);
-            break;
-        case 64:
-            code.mov(Xbyak::Reg64(value_idx), qword[addr]);
-            break;
-        case 128:
-            code.movups(Xbyak::Xmm(value_idx), xword[addr]);
-            break;
-        default:
-            UNREACHABLE();
+        code.lock();
+        code.cmpxchg16b(xword[addr]);
+        if (code.HasHostFeature(HostFeature::SSE41)) {
+            code.movq(Xbyak::Xmm(value_idx), rax);
+            code.pinsrq(Xbyak::Xmm(value_idx), rdx, 1);
+        } else {
+            code.movq(Xbyak::Xmm(value_idx), rax);
+            code.movq(xmm0, rdx);
+            code.punpcklqdq(Xbyak::Xmm(value_idx), xmm0);
         }
         return fastmem_location;
     }
+    const void* fastmem_location = code.getCurr();
+    switch (bitsize) {
+    case 8:
+        code.movzx(Xbyak::Reg64(value_idx).cvt32(), code.byte[addr]);
+        break;
+    case 16:
+        code.movzx(Xbyak::Reg64(value_idx).cvt32(), word[addr]);
+        break;
+    case 32:
+        code.mov(Xbyak::Reg64(value_idx).cvt32(), dword[addr]);
+        break;
+    case 64:
+        code.mov(Xbyak::Reg64(value_idx), qword[addr]);
+        break;
+    case 128:
+        code.movups(Xbyak::Xmm(value_idx), xword[addr]);
+        break;
+    default:
+        UNREACHABLE();
+    }
+    return fastmem_location;
 }
 
 template<std::size_t bitsize>
@@ -422,6 +405,11 @@ void EmitExclusiveTestAndClear(BlockOfCode& code, const UserConfig& conf, Xbyak:
         code.mov(qword[pointer], tmp);
         code.L(ok);
     }
+}
+
+/// A folded address displacement as an Xbyak displacement (sign-extended).
+inline size_t FoldedDisp(s32 disp) {
+    return static_cast<size_t>(static_cast<s64>(disp));
 }
 
 inline bool IsOrdered(IR::AccType acctype) {

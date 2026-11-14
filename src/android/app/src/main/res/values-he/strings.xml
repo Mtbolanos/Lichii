@@ -250,8 +250,8 @@
     <string name="install_game_content_success_install">%1$d הותקן בהצלחה</string>
     <string name="install_game_content_success_overwrite">%1$d נדרס/נכתב מעל בהצלחה</string>
     <string name="custom_driver_not_supported">דרייברים מותאמים אישית לא נתמכים</string>
-    <string name="manage_yuzu_data">נהל את המידע של Eden</string>
-    <string name="manage_yuzu_data_description">יבא/יצא firmware, keys, מידע של משתמש ועוד!</string>
+    <string name="manage_lichii_data">נהל את המידע של Eden</string>
+    <string name="manage_lichii_data_description">יבא/יצא firmware, keys, מידע של משתמש ועוד!</string>
     <string name="game_folders">תיקיית משחקים</string>
     <string name="deep_scan">סריקה עמוקה</string>
     <string name="add_game_folder">הוסף תיקיית משחקים</string>
@@ -313,7 +313,7 @@
     <string name="user_data">נתוני משתמש</string>
     <string name="exporting_user_data">מייצא נתוני משתמש...</string>
     <string name="importing_user_data">מייבא נתוני משתמש...</string>
-    <string name="invalid_yuzu_backup">גיבוי Eden לא חוקי</string>
+    <string name="invalid_lichii_backup">גיבוי Eden לא חוקי</string>
     <string name="user_data_export_success">נתוני משתמש יוצאו בהצלחה</string>
     <string name="user_data_import_success">נתוני משתמש יובאו בהצלחה</string>
     <string name="user_data_export_cancelled">ייצוא בוטל</string>
@@ -503,8 +503,7 @@
     <string name="verify_success">אימות  התקינות הצליח!</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">המשחק שלך מוצפן</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[אנא עקוב אחר המדריכים לשמירת <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">כרטיסי משחק</a> או <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">כותרות דיגיטליות</a> מחדש.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[אנא וודא שקובץ ה-<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> מותקן כך שניתן יהיה לפענח משחקים.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[אנא וודא שקובץ ה-prod.keys מותקן כך שניתן יהיה לפענח משחקים.]]></string>
     <string name="loader_error_video_core">התרחשה בעיה באתחול של ליבת הווידאו</string>
     <string name="loader_error_video_core_description">זה בדרך כלל נגרם על ידי דרייבר לא מתאים עבור המעבד הגרפי. התקנת דרייבר אשר מתאים למעבד הגרפי יכול לפתור את הבעיה הזו.</string>
     <string name="loader_error_file_not_found">קובץ המשחק לא קיים</string>

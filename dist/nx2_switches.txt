@@ -1,8 +1,8 @@
 # Switch NX2 - read when the Lichii GUI starts.
 # One NAME=VALUE per line. Lines starting with # are ignored.
 # A variable already set in the environment wins over this file.
-# Between files, the user copy (%APPDATA%\eden\nx2_switches.txt, or
-# $XDG_CONFIG_HOME/eden/nx2_switches.txt) wins over this one, so editing this file is never
+# Between files, the user copy (%APPDATA%\lichii\nx2_switches.txt, or
+# $XDG_CONFIG_HOME/lichii/nx2_switches.txt) wins over this one, so editing this file is never
 # needed: copy the lines you want into your own and restart.
 # Beside-application files accept EDEN_NX2_* and the emulator's diagnostic switches only.
 # Host environment settings, including library paths such as EDEN_STREAMLINE_DIR, must be

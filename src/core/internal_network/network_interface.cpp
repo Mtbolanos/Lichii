@@ -7,14 +7,14 @@
 #include <vector>
 #include <numeric>
 #include <ranges>
-#include <bit>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
 #include <iphlpapi.h>
-#elif defined(__linux__) || defined(__ANDROID__)
+#elif defined(__linux__) || defined(__ANDROID__) || defined(__APPLE__)
 #include <cerrno>
+#include <cstring>
 #include <ifaddrs.h>
 #include <net/if.h>
 #elif defined(__FreeBSD__)
@@ -33,6 +33,11 @@
 #include <netinet/if_ether.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
+#ifdef __APPLE__
+#include <unordered_set>
+#include <SystemConfiguration/SystemConfiguration.h>
 #endif
 
 #include "common/common_types.h"
@@ -103,8 +108,50 @@ std::vector<Network::NetworkInterface> GetAvailableNetworkInterfaces() {
 
 #else
 
+#ifdef __APPLE__
+/// BSD names of the Wi-Fi interfaces. getifaddrs reports them as IFT_ETHER, so only
+/// SystemConfiguration can tell them apart from wired ones.
+static std::unordered_set<std::string> GetWifiInterfaceNames() {
+    std::unordered_set<std::string> names;
+    const CFArrayRef interfaces = SCNetworkInterfaceCopyAll();
+    if (interfaces == nullptr) {
+        return names;
+    }
+    for (CFIndex i = 0; i < CFArrayGetCount(interfaces); ++i) {
+        const auto iface =
+            static_cast<SCNetworkInterfaceRef>(const_cast<void*>(CFArrayGetValueAtIndex(interfaces, i)));
+        const CFStringRef type = SCNetworkInterfaceGetInterfaceType(iface);
+        const CFStringRef bsd_name = SCNetworkInterfaceGetBSDName(iface);
+        if (type == nullptr || bsd_name == nullptr ||
+            !CFEqual(type, kSCNetworkInterfaceTypeIEEE80211)) {
+            continue;
+        }
+        char name[IFNAMSIZ]{};
+        if (CFStringGetCString(bsd_name, name, sizeof(name), kCFStringEncodingUTF8)) {
+            names.emplace(name);
+        }
+    }
+    CFRelease(interfaces);
+    return names;
+}
+#endif
+
+#if defined(__ANDROID__) || defined(__linux__) || defined(__APPLE__)
+/// IPv4 address of a getifaddrs sockaddr. macOS netmasks can be shorter than sockaddr_in
+/// (sa_len 5 or 7), so only sa_len bytes are copied there.
+static in_addr ToInAddr(const struct sockaddr* addr) {
+    struct sockaddr_in sin{};
+#ifdef __APPLE__
+    std::memcpy(&sin, addr, std::min<size_t>(addr->sa_len, sizeof(sin)));
+#else
+    std::memcpy(&sin, addr, sizeof(sin));
+#endif
+    return sin.sin_addr;
+}
+#endif
+
 std::vector<Network::NetworkInterface> GetAvailableNetworkInterfaces() {
-#if defined(__ANDROID__) || defined(__linux__)
+#if defined(__ANDROID__) || defined(__linux__) || defined(__APPLE__)
     struct ifaddrs* ifaddr = nullptr;
     if (getifaddrs(&ifaddr) != 0) {
         LOG_ERROR(Network, "getifaddrs: {}", std::strerror(errno));
@@ -119,7 +166,7 @@ std::vector<Network::NetworkInterface> GetAvailableNetworkInterfaces() {
         u32 flags;
     };
     std::vector<RoutingEntry> routes{};
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__APPLE__)
     // Even through Linux based, we can't reliably obtain routing information from there :(
 #else
     if (std::ifstream file("/proc/net/route"); file.is_open()) {
@@ -134,6 +181,9 @@ std::vector<Network::NetworkInterface> GetAvailableNetworkInterfaces() {
     } else {
         LOG_WARNING(Network, "\"/proc/net/route\" not found - using gateway 0");
     }
+#endif
+#ifdef __APPLE__
+    const auto wifi_names = GetWifiInterfaceNames();
 #endif
     std::vector<Network::NetworkInterface> ifaces;
     for (auto ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
@@ -151,9 +201,13 @@ std::vector<Network::NetworkInterface> GetAvailableNetworkInterfaces() {
         gw.s_addr = it != routes.end() ? it->gateway : 0;
         ifaces.emplace_back(Network::NetworkInterface{
             .name = ifa->ifa_name,
-            .ip_address = std::bit_cast<struct sockaddr_in>(*ifa->ifa_addr).sin_addr,
-            .subnet_mask = std::bit_cast<struct sockaddr_in>(*ifa->ifa_netmask).sin_addr,
-            .gateway = gw
+            .ip_address = ToInAddr(ifa->ifa_addr),
+            .subnet_mask = ToInAddr(ifa->ifa_netmask),
+            .gateway = gw,
+#ifdef __APPLE__
+            .kind = wifi_names.contains(ifa->ifa_name) ? HostAdapterKind::Wifi
+                                                       : HostAdapterKind::Ethernet,
+#endif
         });
     }
     freeifaddrs(ifaddr);

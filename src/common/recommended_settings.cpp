@@ -6,10 +6,8 @@
 #include "common/recommended_settings.h"
 
 namespace Settings {
-namespace {
 
-// The backup is "label:value,label:value", with values as BasicSetting::ToStringGlobal gives them.
-std::map<std::string, std::string> ParseBackup(const std::string& backup) {
+std::map<std::string, std::string> ParseRecommendedSettingsBackup(const std::string& backup) {
     std::map<std::string, std::string> saved;
     for (std::size_t begin = 0; begin < backup.size();) {
         const std::size_t end = (std::min)(backup.find(',', begin), backup.size());
@@ -23,22 +21,28 @@ std::map<std::string, std::string> ParseBackup(const std::string& backup) {
     return saved;
 }
 
-} // namespace
+std::string FormatRecommendedSettingsBackup(const std::map<std::string, std::string>& entries) {
+    std::string backup;
+    for (const auto& [label, value] : entries) {
+        if (!backup.empty()) {
+            backup += ',';
+        }
+        backup.append(label).append(":").append(value);
+    }
+    return backup;
+}
 
 std::vector<RecommendedSettingChange> ApplyRecommendedSettings(Values& settings) {
-    const auto saved = ParseBackup(settings.recommended_settings_backup.GetValue());
+    const auto saved =
+        ParseRecommendedSettingsBackup(settings.recommended_settings_backup.GetValue());
     std::vector<RecommendedSettingChange> changes;
-    std::string backup;
+    std::map<std::string, std::string> backup;
     ForEachRecommendedSetting(settings, [&](auto& setting, const auto& value) {
         std::string previous = setting.ToStringGlobal();
         // A value backed up earlier stays; a setting the backup does not hold yet, such as one a
         // later build added to the table, joins it.
         const auto it = saved.find(setting.GetLabel());
-        if (!backup.empty()) {
-            backup += ',';
-        }
-        backup.append(setting.GetLabel()).append(":").append(it == saved.end() ? previous
-                                                                              : it->second);
+        backup.emplace(setting.GetLabel(), it == saved.end() ? previous : it->second);
         if (setting.GetValue(true) == value) {
             return;
         }
@@ -48,14 +52,13 @@ std::vector<RecommendedSettingChange> ApplyRecommendedSettings(Values& settings)
         setting.SetGlobal(using_global);
         changes.push_back({&setting, std::move(previous), setting.ToStringGlobal()});
     });
-    if (!changes.empty()) {
-        settings.recommended_settings_backup = backup;
-    }
+    settings.recommended_settings_backup = FormatRecommendedSettingsBackup(backup);
     return changes;
 }
 
 std::vector<RecommendedSettingChange> RestorePreviousSettings(Values& settings) {
-    const auto saved = ParseBackup(settings.recommended_settings_backup.GetValue());
+    const auto saved =
+        ParseRecommendedSettingsBackup(settings.recommended_settings_backup.GetValue());
     std::vector<RecommendedSettingChange> changes;
     ForEachRecommendedSetting(settings, [&](auto& setting, const auto&) {
         const auto it = saved.find(setting.GetLabel());

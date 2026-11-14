@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -20,7 +19,7 @@
 #include "core/hle/service/nvdrv/devices/nvmap.h"
 #include "core/memory.h"
 
-using Core::Memory::YUZU_PAGESIZE;
+using Core::Memory::LICHII_PAGESIZE;
 
 namespace Service::Nvidia::Devices {
 
@@ -85,7 +84,7 @@ NvResult nvmap::IocCreate(IocCreateParams& params) {
 
     std::shared_ptr<NvCore::NvMap::Handle> handle_description{};
     auto result =
-        file.CreateHandle(Common::AlignUp(params.size, YUZU_PAGESIZE), handle_description);
+        file.CreateHandle(Common::AlignUp(params.size, LICHII_PAGESIZE), handle_description);
     if (result != NvResult::Success) {
         LOG_CRITICAL(Service_NVDRV, "Failed to create Object");
         return result;
@@ -111,8 +110,8 @@ NvResult nvmap::IocAlloc(IocAllocParams& params, DeviceFD fd) {
     }
 
     // Force page size alignment at a minimum
-    if (params.align < YUZU_PAGESIZE) {
-        params.align = YUZU_PAGESIZE;
+    if (params.align < LICHII_PAGESIZE) {
+        params.align = LICHII_PAGESIZE;
     }
 
     auto handle_description{file.GetHandle(params.handle)};

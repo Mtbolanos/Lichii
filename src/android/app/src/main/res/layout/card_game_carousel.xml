@@ -1,4 +1,4 @@
-<org.yuzu.yuzu_emu.views.GradientBorderCardView
+<io.github.zortos293.lichii.views.GradientBorderCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_game_carousel"
@@ -49,4 +49,4 @@
             android:text="Game Title" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-</org.yuzu.yuzu_emu.views.GradientBorderCardView>
+</io.github.zortos293.lichii.views.GradientBorderCardView>

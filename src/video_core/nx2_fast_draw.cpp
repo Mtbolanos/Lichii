@@ -18,7 +18,11 @@ void DeviceSpans::Update(const Tegra::MemoryManager& memory_, GPUVAddr address_,
     size = size_;
     map_serial = serial;
     spans.clear();
-    for (const auto& [device, bytes] : memory_.GetSubmappedDeviceRange(address_, size_)) {
+    const auto submapped = memory_.GetSubmappedDeviceRange(address_, size_);
+    // Segments come in GPU order, joined where device memory continues.
+    linear = submapped.size() == 1 && submapped[0].second == size_;
+    linear_base = linear ? submapped[0].first : 0;
+    for (const auto& [device, bytes] : submapped) {
         spans.emplace_back(device, device + bytes);
     }
     std::ranges::sort(spans);

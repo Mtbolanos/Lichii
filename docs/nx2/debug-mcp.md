@@ -87,7 +87,7 @@ Three kinds of work, three places:
    is safe.
 3. **Existing renderer hooks.** The screenshot uses `RendererBase::RequestScreenshot`
    (`src/video_core/renderer_base.cpp:38`), the path the Qt screenshot hotkey uses
-   (`src/yuzu/bootmanager.cpp:819`). It is already safe to call from another thread, and the
+   (`src/lichii/bootmanager.cpp:819`). It is already safe to call from another thread, and the
    renderer fills the buffer at the next present (`renderer_vulkan.cpp:350`).
 
 The server thread waits for rasterizer-thread work with a timeout (5 s for screenshots and
@@ -99,9 +99,8 @@ shutdown waits at most about 50 ms for a handler.
 
 Cost when unused: if `EDEN_NX2_DEBUG_SERVER` is unset, `MaybeStartService` returns at its first
 `getenv`. No thread, no socket, no log ring. The per-frame check is one relaxed atomic load,
-and each guest present checks one more relaxed flag: only a running server
-(`g_nx2_present_time_services`, counted by `Service`) makes it store a steady-clock timestamp in the 4096-entry ring
-`frame_times` reads. The runtime reject check in the lowering is one relaxed atomic load per lowered program. When the
+and each guest present stores a steady-clock timestamp in the 4096-entry ring that
+`frame_times` and the bug bundle read. The runtime reject check in the lowering is one relaxed atomic load per lowered program. When the
 server is on but idle, its thread sleeps in `epoll`/IOCP.
 
 ## Safety
@@ -136,6 +135,7 @@ server is on but idle, its thread sleeps in `epoll`/IOCP.
 | `screenshot` | Owner takes and sends a screenshot | PNG of the next presented frame, as MCP image content | 1 |
 | `log_tail`, `log_filter` | Relaunch with a new filter, owner sends the log | Read new lines since the last call, change the filter live | 1 |
 | `capture_frame` | Relaunch with `EDEN_NX2_FRAME_DUMP`, owner touches `capture.now`, agent copies the dump | Capture the next frame now, sampled textures and bound buffers optional, get the manifest summary back; `capture_image` returns any pass PNG | 1 |
+| `capture_bundle` | Owner zips logs, settings and screenshots by hand | The Report a Bug bundle: logs, settings, screenshot, frame times and a frame capture with shaders, in one zip | 1 |
 | `reject_shaders` | Rebuild the env, relaunch, replay to the spot, once per bisection step | Reject or restore hashes live; bisection becomes a loop of reject, screenshot | 1 |
 | `pause`, `resume`, `step_frames` | Not possible | Freeze on the broken frame, capture it, step one present | 2 |
 | `input`, `input_sequence` (buttons, sticks, frame-timed sequences) | Owner plays to the spot | Agent walks to the spot itself and replays a repro (done) | 2 |
@@ -209,7 +209,9 @@ command. With `index: true`, the adapter runs that command itself. The adapter-o
 threads (default `GPU,GPUBack`) about 1000 times a second for `seconds` (default 10) and returns
 the self, self-and-caller and inclusive counts per function. The report and its folded stacks go
 to `samples-<session>-<n>.txt` in the dump directory. Windows only; the threads run slower while
-sampled, so read fps from a run without it.
+sampled, so read fps from a run without it. A stack ends at its first frame in generated code,
+shown as `(jit)`: a guest core thread (`CPUCore_*`) shows `(jit)` while it runs guest code and
+the host functions above `(jit)` while the JIT calls out.
 
 **`speed_limit`** `{on?}`. Lifts (`false`) or restores (`true`) the speed limit live and returns
 the `previous` and current `on` state, so a test script can boot through the logos and menus
@@ -219,6 +221,15 @@ not list it.
 **`host_timing`** `{stats?}`. Turns the per-second `HostTiming wait` log line
 (`EDEN_NX2_HOSTTIMING_STATS`) on or off and returns the `previous` and current `stats` state.
 Read the lines with `log_tail` (`contains: "HostTiming wait"`).
+
+**`capture_bundle`** `{description?, size_limit_mib?, timeout_s?}` (`index?` in the adapter). It
+writes the bug-report bundle that Help → Report a Bug writes ([bug-bundle.md](bug-bundle.md)):
+logs, system and settings, screenshot, the last 10 s of frame times, and the next frame captured
+with its shaders, SPIR-V and pipeline keys, zipped under `size_limit_mib` (default 19, 1 to 100)
+into `<log dir>/bug-reports`. It waits up to `timeout_s` (default 90) for the frame capture and
+returns `path`, `bytes`, `dropped`, `frame_error`, `manifest` (the bundle's `bundle.json`) and
+`index_command`. In the adapter, `index` runs `bundle_index.py` on the zip and returns its
+`index.html`.
 
 **`reject_shaders`** `{hashes?, reject?, timeout_s?}`. This is `EDEN_NX2_REJECT_HASH` at
 runtime: the same keys (native program key or shader hash) and the same effect. Pipeline
@@ -329,7 +340,10 @@ or setting, so it works with whatever the owner has mapped and leaves nothing be
 goes to player 1, or to the handheld controller when player 1 is not connected; the result names
 which. When no injector is installed, each getter costs one atomic load.
 
-Timing is by presents, not wall time. `RunInput` starts the script at `g_nx2_present_count + 1`,
+Timing is by presents, not wall time. Switch 1 advances the counter when a newly acquired,
+visible game buffer is composed; overlay-only updates and cached-buffer repeats do not count.
+Switch 2 advances it on vi2 present calls. Generated display frames do not count.
+`RunInput` starts the script at `g_nx2_present_count + 1`,
 the next present. The injector looks up the active step from the present count at every read
 (`InputAt`), so a step changes at the first npad update after its present: the npad updates
 every 1 ms (`src/hid_core/resource_manager.cpp:48`). A slow frame stretches the step in time but
@@ -392,7 +406,7 @@ Live switch classification, from the switches in `src/`:
 
 The core cannot save state. There is no serialisation of the kernel, services, the dynarmic and
 NCE CPU state, or the GPU caches, and Eden and yuzu never had it. The `saveState` in
-`src/yuzu/main_window.cpp` is Qt window geometry. Adding save states is a project of its own,
+`src/lichii/main_window.cpp` is Qt window geometry. Adding save states is a project of its own,
 not a tool. The practical substitute is a reproduction script: phase 2 input sequences, recorded
 once (`EDEN_NX2_KEY_RECORD` already records keys in `eden-cli`) and replayed after boot.
 

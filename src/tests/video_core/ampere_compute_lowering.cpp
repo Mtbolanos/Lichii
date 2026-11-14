@@ -35,7 +35,7 @@ TEST_CASE("Ampere Ocarina high effective address negates the register base",
 TEST_CASE("Ampere surface reductions preserve every U32 atomic operation",
           "[video_core][ampere]") {
     for (u32 op = 0; op < 8; ++op) {
-        for (const u32 dimension : {1U, 3U}) {
+        for (const u32 dimension : {1U, 3U, 5U}) {
             for (const u32 guard : {1U, 7U, 9U}) {
                 const Instruction instruction{{0x0400059fU | (guard << 12),
                     0x00008400U | (dimension << 29), 0x0010e000U | (op << 23), 0}};

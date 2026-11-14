@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "common/settings.h"
@@ -239,6 +238,19 @@ void AppletManager::CreateAndInsertByFrontendAppletParameters(
         m_pending_parameters = params;
     }
     m_cv.notify_all();
+}
+
+void AppletManager::DropPendingProcess() {
+    std::unique_ptr<Process> process;
+    {
+        // Not waited for: AM holds the lock while it takes the process, so it is gone then.
+        std::unique_lock lk{m_lock, std::try_to_lock};
+        if (!lk.owns_lock() || !m_pending_process) {
+            return;
+        }
+        process = std::move(m_pending_process);
+    }
+    LOG_INFO(Service_AM, "Releasing the application process AM never started");
 }
 
 void AppletManager::RequestExit() {

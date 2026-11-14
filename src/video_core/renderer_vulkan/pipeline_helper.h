@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -392,6 +391,22 @@ public:
     std::array<f32, 4> words{};
 };
 
+/// Whether a depth-compare sample of image_view is undefined and its handle garbage: its format
+/// has no depth comparison on this device (what the sample returns then differs between vendors)
+/// and it is an integer or block-compressed color texture, or its handle was read from memory (a
+/// handle program). A single-channel color texture with a cbuf handle may be one a game compares
+/// on purpose, and keeps its view.
+[[nodiscard]] inline bool IsUncomparable(const ImageView& image_view, bool read_from_memory) {
+    if (image_view.SupportsDepthComparison()) {
+        return false;
+    }
+    const VideoCore::Surface::PixelFormat format{image_view.format};
+    return read_from_memory || VideoCore::Surface::IsPixelFormatInteger(format) ||
+           VideoCore::Surface::IsPixelFormatASTC(format) ||
+           VideoCore::Surface::IsPixelFormatBCn(format) ||
+           VideoCore::Surface::IsPixelFormatETC2(format);
+}
+
 inline void PushImageDescriptors(TextureCache& texture_cache,
                                  GuestDescriptorQueue& guest_descriptor_queue,
                                  const Shader::Info& info, RescalingPushConstant& rescaling,
@@ -404,8 +419,13 @@ inline void PushImageDescriptors(TextureCache& texture_cache,
     for (const auto& desc : info.texture_descriptors) {
         bool is_rescaled{};
         for (u32 index = 0; index < desc.count; ++index) {
-            const VideoCommon::ImageViewId image_view_id{(views++)->id};
+            VideoCommon::ImageViewId image_view_id{(views++)->id};
             const VideoCommon::SamplerId sampler_id{*(samplers++)};
+            if (desc.is_depth && image_view_id != VideoCommon::NULL_IMAGE_VIEW_ID &&
+                IsUncomparable(texture_cache.GetImageView(image_view_id),
+                               desc.handle_program != ~0U)) {
+                image_view_id = VideoCommon::NULL_IMAGE_VIEW_ID;
+            }
             ImageView& image_view{texture_cache.GetImageView(image_view_id)};
             VkImageView vk_image_view{image_view.Handle(desc.type)};
             if (vk_image_view == VK_NULL_HANDLE) {

@@ -124,7 +124,7 @@ echo "-- building..."
     -Dorg.gradle.caching="${CCACHE}" \
     -Dorg.gradle.parallel="${CCACHE}" \
     -Dorg.gradle.workers.max="${NUM_JOBS}" \
-    -PYUZU_ANDROID_ARGS="$*" \
+    -PLICHII_ANDROID_ARGS="$*" \
     -Pnightly="$NIGHTLY" \
     --info
 

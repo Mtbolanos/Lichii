@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -52,6 +51,7 @@ public:
     ResultStatus ReadProgramId(u64& out_program_id) override;
     ResultStatus ReadProgramIds(std::vector<u64>& out_program_ids) override;
     ResultStatus ReadIcon(std::vector<u8>& buffer) override;
+    ResultStatus ReadOriginalIcon(std::vector<u8>& buffer) const;
     ResultStatus ReadTitle(std::string& title) override;
     ResultStatus ReadControlData(FileSys::NACP& nacp) override;
     ResultStatus ReadManualRomFS(FileSys::VirtualFile& out_file) override;

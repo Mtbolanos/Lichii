@@ -28,9 +28,11 @@ public:
 
     /// Records a check of output against input (sampled images in the GENERAL layout) and returns
     /// the result of the oldest earlier check the GPU has finished, if any. Skips recording while
-    /// every result slot is still in flight.
+    /// every result slot is still in flight. `input_region` is the part of input compared, from
+    /// its top-left corner; {0, 0} compares the whole image.
     [[nodiscard]] std::optional<VideoCore::GameDlssProbe> Probe(VkImageView input,
-                                                                VkImageView output);
+                                                                VkImageView output,
+                                                                std::array<u32, 2> input_region);
 
     static constexpr u32 GRID_WIDTH = 32;
     static constexpr u32 GRID_HEIGHT = 18;

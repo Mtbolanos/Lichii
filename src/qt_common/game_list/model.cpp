@@ -110,6 +110,33 @@ void GameListModel::DonePopulating(const QStringList& watch_list) {
     emit PopulatingCompleted(watch_list);
 }
 
+void GameListModel::SetFolderSize(const QString& game_path, u64 size_bytes) {
+    const auto update_children = [&](QStandardItem* parent) {
+        for (int row = 0; row < parent->rowCount(); ++row) {
+            // Favorites rows are plain QStandardItem clones (AddFavorite), so match the stored
+            // type and set the size text directly instead of relying on the item classes.
+            const QStandardItem* path_item = parent->child(row, COLUMN_NAME);
+            if (path_item == nullptr ||
+                path_item->data(GameListItem::TypeRole).toInt() !=
+                    static_cast<int>(GameListItemType::Game) ||
+                path_item->data(GameListItemPath::FullPathRole).toString() != game_path) {
+                continue;
+            }
+            if (QStandardItem* size_item = parent->child(row, COLUMN_SIZE)) {
+                size_item->setData(qulonglong{size_bytes}, GameListItemSize::SizeRole);
+                size_item->setData(QtCommon::ReadableByteSize(size_bytes), Qt::DisplayRole);
+                size_item->setToolTip({});
+            }
+        }
+    };
+    // Games sit at the top level in the flat list, and under their folder (or Favorites) in
+    // the tree.
+    update_children(invisibleRootItem());
+    for (int row = 0; row < rowCount(); ++row) {
+        update_children(item(row));
+    }
+}
+
 bool GameListModel::IsEmpty() const {
     for (int i = 0; i < rowCount(); i++) {
         const QStandardItem* child = invisibleRootItem()->child(i);

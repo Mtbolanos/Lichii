@@ -9,10 +9,14 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "common/common_funcs.h"
 #include "common/common_types.h"
+#include "common/settings_enums.h"
 #include "core/frontend/framebuffer_layout.h"
 #include "video_core/gpu.h"
 #include "video_core/rasterizer_interface.h"
@@ -28,6 +32,12 @@ struct RendererDeviceInfo {
     std::string model;
     std::string driver;
     std::string api;
+    /// Vulkan only, for bug reports: the API version, device-local memory, the device's
+    /// extensions and the features Lichii checks.
+    std::string api_version;
+    u64 device_local_memory{};
+    std::vector<std::string> extensions;
+    std::vector<std::pair<std::string, bool>> features;
 };
 
 enum class FrameGenState : u8 {
@@ -38,11 +48,20 @@ enum class FrameGenState : u8 {
     UnsupportedGpu,
     UnsupportedSurface,
     MissingLosslessDll,
+    NvidiaFrameGen,
 };
 
 struct FrameGenStatus {
     FrameGenState state{FrameGenState::UnsupportedRenderer};
     u64 generated_frames{};
+};
+
+struct DlssStatus {
+    u64 evaluations{};
+    /// The last evaluation's settings: the mode it ran in, and the mode and preset the user chose
+    Settings::NvidiaDlssQuality mode{};
+    Settings::NvidiaDlssQuality requested{};
+    Settings::NvidiaDlssPreset preset{};
 };
 
 struct RendererSettings {
@@ -56,8 +75,8 @@ struct RendererSettings {
 
 class RendererBase {
 public:
-    YUZU_NON_COPYABLE(RendererBase);
-    YUZU_NON_MOVEABLE(RendererBase);
+    LICHII_NON_COPYABLE(RendererBase);
+    LICHII_NON_MOVEABLE(RendererBase);
 
     explicit RendererBase(Core::Frontend::EmuWindow& window,
                           std::unique_ptr<Core::Frontend::GraphicsContext> context);
@@ -76,6 +95,19 @@ public:
     /// Whether frame generation can run and how many frames it has generated so far
     [[nodiscard]] virtual FrameGenStatus GetFrameGenStatus() const {
         return {};
+    }
+
+    /// How many NVIDIA DLSS evaluations ran so far and the mode of the last one
+    [[nodiscard]] virtual DlssStatus GetDlssStatus() const {
+        return {};
+    }
+
+    /// Asks for one host GPU time sample of an upcoming frame
+    virtual void RequestGpuBusySample() {}
+
+    /// Host GPU busy time of the last sampled frame, nullopt when it isn't measured
+    [[nodiscard]] virtual std::optional<double> GetGpuBusyMs() const {
+        return std::nullopt;
     }
 
     [[nodiscard]] const RendererDeviceInfo& GetDeviceInfo() const {

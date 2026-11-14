@@ -57,5 +57,10 @@
 FFX_FSR3UPSCALER_NUM_THREADS
 void main()
 {
-    PrepareInputs(FfxInt32x2(gl_GlobalInvocationID.xy));
+    // The dispatch is rounded up to whole groups: pixels past the render size would read stale
+    // depth and motion there and reproject it into the region.
+    const FfxInt32x2 iPxPos = FfxInt32x2(gl_GlobalInvocationID.xy);
+    if (IsOnScreen(iPxPos, RenderSize())) {
+        PrepareInputs(iPxPos);
+    }
 }

@@ -90,7 +90,7 @@ constexpr std::array<u8, 22> Av1Frame3{
 TEST_CASE("NX2 video decodes AV1 on the CPU with libdav1d whatever NVDEC emulation is set to",
           "[video_core][nx2_video_av1]") {
     if (avcodec_find_decoder_by_name("libdav1d") == nullptr) {
-        SKIP("FFmpeg has no libdav1d (YUZU_USE_EXTERNAL_FFMPEG builds H.264, VP8, VP9 only)");
+        SKIP("FFmpeg has no libdav1d (LICHII_USE_EXTERNAL_FFMPEG builds H.264, VP8, VP9 only)");
     }
     const auto emulation = Settings::values.nvdec_emulation.GetValue();
     SCOPE_EXIT {

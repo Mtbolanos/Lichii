@@ -233,8 +233,8 @@
     <string name="install_game_content_success_install">%1$d بە سەرکەوتوویی دامەزرا</string>
     <string name="install_game_content_success_overwrite">%1$d بە سەرکەوتوویی نوێکرایەوە</string>
     <string name="custom_driver_not_supported">وەگەڕخەری تایبەتمەند پشتگیری ناکرێت</string>
-    <string name="manage_yuzu_data">بەڕێوەبردنی داتای eden</string>
-    <string name="manage_yuzu_data_description">هاوردە/هەناردەکردنی پتەوواڵا، کلیل، داتای بەکارهێنەر و زیاتر!</string>
+    <string name="manage_lichii_data">بەڕێوەبردنی داتای eden</string>
+    <string name="manage_lichii_data_description">هاوردە/هەناردەکردنی پتەوواڵا، کلیل، داتای بەکارهێنەر و زیاتر!</string>
     <string name="game_folders">فۆڵدەری یارییەکان</string>
     <string name="deep_scan">گەڕانی قووڵ</string>
     <string name="add_game_folder">زیادکردنی فۆڵدەری یاری</string>
@@ -467,8 +467,7 @@
     <string name="version">وەشان</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">ڕۆمەکەت کۆدکراوە</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[تکایە ڕێنمایییەکان بە شوێن بکەوە بۆ دووبارە دامپکردنی <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">یارییە کارتەکان</a> یان <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">ناونیشانە دیجیتاڵییەکان</a>.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[تکایە دڵنیابەوە لەدامەزراوی <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> فایلەکەت بۆ ئەوەی بتوانرێت یارییەکان کۆد بکرێنەوە.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[تکایە دڵنیابەوە لەدامەزراوی prod.keys فایلەکەت بۆ ئەوەی بتوانرێت یارییەکان کۆد بکرێنەوە.]]></string>
     <string name="loader_error_video_core">هەڵەیەک لە دەستپێکردنی ناوەکی ڤیدیۆکەدا ڕوویدا</string>
     <string name="loader_error_video_core_description">ئەمەش بەزۆری بەهۆی وەگەڕخەرێکی ناتەبای GPU ەوەیە. دامەزراندنی وەگەڕخەری GPU ی تایبەتمەندکراو لەوانەیە ئەم کێشەیە چارەسەر بکات.</string>
     <string name="loader_error_file_not_found">فایلی ڕۆم بوونی نییە</string>

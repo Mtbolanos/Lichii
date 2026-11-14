@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "common/fs/file.h"
@@ -15,6 +14,8 @@
 
 #include <fmt/format.h>
 #include <algorithm>
+#include <filesystem>
+#include <mutex>
 
 namespace PlayTime {
 
@@ -74,14 +75,6 @@ std::optional<std::filesystem::path> GetCurrentUserPlayTimePath() {
         return false;
     }
 
-    Common::FS::IOFile file{filename.value(), Common::FS::FileAccessMode::Write,
-                            Common::FS::FileType::BinaryFile};
-    if (!file.IsOpen()) {
-        LOG_ERROR(Frontend, "Failed to open play time file: {}",
-                  Common::FS::PathToUTF8String(filename.value()));
-        return false;
-    }
-
     std::vector<PlayTimeElement> elements;
     elements.reserve(play_time_db.size());
 
@@ -91,7 +84,36 @@ std::optional<std::filesystem::path> GetCurrentUserPlayTimePath() {
         }
     }
 
-    return file.WriteSpan<PlayTimeElement>(elements) == elements.size();
+    // Written beside the database and renamed over it once complete: a process that ends during
+    // the save (a stuck shutdown exits after 5 s) keeps the previous play times.
+    auto temporary = filename.value();
+    temporary += ".tmp";
+    bool written = false;
+    {
+        Common::FS::IOFile file{temporary, Common::FS::FileAccessMode::Write,
+                                Common::FS::FileType::BinaryFile};
+        if (!file.IsOpen()) {
+            LOG_ERROR(Frontend, "Failed to open play time file: {}",
+                      Common::FS::PathToUTF8String(temporary));
+            return false;
+        }
+        written = file.WriteSpan<PlayTimeElement>(elements) == elements.size() &&
+                  file.Commit() && file.Close();
+    }
+    std::error_code error;
+    if (!written) {
+        LOG_ERROR(Frontend, "Failed to write play time file: {}",
+                  Common::FS::PathToUTF8String(temporary));
+        std::filesystem::remove(temporary, error);
+        return false;
+    }
+    std::filesystem::rename(temporary, filename.value(), error);
+    if (error) {
+        LOG_ERROR(Frontend, "Failed to replace play time file: {}", error.message());
+        std::filesystem::remove(temporary, error);
+        return false;
+    }
+    return true;
 }
 
 } // namespace
@@ -103,6 +125,7 @@ PlayTimeManager::PlayTimeManager() : running_program_id() {
 }
 
 PlayTimeManager::~PlayTimeManager() {
+    std::scoped_lock lock{save_mutex};
     Save();
 }
 
@@ -136,18 +159,28 @@ void PlayTimeManager::AutoTimestamp(std::stop_token stop_token) {
     while (!stop_token.stop_requested()) {
         Common::StoppableTimedWait(stop_token, 30s);
 
-        database[running_program_id] += GetDuration();
+        std::scoped_lock lock{save_mutex};
+        {
+            std::scoped_lock database_lock{database_mutex};
+            database[running_program_id] += GetDuration();
+        }
         Save();
     }
 }
 
 void PlayTimeManager::Save() {
-    if (!WritePlayTimeFile(database)) {
+    PlayTimeDatabase snapshot;
+    {
+        std::scoped_lock lock{database_mutex};
+        snapshot = database;
+    }
+    if (!WritePlayTimeFile(snapshot)) {
         LOG_ERROR(Frontend, "Failed to update play time database!");
     }
 }
 
 u64 PlayTimeManager::GetPlayTime(u64 program_id) const {
+    std::scoped_lock lock{database_mutex};
     auto it = database.find(program_id);
     if (it != database.end()) {
         return it->second;
@@ -157,12 +190,20 @@ u64 PlayTimeManager::GetPlayTime(u64 program_id) const {
 }
 
 void PlayTimeManager::SetPlayTime(u64 program_id, u64 play_time) {
-    database[program_id] = play_time;
+    std::scoped_lock lock{save_mutex};
+    {
+        std::scoped_lock database_lock{database_mutex};
+        database[program_id] = play_time;
+    }
     Save();
 }
 
 void PlayTimeManager::ResetProgramPlayTime(u64 program_id) {
-    database.erase(program_id);
+    std::scoped_lock lock{save_mutex};
+    {
+        std::scoped_lock database_lock{database_mutex};
+        database.erase(program_id);
+    }
     Save();
 }
 

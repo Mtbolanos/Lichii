@@ -29,6 +29,21 @@ const VkBaseInStructure* FindNext(const void* next, VkStructureType type) {
     return nullptr;
 }
 
+/// AMD's proprietary driver keeps no graphics pipeline with dynamic vertex input in its own disk
+/// cache, so where the store runs there it is all there is: a shader precache stores every cached
+/// pipeline (~600 MB for a game with ~17,000) and the default 384 MiB compaction dropped a third
+/// of it. AMD compacts past 1 GiB, and never drops what a session used or wrote below 4 GiB.
+ShaderCacheV2::DriverBlobOptions BlobOptions(const Device& device) {
+    ShaderCacheV2::DriverBlobOptions options{};
+    if (device.GetDriverID() == VK_DRIVER_ID_AMD_PROPRIETARY) {
+        options.max_bytes = u64{1} << 30;
+        options.target_bytes = options.max_bytes / 8 * 7;
+        options.session_cap_bytes = u64{4} << 30;
+        options.ceiling_bytes = options.session_cap_bytes;
+    }
+    return options;
+}
+
 /// Libraries, and create infos that already chain binaries or flags of their own, are left alone.
 template <typename CreateInfo>
 bool TakesBinaries(const CreateInfo& ci) {
@@ -214,7 +229,7 @@ std::unique_ptr<PipelineBinaries> PipelineBinaries::Open(const Device& device,
 
 PipelineBinaries::PipelineBinaries(const Device& device_, std::filesystem::path file,
                                    const ShaderCacheV2::DeviceIdentity& identity)
-    : device{device_}, store{std::move(file), identity} {}
+    : device{device_}, store{std::move(file), identity, BlobOptions(device_)} {}
 
 vk::Pipeline PipelineBinaries::CreateGraphicsPipeline(const VkGraphicsPipelineCreateInfo& ci,
                                                       VkPipelineCache cache, u64 key) {

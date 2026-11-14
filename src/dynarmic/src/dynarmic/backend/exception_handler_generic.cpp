@@ -40,7 +40,7 @@ bool ExceptionHandler::SupportsFastmem() const noexcept {
     return false;
 }
 
-void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)>) {
+void ExceptionHandler::SetFastmemCallback(std::function<std::optional<FakeCall>(u64)>) {
     // Do nothing
 }
 

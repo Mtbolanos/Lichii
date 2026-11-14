@@ -12,28 +12,29 @@ namespace Vulkan {
 
 LsfgShaders::LsfgShaders(const Device& device) {
     const bool wanted = Settings::values.frame_gen.GetValue();
-    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor() ||
-        !device.IsHostFloat16Supported()) {
+    if (!device.IsVulkanMemoryModelSupported() || !device.HasNullDescriptor()) {
         if (wanted) {
-            LOG_WARNING(Render_Vulkan,
-                        "LSFG unavailable: memory model {}, null descriptor {}, float16 {}",
-                        device.IsVulkanMemoryModelSupported(), device.HasNullDescriptor(),
-                        device.IsHostFloat16Supported());
+            LOG_WARNING(Render_Vulkan, "LSFG unavailable: memory model {}, null descriptor {}",
+                        device.IsVulkanMemoryModelSupported(), device.HasNullDescriptor());
         }
         return;
     }
     device_supported = true;
 
+    const bool fp16 = device.IsHostFloat16Supported();
+    const auto variant = fp16 ? VideoCore::FrameGen::ShaderVariant::NativeFp16
+                              : VideoCore::FrameGen::ShaderVariant::NativeFp32;
     VideoCore::FrameGen::ShaderModules code;
-    const auto status = VideoCore::FrameGen::LoadShaderModules(code);
+    const auto status = VideoCore::FrameGen::LoadShaderModules(variant, code);
     if (status != VideoCore::FrameGen::LosslessStatus::Ok) {
         if (wanted) {
-            LOG_WARNING(Render_Vulkan, "LSFG unavailable: Lossless.dll status {}",
-                        static_cast<u32>(status));
+            LOG_WARNING(Render_Vulkan, "LSFG unavailable: Lossless.dll status {} ({} shaders)",
+                        static_cast<u32>(status), fp16 ? "fp16" : "fp32");
         }
         return;
     }
-    LOG_INFO(Render_Vulkan, "LSFG shaders loaded: {} modules", code.size());
+    LOG_INFO(Render_Vulkan, "LSFG shaders loaded: {} {} modules", code.size(),
+             fp16 ? "fp16" : "fp32");
 
     for (const auto& [id, words] : code) {
         modules.emplace(id, CreateWrappedShaderModule(device, words));

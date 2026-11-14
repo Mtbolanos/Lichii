@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -110,6 +109,39 @@ inline CommandHeader BuildCommandHeader(BufferMethods method, u32 arg_count, Sub
     return result;
 }
 
+/// Keeps the blocks of the command lists' submit-time copies for reuse. The guest's submit
+/// thread allocated ~1000 a second, of up to hundreds of KiB, and the GPU thread freed them:
+/// in Ocarina of Time each free took the heap ~30 us of the GPU thread, and each allocation the
+/// submit thread almost as long.
+namespace CommandWordsPool {
+[[nodiscard]] void* Allocate(std::size_t bytes);
+void Deallocate(void* pointer, std::size_t bytes) noexcept;
+/// Frees the blocks kept for reuse (when a channel goes away).
+void Trim() noexcept;
+/// Bytes kept for reuse.
+[[nodiscard]] std::size_t PooledBytes() noexcept;
+} // namespace CommandWordsPool
+
+template <typename T>
+struct CommandWordsAllocator {
+    using value_type = T;
+
+    CommandWordsAllocator() noexcept = default;
+    template <typename U>
+    CommandWordsAllocator(const CommandWordsAllocator<U>&) noexcept {}
+
+    [[nodiscard]] T* allocate(std::size_t count) {
+        return static_cast<T*>(CommandWordsPool::Allocate(count * sizeof(T)));
+    }
+    void deallocate(T* pointer, std::size_t count) noexcept {
+        CommandWordsPool::Deallocate(pointer, count * sizeof(T));
+    }
+    template <typename U>
+    bool operator==(const CommandWordsAllocator<U>&) const noexcept {
+        return true;
+    }
+};
+
 struct CommandList final {
     CommandList() = default;
     explicit CommandList(std::size_t size) : command_lists(size) {}
@@ -122,7 +154,7 @@ struct CommandList final {
     std::vector<u64> submit_hashes;
     /// The entries' words when they were submitted (NX2), each entry's at submitted_offsets[i]:
     /// executed instead of the memory, which the game may already be refilling for a later frame.
-    std::vector<CommandHeader> submitted_words;
+    std::vector<CommandHeader, CommandWordsAllocator<CommandHeader>> submitted_words;
     std::vector<u32> submitted_offsets;
     /// Entries (ascending) not copied when submitted, because a GPU map still queued covers them:
     /// DmaPusher::Push copies them after the map, and until then they read memory.
@@ -131,6 +163,9 @@ struct CommandList final {
     /// that waited behind one, reads memory instead: games write the commands it runs before they
     /// release the acquire.
     u64 snapshot_suspensions = 0;
+    /// The snapshot copier's job that copies the words again (DmaPusher::QueueSnapshotCopy), 0
+    /// for none: the GPU thread waits for it before it parses or copies the list itself.
+    u64 copy_job = 0;
 };
 
 /// FNV-1a over pushbuffer words (EDEN_NX2_PB_CHECK).
@@ -178,6 +213,10 @@ public:
         return puller.HasPendingAcquire() || pending_list_tick.has_value();
     }
     [[nodiscard]] bool CanResumeAcquire();
+    /// Suspended on the GPU's copy of a command list.
+    [[nodiscard]] bool WaitsForListCopy() const {
+        return pending_list_tick.has_value();
+    }
 
     void BindSubchannel(Engines::EngineInterface* engine, u32 subchannel_id, Engines::EngineTypes engine_type) {
         subchannels[subchannel_id] = engine;
@@ -219,8 +258,15 @@ public:
     /// A copy engine method sent to the split's back: a launch that releases its semaphore tells
     /// the front what it writes (GpuSplit::NoteSemaphoreWrite).
     void NoteDmaSemaphore(u32 method, u32 argument);
-    /// Copies the list's words from memory again, as of suspension count `now`.
-    void RefreshSnapshot(CommandList& list, u64 now);
+    /// Copies the list's words from memory again, as of suspension count `now`, from entry
+    /// `first_entry` on (the entries before it ran already). Waits for the list's copier job first.
+    void RefreshSnapshot(CommandList& list, u64 now, size_t first_entry = 0);
+    /// RefreshSnapshot on the snapshot copier's thread. False when its queue is full (the caller
+    /// copies).
+    bool QueueSnapshotCopy(CommandList& list, u64 now);
+    /// Waits until the snapshot copier copied everything queued (before work that may change the
+    /// GPU's mappings, and before a channel goes away).
+    static void WaitForSnapshotCopies();
     /// Copies the list's deferred entries (CommandList::deferred_entries) from memory.
     void RefreshDeferredEntries(CommandList& list);
 
@@ -315,6 +361,8 @@ public:
     std::optional<u64> pending_list_tick;
     /// The entry parsed next was suspended on pending_list_tick, which is done now.
     bool resumed_list_read{};
+    /// When the channel suspended on pending_list_tick (EDEN_NX2_LIST_MACRO_TRACE), else 0.
+    u64 list_trace_wait_start{};
 
     // Not bitfields: the fence thread sets synced, and a bitfield write would rewrite the byte it
     // shares with dma_increment_once and signal_sync (#479).

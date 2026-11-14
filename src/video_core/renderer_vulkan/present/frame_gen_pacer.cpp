@@ -5,7 +5,10 @@
 #include <cmath>
 #include <utility>
 
+#include "common/dkb_frame_trace.h"
+#include "common/logging.h"
 #include "common/settings.h"
+#include "video_core/nx2.h"
 #include "video_core/renderer_vulkan/present/frame_gen_pacer.h"
 
 namespace Vulkan {
@@ -46,7 +49,46 @@ constexpr auto PROBE_STEP_DELAY = std::chrono::milliseconds(250);
 
 } // Anonymous namespace
 
-FrameGenPlan FrameGenPacer::Plan(size_t capacity) {
+// With a target rate, the generations of a frame fill its interval at that rate. The display
+// takes no more than the target (FIFO at 120 Hz), so once a slow stretch has raised the count,
+// the presents of each frame take the whole interval, the renderer waits for a free frame, and
+// the interval it measures never shortens again: Ocarina of Time stayed at 42 fps with 1.9
+// generated frames each (real + generated = 120 a second, the GPU thread waiting 6-11 ms of
+// every frame for a frame to draw into) where it runs 60 with one. The time spent waiting is
+// not the game's, so it is left out, down to the interval the game is paced to: at that rate
+// a wait only shifts the game's own sleep.
+f32 FrameGenPacer::PlanningInterval(f32 interval_seconds, f32 blocked_seconds) {
+    const f32 guest_interval =
+        static_cast<f32>(Tegra::g_nx2_guest_frame_interval_ns.load(std::memory_order_relaxed)) *
+        1.0e-9f;
+    if (guest_interval <= 0.0f || blocked_seconds <= 0.0f) {
+        return interval_seconds;
+    }
+    const f32 unblocked = interval_seconds - std::min(blocked_seconds, interval_seconds);
+    return std::max(unblocked, std::min(guest_interval, interval_seconds));
+}
+
+void FrameGenPacer::LogPlans(f32 interval_seconds, f32 blocked_seconds, size_t generations) {
+    if (!Common::DkbFrameTrace::Enabled()) {
+        return;
+    }
+    ++plan_log.frames;
+    plan_log.generations += static_cast<u32>(generations);
+    plan_log.interval += interval_seconds;
+    plan_log.blocked += blocked_seconds;
+    if (plan_log.frames < 300) {
+        return;
+    }
+    const f32 frames = static_cast<f32>(plan_log.frames);
+    LOG_INFO(Render_Vulkan,
+             "Frame gen plan (300 frames): interval {:.2f} ms, of it waiting for a present frame "
+             "{:.2f} ms, planned against {:.2f} ms, {:.2f} generations a frame, limit {}",
+             plan_log.interval / frames * 1000.0f, plan_log.blocked / frames * 1000.0f,
+             planning_interval * 1000.0f, static_cast<f32>(plan_log.generations) / frames, limit);
+    plan_log = {};
+}
+
+FrameGenPlan FrameGenPacer::Plan(size_t capacity, Clock::duration blocked) {
     const size_t ceiling = std::min(capacity, Settings::FrameGenMaxGenerations());
     if (ceiling == 0) {
         Reset();
@@ -92,6 +134,11 @@ FrameGenPlan FrameGenPacer::Plan(size_t capacity) {
                             ? smoothed_interval +
                                   (interval_seconds - smoothed_interval) * INTERVAL_SMOOTHING
                             : interval_seconds;
+    const f32 blocked_seconds = std::chrono::duration<f32>(blocked).count();
+    const f32 planned = PlanningInterval(interval_seconds, blocked_seconds);
+    planning_interval = planning_interval > 0.0f
+                            ? planning_interval + (planned - planning_interval) * INTERVAL_SMOOTHING
+                            : planned;
 
     if (previous_generations == 0) {
         const f32 measured = 1.0f / smoothed_interval;
@@ -103,6 +150,7 @@ FrameGenPlan FrameGenPacer::Plan(size_t capacity) {
 
     if (stable_until) {
         if (now < *stable_until) {
+            LogPlans(interval_seconds, blocked_seconds, 0);
             return {};
         }
         stable_until.reset();
@@ -115,12 +163,13 @@ FrameGenPlan FrameGenPacer::Plan(size_t capacity) {
         return {.generations = limit, .warm = limit > 0};
     }
 
-    UpdateLimit(now, 1.0f / smoothed_interval, target_rate, ceiling);
+    UpdateLimit(now, 1.0f / planning_interval, target_rate, ceiling);
 
     const size_t allowed = std::min(limit, ceiling);
-    const f32 desired_outputs = smoothed_interval * target_rate;
+    const f32 desired_outputs = planning_interval * target_rate;
     if (allowed == 0 || desired_outputs <= 1.0f) {
         output_credit = 0.0f;
+        LogPlans(interval_seconds, blocked_seconds, 0);
         return {};
     }
 
@@ -137,6 +186,7 @@ FrameGenPlan FrameGenPacer::Plan(size_t capacity) {
     }
 
     issued_generations = generations;
+    LogPlans(interval_seconds, blocked_seconds, generations);
     return {.generations = generations, .warm = true};
 }
 
@@ -218,6 +268,7 @@ void FrameGenPacer::Stabilize(Clock::time_point now) {
     probe_until.reset();
     deficit_since.reset();
     smoothed_interval = 0.0f;
+    planning_interval = 0.0f;
     output_credit = 0.0f;
 }
 
@@ -228,6 +279,7 @@ void FrameGenPacer::Reset() {
     next_probe.reset();
     deficit_since.reset();
     smoothed_interval = 0.0f;
+    planning_interval = 0.0f;
     output_credit = 0.0f;
     probe_base_rate = 0.0f;
     unloaded_base_rate = 0.0f;

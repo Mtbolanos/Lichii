@@ -175,6 +175,25 @@ TEST_CASE("Star Fox captured passes use the validated colour and jitter slots", 
     REQUIRE_FALSE(FE::CapturedPasses(0x040074A01BF12000ULL));
 }
 
+TEST_CASE("Star Fox cutscene prepass opens the existing spatial replacement chain",
+          "[starfox_upscale]") {
+    const auto passes = FE::CapturedPasses(FE::StarFoxProgramId);
+    REQUIRE(passes);
+    for (const u64 prepass : {0xd686ca0b9fad9e6dULL, 0xebab31dd6f0fc08dULL}) {
+        REQUIRE(passes->IsPrepass(prepass));
+        REQUIRE_FALSE(FE::CapturedPasses(FE::ProgramId)->IsPrepass(prepass));
+        REQUIRE_FALSE(FE::UseReplacement(FE::StarFoxProgramId, prepass, nullptr));
+        for (unsigned bit = 0; bit < 64; ++bit) {
+            REQUIRE_FALSE(passes->IsPrepass(prepass ^ (1ULL << bit)));
+        }
+    }
+    REQUIRE_FALSE(passes->IsPrepass(0));
+    REQUIRE_FALSE(passes->IsPrepass(FE::StarFoxOutputProgramKey));
+    REQUIRE_FALSE(passes->IsPrepass(FE::PrepassProgramKey));
+    REQUIRE(FE::CapturedPasses(FE::ProgramId)->IsPrepass(FE::PrepassProgramKey));
+    REQUIRE_FALSE(FE::CapturedPasses(FE::ProgramId)->IsPrepass(0));
+}
+
 TEST_CASE("Star Fox logged native-resolution cutscene colour pair is accepted", "[starfox_upscale]") {
     const auto input = std::bit_cast<TICEntry>(std::array<u32, 8>{
         0x58d24908, 0x26f62000, 0x00600081, 0x00070020,

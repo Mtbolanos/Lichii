@@ -19,7 +19,7 @@ class MemoryAllocator;
 class Scheduler;
 class StagingBufferPool;
 
-/// AMD FidelityFX Super Resolution 3.1 (the FSR 3.1.4 upscaler from FidelityFX SDK v1.1.4, shaders
+/// AMD FidelityFX Super Resolution 3.1 (the FSR 3.1.6 upscaler from AMD FSR SDK v2.4.0, shaders
 /// in externals/FidelityFX-SDK) in place of a game's DLSS evaluation. The host side follows the
 /// SDK's ffx_fsr3upscaler.cpp: the same passes, internal images and constants, recorded through the
 /// scheduler. The default profile takes reversed infinite depth and HDR colour with auto exposure.

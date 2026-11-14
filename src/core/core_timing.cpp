@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -24,14 +23,11 @@
 #include "common/settings.h"
 #include "core/core_timing.h"
 #include "core/hardware_properties.h"
+#include "core/host_wait_margin.h"
 
 namespace Core::Timing {
 
 constexpr s64 MAX_SLICE_LENGTH = 10000;
-
-// The timer thread sleeps in the OS until this long before the next event and waits the rest with
-// Event::WaitFor, which on x86 Windows is a hardware wait that keeps the thread running.
-constexpr s64 HOST_WAIT_MARGIN_NS = 0;
 
 constexpr u32 CPU_CLOCK_BASE_MHZ = 1020;
 constexpr u32 CPU_CLOCK_BOOST_MHZ = 1734;
@@ -57,12 +53,14 @@ struct HostWaitWindow {
     u64 waits{};
     u64 woken{};
     s64 sleep_ns{};
-    s64 wait_for_ns{};
+    s64 precise_ns{};
     std::vector<s64> wake_late;
     std::vector<s64> event_late;
+    std::vector<s64> one_shot_late;
 };
 
 thread_local HostWaitWindow t_host_wait;
+thread_local HostWaitMargin t_host_wait_margin;
 
 void LogHostWait(s64 now) {
     HostWaitWindow& w = t_host_wait;
@@ -76,24 +74,29 @@ void LogHostWait(s64 now) {
     };
     const auto wake = percentiles(w.wake_late);
     const auto event = percentiles(w.event_late);
+    const auto one_shot = percentiles(w.one_shot_late);
     const f64 seconds = static_cast<f64>(now - w.start) / 1e9;
     const std::optional<u64> cpu = Common::CurrentThreadCpuTimeNs();
     LOG_INFO(Core_Timing,
              "HostTiming wait: {} waits, {} woken by new events, OS sleep {:.1f} ms/s, "
-             "WaitFor {:.1f} ms/s; wake late p50/p99/max {}/{}/{} us; {} events late "
-             "p50/p99/max {}/{}/{} us; thread CPU {}",
+             "precise wait {:.1f} ms/s, margin {} us; wake late p50/p99/max {}/{}/{} us; {} events "
+             "late p50/p99/max {}/{}/{} us, {} of them one-shot p50/p99/max {}/{}/{} us; thread "
+             "CPU {}",
              w.waits, w.woken, static_cast<f64>(w.sleep_ns) / 1e6 / seconds,
-             static_cast<f64>(w.wait_for_ns) / 1e6 / seconds, wake[0], wake[1], wake[2],
-             w.event_late.size(), event[0], event[1], event[2],
+             static_cast<f64>(w.precise_ns) / 1e6 / seconds,
+             t_host_wait_margin.Estimate() / 1000, wake[0], wake[1], wake[2], w.event_late.size(),
+             event[0], event[1], event[2], w.one_shot_late.size(), one_shot[0], one_shot[1],
+             one_shot[2],
              cpu && w.cpu_start
                  ? fmt::format("{:.1f}%", static_cast<f64>(*cpu - *w.cpu_start) / 1e7 / seconds)
                  : std::string{"unknown"});
     w.start = now;
     w.cpu_start = cpu;
     w.waits = w.woken = 0;
-    w.sleep_ns = w.wait_for_ns = 0;
+    w.sleep_ns = w.precise_ns = 0;
     w.wake_late.clear();
     w.event_late.clear();
+    w.one_shot_late.clear();
 }
 
 } // Anonymous namespace
@@ -145,9 +148,9 @@ void CoreTiming::Initialize(std::function<void()>&& on_thread_init_) {
             while (!stop_token.stop_requested()) {
                 while (!paused && !stop_token.stop_requested()) {
                     paused_set = false;
-                    if (auto const next_time = Advance(); next_time) {
+                    if (const NextEvents next = AdvanceEvents(); next.next) {
                         // There are more events left in the queue, wait until the next event.
-                        WaitForEvent(*next_time);
+                        WaitForEvent(*next.next, next.one_shot);
                     } else {
                         // Queue is empty, wait until another event is scheduled and signals us to
                         // continue.
@@ -163,32 +166,31 @@ void CoreTiming::Initialize(std::function<void()>&& on_thread_init_) {
     }
 }
 
-void CoreTiming::WaitForEvent(s64 next_time) {
+void CoreTiming::WaitForEvent(s64 next_time, std::optional<s64> one_shot_time) {
     const s64 start = GetGlobalTimeNs().count();
     if (next_time <= start) {
         return;
     }
-    s64 now = start;
-    bool signalled = false;
-    if (next_time - now > HOST_WAIT_MARGIN_NS) {
-        signalled = event.SleepFor(std::chrono::nanoseconds{next_time - HOST_WAIT_MARGIN_NS - now});
-        now = GetGlobalTimeNs().count();
-    }
-    const s64 sleep_ns = now - start;
-    if (!signalled && next_time > now) {
-        signalled = event.WaitFor(std::chrono::nanoseconds{next_time - now});
+    const s64 margin = t_host_wait_margin.Get(start);
+    const bool precise = one_shot_time && *one_shot_time - margin <= start;
+    const s64 wake = one_shot_time ? (std::min)(next_time, *one_shot_time - margin) : next_time;
+    const bool signalled = precise ? event.SpinFor(std::chrono::nanoseconds{next_time - start})
+                                   : event.SleepFor(std::chrono::nanoseconds{wake - start});
+    const s64 end = GetGlobalTimeNs().count();
+    if (precise) {
+        t_host_wait_margin.OnPreciseWait(end - start);
+    } else if (!signalled) {
+        t_host_wait_margin.OnOversleep(end - wake);
     }
     if (!host_wait_stats.load(std::memory_order_relaxed)) {
         return;
     }
-    const s64 end = GetGlobalTimeNs().count();
     HostWaitWindow& w = t_host_wait;
     ++w.waits;
     w.woken += signalled;
-    w.sleep_ns += sleep_ns;
-    w.wait_for_ns += end - start - sleep_ns;
-    if (!signalled) {
-        w.wake_late.push_back(end - next_time);
+    (precise ? w.precise_ns : w.sleep_ns) += end - start;
+    if (!precise && !signalled) {
+        w.wake_late.push_back(end - wake);
     }
     if (w.start == 0) {
         w.start = end;
@@ -339,6 +341,10 @@ u64 CoreTiming::GetGPUTicks() const {
 }
 
 std::optional<s64> CoreTiming::Advance() {
+    return AdvanceEvents().next;
+}
+
+CoreTiming::NextEvents CoreTiming::AdvanceEvents() {
     std::scoped_lock lock{advance_lock, basic_lock};
     global_timer = GetGlobalTimeNs().count();
 
@@ -351,6 +357,9 @@ std::optional<s64> CoreTiming::Advance() {
             const std::chrono::nanoseconds late{GetGlobalTimeNs().count() - evt_time};
             if (is_multicore && host_wait_stats.load(std::memory_order_relaxed)) {
                 t_host_wait.event_late.push_back(late.count());
+                if (evt.reschedule_time == 0) {
+                    t_host_wait.one_shot_late.push_back(late.count());
+                }
             }
 
             if (evt.reschedule_time == 0) {
@@ -364,7 +373,14 @@ std::optional<s64> CoreTiming::Advance() {
             } else {
                 basic_lock.unlock();
 
-                const auto new_schedule_time{event_type->callback(evt_time, late)};
+                // Time spent paused is not lateness: a callback that makes up for being late (the
+                // sysmix pump) would otherwise wait out the pause again after it.
+                const std::chrono::nanoseconds late_since_pause{
+                    evt_time < pause_end_time
+                        ? (std::min)(late.count(),
+                                     GetGlobalTimeNs().count() - static_cast<s64>(pause_end_time))
+                        : late.count()};
+                const auto new_schedule_time{event_type->callback(evt_time, late_since_pause)};
 
                 basic_lock.lock();
 
@@ -392,11 +408,16 @@ std::optional<s64> CoreTiming::Advance() {
         global_timer = GetGlobalTimeNs().count();
     }
 
-    if (!event_queue.empty()) {
-        return event_queue.top().time;
-    } else {
-        return std::nullopt;
+    if (event_queue.empty()) {
+        return {};
     }
+    NextEvents next{.next = event_queue.top().time, .one_shot = std::nullopt};
+    for (const Event& e : event_queue) {
+        if (e.reschedule_time == 0 && (!next.one_shot || e.time < *next.one_shot)) {
+            next.one_shot = e.time;
+        }
+    }
+    return next;
 }
 
 void CoreTiming::Reset() {

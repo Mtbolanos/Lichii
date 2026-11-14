@@ -9,8 +9,8 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Network Test)
 add_executable(compatibility_report_tests
     compatibility_report.cpp
-    ../../yuzu/compatibility_report.cpp
-    ../../yuzu/compatibility_report.h
+    ../../lichii/compatibility_report.cpp
+    ../../lichii/compatibility_report.h
 )
 target_compile_features(compatibility_report_tests PRIVATE cxx_std_20)
 target_compile_definitions(compatibility_report_tests PRIVATE

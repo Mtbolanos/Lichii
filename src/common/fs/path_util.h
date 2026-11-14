@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -14,7 +13,7 @@
 namespace Common::FS {
 
 enum class EdenPath {
-    EdenDir,        // Where yuzu stores its data.
+    EdenDir,        // Where Lichii stores its data.
     AmiiboDir,      // Where Amiibo backups are stored.
     CacheDir,       // Where cached filesystem data is stored.
     ConfigDir,      // Where config files are stored.
@@ -29,7 +28,7 @@ enum class EdenPath {
     PostPresetDir,
     PostShaderDir,  // Where user post-processing shaders are stored.
     SaveDir,        // Where save data is stored.
-    ScreenshotsDir, // Where yuzu screenshots are stored.
+    ScreenshotsDir, // Where Lichii screenshots are stored.
     SDMCDir,        // Where the emulated SDMC is stored.
     ShaderDir,      // Where shaders are stored.
     TASDir,         // Where TAS scripts are stored.
@@ -40,6 +39,10 @@ enum class EdenPath {
 
 // migration/compat dirs
 enum EmuPath {
+    LegacyEdenDir,
+    LegacyEdenConfigDir,
+    LegacyEdenCacheDir,
+
     CitronDir,
     CitronConfigDir,
     CitronCacheDir,
@@ -223,6 +226,8 @@ template <typename Path>
  */
 void SetAppDirectory(const std::string& app_directory);
 
+[[nodiscard]] bool IsPortableMode();
+
 /**
  * Gets the filesystem path associated with the EdenPath enum.
  *
@@ -311,14 +316,14 @@ void SetEdenPath(EdenPath eden_path, const Path& new_path) {
 [[nodiscard]] std::filesystem::path GetHomeDirectory();
 
 /**
- * Gets the relevant paths for yuzu to store its data based on the given XDG environment variable.
+ * Gets the relevant paths for Lichii to store its data based on the given XDG environment variable.
  * See https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
  * Defaults to $HOME/.local/share for main application data,
  * $HOME/.cache for cached data, and $HOME/.config for configuration files.
  *
  * @param env_name XDG environment variable name
  *
- * @returns The path where yuzu should store its data.
+ * @returns The path where Lichii should store its data.
  */
 [[nodiscard]] std::filesystem::path GetDataDirectory(const std::string& env_name);
 
@@ -342,11 +347,11 @@ enum class DirectorySeparator {
 };
 
 // Splits the path on '/' or '\' and put the components into a vector
-// i.e. "C:\Users\Yuzu\Documents\save.bin" becomes {"C:", "Users", "Yuzu", "Documents", "save.bin" }
+// i.e. "C:\Users\Lichii\Documents\save.bin" becomes {"C:", "Users", "Lichii", "Documents", "save.bin" }
 [[nodiscard]] std::vector<std::string_view> SplitPathComponents(std::string_view filename);
 
 // Splits the path on '/' or '\' and put the components into a vector
-// i.e. "C:\Users\Yuzu\Documents\save.bin" becomes {"C:", "Users", "Yuzu", "Documents", "save.bin" }
+// i.e. "C:\Users\Lichii\Documents\save.bin" becomes {"C:", "Users", "Lichii", "Documents", "save.bin" }
 [[nodiscard]] std::vector<std::string> SplitPathComponentsCopy(std::string_view filename);
 
 // Normalizes directory separators, removes duplicate and non-root trailing separators, and resolves

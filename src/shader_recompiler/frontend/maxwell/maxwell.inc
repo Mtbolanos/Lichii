@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 INST(TENSOR_MUL_ADD, "TENSOR_MUL_ADD", "0101 1101 0011 0---")

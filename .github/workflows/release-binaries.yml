@@ -14,7 +14,7 @@ on:
     paths:
       - "src/**"
       # Test-only changes cannot change a binary: the build configures with BUILD_TESTING=OFF and
-      # YUZU_TESTS=OFF below, so a push that only touches src/tests has nothing to rebuild.
+      # LICHII_TESTS=OFF below, so a push that only touches src/tests has nothing to rebuild.
       - "!src/tests/**"
       - "CMakeLists.txt"
       - "CMakeModules/**"
@@ -122,11 +122,15 @@ jobs:
             libswscale-dev pkg-config zlib1g-dev libva-dev libvdpau-dev \
             spirv-tools spirv-headers libusb-1.0-0-dev \
             libboost-dev libboost-fiber-dev libboost-context-dev \
-            libopus-dev libasound2-dev ccache \
+            libopus-dev libasound2-dev ccache llvm python3-zstandard \
             libxcb-cursor0 libxcb-icccm4 libxcb-image0 \
             libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
 
-      # The packages docs/Deps.md lists for macOS, plus ccache.
+      # The packages docs/Deps.md lists for macOS, plus ccache. The runner image can carry a
+      # freetype 2.15.0 bottle that links /usr/lib/libhvf.dylib, which macOS has only from 15.4, so
+      # the bundled copy stopped the app from starting on 15.0 to 15.3 (#892). Homebrew rebuilt the
+      # Sequoia bottle without HVF (homebrew-core 85373af); a rebuilt bottle keeps the version
+      # number, so only an updated tap and an explicit reinstall replace the image's copy.
       - name: Install macOS dependencies
         if: startsWith(matrix.platform, 'macos')
         shell: bash
@@ -137,6 +141,15 @@ jobs:
           brew install autoconf automake boost ffmpeg fmt glslang hidapi libtool libusb lz4 ninja \
             nlohmann-json openssl pkg-config qt@6 sdl3 speexdsp zlib zstd cmake catch2 molten-vk \
             vulkan-loader spirv-tools vulkan-utility-libraries ccache
+          freetype="$(brew --prefix freetype)/lib/libfreetype.6.dylib"
+          if otool -L "$freetype" | grep -F /usr/lib/libhvf.dylib > /dev/null; then
+            brew update --quiet
+            HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew reinstall freetype
+            if otool -L "$freetype" | grep -F /usr/lib/libhvf.dylib; then
+              echo "::error::$freetype still links libhvf.dylib, which macOS 15.0 to 15.3 lack"
+              exit 1
+            fi
+          fi
 
       - name: Install Qt on Linux x86_64
         if: startsWith(matrix.platform, 'linux') && runner.arch != 'ARM64'
@@ -263,14 +276,14 @@ jobs:
           flags=(
             -DCMAKE_BUILD_TYPE=Release
             -DBUILD_TESTING=OFF
-            -DYUZU_TESTS=OFF
-            -DYUZU_CMD=ON
-            -DYUZU_ROOM=OFF
-            -DYUZU_ROOM_STANDALONE=OFF
-            -DYUZU_USE_BUNDLED_QT=OFF
+            -DLICHII_TESTS=OFF
+            -DLICHII_CMD=ON
+            -DLICHII_ROOM=OFF
+            -DLICHII_ROOM_STANDALONE=OFF
+            -DLICHII_USE_BUNDLED_QT=OFF
             -DENABLE_QT_TRANSLATION=ON
             "-DCMAKE_PREFIX_PATH=$QT_ROOT_DIR"
-            -DYUZU_USE_BUNDLED_SDL3=ON
+            -DLICHII_USE_BUNDLED_SDL3=ON
             -DVulkanHeaders_FORCE_BUNDLED=ON
             -DVulkanUtilityLibraries_FORCE_BUNDLED=ON
             -DENABLE_UPDATE_CHECKER=ON
@@ -310,13 +323,13 @@ jobs:
           cmake -S . -B build/release -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTING=OFF \
-            -DYUZU_TESTS=OFF \
-            -DYUZU_CMD=ON \
-            -DYUZU_ROOM=OFF \
-            -DYUZU_ROOM_STANDALONE=OFF \
-            -DYUZU_USE_BUNDLED_QT=OFF \
+            -DLICHII_TESTS=OFF \
+            -DLICHII_CMD=ON \
+            -DLICHII_ROOM=OFF \
+            -DLICHII_ROOM_STANDALONE=OFF \
+            -DLICHII_USE_BUNDLED_QT=OFF \
             -DENABLE_QT_TRANSLATION=ON \
-            -DYUZU_USE_BUNDLED_SDL3=ON \
+            -DLICHII_USE_BUNDLED_SDL3=ON \
             -DENABLE_UPDATE_CHECKER=ON \
             -DLICHII_BUILD_TAG=build-${{ github.run_number }} \
             -DLICHII_BUILD_PLATFORM=${{ matrix.platform }} \
@@ -338,11 +351,11 @@ jobs:
           cmake -S . -B build/release -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTING=OFF \
-            -DYUZU_TESTS=OFF \
-            -DYUZU_CMD=ON \
-            -DYUZU_ROOM=OFF \
-            -DYUZU_ROOM_STANDALONE=OFF \
-            -DYUZU_USE_BUNDLED_QT=OFF \
+            -DLICHII_TESTS=OFF \
+            -DLICHII_CMD=ON \
+            -DLICHII_ROOM=OFF \
+            -DLICHII_ROOM_STANDALONE=OFF \
+            -DLICHII_USE_BUNDLED_QT=OFF \
             -DENABLE_QT_TRANSLATION=ON \
             "-DCMAKE_PREFIX_PATH=$(brew --prefix qt@6);$(brew --prefix zlib)" \
             "-DOPENSSL_ROOT_DIR=$(brew --prefix openssl@3)" \
@@ -365,7 +378,7 @@ jobs:
         shell: bash
         run: |
           if command -v ccache > /dev/null; then ccache --zero-stats; else sccache --zero-stats; fi
-          targets="yuzu yuzu-cmd"
+          targets="lichii lichii-cmd"
           if [[ "${{ matrix.platform }}" == windows* ]]; then targets="$targets lichii-updater"; fi
           cmake --build build/release --target $targets --parallel
           if command -v ccache > /dev/null; then ccache --show-stats; else sccache --show-stats; fi
@@ -384,31 +397,44 @@ jobs:
             .sccache
           key: ${{ steps.compiler-cache.outputs.cache-primary-key }}
 
-      # Plain tar.gz with the two programs and switch defaults. GitHub artifacts drop executable
-      # bits, so a tar preserves them. This needs Qt 6 and the usual system libraries installed.
-      - name: Package Linux tar.gz
-        if: startsWith(matrix.platform, 'linux')
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -x build/release/bin/lichii
-          test -x build/release/bin/eden-cli
-          test -f build/release/bin/libnxformat.so
-          strip build/release/bin/lichii build/release/bin/eden-cli
-          tar -czf "lichii-${GITHUB_SHA}-${{ matrix.platform }}.tar.gz" \
-            -C build/release/bin lichii eden-cli nx2_switches.txt libnxformat.so
-          ls -la "lichii-${GITHUB_SHA}-${{ matrix.platform }}.tar.gz"
+      # fsr4-vk, the community Vulkan port of FSR 4 that the x86-64 Linux packages ship
+      # (tools/fsr4-vk/build.sh pins its commit and AMD's DLL it is built from). The build's inputs
+      # are all in the script, so its output is cached by the script's hash. Its shader conversion
+      # fails its own asset check on arm64 hosts, so the aarch64 packages go without it.
+      - name: Restore fsr4-vk
+        if: startsWith(matrix.platform, 'linux-x86_64')
+        id: fsr4-vk
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ runner.temp }}/fsr4-vk
+          key: fsr4-vk-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/fsr4-vk/build.sh') }}
 
-      # A self-contained AppImage: linuxdeploy bundles every library the two programs need except
-      # the base system ones (glibc, X11/Wayland client libraries, the GPU driver and Vulkan loader),
-      # and its Qt plugin adds the Qt libraries and platform plugins. Runs on glibc 2.39+ systems.
-      - name: Package Linux AppImage
+      - name: Build fsr4-vk
+        if: startsWith(matrix.platform, 'linux-x86_64') && steps.fsr4-vk.outputs.cache-hit != 'true'
+        shell: bash
+        run: bash tools/fsr4-vk/build.sh "$RUNNER_TEMP/fsr4-vk-work" "$RUNNER_TEMP/fsr4-vk"
+
+      - name: Save fsr4-vk
+        if: startsWith(matrix.platform, 'linux-x86_64') && steps.fsr4-vk.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ runner.temp }}/fsr4-vk
+          key: ${{ steps.fsr4-vk.outputs.cache-primary-key }}
+
+      # Both Linux packages are self-contained: linuxdeploy bundles every library the two programs
+      # need except the base system ones (glibc, X11/Wayland client libraries, the GPU driver and
+      # Vulkan loader), and its Qt plugin adds the Qt libraries and platform plugins. The AppImage
+      # packs that folder into one file; the tar.gz holds the same folder for systems without FUSE,
+      # with lichii and eden-cli links at its top. Both run on glibc 2.39+ systems. A tar.gz of the
+      # bare programs needed the Qt 6.8 they were built against installed system-wide (#901).
+      - name: Package Linux AppImage and tar.gz
         if: startsWith(matrix.platform, 'linux')
         shell: bash
         run: |
           set -euo pipefail
           test -x build/release/bin/lichii
           test -x build/release/bin/eden-cli
+          strip build/release/bin/lichii build/release/bin/eden-cli
           tools="$RUNNER_TEMP/linuxdeploy"
           mkdir -p "$tools"
           arch=$(uname -m)   # aarch64 or x86_64
@@ -430,17 +456,43 @@ jobs:
           export LDAI_OUTPUT="lichii-${GITHUB_SHA}-${{ matrix.platform }}.AppImage"
           export OUTPUT="$LDAI_OUTPUT"
           export ARCH="$arch"
-          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/bin AppDir/usr/share/licenses
           cp build/release/bin/nx2_switches.txt AppDir/usr/bin/
+          # The emulator loads fsr4-vk from <exe dir>/../lib (FfxRuntime::PortLibrary).
+          fsr4=amd_fidelityfx_upscaler_vk.so
+          fsr4_library=()
+          if [ "$arch" = x86_64 ]; then
+            cp -r "$RUNNER_TEMP/fsr4-vk/licenses/fsr4-vk" AppDir/usr/share/licenses/
+            fsr4_library=(--library "$RUNNER_TEMP/fsr4-vk/$fsr4")
+          fi
           "$tools/linuxdeploy-$arch.AppImage" --appdir AppDir \
             --executable build/release/bin/lichii \
             --executable build/release/bin/eden-cli \
+            "${fsr4_library[@]}" \
             --desktop-file dist/io.github.zortos293.lichii.desktop \
             --icon-file "$icon" \
             --plugin qt \
             --output appimage
           test -s "$LDAI_OUTPUT"
           ls -la "$LDAI_OUTPUT"
+          test -f AppDir/usr/bin/qt.conf
+          mv AppDir lichii
+          ln -s usr/bin/lichii lichii/lichii
+          ln -s usr/bin/eden-cli lichii/eden-cli
+          tar -czf "lichii-${GITHUB_SHA}-${{ matrix.platform }}.tar.gz" lichii
+          ls -la "lichii-${GITHUB_SHA}-${{ matrix.platform }}.tar.gz"
+          # Both x86-64 packages must carry fsr4-vk and its licences.
+          if [ "$arch" = x86_64 ]; then
+            test "$(tar -tzf "lichii-${GITHUB_SHA}-${{ matrix.platform }}.tar.gz" |
+              grep -cFx -e "lichii/usr/lib/$fsr4" -e lichii/usr/share/licenses/fsr4-vk/LICENSE \
+                -e lichii/usr/share/licenses/fsr4-vk/AMD-FidelityFX-SDK-license.md)" = 3
+            extract="$RUNNER_TEMP/appimage-check"
+            mkdir -p "$extract"
+            (cd "$extract" &&
+              "$GITHUB_WORKSPACE/$LDAI_OUTPUT" --appimage-extract "usr/lib/$fsr4" > /dev/null)
+            cmp "$extract/squashfs-root/usr/lib/$fsr4" "lichii/usr/lib/$fsr4"
+            nm -D --defined-only "lichii/usr/lib/$fsr4" | grep -w ffxCreateContext
+          fi
 
       - name: Package Windows binary
         if: startsWith(matrix.platform, 'windows')
@@ -495,6 +547,15 @@ jobs:
             echo "$leaks" | sort -u
             exit 1
           fi
+          # dyld refuses to start the app when a linked system library is missing, and libhvf.dylib
+          # ships only with macOS 15.4 and later, newer than the 15.0 deployment target (#892).
+          hvf=$(for binary in $binaries; do
+            otool -L "$binary" | grep -F /usr/lib/libhvf.dylib > /dev/null && echo "$binary"
+          done || true)
+          if [ -n "$hvf" ]; then
+            echo "::error::these link /usr/lib/libhvf.dylib, which macOS 15.0 to 15.3 lack: $hvf"
+            exit 1
+          fi
           # macdeployqt invalidates the signatures. The programs get the entitlements when the
           # tree has them (the Hypervisor CPU backend needs com.apple.security.hypervisor).
           codesign --force --deep --sign - "$app"
@@ -504,64 +565,6 @@ jobs:
             codesign --force --sign - --entitlements dist/eglantine.entitlements "$app"
           fi
           codesign --verify --deep --strict "$app"
-          # libnxformat must resolve inside the bundle: lichii names it through @rpath,
-          # @executable_path or @loader_path (as macdeployqt rewrites it), every LC_RPATH of lichii
-          # is bundle-relative, the dylib is where they point, and the dylib itself depends only on
-          # @rpath and system libraries.
-          exe="$app/Contents/MacOS/lichii"
-          echo "otool -L lichii:"; otool -L "$exe"
-          rpaths=$(otool -l "$exe" | awk '/cmd LC_RPATH/ {getline; getline; print $2}')
-          echo "LC_RPATH lichii:"; echo "$rpaths"
-          ref=$(otool -L "$exe" | awk '/libnxformat\.dylib/ {print $1}')
-          case "$ref" in
-            @rpath/*|@executable_path/*|@loader_path/*) ;;
-            *) echo "::error::lichii references libnxformat as '$ref'"; exit 1 ;;
-          esac
-          for rpath in $rpaths; do
-            case "$rpath" in
-              @executable_path*|@loader_path*) ;;
-              *) echo "::error::lichii has an LC_RPATH outside the bundle: $rpath"; exit 1 ;;
-            esac
-          done
-          dylib=
-          if [[ $ref == @rpath/* ]]; then
-            for rpath in $rpaths; do
-              dir=${rpath/#@executable_path/$app/Contents/MacOS}
-              dir=${dir/#@loader_path/$app/Contents/MacOS}
-              if [ -z "$dylib" ] && [ -f "$dir/${ref#@rpath/}" ]; then
-                dylib="$dir/${ref#@rpath/}"
-              fi
-            done
-          else
-            target=${ref/#@executable_path/$app/Contents/MacOS}
-            target=${target/#@loader_path/$app/Contents/MacOS}
-            if [ -f "$target" ]; then
-              dylib=$target
-            fi
-          fi
-          if [ -z "$dylib" ]; then
-            echo "::error::$ref does not resolve inside lichii.app"
-            exit 1
-          fi
-          echo "libnxformat resolves to $dylib"
-          echo "otool -L libnxformat:"; otool -arch arm64 -L "$dylib"
-          echo "LC_RPATH libnxformat:"
-          otool -arch arm64 -l "$dylib" | awk '/cmd LC_RPATH/ {getline; getline; print $2}'
-          outside=$(otool -arch arm64 -L "$dylib" | tail -n +2 | awk '{print $1}' |
-            grep -vE '^(@rpath/|@executable_path/|@loader_path/|/usr/lib/|/System/Library/)' || true)
-          if [ -n "$outside" ]; then
-            echo "::error::libnxformat.dylib depends on libraries outside the bundle: $outside"
-            exit 1
-          fi
-          # Advisory: start the app for 20 s and look for dyld loading libnxformat from the bundle.
-          status=0
-          DYLD_PRINT_LIBRARIES=1 QT_QPA_PLATFORM=offscreen \
-            perl -e 'alarm 20; exec @ARGV' "$exe" > launch.log 2>&1 || status=$?
-          echo "launch exit status: $status"
-          if ! grep -E 'lichii\.app/Contents/.*libnxformat\.dylib' launch.log; then
-            echo "::warning::the launch check did not see libnxformat.dylib load from lichii.app"
-            tail -n 40 launch.log || true
-          fi
           ditto -c -k --keepParent "$app" "lichii-${GITHUB_SHA}-${{ matrix.platform }}.zip"
           ls -la "lichii-${GITHUB_SHA}-${{ matrix.platform }}.zip"
           # Also ship a .dmg (drag lichii.app onto Applications).
@@ -698,7 +701,7 @@ jobs:
 
           ## Linux
 
-          Linux packages come as an AppImage (self-contained, needs glibc 2.39 or newer: Ubuntu 24.04, Fedora 40, Debian 13, Arch) and a tar.gz (uses your system libraries, so Qt 6 and the usual libraries must be installed).
+          Linux packages come as an AppImage and a tar.gz. Both are self-contained and need glibc 2.39 or newer (Ubuntu 24.04, Fedora 40, Debian 13, Arch). The tar.gz holds the same files unpacked, for systems without FUSE: extract it and run \`lichii/lichii\`.
 
           $({
             row amd64 "$(appimage_tar lichii-linux-x86_64)" "$(appimage_tar lichii-linux-x86_64-pgo)" "Make the AppImage executable (\`chmod +x\`) and run it"

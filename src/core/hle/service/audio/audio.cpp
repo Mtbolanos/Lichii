@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "core/core.h"
@@ -17,6 +16,7 @@
 #include "core/hle/service/audio/hardware_opus_decoder_manager.h"
 #include "core/hle/service/server_manager.h"
 #include "core/hle/service/service.h"
+#include "core/hle/service/sm/sm.h"
 
 namespace Service::Audio {
 
@@ -201,6 +201,12 @@ void LoopProcess(Core::System& system) {
     server_manager->RegisterNamedService("audout:u", std::make_shared<IAudioOutManager>(system), 30);
     server_manager->RegisterNamedService("audout:a", std::make_shared<IAudioOutManagerForApplet>(system), 30);
     server_manager->RegisterNamedService("auddev", std::make_shared<IAudioSnoopManager>(system), 30);
+    // set:sys comes from the guest cores, which never start after a close during the boot shader
+    // load: audio then leaves instead of waiting on a closed boot.
+    if (!system.ServiceManager().WaitForService("set:sys")) {
+        server_manager->SkipLoop();
+        return;
+    }
     // Depends on audout:u and audin:u on ctor!
     server_manager->RegisterNamedService("audctl", std::make_shared<IAudioController>(system), 30);
     server_manager->RegisterNamedService("audrec:a", std::make_shared<IFinalOutputRecorderManagerForApplet>(system), 30);

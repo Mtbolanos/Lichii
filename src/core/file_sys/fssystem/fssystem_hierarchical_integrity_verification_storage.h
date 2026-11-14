@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -61,8 +60,8 @@ struct HierarchicalIntegrityVerificationSizeSet {
 static_assert(std::is_trivial_v<HierarchicalIntegrityVerificationSizeSet>);
 
 class HierarchicalIntegrityVerificationStorage : public IReadOnlyStorage {
-    YUZU_NON_COPYABLE(HierarchicalIntegrityVerificationStorage);
-    YUZU_NON_MOVEABLE(HierarchicalIntegrityVerificationStorage);
+    LICHII_NON_COPYABLE(HierarchicalIntegrityVerificationStorage);
+    LICHII_NON_MOVEABLE(HierarchicalIntegrityVerificationStorage);
 
 public:
     using GenerateRandomFunction = void (*)(void* dst, size_t size);

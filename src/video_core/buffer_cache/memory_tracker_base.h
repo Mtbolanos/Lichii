@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
@@ -18,6 +17,7 @@
 #include "common/alignment.h"
 #include "common/common_types.h"
 #include "video_core/buffer_cache/word_manager.h"
+#include "video_core/page_filter.h"
 
 namespace VideoCommon {
 
@@ -79,8 +79,19 @@ public:
         });
     }
 
+    /// As MarkRegionAsCpuModified, for data the GPU's own engines wrote to guest memory (inline
+    /// constant buffer data): the pages stay tracked, as no guest CPU write needs to be let
+    /// through, and the next upload has nothing to track again.
+    void MarkRegionAsWrittenTracked(VAddr dirty_cpu_addr, u64 query_size) {
+        ForgetSynchronized(dirty_cpu_addr, query_size);
+        IteratePages<true>(dirty_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
+            manager->MarkWrittenTracked(manager->cpu_addr + offset, size);
+        });
+    }
+
     /// Unmark region as CPU modified, notifying the device_tracker about this change
     void UnmarkRegionAsCpuModified(VAddr dirty_cpu_addr, u64 query_size) {
+        ever_synchronized_pages.Mark(dirty_cpu_addr, query_size);
         IteratePages<true>(dirty_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
             manager->ChangeRegionState(Type::CPU, false, manager->cpu_addr + offset, size);
         });
@@ -88,6 +99,7 @@ public:
 
     /// Mark region as modified from the host GPU
     void MarkRegionAsGpuModified(VAddr dirty_cpu_addr, u64 query_size) noexcept {
+        ever_synchronized_pages.Mark(dirty_cpu_addr, query_size);
         IteratePages<true>(dirty_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
             manager->ChangeRegionState(Type::GPU, true, manager->cpu_addr + offset, size);
         });
@@ -95,6 +107,7 @@ public:
 
     /// Mark region as modified from the host GPU
     void MarkRegionAsPreflushable(VAddr dirty_cpu_addr, u64 query_size) noexcept {
+        ever_synchronized_pages.Mark(dirty_cpu_addr, query_size);
         IteratePages<true>(dirty_cpu_addr, query_size, [](Manager* manager, u64 offset, size_t size) {
             manager->ChangeRegionState(Type::Preflushable, true, manager->cpu_addr + offset, size);
         });
@@ -159,8 +172,12 @@ public:
     /// Call 'func' for each CPU modified range and unmark those pages as CPU modified
     template <typename Func>
     void ForEachUploadRange(VAddr query_cpu_range, u64 query_size, Func&& func) {
-        IteratePages<true>(query_cpu_range, query_size, [&func](Manager* manager, u64 offset, size_t size) {
-            manager->ForEachModifiedRange(Type::CPU, true, manager->cpu_addr + offset, size, func);
+        const auto upload = [this, &func](VAddr address, u64 size) {
+            ever_synchronized_pages.Mark(address, size);
+            func(address, size);
+        };
+        IteratePages<true>(query_cpu_range, query_size, [&upload](Manager* manager, u64 offset, size_t size) {
+            manager->ForEachModifiedRange(Type::CPU, true, manager->cpu_addr + offset, size, upload);
         });
     }
 
@@ -191,7 +208,11 @@ public:
     /// part of the range: they have nothing to find or change. A per-word form of PR #161's skip.
     template <typename Func>
     void ForEachDirtyUploadRange(VAddr query_cpu_range, u64 query_size, Func&& func) {
-        IteratePages<true>(query_cpu_range, query_size, [&func](Manager* manager, u64 offset, size_t size) {
+        const auto upload = [this, &func](VAddr address, u64 size) {
+            ever_synchronized_pages.Mark(address, size);
+            func(address, size);
+        };
+        IteratePages<true>(query_cpu_range, query_size, [&upload](Manager* manager, u64 offset, size_t size) {
             const u64 dirty =
                 manager->DirtyWords(offset / BYTES_PER_WORD, (offset + size - 1) / BYTES_PER_WORD);
             if (dirty == 0) {
@@ -201,9 +222,16 @@ public:
             const u64 end =
                 (std::min<u64>)(offset + size, (64 - std::countl_zero(dirty)) * BYTES_PER_WORD);
             manager->ForEachModifiedRange(Type::CPU, true, manager->cpu_addr + begin,
-                                          static_cast<s64>(end - begin), func);
+                                          static_cast<s64>(end - begin), upload);
         });
     }
+    /// Whether a page of the range ever left the CPU-modified state (an upload or an unmark) or
+    /// was marked GPU-modified or preflushable. Pages without any are CPU-modified as their
+    /// managers were created. Any thread, without a lock.
+    [[nodiscard]] bool IsRegionEverSynchronized(VAddr query_cpu_addr, u64 query_size) const noexcept {
+        return ever_synchronized_pages.Any(query_cpu_addr, query_size);
+    }
+
     /// Verify mode: true when the clean words of the managers over a range match a recount.
     [[nodiscard]] bool CleanWordsHold(VAddr query_cpu_addr, u64 query_size) const noexcept {
         const size_t first = query_cpu_addr >> HIGHER_PAGE_BITS;
@@ -330,6 +358,7 @@ private:
     ::Common::unordered_set<u32> cached_pages;
     std::array<std::pair<VAddr, VAddr>, 64> synchronized_ranges{};
     u64 synchronized_mask{};
+    PageFilter ever_synchronized_pages;
     DeviceTracker* device_tracker = nullptr;
 };
 

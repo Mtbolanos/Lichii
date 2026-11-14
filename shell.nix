@@ -3,7 +3,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 let
-  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-25.05";
+  # nixos-26.05; bump the rev and sha256 together (nix-prefetch-url --unpack <url>)
+  nixpkgs = fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/ac588ef1c914865dad517b337ea0eb9694a4021c.tar.gz";
+    sha256 = "1sxd2sqlpy1bx6b5xiwy1pbyygazl9d1a5yy0rvqfsihqpcibq2y";
+  };
   pkgs = import nixpkgs { config = {}; overlays = []; };
 in
 pkgs.mkShellNoCC {
@@ -24,10 +28,12 @@ pkgs.mkShellNoCC {
     # optional components
     discord-rpc gamemode
   ];
-  # Host /usr Vulkan drivers can't load inside the Nix shell (their libdrm/libz deps
-  # aren't visible to the Nix dynamic linker), so point the loader at Nix's RADV.
-  VK_DRIVER_FILES = "${pkgs.mesa}/share/vulkan/icd.d/radeon_icd.x86_64.json";
   shellHook = ''
+    # Host /usr Vulkan drivers can't load inside the Nix shell (their libdrm/libz deps
+    # aren't visible to the Nix dynamic linker), so default the loader to every Mesa ICD.
+    if [ -z "$VK_DRIVER_FILES" ]; then
+      export VK_DRIVER_FILES="$(echo ${pkgs.mesa}/share/vulkan/icd.d/*.json | tr ' ' ':')"
+    fi
     export CMAKE_PREFIX_PATH="$(echo $nativeBuildInputs $buildInputs | tr ' ' ':')"
   '';
 }

@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
 #include <chrono>
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -90,6 +90,13 @@ public:
 
     void InvokeControlRequest(HLERequestContext& context);
 
+    /// Waits until the service is registered, as GetService with block does, from a host thread
+    /// only. Returns false once Close ran, the boot having ended before the service could start:
+    /// the caller gives up.
+    bool WaitForService(const std::string& name);
+    /// Ends the waits of WaitForService, and waits for the threads in them to leave.
+    void Close();
+
     void SetDeferralEvent(Kernel::KEvent* deferral_event_) {
         deferral_event = deferral_event_;
     }
@@ -102,6 +109,11 @@ private:
     mutable std::mutex lock;
     ::Common::unordered_map<std::string, SessionRequestHandlerFactory> registered_services;
     ::Common::unordered_map<std::string, Kernel::KClientPort*> service_ports;
+
+    /// WaitForService state, guarded by lock
+    bool closing{};
+    u32 service_waiters{};
+    std::condition_variable waiters_changed; ///< Close ran, or a waiter left
 
     /// Kernel context
     Kernel::KernelCore& kernel;

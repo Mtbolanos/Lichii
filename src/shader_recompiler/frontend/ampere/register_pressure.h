@@ -142,7 +142,7 @@ inline RegisterPressure PrepareRegisterPressure(const Instruction& input, u32 re
         operand(16);
         break;
     case 0x59f:
-        operand(24, 2);
+        operand(24, input.Bits(61, 3) == 1 ? 1 : input.Bits(61, 3) == 5 ? 3 : 2);
         operand(32);
         break;
     case 0x98e:
@@ -183,6 +183,7 @@ inline RegisterPressure PrepareRegisterPressure(const Instruction& input, u32 re
         break;
     case 0x419:
     case 0x819:
+    case 0xc19: // SHF with a uniform shift amount: Rd and the low and high words are registers
         operand(16);
         operand(24);
         operand(64);

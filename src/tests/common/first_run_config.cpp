@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <random>
+#include <sstream>
+#include <type_traits>
 #include <catch2/catch_test_macros.hpp>
 #include <fmt/format.h>
 #include "common/fs/path_util.h"
 #include "common/recommended_settings.h"
 #include "common/settings.h"
 #include "frontend_common/config.h"
+#include "frontend_common/recommended_settings.h"
 
 namespace {
 
@@ -127,7 +132,11 @@ void CheckUnchangedProfile() {
     CHECK(values.use_vulkan_driver_pipeline_cache.GetValue());
     CHECK_FALSE(values.use_video_framerate.GetValue());
     CHECK_FALSE(values.mkw_30fps.GetValue());
+    CHECK_FALSE(values.mkw_60fps.GetValue());
+    CHECK(values.mkw_60fps_fallback.GetValue());
     CHECK_FALSE(values.mkw_dynamic_fps.GetValue());
+    CHECK_FALSE(values.hyrule_dynamic_fps.GetValue());
+    CHECK_FALSE(values.hyrule_30fps.GetValue());
     CHECK(values.use_reactive_flushing.GetValue());
     CHECK(values.barrier_feedback_loops.GetValue());
     CHECK_FALSE(values.enable_buffer_history.GetValue());
@@ -299,7 +308,69 @@ TEST_CASE("Missing per-game and input profiles are not seeded", "[config]") {
     CheckFreshProfile();
 }
 
+namespace {
+
+std::string ReadText(const std::filesystem::path& path) {
+    std::ifstream file{path};
+    return {std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+}
+
+/// Temporary files a save left in the directory (qt-config.ini.tmp.<pid>.<n>).
+size_t SaveTemporaries(const std::filesystem::path& directory) {
+    return static_cast<size_t>(std::ranges::count_if(
+        std::filesystem::directory_iterator{directory}, [](const auto& entry) {
+            return entry.path().filename().string().starts_with("qt-config.ini.tmp.");
+        }));
+}
+
+constexpr const char* SharpeningConfig =
+    "[Renderer]\nfsr_sharpening_slider=83\nfsr_sharpening_slider\\default=false\n";
+
+} // namespace
+
+TEST_CASE("A config save replaces the file and ignores a leftover temporary file", "[config]") {
+    ConfigDirectory directory;
+    directory.Write("qt-config.ini", SharpeningConfig);
+    directory.Write("qt-config.ini.tmp", "left by a save that was killed");
+    FileConfig config{std::string{"qt-config"}};
+    config.SaveValues();
+    CHECK(ReadText(directory.path / "qt-config.ini").find("fsr_sharpening_slider=83") !=
+          std::string::npos);
+    CHECK(ReadText(directory.path / "qt-config.ini.tmp") == "left by a save that was killed");
+    CHECK(SaveTemporaries(directory.path) == 0);
+}
+
 #ifndef _WIN32
+TEST_CASE("A config save writes through a symlink and keeps it", "[config]") {
+    ConfigDirectory directory;
+    directory.Write("target.ini", SharpeningConfig);
+    std::filesystem::create_symlink("target.ini", directory.path / "qt-config.ini");
+    FileConfig config{std::string{"qt-config"}};
+    config.SaveValues();
+    CHECK(std::filesystem::is_symlink(directory.path / "qt-config.ini"));
+    CHECK(ReadText(directory.path / "target.ini").find("fsr_sharpening_slider=83") !=
+          std::string::npos);
+}
+
+TEST_CASE("A config save keeps a read-only config", "[config]") {
+    ConfigDirectory directory;
+    const auto filename = directory.path / "qt-config.ini";
+    directory.Write("qt-config.ini", SharpeningConfig);
+    std::filesystem::permissions(filename, std::filesystem::perms::owner_read);
+    if (std::ofstream{filename, std::ios::app}.is_open()) {
+        std::filesystem::permissions(filename, std::filesystem::perms::owner_read |
+                                                   std::filesystem::perms::owner_write);
+        SKIP("This user can write files despite restrictive permissions");
+    }
+    FileConfig config{std::string{"qt-config"}};
+    Settings::values.fsr_sharpening_slider.SetValue(20);
+    config.SaveValues();
+    std::filesystem::permissions(filename, std::filesystem::perms::owner_read |
+                                               std::filesystem::perms::owner_write);
+    CHECK(ReadText(filename) == SharpeningConfig);
+    CHECK(SaveTemporaries(directory.path) == 0);
+}
+
 TEST_CASE("A dangling config symlink is not a new user", "[config]") {
     ConfigDirectory directory;
     std::filesystem::create_symlink(directory.path / "target.ini",
@@ -347,31 +418,31 @@ TEST_CASE("A denied config status lookup is not seeded", "[config]") {
 }
 #endif
 
-TEST_CASE("The recommended settings offer and its backup persist in the config", "[config]") {
+TEST_CASE("The recommended settings backup persists in the config", "[config]") {
     ConfigDirectory directory;
     SECTION("New install") {}
     SECTION("Config from an older build") {
         directory.Write("qt-config.ini",
                         "[Renderer]\nasync_presentation=false\nasync_presentation\\default=false\n");
     }
+    SECTION("Config from a build that offered the recommended settings at startup") {
+        directory.Write("qt-config.ini", "[Miscellaneous]\nrecommended_settings_prompt_shown=true\n"
+                                         "recommended_settings_prompt_shown\\default=false\n");
+    }
     std::string backup;
     std::size_t changed = 0;
     {
         FileConfig config{std::string{"qt-config"}};
-        CHECK_FALSE(Settings::values.recommended_settings_prompt_shown.GetValue());
         CHECK(Settings::values.recommended_settings_backup.GetValue().empty());
         Settings::values.speed_limit.SetValue(150);
-        Settings::values.recommended_settings_prompt_shown = true;
         changed = Settings::ApplyRecommendedSettings(Settings::values).size();
         CHECK(changed > 0);
         backup = Settings::values.recommended_settings_backup.GetValue();
         config.SaveValues();
     }
-    Settings::values.recommended_settings_prompt_shown = false;
     Settings::values.recommended_settings_backup = std::string{};
     {
         FileConfig config{std::string{"qt-config"}};
-        CHECK(Settings::values.recommended_settings_prompt_shown.GetValue());
         CHECK(Settings::values.recommended_settings_backup.GetValue() == backup);
         CHECK(Settings::ApplyRecommendedSettings(Settings::values).empty());
         CHECK(Settings::RestorePreviousSettings(Settings::values).size() == changed);
@@ -380,9 +451,88 @@ TEST_CASE("The recommended settings offer and its backup persist in the config",
     }
     Settings::values.speed_limit.SetValue(100);
     FileConfig config{std::string{"qt-config"}};
-    CHECK(Settings::values.recommended_settings_prompt_shown.GetValue());
     CHECK(Settings::values.recommended_settings_backup.GetValue().empty());
     CHECK(Settings::values.speed_limit.GetValue() == 150);
+}
+
+namespace {
+
+// Gives the game its own value, other than the recommended one, for every recommended setting
+// and for the resolution, which is not one.
+void WriteGameOverrides(const std::string& game) {
+    FileConfig config{game, Config::ConfigType::PerGameConfig};
+    Settings::ForEachRecommendedSetting(Settings::values, [](auto& setting, const auto& value) {
+        using Type = std::remove_cvref_t<decltype(value)>;
+        setting.SetGlobal(false);
+        setting.SetValue(value == Type{} ? static_cast<Type>(1) : Type{});
+    });
+    Settings::values.resolution_setup.SetGlobal(false);
+    Settings::values.resolution_setup.SetValue(Settings::ResolutionSetup::Res2X);
+    config.SaveValues();
+    Settings::RestoreGlobalState(false);
+}
+
+// Boots the game's config and returns the value it uses for every per-game setting, "global"
+// where it uses the global value.
+std::map<std::string, std::string> GameValues(const std::string& game) {
+    std::map<std::string, std::string> values;
+    {
+        FileConfig config{game, Config::ConfigType::PerGameConfig};
+        for (const auto& [key, setting] : Settings::values.linkage.by_key) {
+            if (setting->Switchable()) {
+                values.emplace(key, setting->UsingGlobal() ? "global" : setting->ToString());
+            }
+        }
+    }
+    Settings::RestoreGlobalState(false);
+    return values;
+}
+
+std::string ReadFile(const std::filesystem::path& path) {
+    std::ifstream file{path};
+    std::stringstream contents;
+    contents << file.rdbuf();
+    return contents.str();
+}
+
+} // namespace
+
+TEST_CASE("Recommended settings reset the per-game values of recommended settings", "[config]") {
+    ConfigDirectory directory;
+    const std::string game = "0100152000022000";
+    // The global values already match, so only the game changes.
+    Settings::ApplyRecommendedSettings(Settings::values);
+    Settings::values.recommended_settings_backup = std::string{};
+    WriteGameOverrides(game);
+    directory.Write("custom/0400C3F00006E000.ini",
+                    "[Renderer]\nresolution_setup\\use_global=true\n");
+    const auto before = GameValues(game);
+    const std::string other_game = ReadFile(directory.path / "custom" / "0400C3F00006E000.ini");
+
+    const auto changes = FrontendCommon::ApplyRecommendedSettings(Settings::values);
+    REQUIRE_FALSE(changes.empty());
+    CHECK(std::ranges::all_of(changes, [&](const auto& change) { return change.game == game; }));
+    // Help > Restore My Previous Settings shows while the backup holds something.
+    CHECK_FALSE(Settings::values.recommended_settings_backup.GetValue().empty());
+    auto after = GameValues(game);
+    Settings::ForEachRecommendedSetting(Settings::values, [&](auto& setting, const auto&) {
+        INFO(setting.GetLabel());
+        CHECK(after.at(setting.GetLabel()) == "global");
+        after[setting.GetLabel()] = before.at(setting.GetLabel());
+    });
+    CHECK(after == before);
+    CHECK(before.at("resolution_setup") != "global");
+    CHECK(ReadFile(directory.path / "custom" / "0400C3F00006E000.ini") == other_game);
+
+    const std::string applied = ReadFile(directory.path / "custom" / (game + ".ini"));
+    CHECK(FrontendCommon::ApplyRecommendedSettings(Settings::values).empty());
+    CHECK(ReadFile(directory.path / "custom" / (game + ".ini")) == applied);
+
+    CHECK(FrontendCommon::RestorePreviousSettings(Settings::values).size() == changes.size());
+    CHECK(GameValues(game) == before);
+    CHECK(Settings::values.recommended_settings_backup.GetValue().empty());
+    CHECK(FrontendCommon::RestorePreviousSettings(Settings::values).empty());
+    CHECK(GameValues(game) == before);
 }
 
 TEST_CASE("A config path beneath a non-directory is not seeded", "[config]") {
@@ -391,4 +541,57 @@ TEST_CASE("A config path beneath a non-directory is not seeded", "[config]") {
     FileConfig config{
         std::make_optional(Common::FS::PathToUTF8String(directory.path / "file" / "config.ini"))};
     CheckLegacyProfile();
+}
+
+TEST_CASE("DLSS old profiles default to M and preserve native quality values",
+          "[config][dlss_mode]") {
+    ConfigDirectory directory;
+    directory.Write("qt-config.ini", "[Renderer]\nnvidia_dlss=true\nnvidia_dlss\\default=false\n");
+    FileConfig config{std::string{"qt-config"}};
+    CHECK(Settings::values.nvidia_dlss.GetValue());
+    CHECK(Settings::values.nvidia_dlss_preset.GetValue() == Settings::NvidiaDlssPreset::M);
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().preset == Settings::NvidiaDlssPreset::M);
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().quality ==
+          Settings::NvidiaDlssQuality::Automatic);
+    directory.Write("qt-config.ini",
+                    "[Renderer]\nnvidia_dlss_quality=1\nnvidia_dlss_quality\\default=false\n"
+                    "nvidia_dlss_preset=0\nnvidia_dlss_preset\\default=false\n");
+    FileConfig native_config{std::string{"qt-config"}};
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().quality == Settings::NvidiaDlssQuality::Native);
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().preset == Settings::NvidiaDlssPreset::M);
+}
+
+TEST_CASE("DLSS config round-trips choices and publishes per-game overrides",
+          "[config][dlss_mode]") {
+    ConfigDirectory directory;
+    FileConfig config{std::string{"qt-config"}};
+    for (const auto& [name, value] :
+         Settings::EnumMetadata<Settings::NvidiaDlssPreset>::Canonicalizations()) {
+        Settings::values.nvidia_dlss_preset.SetValue(value);
+        config.SaveValues();
+        Settings::values.nvidia_dlss_preset.LoadString("");
+        FileConfig loaded{std::string{"qt-config"}};
+        CHECK(Settings::values.nvidia_dlss_preset.GetValue() == value);
+        CHECK(Settings::GetNvidiaDlssRuntimeSettings().preset == value);
+    }
+    for (const auto& [name, value] :
+         Settings::EnumMetadata<Settings::NvidiaDlssQuality>::Canonicalizations()) {
+        Settings::values.nvidia_dlss_quality.SetValue(value);
+        config.SaveValues();
+        Settings::values.nvidia_dlss_quality.LoadString("");
+        FileConfig loaded{std::string{"qt-config"}};
+        CHECK(Settings::values.nvidia_dlss_quality.GetValue() == value);
+        CHECK(Settings::GetNvidiaDlssRuntimeSettings().quality == value);
+    }
+    Settings::values.nvidia_dlss_preset = Settings::NvidiaDlssPreset::K;
+    config.SaveValues();
+    directory.Write("custom/game.ini",
+                    "[Renderer]\nnvidia_dlss_preset=0\nnvidia_dlss_preset\\default=false\n"
+                    "nvidia_dlss_preset\\use_global=false\n");
+    FileConfig game{std::string{"game"}, Config::ConfigType::PerGameConfig};
+    CHECK_FALSE(Settings::values.nvidia_dlss_preset.UsingGlobal());
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().preset == Settings::NvidiaDlssPreset::M);
+    Settings::values.nvidia_dlss_preset.SetGlobal(true);
+    Settings::RefreshNvidiaDlssRuntimeSettings();
+    CHECK(Settings::GetNvidiaDlssRuntimeSettings().preset == Settings::NvidiaDlssPreset::K);
 }

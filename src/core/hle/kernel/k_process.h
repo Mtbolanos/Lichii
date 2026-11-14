@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -121,6 +120,9 @@ private:
 
     std::atomic<s64> m_cpu_time{};
     std::atomic_bool m_mkw_dynamic_fps_patch_applied{};
+    std::atomic<u64> m_mkw_frame_mode_address{};
+    std::atomic<u64> m_frame_interval_address{};
+    std::atomic<u64> m_frame_interval_source_address{};
     std::atomic<s64> m_num_process_switches{};
     std::atomic<s64> m_num_thread_switches{};
     std::atomic<s64> m_num_fpu_switches{};
@@ -190,6 +192,30 @@ public:
 
     void SetMkwDynamicFpsPatchApplied(bool applied) {
         m_mkw_dynamic_fps_patch_applied.store(applied, std::memory_order_relaxed);
+    }
+
+    /// Mario Kart World's frame mode word that the 60 FPS mode switches (loader/nso.cpp), or 0.
+    u64 GetMkwFrameModeAddress() const {
+        return m_mkw_frame_mode_address.load(std::memory_order_relaxed);
+    }
+
+    void SetMkwFrameModeAddress(u64 address) {
+        m_mkw_frame_mode_address.store(address, std::memory_order_relaxed);
+    }
+
+    /// Hyrule Warriors' frame interval global (see nx2_frame_interval.h), or 0 when not found.
+    u64 GetFrameIntervalAddress() const {
+        return m_frame_interval_address.load(std::memory_order_relaxed);
+    }
+
+    /// The global the game copies into the frame interval every few frames.
+    u64 GetFrameIntervalSourceAddress() const {
+        return m_frame_interval_source_address.load(std::memory_order_relaxed);
+    }
+
+    void SetFrameIntervalAddresses(u64 interval, u64 source) {
+        m_frame_interval_source_address.store(source, std::memory_order_relaxed);
+        m_frame_interval_address.store(interval, std::memory_order_relaxed);
     }
 
     u64 GetProcessId() const {

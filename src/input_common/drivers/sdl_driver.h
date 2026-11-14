@@ -70,6 +70,11 @@ public:
         const PadIdentifier& identifier, const Common::Input::VibrationStatus& vibration) override;
 
     bool IsVibrationEnabled(const PadIdentifier& identifier) override;
+    bool IsVibrationStreamed(const PadIdentifier& identifier) override;
+
+    /// Why the controller does nothing, when it sent no input since it connected and its raw HID
+    /// device can't be opened. Empty otherwise.
+    std::string GetSilenceWarning(const Common::ParamPackage& params);
 
 private:
     void InitJoystick(SDL_JoystickID joystick_id);

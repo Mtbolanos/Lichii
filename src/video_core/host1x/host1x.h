@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
@@ -190,7 +189,7 @@ public:
         Tegra::Host1x::Nvdec,
         Tegra::Host1x::Vic
     >, 1024> devices;
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
     std::once_flag nvdec_first_init;
     std::once_flag vic_first_init;
 #endif

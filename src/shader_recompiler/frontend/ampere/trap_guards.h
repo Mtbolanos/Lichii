@@ -45,8 +45,10 @@ inline bool VerifyTrapGuards(std::span<const Instruction> prefix, const TrapGuar
             ++pc;
             continue;
         }
+        // Bit 63 negates a 0x624 constant buffer addend; other forms keep rejecting it.
+        const bool negated_cbuf = op == 0x624 && insn.Bits(63, 1);
         const auto cbuf = [&]() -> std::optional<u32> {
-            if (insn.Bits(59, 5) || insn.Bits(38, 16) % 4)
+            if (insn.Bits(59, 4) || (insn.Bits(63, 1) && !negated_cbuf) || insn.Bits(38, 16) % 4)
                 return std::nullopt;
             return read(insn.Bits(54, 5), insn.Bits(38, 16));
         };
@@ -85,9 +87,11 @@ inline bool VerifyTrapGuards(std::span<const Instruction> prefix, const TrapGuar
         if (op == 0x624 || op == 0x424 || op == 0x224) {
             if (insn.Bits(24, 8) != 255 || insn.Bits(64, 8) != 255 || insn.words[2] != 0x078e00ff)
                 return false;
-            if (op == 0x624)
+            if (op == 0x624) {
                 value = cbuf();
-            else if (op == 0x424)
+                if (value && negated_cbuf)
+                    value = 0U - *value;
+            } else if (op == 0x424)
                 value = insn.words[1];
             else
                 value = regs[insn.Bits(32, 8)];

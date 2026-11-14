@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -17,7 +16,14 @@ class Services final {
 public:
     explicit Services(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system,
                       std::stop_token token);
+    /// Joins the audio and vi threads. At shutdown this runs after ServiceManager::Close and
+    /// CloseServices, so they leave their wait or server at once, and before the service manager
+    /// they use is destroyed.
     ~Services() = default;
+
+private:
+    std::jthread audio_worker;
+    std::jthread vi_worker;
 };
 
 } // namespace Service

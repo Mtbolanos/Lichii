@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2019 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -62,10 +61,6 @@ struct PageTable {
 
         [[nodiscard]] static constexpr u16 BlockIdForMapping(u64 mapping_id) noexcept {
             return mapping_id < INVALID_BLOCK_ID ? static_cast<u16>(mapping_id) : INVALID_BLOCK_ID;
-        }
-
-        [[nodiscard]] static constexpr bool CanFastSpan(u16 first, u16 last) noexcept {
-            return first != INVALID_BLOCK_ID && first == last;
         }
 
         struct Data {

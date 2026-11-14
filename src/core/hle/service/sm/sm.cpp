@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <tuple>
@@ -38,6 +37,36 @@ constexpr Result ResultNotRegistered(ErrorModule::SM, 7);
 
 ServiceManager::ServiceManager(Kernel::KernelCore& kernel_) : kernel{kernel_} {
     controller_interface = std::make_unique<Controller>(kernel.System());
+}
+
+bool ServiceManager::WaitForService(const std::string& name) {
+    // Only for services on host threads (audio, vi). They wait on the host, not with SleepThread:
+    // that sleep ends on the emulated timer, which stops once emulation is suspended at shutdown.
+    // A guest thread must not wait here, it would block its emulated core.
+    DEBUG_ASSERT(Kernel::GetCurrentThread(kernel).IsDummyThread());
+    std::unique_lock l{lock};
+    ++service_waiters;
+    SCOPE_EXIT {
+        --service_waiters;
+        waiters_changed.notify_all();
+    };
+    while (registered_services.find(name) == registered_services.end()) {
+        if (closing) {
+            LOG_INFO(Service_SM, "Gave up waiting for {}: the services are closing", name);
+            return false;
+        }
+        // Checks again every 100 ms, or at once when Close runs.
+        waiters_changed.wait_for(l, std::chrono::milliseconds{100});
+    }
+    return true;
+}
+
+void ServiceManager::Close() {
+    std::unique_lock l{lock};
+    closing = true;
+    // Waiters wake on the host at once, see closing and leave: no waiter outlives the manager.
+    waiters_changed.notify_all();
+    waiters_changed.wait(l, [this] { return service_waiters == 0; });
 }
 
 ServiceManager::~ServiceManager() {

@@ -71,6 +71,9 @@ struct DriverBlobOptions {
     /// No blob is stored in a session once the file would take more than this, dead records
     /// included (Full); closing then brings it back under max_bytes
     u64 ceiling_bytes{1ULL << 30};
+    /// When above max_bytes, closing keeps every blob the session used or wrote up to this many
+    /// bytes, past max_bytes and target_bytes if they need it: the limit follows what the game uses
+    u64 session_cap_bytes{0};
     WriterOptions writer{};
 };
 

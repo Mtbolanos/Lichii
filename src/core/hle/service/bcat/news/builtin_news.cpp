@@ -28,7 +28,7 @@
 #include <optional>
 #include <thread>
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
 #include <openssl/cert.h>
 #endif
 
@@ -88,7 +88,7 @@ std::vector<u8> DownloadImage(const std::string& url_path, const std::filesystem
         cli.set_connection_timeout(std::chrono::seconds(2));
         cli.set_read_timeout(std::chrono::seconds(2));
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
         cli.load_ca_cert_store(kCert, sizeof(kCert));
 #endif
 

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <fstream>
 #include <istream>
 #include <map>
 #include <unordered_map>
@@ -65,32 +66,44 @@ LegacyCacheMigration MigrateLegacyPipelineCache(const std::filesystem::path& dir
         if (!std::filesystem::is_regular_file(source, error)) {
             continue;
         }
-        struct Converted {
+        ShaderCacheV2::LogBuilder builder;
+        switch (builder.Start(log)) {
+        case ShaderCacheV2::WriteResult::Exists:
+            return result; // Another emulator migrated it first
+        case ShaderCacheV2::WriteResult::Written:
+            break;
+        default:
+            return {.failed = true};
+        }
+        // The source is read twice. The first pass keeps only where each record lies and which key
+        // it has, so that a record of one key replaces the ones before it; the second writes the
+        // kept records out as the bytes they are. The source, and a copy of it, never sit in
+        // memory at once, which a shared cache of tens of thousands of pipelines did not fit in.
+        struct LegacyRecord {
             RecordKind kind;
             u64 key;
-            std::vector<u8> payload;
+            u64 begin;
+            u64 end;
         };
-        std::vector<Converted> converted;
-        std::unordered_map<u64, size_t> slots;
-        std::unordered_map<u64, u64> rekeyed; ///< Key hash with the driver -> without
+        std::vector<LegacyRecord> records;
+        std::unordered_map<u64, size_t> last_of_key; ///< The record each key was last written by
+        std::unordered_map<u64, u64> rekeyed;        ///< Key hash with the driver -> without
+        const auto source_size = std::filesystem::file_size(source, error);
+        const auto source_mtime = std::filesystem::last_write_time(source, error);
         u64 record_begin{VideoCommon::PipelineCacheMagic.size() + sizeof(u32)};
-        // The bytes of the record the callback has read, up to the end of its key
-        const auto record_bytes = [&](std::istream& file) {
+        // The bytes of the record the callback has read, from its start to the end of its key
+        const auto record_bytes = [&](std::istream& file, u64& begin) {
             const u64 end{static_cast<u64>(std::streamoff{file.tellg()})};
+            begin = record_begin;
             std::vector<u8> bytes(static_cast<size_t>(end - record_begin));
             file.seekg(static_cast<std::streamoff>(record_begin));
             file.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
             record_begin = end;
             return bytes;
         };
-        const auto add = [&](RecordKind kind, u64 key, std::vector<u8> payload) {
-            const auto [slot, inserted] = slots.try_emplace(key, converted.size());
-            if (inserted) {
-                converted.push_back({kind, key, std::move(payload)});
-            } else {
-                converted[slot->second].payload = std::move(payload);
-                ++result.collapsed;
-            }
+        const auto add = [&](RecordKind kind, u64 key, u64 begin) {
+            last_of_key.insert_or_assign(key, records.size());
+            records.push_back({kind, key, begin, record_begin});
         };
         const bool read = VideoCommon::ReadPipelinesUnchanged(
             source, version,
@@ -98,28 +111,70 @@ LegacyCacheMigration MigrateLegacyPipelineCache(const std::filesystem::path& dir
                 ComputePipelineCacheKey key;
                 file.read(reinterpret_cast<char*>(&key), sizeof(key));
                 VideoCommon::CheckComputeRecord(env, key.shared_memory_size, key.workgroup_size);
-                std::vector<u8> bytes = record_bytes(file);
-                const u64 record_key = ComputeRecordKey(bytes);
-                add(RecordKind::Compute, record_key, std::move(bytes));
+                u64 begin{};
+                const std::vector<u8> bytes = record_bytes(file, begin);
+                add(RecordKind::Compute, ComputeRecordKey(bytes), begin);
             },
             [&](std::istream& file, std::vector<VideoCommon::FileEnvironment> envs) {
                 GraphicsPipelineCacheKey key;
                 file.read(reinterpret_cast<char*>(&key), sizeof(key));
                 VideoCommon::CheckGraphicsRecord(key.unique_hashes, envs.size());
-                std::vector<u8> bytes = record_bytes(file);
+                u64 begin{};
+                const std::vector<u8> bytes = record_bytes(file, begin);
                 const u64 hash = key.Hash();
                 ClearDriverFields(key);
-                std::memcpy(bytes.data() + bytes.size() - sizeof(key), &key, sizeof(key));
                 rekeyed.insert_or_assign(hash, key.Hash());
-                add(RecordKind::Graphics, key.Hash(), std::move(bytes));
+                add(RecordKind::Graphics, key.Hash(), begin);
             });
         if (!read) {
+            builder.Discard();
             continue; // Another file under that name
         }
-        std::vector<u8> records;
-        for (const Converted& record : converted) {
-            EncodeRecord(records, record.kind, record.key, record.payload);
-            ++(record.kind == RecordKind::Graphics ? result.graphics : result.compute);
+        result.collapsed = static_cast<u32>(records.size() - last_of_key.size());
+        for (size_t i = 0; i < records.size(); ++i) {
+            if (last_of_key[records[i].key] != i) {
+                continue;
+            }
+            ++(records[i].kind == RecordKind::Graphics ? result.graphics : result.compute);
+        }
+
+        // The second pass copies the records the first kept. A source another process wrote in
+        // between no longer matches the offsets. The migration fails then, as when the log is
+        // busy, rather than falling back to an older source that would shadow this one.
+        std::ifstream kept_source(source, std::ios::binary);
+        if (!kept_source.is_open() ||
+            std::filesystem::file_size(source, error) != source_size ||
+            std::filesystem::last_write_time(source, error) != source_mtime) {
+            builder.Discard();
+            return {.failed = true};
+        }
+        std::vector<u8> bytes;
+        bool appended{true};
+        for (size_t i = 0; i < records.size() && appended; ++i) {
+            const LegacyRecord& record = records[i];
+            if (last_of_key[record.key] != i) {
+                continue;
+            }
+            bytes.resize(static_cast<size_t>(record.end - record.begin));
+            kept_source.seekg(static_cast<std::streamoff>(record.begin));
+            kept_source.read(reinterpret_cast<char*>(bytes.data()),
+                             static_cast<std::streamsize>(bytes.size()));
+            if (!kept_source.good()) {
+                appended = false;
+                break;
+            }
+            if (record.kind == RecordKind::Graphics) {
+                // The key the record ends with is kept without the driver that built it
+                GraphicsPipelineCacheKey key;
+                std::memcpy(&key, bytes.data() + bytes.size() - sizeof(key), sizeof(key));
+                ClearDriverFields(key);
+                std::memcpy(bytes.data() + bytes.size() - sizeof(key), &key, sizeof(key));
+            }
+            appended = builder.Append(record.kind, record.key, bytes);
+        }
+        if (!appended) {
+            builder.Discard();
+            return {.failed = true};
         }
 
         // The used list saved beside the cache, by sessions since the last use
@@ -135,11 +190,12 @@ LegacyCacheMigration MigrateLegacyPipelineCache(const std::filesystem::path& dir
         }
         for (auto& [age, pipelines] : sessions) {
             std::ranges::sort(pipelines);
-            EncodeRecord(records, RecordKind::Used, MigratedUsedSessionKey(age),
-                         ShaderCacheV2::EncodeUsed({
-                             .session_time = MigratedUsedSessionTime(age),
-                             .pipelines = std::move(pipelines),
-                         }));
+            const std::vector<u8> payload = ShaderCacheV2::EncodeUsed({
+                .session_time = MigratedUsedSessionTime(age),
+                .pipelines = std::move(pipelines),
+            });
+            appended = builder.Append(RecordKind::Used, MigratedUsedSessionKey(age), payload) &&
+                       appended;
         }
 
         const ShaderCacheV2::MigratedRecord migrated{
@@ -153,15 +209,22 @@ LegacyCacheMigration MigrateLegacyPipelineCache(const std::filesystem::path& dir
             .used = result.used,
         };
         const std::vector<u8> name(migrated.source.begin(), migrated.source.end());
-        EncodeRecord(records, RecordKind::Migrated, ShaderCacheV2::Hash64(name),
-                     ShaderCacheV2::EncodeMigrated(migrated));
+        const std::vector<u8> migrated_payload = ShaderCacheV2::EncodeMigrated(migrated);
+        appended = builder.Append(RecordKind::Migrated, ShaderCacheV2::Hash64(name),
+                                  migrated_payload) &&
+                   appended;
+        if (!appended) {
+            builder.Discard();
+            return {.failed = true};
+        }
 
-        switch (ShaderCacheV2::CreateLog(log, records)) {
+        switch (builder.Commit()) {
         case ShaderCacheV2::WriteResult::Written:
             result.version = version;
             break;
         case ShaderCacheV2::WriteResult::Exists:
-            break; // Another emulator migrated it first
+            result = {}; // Another emulator migrated it first
+            break;
         default:
             result = {.failed = true};
             break;

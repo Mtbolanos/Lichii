@@ -1,12 +1,12 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <array>
 #include <bit>
@@ -16,6 +16,7 @@
 #include <mutex>
 #include <numeric>
 #include <optional>
+#include <source_location>
 #include <span>
 #include <unordered_map>
 #include <unordered_set>
@@ -193,7 +194,7 @@ class BufferCache : public VideoCommon::ChannelSetupCaches<BufferCacheChannelInf
     friend struct BufferCacheTestAccess;
     // Page size for caching purposes.
     // This is unrelated to the CPU page size and it can be changed as it seems optimal.
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
     static constexpr u32 CACHING_PAGEBITS = 12;
 #else
     static constexpr u32 CACHING_PAGEBITS = 16;
@@ -211,7 +212,7 @@ class BufferCache : public VideoCommon::ChannelSetupCaches<BufferCacheChannelInf
     static constexpr bool SEPARATE_IMAGE_BUFFERS_BINDINGS = P::SEPARATE_IMAGE_BUFFER_BINDINGS;
     static constexpr bool USE_MEMORY_MAPS_FOR_UPLOADS = P::USE_MEMORY_MAPS_FOR_UPLOADS;
 
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
     static constexpr s64 TARGET_THRESHOLD = 3_GiB;
 #else
     static constexpr s64 TARGET_THRESHOLD = 4_GiB;
@@ -233,6 +234,8 @@ class BufferCache : public VideoCommon::ChannelSetupCaches<BufferCacheChannelInf
 
     struct OverlapResult {
         boost::container::small_vector<BufferId, 16> ids;
+        /// Large buffers that only touch the range: deleted, not joined
+        boost::container::small_vector<BufferId, 2> cut;
         DAddr begin;
         DAddr end;
         bool has_stream_leap = false;
@@ -257,10 +260,19 @@ public:
     void UnmapGPUMemory(size_t as_id, GPUVAddr gpu_addr, size_t size);
 
     /// `keep_page_gpu_data`: download GPU-written bytes sharing the written pages first (false
-    /// when the memory is going away).
-    void WriteMemory(DAddr device_addr, u64 size, bool keep_page_gpu_data = true);
+    /// when the memory is going away). `engine_write`: the GPU's own engines wrote it (inline
+    /// constant buffer data, MemoryManager::FlushCaching), not the guest CPU.
+    void WriteMemory(DAddr device_addr, u64 size, bool keep_page_gpu_data = true,
+                     bool engine_write = false);
 
     void CachedWriteMemory(DAddr device_addr, u64 size);
+
+    /// Whether constant buffer data written to [device_addr, device_addr + size) must reach
+    /// WriteMemory. Pages no buffer was ever uploaded from and the GPU never wrote are
+    /// CPU-modified still, so WriteMemory would change nothing there that the streamed uniform
+    /// buffers reading them need: those read guest memory, and their keeps learn of the write
+    /// from the draw's fast draw delta. Drawing thread, without the lock.
+    [[nodiscard]] bool ConstantDataReachesBuffers(DAddr device_addr, u64 size) const;
 
     /// Cancels pending downloads over the range (fences' and reads'), so none writes them over
     /// newer bytes. Those bytes reach guest memory later if at all (a GPU copy, a clear, an
@@ -315,6 +327,15 @@ public:
 
     /// The query cache wrote a result NoteReportPending kept to guest memory, or dropped it.
     void FinishReport(DAddr device_addr, u64 size);
+
+    /// Without `mutex`: false when the page under device_addr can't be one the guest reads back
+    /// (NoteReportPending would return false). Seeing the bounds before a page joins them is
+    /// the same as looking before that read took the lock.
+    [[nodiscard]] bool MayBeReadBackPage(DAddr device_addr) const noexcept {
+        const DAddr page = Common::AlignDown(device_addr, Core::DEVICE_PAGESIZE);
+        return page >= read_back_first.load(std::memory_order_acquire) &&
+               page <= read_back_last.load(std::memory_order_acquire);
+    }
 
     /// The GPU thread recorded a draw or dispatch (`mutex` held). After a dispatch, the downloads
     /// of the pages written since that the guest reads after each write go right behind it
@@ -400,7 +421,8 @@ public:
     /// Takes CPU writes about to be applied one by one out of the GPU-written ranges first, so
     /// applying one doesn't download the GPU's copy over another (WriteMemory keeps the GPU data
     /// on the pages it writes).
-    void ClaimCpuWrites(std::span<const std::pair<DAddr, u64>> ranges);
+    template <typename Ranges>
+    void ClaimCpuWrites(const Ranges& ranges);
 
     /// Return true when there are uncommitted buffers to be downloaded
     [[nodiscard]] bool HasUncommittedFlushes() const noexcept;
@@ -532,8 +554,8 @@ public:
     }
 
     /// Called before each graphics draw binds its buffers (uniform keeps). `delta`: the constant
-    /// buffer binds and data since the previous draw when it is a fast draw delta draw, else
-    /// nullptr.
+    /// buffer binds and data since the previous call, or nullptr when they aren't known (then
+    /// nothing is kept).
     void BeginGraphicsUniforms(const Nx2FastDraw::Delta* delta);
 
     Common::SpinRecursiveMutex mutex;
@@ -635,7 +657,8 @@ private:
     /// while collecting, asks for new copies.
     void Nx2NoteListWrite(BufferId buffer_id, DAddr device_addr, u64 size);
 
-    [[nodiscard]] BufferId FindBuffer(DAddr device_addr, u32 size, bool sparse_compatible);
+    [[nodiscard]] BufferId FindBuffer(DAddr device_addr, u32 size, bool sparse_compatible,
+                                      std::source_location caller = std::source_location::current());
 
     void SynchronizeBufferWrites(Buffer& buffer);
 
@@ -643,8 +666,8 @@ private:
 
     void JoinOverlap(BufferId new_buffer_id, BufferId overlap_id, bool accumulate_stream_score);
 
-    [[nodiscard]] BufferId CreateBuffer(DAddr device_addr, u32 wanted_size,
-                                        bool sparse_compatible);
+    [[nodiscard]] BufferId CreateBuffer(DAddr device_addr, u32 wanted_size, bool sparse_compatible,
+                                        std::source_location caller = std::source_location::current());
 
     void Register(BufferId buffer_id);
 
@@ -718,7 +741,8 @@ private:
 
     [[nodiscard]] Binding StorageBufferBinding(GPUVAddr ssbo_addr, u32 cbuf_index, bool is_written,
                                                bool native_pointer = false,
-                                               bool table_pointer = false) const;
+                                               bool table_pointer = false,
+                                               bool compute = false) const;
 
     void TraceTablePointer(bool compute, size_t stage, size_t ssbo_index, u32 cbuf_index,
                            u32 cbuf_offset, u32 indirect_offset, GPUVAddr holder,
@@ -752,7 +776,7 @@ private:
     Tegra::MaxwellDeviceMemoryManager& device_memory;
 
     Common::SlotVector<Buffer> slot_buffers;
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
     static constexpr size_t TICKS_TO_DESTROY = 6;
 #else
     static constexpr size_t TICKS_TO_DESTROY = 8;
@@ -778,17 +802,32 @@ private:
     std::array<GeometrySync, NUM_VERTEX_BUFFERS + 1> geometry_syncs{};
     /// Counts DeleteBuffer calls: a buffer id older than this count may have been freed or reused.
     u64 buffer_deletions = 0;
+    /// EDEN_NX2_BUFFER_TRACE: buffers created (with the buffers they joined) and collected, logged
+    /// every 10 s, and each creation of 64 MiB or more with the line that asked for it.
+    struct CreateTrace {
+        bool enabled = std::getenv("EDEN_NX2_BUFFER_TRACE") != nullptr;
+        u64 creates{};
+        u64 created_bytes{};
+        u64 joins{};
+        u64 joined_bytes{};
+        u64 leaps{};
+        u64 collected{};
+        u64 collected_bytes{};
+        u32 large_logged{};
+        std::chrono::steady_clock::time_point last{};
+    } create_trace;
     struct GeometryStats {
         u64 syncs{};
         u64 syncs_skipped{};
         u64 verify_mismatches{};
     } geometry_stats;
 
-    /// Uniform keeps: a delta draw binds a small uniform buffer from the stream
-    /// allocation the previous draw made for it, without reading guest memory, when nothing ordered
-    /// between the two draws wrote its range: no inline constant data, no rebind, no CPU write the
-    /// caches were told about, no GPU write and no buffer deletion. Anything else in between ends
-    /// the delta chain.
+    /// Uniform keeps: a draw binds a small uniform buffer from the stream allocation an earlier
+    /// draw of the command buffer made for its slot and range, without reading guest memory, when
+    /// nothing ordered between them wrote the range: no inline constant data, no rebind, no CPU
+    /// write the caches were told about, no GPU write, no buffer deletion and no memory map
+    /// change. Nor anything the guest CPU could have synchronised with (Nx2FastDraw::SyncSerial):
+    /// it may write pages the caches don't watch after one.
     [[nodiscard]] bool UniformRangeKept(size_t stage, u32 index, DAddr device_addr,
                                         u32 size) const noexcept;
     void NoteUniformWrite(DAddr device_addr, u64 size) {
@@ -806,15 +845,18 @@ private:
         return value != nullptr && value[0] == '1';
     }();
     struct UniformKeep {
-        std::array<u32, NUM_STAGES> candidates{}; ///< Streamed by the previous draw, not rebound
-        std::array<u32, NUM_STAGES> streamed{};   ///< Streamed by this draw
-        /// Device ranges written since the previous draw began: inline constant data, then the
-        /// CPU writes and GPU-modified marks.
-        boost::container::static_vector<std::pair<DAddr, DAddr>, Nx2FastDraw::Delta::MaxWrites + 8>
-            writes;
+        /// Slots whose last stream allocation still holds what guest memory has at `ranges`.
+        std::array<u32, NUM_STAGES> clean{};
+        std::array<std::array<std::pair<DAddr, u32>, NUM_GRAPHICS_UNIFORM_BUFFERS>, NUM_STAGES>
+            ranges{};
+        /// CPU writes and GPU-modified marks since the previous draw began.
         boost::container::static_vector<std::pair<DAddr, DAddr>, 8> memory_writes;
         bool memory_writes_lost{}; ///< More writes than memory_writes holds
         u64 draw_deletions{}; ///< buffer_deletions when the previous draw began
+        u64 sync_serial{};    ///< Nx2FastDraw::SyncSerial then
+        u64 host_serial{};    ///< MemoryManager::HostPointerSerial then
+        /// gpu_memory then: another one's HostPointerSerial can be the same number
+        const Tegra::MemoryManager* gpu_memory{};
         u64 kept{};
         u64 streamed_binds{};
         u64 verified{};
@@ -849,6 +891,29 @@ private:
     /// flush and rely on these downloads, e.g. collision meshes skinned by compute shaders.
     bool DownloadsAtFence(DAddr device_addr, u64 size) noexcept {
         return AsyncBufferDownloads() || memory_tracker.IsRegionPreflushable(device_addr, size);
+    }
+
+    /// Whether the range holds GPU-written data that no fence downloads (not Preflushable).
+    bool HasGpuWritesNotDownloadedAtFence(DAddr device_addr, u64 size) {
+        if (AsyncBufferDownloads()) {
+            return false;
+        }
+        bool found = false;
+        memory_tracker.ForEachDownloadRange(
+            device_addr, size, false, [&](u64 start, u64 range_size) {
+                if (found) {
+                    return;
+                }
+                u64 covered = 0;
+                memory_tracker.ForEachPreflushableRange(
+                    start, range_size, [&](u64 lower, u64 length) {
+                        const u64 begin = (std::max)(lower, start);
+                        const u64 end = (std::min)(lower + length, start + range_size);
+                        covered += end > begin ? end - begin : 0;
+                    });
+                found = covered < range_size;
+            });
+        return found;
     }
 
     /// Queues a GPU write for download at the next fence where DownloadsAtFence holds. With only
@@ -1052,6 +1117,9 @@ private:
     static constexpr u64 EarlyBytesPerFrame = 1_MiB;
     static constexpr u32 MaxPendingEarlyDownloads = 32;
     std::vector<ReadBackPage> read_back_pages; ///< Sorted by page
+    /// The first and last page of read_back_pages (MayBeReadBackPage), set under `mutex`.
+    std::atomic<DAddr> read_back_first{~DAddr{0}};
+    std::atomic<DAddr> read_back_last{0};
     /// NoteReportPending's results not yet written, oldest first.
     struct PendingReport {
         DAddr addr;
@@ -1083,14 +1151,16 @@ private:
     std::vector<MultiRangeSegment> graphics_segments;
     std::vector<MultiRangeSegment> compute_segments;
     u64 frame_tick = 0;
+    /// Buffers created since the last TickFrame; ResolveOverlaps does not cut these
+    std::vector<BufferId> frame_created_buffers;
     /// EDEN_NX2_TABLE_POINTER_TRACE: last table entry and size bound per table pointer slot.
     std::unordered_map<u64, std::pair<GPUVAddr, u32>> traced_table_pointers;
     u64 total_used_memory = 0;
-    u64 buffer_bytes = 0; ///< The buffers' own size (total_used_memory may be the device's)
+    u64 buffer_bytes = 0; ///< The buffers' allocated size (total_used_memory may be the device's)
     u64 minimum_memory = 0;
     u64 critical_memory = 0;
     BufferId inline_buffer_id;
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
     bool immediately_free = false;
 #endif
 

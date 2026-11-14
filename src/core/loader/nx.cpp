@@ -20,12 +20,15 @@
 #include "common/logging.h"
 #include "common/settings.h"
 #include "core/core.h"
+#include "core/file_sys/content_archive.h"
 #include "core/file_sys/control_metadata.h"
 #include "core/file_sys/decrypted_nca.h"
+#include "core/file_sys/patch_manager.h"
 #include "core/file_sys/program_metadata.h"
 #include "core/file_sys/registered_cache.h"
 #include "core/file_sys/romfs.h"
 #include "core/file_sys/romfs_factory.h"
+#include "core/file_sys/submission_package.h"
 #include "core/file_sys/vfs/vfs.h"
 #include "core/file_sys/vfs/vfs_vector.h"
 #include "core/hle/kernel/k_process.h"
@@ -609,7 +612,7 @@ struct AppLoader_NX::Impl {
         // Built on first use: listing the game needs only its metadata.
         tree_romfs_dir = root->GetSubdirectory("romfs");
         LoadNacp(selected);
-        tree_executable = std::make_unique<AppLoader_DeconstructedRomDirectory>(exefs, true);
+        tree_executable = std::make_unique<AppLoader_DeconstructedRomDirectory>(exefs, true, false);
         tree = true;
         status = ResultStatus::Success;
     }
@@ -640,6 +643,8 @@ struct AppLoader_NX::Impl {
         if (package == nullptr) {
             return;
         }
+        // RomFS updates also need the base NCA in the content provider.
+        native_extras.push_back(package);
         native = std::make_unique<AppLoader_NSP>(std::move(package),
                                                  system->GetFileSystemController(),
                                                  system->GetContentProvider(), program_id,
@@ -772,22 +777,42 @@ bool AppLoader_NX::IsBootable(const FileSys::VirtualFile& nx_file) {
     });
 }
 
-u8 AppLoader_NX::ReadPlatform(const FileSys::VirtualFile& nx_file, u64 program_id) {
+std::optional<AppLoader_NX::ProgramPlatform> AppLoader_NX::ReadProgramPlatform(
+    const FileSys::VirtualFile& nx_file, u64 program_id) {
     if (IdentifyType(nx_file) != FileType::NX) {
-        return 0;
+        return std::nullopt;
     }
     const auto catalog = FileSys::OpenNxCatalog(nx_file);
     if (!catalog) {
-        return 0;
+        return std::nullopt;
     }
+    // The same application and program Impl::Open boots.
     const auto& a = catalog->archive;
-    for (const auto& program : a.programs()) {
-        const auto& owner = a.applications()[program.application_index];
-        if (program_id == 0 || program.id == program_id || owner.id == program_id) {
-            return owner.platform;
+    for (const auto& owner : a.applications()) {
+        if (owner.platform != 1 && owner.platform != 2) {
+            continue;
+        }
+        const bool by_program = program_id != 0 && program_id != owner.id;
+        bool matches = !by_program;
+        std::optional<ProgramPlatform> found;
+        for (u32 p = owner.first_program;
+             p != Absent && p < owner.first_program + owner.program_count; ++p) {
+            const auto& program = a.programs()[p];
+            matches |= program.id == program_id;
+            if (!found && (by_program ? program.id == program_id : program.kind == 0)) {
+                found = ProgramPlatform{program.id, owner.platform};
+            }
+        }
+        if (matches) {
+            return found;
         }
     }
-    return 0;
+    return std::nullopt;
+}
+
+u8 AppLoader_NX::ReadPlatform(const FileSys::VirtualFile& nx_file, u64 program_id) {
+    const auto found = ReadProgramPlatform(nx_file, program_id);
+    return found ? found->platform : 0;
 }
 
 void AppLoader_NX::RegisterContent(FileSys::ManualContentProvider& provider) const {
@@ -878,6 +903,33 @@ ResultStatus AppLoader_NX::ReadRomFS(FileSys::VirtualFile& out_file) {
     return out_file != nullptr ? ResultStatus::Success : ResultStatus::ErrorNoRomFS;
 }
 
+ResultStatus AppLoader_NX::ReadPatchedRomFS(FileSys::VirtualFile& out_file) {
+    if (impl->status != ResultStatus::Success || impl->tree) {
+        return ReadRomFS(out_file);
+    }
+    const auto package = impl->SnapshotPackage(impl->BaseOf(impl->selected));
+    if (package == nullptr) {
+        return ResultStatus::ErrorNSPMissingProgramNCA;
+    }
+    const FileSys::NSP nsp{package, impl->program_id};
+    const auto base_nca = nsp.GetNCA(impl->program_id, FileSys::ContentRecordType::Program);
+    if (base_nca == nullptr || base_nca->GetRomFS() == nullptr) {
+        return ResultStatus::ErrorNoRomFS;
+    }
+    // The updates of the archive are found through the frontend provider, as when it runs.
+    auto& system = *impl->system;
+    if (const auto* slot = system.GetContentProviderUnion().GetSlotProvider(
+            FileSys::ContentProviderUnionSlot::FrontendManual)) {
+        RegisterContent(*const_cast<FileSys::ManualContentProvider*>(
+            static_cast<const FileSys::ManualContentProvider*>(slot)));
+    }
+    const FileSys::PatchManager pm{impl->program_id, system.GetFileSystemController(),
+                                   system.GetContentProvider()};
+    out_file = pm.PatchRomFS(base_nca.get(), base_nca->GetRomFS(),
+                             FileSys::ContentRecordType::Program, nullptr, false);
+    return out_file != nullptr ? ResultStatus::Success : ResultStatus::ErrorNoRomFS;
+}
+
 ResultStatus AppLoader_NX::ReadUpdateRaw(FileSys::VirtualFile& out_file) {
     if (impl->status != ResultStatus::Success || impl->tree) {
         return ResultStatus::ErrorNoPackedUpdate;
@@ -936,6 +988,13 @@ ResultStatus AppLoader_NX::ReadIcon(std::vector<u8>& buffer) {
     return ResultStatus::Success;
 }
 
+ResultStatus AppLoader_NX::ReadOriginalIcon(u64 application_id, std::vector<u8>& buffer) const {
+    if (impl->native == nullptr || impl->Archive().applications()[impl->app].id != application_id) {
+        return ResultStatus::ErrorNoIcon;
+    }
+    return impl->native->ReadOriginalIcon(buffer);
+}
+
 ResultStatus AppLoader_NX::ReadTitle(std::string& title) {
     if (impl->status != ResultStatus::Success) {
         return impl->status;
@@ -950,6 +1009,14 @@ ResultStatus AppLoader_NX::ReadTitle(std::string& title) {
     }
     title = a.title(impl->app);
     return title.empty() ? ResultStatus::ErrorNoControl : ResultStatus::Success;
+}
+
+ResultStatus AppLoader_NX::ReadPublisher(std::string& publisher) const {
+    if (impl->app == Absent) {
+        return ResultStatus::ErrorNoControl;
+    }
+    publisher = impl->Archive().publisher(impl->app);
+    return ResultStatus::Success;
 }
 
 ResultStatus AppLoader_NX::ReadControlData(FileSys::NACP& control) {

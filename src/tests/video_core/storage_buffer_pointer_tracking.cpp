@@ -627,3 +627,27 @@ TEST_CASE("NVN fallback descriptors use guest slots rather than compact binding 
     std::ranges::reverse(reversed);
     CHECK(selected(reversed) == std::vector<u32>{0x400, 0x340});
 }
+
+TEST_CASE("Iterator analysis handles deep loop-carried shader graphs",
+          "[shader][storage_buffer]") {
+    KernelProgram fixture;
+    fixture.env.native = true;
+    fixture.entry.AddBranch(&fixture.loop);
+    fixture.loop.AddBranch(&fixture.loop);
+    fixture.program.blocks = {&fixture.entry, &fixture.loop};
+    fixture.program.post_order_blocks = {&fixture.loop, &fixture.entry};
+    std::vector<IR::Inst*> phis;
+    phis.reserve(20000);
+    for (size_t index = 0; index < 20000; ++index) {
+        fixture.loop.AppendNewInst(IR::Opcode::Phi, {});
+        phis.push_back(&fixture.loop.back());
+        phis.back()->SetFlags(IR::Type::U32);
+    }
+    for (size_t index = 0; index < phis.size(); ++index) {
+        phis[index]->AddPhiOperand(&fixture.entry, IR::Value{0U});
+        phis[index]->AddPhiOperand(&fixture.loop, IR::Value{phis[(index + 1) % phis.size()]});
+    }
+    IR::IREmitter entry{fixture.entry};
+    entry.WriteGlobal32(Address(entry, Word(entry, 0x310), Word(entry, 0x314)), entry.Imm32(1));
+    CHECK(fixture.TrackedOffsets() == std::vector<u32>{0x310});
+}

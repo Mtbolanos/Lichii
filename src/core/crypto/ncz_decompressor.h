@@ -3,32 +3,43 @@
 
 #pragma once
 
+#include <memory>
 #include <string_view>
 
 #include "core/file_sys/vfs/vfs_types.h"
 
 namespace Core::Crypto {
 
+class NczCache;
+
 /**
- * Opens an NCZBLOCK-compressed NCA (nsz -B / .xcz block format) as a VirtualFile backed by
- * on-demand block decoding. Nothing is written to disk; each read decodes only the blocks it
- * covers and re-encrypts CTR sections. Solid NCZ is not supported.
+ * Opens block or solid NCZ as an NCA VirtualFile, preserving CTR encryption. Blocks are
+ * decoded on demand; solid streams use a private, delete-on-close disk cache. Solid decoding
+ * has bounded working memory and may require decoding the prefix up to the requested offset.
  *
  * @param ncz_file    The raw NCZ payload (e.g. "<id>.ncz" entry from an NSZ/XCZ PFS0).
  * @param output_name Name to give the returned VirtualFile (e.g. "<id>.nca").
  *
- * @return a VirtualFile for the NCA, or nullptr if the NCZ is malformed or not NCZBLOCK.
+ * @return a VirtualFile for the NCA, or nullptr for unsupported headers or cache errors.
  */
 [[nodiscard]] FileSys::VirtualFile DecompressNCZ(const FileSys::VirtualFile& ncz_file,
                                                  std::string_view output_name);
 
+// An owned backing store permits host I/O policies and deterministic cache-failure testing.
+[[nodiscard]] FileSys::VirtualFile DecompressNCZ(const FileSys::VirtualFile& ncz_file,
+                                                 std::string_view output_name,
+                                                 std::unique_ptr<NczCache> cache);
+
 /**
  * Returns true if the given file is an NCZ payload in block-compressed (NCZBLOCK) form,
- * i.e. one that DecompressNCZ() can open. Solid NCZ returns false.
+ * Solid NCZ returns false even though playback can use the disk-backed reader.
  */
 [[nodiscard]] bool IsBlockCompressedNCZ(const FileSys::VirtualFile& ncz_file);
 
-// Install to NAND: same as DecompressNCZ, but solid NCZ is decoded on demand too.
+// Header-only eligibility check; actual NCA validation and decoding still happen on reads.
+[[nodiscard]] bool IsSupportedNCZ(const FileSys::VirtualFile& ncz_file);
+
+// Installation shares the same bounded decoder and private cache as playback.
 [[nodiscard]] FileSys::VirtualFile DecompressNCZForInstall(
     const FileSys::VirtualFile& ncz_file, std::string_view output_name);
 

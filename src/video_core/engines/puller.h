@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
@@ -18,6 +17,10 @@
 
 namespace Core {
 class System;
+}
+
+namespace VideoCommon::GpuTrace {
+struct StateAccess;
 }
 
 namespace Tegra {
@@ -45,6 +48,8 @@ class RasterizerInterface;
 namespace Tegra::Engines {
 
 class Puller final {
+    friend struct ::VideoCommon::GpuTrace::StateAccess;
+
 public:
     struct MethodCall {
         u32 method{};
@@ -87,6 +92,11 @@ public:
         /// Whether it waits for the word to reach `value` (greater or equal).
         [[nodiscard]] bool WaitsToReach() const;
     };
+
+    Puller() = default;
+    /// Leaves the semaphore waiters, so a channel torn down mid-wait leaves no slot (and no host
+    /// pointer to its semaphore word) for the next session's GPU thread.
+    ~Puller();
 
     [[nodiscard]] bool HasPendingAcquire() const {
         return pending_acquire.has_value();

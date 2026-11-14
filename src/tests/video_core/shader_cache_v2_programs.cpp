@@ -321,6 +321,32 @@ TEST_CASE("Shader cache v2: a record of another lowering is stale and never used
             V2::ProgramLookup::Miss);
 }
 
+TEST_CASE("Shader cache v2: a stale record stays after KeepStalePrograms",
+          "[video_core][shader_cache_v2]") {
+    TempDir temp;
+    const auto file = temp.path / "cache.bin";
+    const std::vector<TestProgram> programs = TestPrograms();
+    const TestProgram& program = programs[0];
+    V2::ProgramRecord stale = RecordOf(program, *LowerFresh(program));
+    stale.lowering_stamp ^= 1;
+    WriteLog(file, std::span{&stale, 1});
+    const V2::LogFile log = V2::ReadLogFile(file);
+    V2::Cache cache{file};
+    cache.KeepStalePrograms();
+    cache.LoadPrograms(log.parsed.live);
+    // Lowered again, its record of this lowering isn't written, so the next boot load still
+    // lowers it again and moves its pipelines' records
+    cache.RecordProgram(RecordOf(program, *LowerFresh(program)));
+    const auto sph = program.Header();
+    const auto traps = program.Traps();
+    REQUIRE(cache.FindProgram(KeyInputs(program, sph, traps)).lookup == V2::ProgramLookup::Stale);
+    // A program the log has no record of is still recorded
+    const TestProgram& unknown = programs[4];
+    cache.RecordProgram(RecordOf(unknown, *LowerFresh(unknown)));
+    REQUIRE(cache.Writer().Drain(5s));
+    REQUIRE(cache.Writer().Stats().written_records == 1);
+}
+
 TEST_CASE("Shader cache v2: a damaged program record never gives code",
           "[video_core][shader_cache_v2]") {
     const std::vector<TestProgram> programs = TestPrograms();

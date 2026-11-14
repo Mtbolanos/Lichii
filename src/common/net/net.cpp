@@ -15,7 +15,7 @@
 
 #include "common/httplib.h"
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
 #include <openssl/cert.h>
 #endif
 
@@ -211,7 +211,7 @@ RequestResult Fetch(const std::string& url, const std::string& path) {
         client->set_read_timeout(timeout_seconds);
         client->set_write_timeout(timeout_seconds);
 
-#ifdef YUZU_BUNDLED_OPENSSL
+#ifdef LICHII_BUNDLED_OPENSSL
         client->load_ca_cert_store(kCert, sizeof(kCert));
 #endif
 

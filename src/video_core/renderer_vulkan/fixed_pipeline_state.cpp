@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2019 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -103,6 +102,27 @@ void RefreshXfbState(VideoCommon::TransformFeedbackState& state, const Maxwell& 
 }
 } // Anonymous namespace
 
+u64 FixedPipelineState::DynamicAttributeTypes(const Maxwell& regs) noexcept {
+    static constexpr std::array LUT{
+        0u, // Invalid
+        1u, // SignedNorm
+        1u, // UnsignedNorm
+        2u, // SignedInt
+        3u, // UnsignedInt
+        1u, // UnsignedScaled
+        1u, // SignedScaled
+        1u, // Float
+    };
+    const auto& attrs = regs.vertex_attrib_format;
+    u64 types = 0;
+    for (size_t i = 0; i < Maxwell::NumVertexAttributes; ++i) {
+        const u32 mask = attrs[i].constant != 0 ? 0 : 3;
+        const u32 type = LUT[static_cast<size_t>(attrs[i].type.Value())];
+        types |= static_cast<u64>(type & mask) << (i * 2);
+    }
+    return types;
+}
+
 void FixedPipelineState::Refresh(Tegra::Engines::Maxwell3D& maxwell3d, DynamicFeatures& features) {
     const Maxwell& regs = maxwell3d.regs;
     const auto topology_ = maxwell3d.draw_manager.draw_state.topology;
@@ -198,23 +218,7 @@ void FixedPipelineState::Refresh(Tegra::Engines::Maxwell3D& maxwell3d, DynamicFe
     if (maxwell3d.dirty.flags[Dirty::VertexInput]) {
         if (features.has_dynamic_vertex_input) {
             // Dirty flag will be reset by the command buffer update
-            static constexpr std::array LUT{
-                0u, // Invalid
-                1u, // SignedNorm
-                1u, // UnsignedNorm
-                2u, // SignedInt
-                3u, // UnsignedInt
-                1u, // UnsignedScaled
-                1u, // SignedScaled
-                1u, // Float
-            };
-            const auto& attrs = regs.vertex_attrib_format;
-            attribute_types = 0;
-            for (size_t i = 0; i < Maxwell::NumVertexAttributes; ++i) {
-                const u32 mask = attrs[i].constant != 0 ? 0 : 3;
-                const u32 type = LUT[static_cast<size_t>(attrs[i].type.Value())];
-                attribute_types |= static_cast<u64>(type & mask) << (i * 2);
-            }
+            attribute_types = DynamicAttributeTypes(regs);
         } else {
             maxwell3d.dirty.flags[Dirty::VertexInput] = false;
             enabled_divisors = 0;

@@ -1,8 +1,9 @@
-# Star Fox spatial upscale candidate
+# Star Fox spatial display workaround
 
 This extends the guarded Fire Emblem workaround to the captured Star Fox DLSS
-passes. It is a candidate for the Venom cutscene's repeated ship trails, not a
-verified repair of the native network. The owner must compare the same scene.
+passes. Desktop testing confirms that it removes black rectangles in the opening
+cutscene for the captured docked prepass. It does not repair the native temporal
+network; later missions and motion-vector conventions remain unverified.
 
 ## Evidence
 
@@ -65,14 +66,48 @@ sparse, layered, aliasing or unequal-sized images are rejected. The source is
 bound through an sRGB view, so sampling decodes it to linear colour before writing
 the float output. The spatial and sharpening passes write only RGB, preserving
 the alpha produced by the native pass and its separate output at `0x350`.
-Fire Emblem keeps its original format and upscale restrictions. No new shader
-fingerprints or slot-search heuristics are added.
+Fire Emblem keeps its original format and upscale restrictions. The colour-pair
+change itself added no shader fingerprints or slot-search heuristics.
+
+## Docked cutscene prepass validation
+
+A November 11 desktop capture of Star Fox (`0400E88025B1A000`, main build
+`A7730D0F74D168D90422354C8317F76FF78AD938`) uses prepass key
+`ebab31dd6f0fc08d`. The old `d686ca0b9fad9e6d` gate therefore never opened the
+replacement chain. Both keys now identify the same guarded prepass; the final
+key remains `7d3764ff101bec27`.
+
+Native disassembly confirms the existing resource contract: jitter loads at
+instructions `0xe0` and `0xf0` read `cbuf0+0x1b0` and `+0x1b4`, while `TLD` at
+`0x3140` reads colour through `cbuf0+0x278`. Captured jitter is
+`(-0.4375, 0.388888955)`. The final pass reads that same 1920x1080 sRGB colour
+image through `+0x328` and writes equal-sized RGBA16F output at `+0x348`, with
+separate history at `+0x350`.
+
+A sampled frame dump locates clean colour before the native temporal network and
+black rectangles in its output. RenderDoc 1.46 independently confirms the chain
+in a successfully replayed Vulkan capture: event 3215, translated shader
+`25a620c965883cde`, produces the first corrupt output; event 3279
+(`bccc6a99e0f227fa`) retains it; event 3308 (`a2884a1f4cd841e7`) enlarges it
+into the final 4K image. Captures remain local.
+
+On a desktop integration based on `e860139f53`, the patched contract trace reports
+`Star Fox DLSS replacement: applied temporal=false`. Uncaptured room and cockpit
+screenshots are free of the reproduced black rectangles. A later frame dump
+also shows the native result repaired before downstream tone mapping. This
+integration included separate audio and async-draw fixes; the native network,
+secondary writes and output alpha still execute unchanged.
+
+The regression checks both captured keys, every one-bit key mutation, the output
+key, and Fire Emblem separation. This is a display repair, not an average-FPS
+improvement. A possible trail in another moving-ship screenshot remains
+unclassified; its exact frame was not captured, and later missions were not tested.
 
 ## Owner-side comparison
 
 Start a fresh process with `EDEN_NX2_DLSS_CONTRACT_TRACE=1` and log filter
 `*:Info HW.GPU:Debug Shader:Debug Render.Vulkan:Debug`.
-Leave `EDEN_NX2_DLSS_REPLACEMENT` unset for the spatial candidate. Star Fox always
+Leave `EDEN_NX2_DLSS_REPLACEMENT` unset for the spatial workaround. Star Fox always
 uses the spatial path, even if `fsr` or `dlss` is requested; its temporal resource
 contract has not been validated. Set `EDEN_NX2_DLSS_REPLACEMENT=native` in a second
 fresh process to retain the original output for comparison.

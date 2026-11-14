@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <map>
@@ -259,19 +258,19 @@ void AndroidKeyboard::SubmitNormalText(const ResultData& data) const {
 
 void InitJNI(JNIEnv* env) {
     s_software_keyboard_class = reinterpret_cast<jclass>(
-        env->NewGlobalRef(env->FindClass("org/yuzu/yuzu_emu/applets/keyboard/SoftwareKeyboard")));
+        env->NewGlobalRef(env->FindClass("io/github/zortos293/lichii/applets/keyboard/SoftwareKeyboard")));
     s_keyboard_config_class = reinterpret_cast<jclass>(env->NewGlobalRef(
-        env->FindClass("org/yuzu/yuzu_emu/applets/keyboard/SoftwareKeyboard$KeyboardConfig")));
+        env->FindClass("io/github/zortos293/lichii/applets/keyboard/SoftwareKeyboard$KeyboardConfig")));
     s_keyboard_data_class = reinterpret_cast<jclass>(env->NewGlobalRef(
-        env->FindClass("org/yuzu/yuzu_emu/applets/keyboard/SoftwareKeyboard$KeyboardData")));
+        env->FindClass("io/github/zortos293/lichii/applets/keyboard/SoftwareKeyboard$KeyboardData")));
 
     s_swkbd_execute_normal = env->GetStaticMethodID(
         s_software_keyboard_class, "executeNormal",
-        "(Lorg/yuzu/yuzu_emu/applets/keyboard/SoftwareKeyboard$KeyboardConfig;)Lorg/yuzu/yuzu_emu/"
+        "(Lio/github/zortos293/lichii/applets/keyboard/SoftwareKeyboard$KeyboardConfig;)Lio/github/zortos293/lichii/"
         "applets/keyboard/SoftwareKeyboard$KeyboardData;");
     s_swkbd_execute_inline = env->GetStaticMethodID(
         s_software_keyboard_class, "executeInline",
-        "(Lorg/yuzu/yuzu_emu/applets/keyboard/SoftwareKeyboard$KeyboardConfig;)V");
+        "(Lio/github/zortos293/lichii/applets/keyboard/SoftwareKeyboard$KeyboardConfig;)V");
 }
 
 void CleanupJNI(JNIEnv* env) {

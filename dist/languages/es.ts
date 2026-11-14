@@ -2,22 +2,22 @@
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="14"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="14"/>
         <source>About Eden</source>
         <translation>Acerca de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="72"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="72"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="85"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="85"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1 (%2)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;%1 (%2)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="98"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="98"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -36,27 +36,27 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Eden es un emulador experimental de código abierto de Nintendo Switch licenciado bajo GPLv3.0+ que está basado en el emulador yuzu el cual finalizó su desarrollo en marzo de 2024. &lt;br /&gt;&lt;br /&gt;Este programa no debería ser usado para jugar a juegos que no fueron obtenidos legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="131"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="131"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://eden-emulator.github.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Website&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Source Code&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev/eden-emu/eden/activity/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Contributors&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://discord.gg/HstXbPch7X&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Discord&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://stt.gg/qKgFEAbH&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Stoat&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://nitter.poast.org/edenemuofficial&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Twitter&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/LICENSE.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;License&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://eden-emulator.github.io/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Sitio web&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Código fuente&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev/eden-emu/eden/activity/contributors&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Colaboradores&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://discord.gg/HstXbPch7X&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Discord&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://stt.gg/qKgFEAbH&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Stoat&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://nitter.poast.org/edenemuofficial&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Twitter&lt;/span&gt;&lt;/a&gt; | &lt;a href=&quot;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/LICENSE.txt&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#039be5;&quot;&gt;Licencia&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="147"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="147"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Eden is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Eden no está afiliado de ninguna forma con Nintendo.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="14"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="14"/>
         <source>About Lichii</source>
         <translation>Acerca de Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="72"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="72"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Lichii&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Lichii&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="98"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="98"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -75,12 +75,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-size:12pt;&quot;&gt;Lichii es un emulador experimental de código abierto para Nintendo Switch 2, basado en Eglantine y Eden. &lt;br /&gt;&lt;br /&gt;Este software no debe usarse para jugar juegos que no haya obtenido legalmente.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="131"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="131"/>
         <source>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/zortos293/Eglantine&quot;&gt;Source Code&lt;/a&gt; | &lt;a href=&quot;https://github.com/zortos293/Eglantine/issues&quot;&gt;Report an Issue&lt;/a&gt; | &lt;a href=&quot;https://github.com/zortos293/Eglantine#credits-and-license&quot;&gt;Credits and License&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/zortos293/Eglantine&quot;&gt;Código fuente&lt;/a&gt; | &lt;a href=&quot;https://github.com/zortos293/Eglantine/issues&quot;&gt;Reportar un problema&lt;/a&gt; | &lt;a href=&quot;https://github.com/zortos293/Eglantine#credits-and-license&quot;&gt;Créditos y licencia&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/aboutdialog.ui" line="147"/>
+        <location filename="../../src/lichii/aboutdialog.ui" line="147"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; is a trademark of Nintendo. Lichii is not affiliated with Nintendo in any way.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;&amp;quot;Nintendo Switch&amp;quot; es una marca registrada de Nintendo. Lichii no está afiliado a Nintendo de ninguna manera.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -88,32 +88,32 @@ li.checked::marker { content: &quot;\2612&quot;; }
 <context>
     <name>CalibrationConfigurationDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="26"/>
         <source>Communicating with the server...</source>
         <translation>Comunicando con el servidor...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="27"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="27"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="45"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="45"/>
         <source>Touch the top left corner &lt;br&gt;of your touchpad.</source>
         <translation>Toca la esquina superior izquierda&lt;br&gt;de tu panel táctil.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="48"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="48"/>
         <source>Now touch the bottom right corner &lt;br&gt;of your touchpad.</source>
         <translation>Ahora toca la esquina inferior derecha &lt;br&gt;de tu panel táctil.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="51"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="51"/>
         <source>Configuration completed!</source>
         <translation>¡Configuración completada!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="59"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="59"/>
         <source>OK</source>
         <translation>Aceptar</translation>
     </message>
@@ -121,93 +121,93 @@ li.checked::marker { content: &quot;\2612&quot;; }
 <context>
     <name>ChatRoom</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.ui" line="14"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.ui" line="14"/>
         <source>Room Window</source>
         <translation>Ventana de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.ui" line="40"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.ui" line="40"/>
         <source>Send Chat Message</source>
         <translation>Enviar mensaje al chat</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.ui" line="47"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.ui" line="47"/>
         <source>Send Message</source>
         <translation>Enviar mensaje</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="182"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="182"/>
         <source>Members</source>
         <translation>Miembros</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="318"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="318"/>
         <source>%1 has joined</source>
         <translation>%1 se unió</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="321"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="321"/>
         <source>%1 has left</source>
         <translation>%1 se fué</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="324"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="324"/>
         <source>%1 has been kicked</source>
         <translation>%1 ha sido expulsado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="327"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="327"/>
         <source>%1 has been banned</source>
         <translation>%1 ha sido vetado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="330"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="330"/>
         <source>%1 has been unbanned</source>
         <translation>%1 se le ha retirado el veto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="446"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="446"/>
         <source>View Profile</source>
         <translation>Ver perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="459"/>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="469"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="459"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="469"/>
         <source>Block Player</source>
         <translation>Bloquear jugador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="470"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="470"/>
         <source>When you block a player, you will no longer receive chat messages from them.&lt;br&gt;&lt;br&gt;Are you sure you would like to block %1?</source>
         <translation>Cuando bloqueas a un jugador, ya no recibirás más mensajes de él. &lt;br&gt;&lt;br&gt; ¿Estás seguro de que quieres bloquear a %1?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="483"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="483"/>
         <source>Kick</source>
         <translation>Expulsar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="484"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="484"/>
         <source>Ban</source>
         <translation>Vetar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="488"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="488"/>
         <source>Kick Player</source>
         <translation>Expulsar al jugador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="489"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="489"/>
         <source>Are you sure you would like to &lt;b&gt;kick&lt;/b&gt; %1?</source>
         <translation>¿Estás seguro de que quieres &lt;b&gt;expulsar&lt;/b&gt; a %1?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="497"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="497"/>
         <source>Ban Player</source>
         <translation>Vetar al jugador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="498"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="498"/>
         <source>Are you sure you would like to &lt;b&gt;kick and ban&lt;/b&gt; %1?
 
 This would ban both their forum username and their IP address.</source>
@@ -219,22 +219,22 @@ Esto vetará su nombre de usuario del foro y su dirección IP.</translation>
 <context>
     <name>ClientRoom</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.ui" line="14"/>
+        <location filename="../../src/lichii/multiplayer/client_room.ui" line="14"/>
         <source>Room Window</source>
         <translation>Ventana de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.ui" line="27"/>
+        <location filename="../../src/lichii/multiplayer/client_room.ui" line="27"/>
         <source>Room Description</source>
         <translation>Descripción de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.ui" line="47"/>
+        <location filename="../../src/lichii/multiplayer/client_room.ui" line="47"/>
         <source>Moderation...</source>
         <translation>Moderación...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.ui" line="57"/>
+        <location filename="../../src/lichii/multiplayer/client_room.ui" line="57"/>
         <source>Leave Room</source>
         <translation>Abandonar la sala</translation>
     </message>
@@ -242,17 +242,17 @@ Esto vetará su nombre de usuario del foro y su dirección IP.</translation>
 <context>
     <name>ClientRoomWindow</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.cpp" line="80"/>
+        <location filename="../../src/lichii/multiplayer/client_room.cpp" line="80"/>
         <source>Connected</source>
         <translation>Conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.cpp" line="89"/>
+        <location filename="../../src/lichii/multiplayer/client_room.cpp" line="89"/>
         <source>Disconnected</source>
         <translation>Desconectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/client_room.cpp" line="102"/>
+        <location filename="../../src/lichii/multiplayer/client_room.cpp" line="102"/>
         <source>%1 - %2 (%3/%4 members) - connected</source>
         <translation>%1 - %2 (%3/%4 miembros) - conectado</translation>
     </message>
@@ -260,7 +260,7 @@ Esto vetará su nombre de usuario del foro y su dirección IP.</translation>
 <context>
     <name>ConfigurationShared</name>
     <message>
-        <location filename="../../src/yuzu/configuration/shared_widget.cpp" line="67"/>
+        <location filename="../../src/lichii/configuration/shared_widget.cpp" line="67"/>
         <source>%</source>
         <translation>%</translation>
     </message>
@@ -2473,17 +2473,17 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureApplets</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_applets.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_applets.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_applets.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_applets.ui" line="17"/>
         <source>Applets</source>
         <translation>Applets</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_applets.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_applets.ui" line="25"/>
         <source>Applet mode preference</source>
         <translation>Preferencia del modo Applet</translation>
     </message>
@@ -2491,8 +2491,8 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureAudio</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_audio.ui" line="14"/>
-        <location filename="../../src/yuzu/configuration/configure_audio.ui" line="20"/>
+        <location filename="../../src/lichii/configuration/configure_audio.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_audio.ui" line="20"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
@@ -2500,47 +2500,47 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureCamera</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="14"/>
         <source>Configure Infrared Camera</source>
         <translation>Configurar la cámara infrarroja</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="26"/>
         <source>Select where the image of the emulated camera comes from. It may be a virtual camera or a real camera.</source>
         <translation>Selecciona de dónde proviene la imagen de la cámara emulada. Puede ser una cámara virtual o una real.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="52"/>
         <source>Camera Image Source:</source>
         <translation>Fuente de la imagen de cámara:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="71"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="71"/>
         <source>Input device:</source>
         <translation>Dispositivo de entrada:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="96"/>
         <source>Preview</source>
         <translation>Vista previa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="108"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="108"/>
         <source>Resolution: 320*240</source>
         <translation>Resolución: 320*240</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="115"/>
         <source>Click to preview</source>
         <translation>Clic para vista previa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.ui" line="140"/>
+        <location filename="../../src/lichii/configuration/configure_camera.ui" line="140"/>
         <source>Restore Defaults</source>
         <translation>Restaurar valores predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_camera.cpp" line="135"/>
+        <location filename="../../src/lichii/configuration/configure_camera.cpp" line="135"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
@@ -2548,37 +2548,37 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureCpu</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="17"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="28"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="28"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="52"/>
         <source>We recommend setting accuracy to &quot;Auto&quot;.</source>
         <translation>Recomendamos establecer la precisión en &quot;Auto&quot;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="68"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="68"/>
         <source>CPU Backend</source>
         <translation>Motor de la CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="95"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="95"/>
         <source>Unsafe CPU Optimization Settings</source>
         <translation>Ajustes inseguros de la optimización de la CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu.ui" line="101"/>
+        <location filename="../../src/lichii/configuration/configure_cpu.ui" line="101"/>
         <source>These settings reduce accuracy for speed.</source>
         <translation>Estos ajustes reducen la precisión para mejorar el rendimiento.</translation>
     </message>
@@ -2586,27 +2586,27 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureCpuDebug</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="17"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="25"/>
         <source>Toggle CPU Optimizations</source>
         <translation>Alternar las optimizaciones de la CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="31"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="31"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;For debugging only.&lt;/span&gt;&lt;br/&gt;If you&apos;re not sure what these do, keep all of these enabled. &lt;br/&gt;These settings, when disabled, only take effect when CPU Debugging is enabled. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Solo para depurar.&lt;/span&gt;&lt;br/&gt;Si no estás seguro de su función, déjalas activadas. &lt;br/&gt;Estas opciones, cuando estén desactivadas, solo funcionarán cuando la Depuración de CPU esté activada. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="41"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="41"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;This optimization speeds up memory accesses by the guest program.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;Enabling it inlines accesses to PageTable::pointers into emitted code.&lt;/div&gt;
@@ -2619,12 +2619,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="48"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="48"/>
         <source>Enable inline page tables</source>
         <translation>Activar las tablas de páginas integradas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="55"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="55"/>
         <source>
             &lt;div&gt;This optimization avoids dispatcher lookups by allowing emitted basic blocks to jump directly to other basic blocks if the destination PC is static.&lt;/div&gt;
            </source>
@@ -2633,12 +2633,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="60"/>
         <source>Enable block linking</source>
         <translation>Activar enlace de bloques</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="67"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="67"/>
         <source>
             &lt;div&gt;This optimization avoids dispatcher lookups by keeping track potential return addresses of BL instructions. This approximates what happens with a return stack buffer on a real CPU.&lt;/div&gt;
            </source>
@@ -2647,12 +2647,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="72"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="72"/>
         <source>Enable return stack buffer</source>
         <translation>Activar el búfer de acumulación de retorno</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="79"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="79"/>
         <source>
             &lt;div&gt;Enable a two-tiered dispatch system. A faster dispatcher written in assembly has a small MRU cache of jump destinations is used first. If that fails, dispatch falls back to the slower C++ dispatcher.&lt;/div&gt;
            </source>
@@ -2661,12 +2661,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="84"/>
         <source>Enable fast dispatcher</source>
         <translation>Activar emisor rápido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="91"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="91"/>
         <source>
             &lt;div&gt;Enables an IR optimization that reduces unnecessary accesses to the CPU context structure.&lt;/div&gt;
            </source>
@@ -2675,12 +2675,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="96"/>
         <source>Enable context elimination</source>
         <translation>Activar eliminación de contexto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="103"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="103"/>
         <source>
             &lt;div&gt;Enables IR optimizations that involve constant propagation.&lt;/div&gt;
            </source>
@@ -2689,12 +2689,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="108"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="108"/>
         <source>Enable constant propagation</source>
         <translation>Activar propagación constante</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="115"/>
         <source>
             &lt;div&gt;Enables miscellaneous IR optimizations.&lt;/div&gt;
            </source>
@@ -2703,12 +2703,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="120"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="120"/>
         <source>Enable miscellaneous optimizations</source>
         <translation>Activar optimizaciones misceláneas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="127"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="127"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;When enabled, a misalignment is only triggered when an access crosses a page boundary.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;When disabled, a misalignment is triggered on all misaligned accesses.&lt;/div&gt;
@@ -2719,12 +2719,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="133"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="133"/>
         <source>Enable misalignment check reduction</source>
         <translation>Activar reducción del control de desalineación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="140"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="140"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;This optimization speeds up memory accesses by the guest program.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;Enabling it causes guest memory reads/writes to be done directly into memory and make use of Host's MMU.&lt;/div&gt;
@@ -2737,12 +2737,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="147"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="147"/>
         <source>Enable Host MMU Emulation (general memory instructions)</source>
         <translation>Activar emulación MMU del anfitrión (Instrucciones de memoria general)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="154"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="154"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;This optimization speeds up exclusive memory accesses by the guest program.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;Enabling it causes guest exclusive memory reads/writes to be done directly into memory and make use of Host's MMU.&lt;/div&gt;
@@ -2755,12 +2755,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="161"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="161"/>
         <source>Enable Host MMU Emulation (exclusive memory instructions)</source>
         <translation>Activar emulación MMU del anfitrión (Instrucciones de memoria exclusiva)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="168"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="168"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;This optimization speeds up exclusive memory accesses by the guest program.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;Enabling it reduces the overhead of fastmem failure of exclusive memory accesses.&lt;/div&gt;
@@ -2771,12 +2771,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="174"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="174"/>
         <source>Enable recompilation of exclusive memory instructions</source>
         <translation>Activar recompilación de las instrucciones de memoria exclusiva</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="181"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="181"/>
         <source>
             &lt;div style=&quot;white-space: nowrap&quot;&gt;This optimization speeds up memory accesses by allowing invalid memory accesses to succeed.&lt;/div&gt;
             &lt;div style=&quot;white-space: nowrap&quot;&gt;Enabling it reduces the overhead of all memory accesses and has no impact on programs that don't access invalid memory.&lt;/div&gt;
@@ -2787,12 +2787,12 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
            </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="187"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="187"/>
         <source>Enable fallbacks for invalid memory accesses</source>
         <translation>Activar fallbacks para accesos inválidos de memoria</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_cpu_debug.ui" line="212"/>
+        <location filename="../../src/lichii/configuration/configure_cpu_debug.ui" line="212"/>
         <source>CPU settings are available only when game is not running.</source>
         <translation>Los ajustes de la CPU solo están disponibles cuando no se esté ejecutando ningún juego.</translation>
     </message>
@@ -2800,327 +2800,327 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureDebug</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="40"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="40"/>
         <source>Debugger</source>
         <translation>Depurador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="85"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="85"/>
         <source>Enable GDB Stub</source>
         <translation>Activar GDB Stub</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="119"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="119"/>
         <source>Port:</source>
         <translation>Puerto:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="157"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="157"/>
         <source>Logging</source>
         <translation>Registro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="190"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="190"/>
         <source>Global Log Filter</source>
         <translation>Filtro del registro global</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="224"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="224"/>
         <source>GPU Logging/Level</source>
         <translation>Nivel/Registros de la GPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="231"/>
         <source>Detail level for GPU logs. Off disables logging entirely.</source>
         <translation>Nivel de detalle para los registros de la GPU. En Apagado desactiva todos los registros.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="235"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="235"/>
         <source>Off</source>
         <translation>Apagado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="240"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="240"/>
         <source>Errors</source>
         <translation>Errores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="245"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="245"/>
         <source>Standard</source>
         <translation>Estándar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="250"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="250"/>
         <source>Verbose</source>
         <translation>Detallado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="255"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="255"/>
         <source>All</source>
         <translation>Todos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="266"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="266"/>
         <source>Show Log in Console</source>
         <translation>Ver el registro en la consola</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="276"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="276"/>
         <source>When checked, the max size of the log increases from 100 MB to 1 GB</source>
         <translation>Al activarlo, el tamaño máximo del registro aumenta de 100 MB a 1 GB.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="279"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="279"/>
         <source>Enable Extended Logging**</source>
         <translation>Habilitar el registro extendido**</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="298"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="298"/>
         <source>Open Log Location</source>
         <translation>Abrir la ubicación del archivo de registro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="310"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="310"/>
         <source>Homebrew</source>
         <translation>Homebrew</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="318"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="318"/>
         <source>Arguments String</source>
         <translation>Cadena de argumentos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="335"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="335"/>
         <source>Graphics</source>
         <translation>Gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="341"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="341"/>
         <source>When checked, it executes shaders without loop logic changes</source>
         <translation>Al activarlo, se ejecutarán los sombreadores sin cambios en bucles lógicos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="344"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="344"/>
         <source>Disable Loop safety checks</source>
         <translation>Desactivar comprobaciones de seguridad de bucles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="354"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="354"/>
         <source>When checked, it will dump all the macro programs of the GPU</source>
         <translation>Al activarlo, se volcarán todos los programas macro de la GPU.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="357"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="357"/>
         <source>Dump Maxwell Macros</source>
         <translation>Volcar macros Maxwell</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="364"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="364"/>
         <source>When checked, it enables Nsight Aftermath crash dumps</source>
         <translation>Al activarlo, se habilitan los volcados Nsight Aftermath de bloqueos o errores.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="367"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="367"/>
         <source>Enable Nsight Aftermath</source>
         <translation>Activar Nsight Aftermath</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="377"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="377"/>
         <source>When checked, it will dump original Maxwell guest shader bytecode (the input to the recompiler) as .ash files under DumpDir/shaders/. Useful for inspection with nvdisasm.</source>
         <translation>Al activarlo, volcará el bytecode original del sombreador huesped Maxwell (la entrada al recompilador) como archivos .ash bajo DumpDir/shaders/. Útil para inspeccionar con nvdisasm.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="380"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="380"/>
         <source>Dump Guest (Maxwell) Shaders</source>
         <translation>Volcar sombreadores huesped (Maxwell)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="387"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="387"/>
         <source>Enable Renderdoc Hotkey</source>
         <translation>Atajo para activar Renderdoc</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="397"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="397"/>
         <source>When checked, it disables the macro Just In Time compiler. Enabling this makes games run slower</source>
         <translation>Al activarlo, se desactiva el compilador de macro Just In Time. Activar esto hace que los juegos se ejecuten más lento.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="400"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="400"/>
         <source>Disable Macro JIT</source>
         <translation>Desactivar macro JIT</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="410"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="410"/>
         <source>When checked, it disables the macro HLE functions. Enabling this makes games run slower</source>
         <translation>Al activarlo, desactiva las funciones de macro HLE. Activar esto hace que los juegos se ejecuten más lento.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="413"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="413"/>
         <source>Disable Macro HLE</source>
         <translation>Desactivar macro HLE</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="423"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="423"/>
         <source>When checked, the graphics API enters a slower debugging mode</source>
         <translation>Al activarlo, la API gráfica entrará en un modo de depuración más lento.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="426"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="426"/>
         <source>Enable Graphics Debugging</source>
         <translation>Activar depuración de gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="449"/>
-        <source>When checked, yuzu will log statistics about the compiled pipeline cache</source>
-        <translation>Al activarlo, yuzu realizará un registro de estadísticas del caché de canalización compilado.</translation>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="449"/>
+        <source>When checked, Lichii will log statistics about the compiled pipeline cache</source>
+        <translation>Al activarlo, Lichii realizará un registro de estadísticas del caché de canalización compilado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="452"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="452"/>
         <source>Enable Shader Feedback</source>
         <translation>Activar información de shaders</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="459"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="459"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When checked, disables reordering of mapped memory uploads which allows to associate uploads with specific draws. May reduce performance in some cases.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Al activarlo, se desactiva la reordenación de las subidas de memoria mapeadas, lo que permite asociar subidas con extracciones específicas. Puede reducir el rendimiento en algunos casos.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="462"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="462"/>
         <source>Disable Buffer Reorder</source>
         <translation>Desactivar el reordenamiento de búferes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="469"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="469"/>
         <source>When checked, it will dump the recompiler&apos;s output SPIR-V binaries (.spv) under LogDir/shaders/. Inspect via SPIRV-Tools (spirv-dis / spirv-cross / spirv-val) or RenderDoc.</source>
         <translation>Al activarlo, se volcarán los archivos binarios SPIR-V (.spv) generados por el recompilador en LogDir/shaders/. Inspeccionarlos con SPIRV-Tools (spirv-dis / spirv-cross / spirv-val) o RenderDoc.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="472"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="472"/>
         <source>Dump SPIR-V Shaders</source>
         <translation>Volcar sombreadores SPIR-V</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="482"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="482"/>
         <source>Advanced</source>
         <translation>Avanzado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="488"/>
-        <source>Enables yuzu to check for a working Vulkan environment when the program starts up. Disable this if this is causing issues with external programs seeing yuzu.</source>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="488"/>
+        <source>Enables Lichii to check for a working Vulkan environment when the program starts up. Disable this if this is causing issues with external programs seeing Lichii.</source>
         <translation>Permite a Eden comprobar si el entorno de Vulkan funciona cuando el programa se inicia. Desactiva esto si está causando problemas a programas externos que ven a Eden.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="491"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="491"/>
         <source>Perform Startup Vulkan Check</source>
         <translation>Realizar comprobación de Vulkan al iniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="498"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="498"/>
         <source>Disable Web Applet</source>
         <translation>Desactivar applet web</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="505"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="505"/>
         <source>Enable All Controller Types</source>
         <translation>Activar todos los tipos de controladores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="512"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="512"/>
         <source>Enable Auto-Stub</source>
         <translation>Activar Auto-Stub</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="519"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="519"/>
         <source>Kiosk (Quest) Mode</source>
         <translation>Modo quiosco (Quest)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="526"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="526"/>
         <source>Use dev.keys</source>
         <translation>Usar dev.keys</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="533"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="533"/>
         <source>Enable Debug Asserts</source>
         <translation>Activar alertas de depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="559"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="559"/>
         <source>Debugging</source>
         <translation>Depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="592"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="592"/>
         <source>Battery Serial:</source>
         <translation>Nº de serie de la batería:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="632"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="632"/>
         <source>Debug Knobs:</source>
         <translation>Interruptores de depuración:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="645"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="645"/>
         <source>Bitmask for quick development toggles</source>
         <translation>Bitmask para toggles de desarrollo rapido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="648"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="648"/>
         <source>Set debug knobs (bitmask)</source>
         <translation> Establecer parámetros de depuración (bitmask)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="651"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="651"/>
         <source>16-bit debug knob set for quick development toggles</source>
         <translation>Conjunto de interruptores de depuración de 16 bits para toggles de desarrollo rapido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="654"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="654"/>
         <source> (bitmask)</source>
         <translation>(bitmask)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="691"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="691"/>
         <source>Unit Serial:</source>
         <translation>Nº de serie de la unidad:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="720"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="720"/>
         <source>Enable this to output the latest generated audio command list to the console. Only affects games using the audio renderer.</source>
         <translation>Activa esta opción para mostrar en la consola la última lista de comandos de audio generada. Solo afecta a los juegos que utilizan el renderizador de audio.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="723"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="723"/>
         <source>Dump Audio Commands To Console**</source>
         <translation>Volcar comandos de audio a la consola**</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="730"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="730"/>
         <source>Flush log output on each line</source>
         <translation>Limpia el registro de salida en cada línea</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="737"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="737"/>
         <source>Enable FS Access Log</source>
         <translation>Activar registro de acceso FS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="744"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="744"/>
         <source>Enable Verbose Reporting Services**</source>
         <translation>Activar servicios de reporte detallados**</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="751"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="751"/>
         <source>Censor username in logs</source>
         <translation>Censura del nombre de usuario en los archivos de registro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="787"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="787"/>
         <source>**This will be reset automatically when Eden closes.</source>
         <translation>**Esto se reiniciara automáticamente cuando Eden se cierre.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug.ui" line="787"/>
+        <location filename="../../src/lichii/configuration/configure_debug.ui" line="787"/>
         <source>**This will be reset automatically when Lichii closes.</source>
         <translation>**Esto se restablecerá automáticamente cuando Lichii se cierre.</translation>
     </message>
@@ -3128,17 +3128,17 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureDebugController</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_controller.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_debug_controller.ui" line="14"/>
         <source>Configure Debug Controller</source>
         <translation>Configurar el controlador de depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_controller.ui" line="40"/>
+        <location filename="../../src/lichii/configuration/configure_debug_controller.ui" line="40"/>
         <source>Clear</source>
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_controller.ui" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_debug_controller.ui" line="47"/>
         <source>Defaults</source>
         <translation>Valores predeterminados</translation>
     </message>
@@ -3146,18 +3146,18 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureDebugTab</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_tab.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_debug_tab.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_tab.ui" line="17"/>
-        <location filename="../../src/yuzu/configuration/configure_debug_tab.cpp" line="16"/>
+        <location filename="../../src/lichii/configuration/configure_debug_tab.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_debug_tab.cpp" line="16"/>
         <source>Debug</source>
         <translation>Depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_debug_tab.cpp" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_debug_tab.cpp" line="17"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
@@ -3165,103 +3165,103 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure.ui" line="20"/>
+        <location filename="../../src/lichii/configuration/configure.ui" line="20"/>
         <source>Eden Configuration</source>
         <translation>Configuración de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure.ui" line="67"/>
+        <location filename="../../src/lichii/configuration/configure.ui" line="67"/>
         <source>Some settings are only available when a game is not running.</source>
         <translation>Algunos ajustes solo están disponibles cuando no se estén ejecutando los juegos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="69"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="69"/>
         <source>Applets</source>
         <translation>Applets</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="70"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="183"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="70"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="183"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="71"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="180"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="71"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="180"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="72"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="72"/>
         <source>Debug</source>
         <translation>Depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="73"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="73"/>
         <source>Filesystem</source>
         <translation>Sistema de archivos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="74"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="175"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="175"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="75"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="181"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="75"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="181"/>
         <source>Graphics</source>
         <translation>Gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="76"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="76"/>
         <source>GraphicsAdvanced</source>
         <translation>GráficosAvanzados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="77"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="77"/>
         <source>GraphicsExtra</source>
         <translation>GraficasExtra</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="78"/>
         <source>Hotkeys</source>
         <translation>Teclas de acceso rápido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="79"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="184"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="79"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="184"/>
         <source>Controls</source>
         <translation>Controles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="80"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="80"/>
         <source>Profiles</source>
         <translation>Perfiles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="81"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="81"/>
         <source>Network</source>
         <translation>Red</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="82"/>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="177"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="177"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="83"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="83"/>
         <source>Game List</source>
         <translation>Lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_dialog.cpp" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_dialog.cpp" line="84"/>
         <source>Web</source>
         <translation>Web</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure.ui" line="20"/>
+        <location filename="../../src/lichii/configuration/configure.ui" line="20"/>
         <source>Lichii Configuration</source>
         <translation>Configuración de Lichii</translation>
     </message>
@@ -3269,158 +3269,158 @@ Esperar detiene la GPU hasta que la canalización esté lista (no faltan efectos
 <context>
     <name>ConfigureFilesystem</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="17"/>
         <source>Filesystem</source>
         <translation>Sistema de archivos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="25"/>
         <source>Storage Directories</source>
         <translation>Directorios de almacenamiento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="31"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="31"/>
         <source>NAND</source>
         <translation>NAND</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="38"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="58"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="75"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="131"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="153"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="160"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="38"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="75"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="131"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="153"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="160"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="51"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="51"/>
         <source>SD Card</source>
         <translation>Tarjeta SD</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="65"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="65"/>
         <source>Save Data</source>
         <translation>Datos de guardado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="101"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="101"/>
         <source>Gamecard</source>
         <translation>Cartucho de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="107"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="107"/>
         <source>Path</source>
         <translation>Ruta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="117"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="117"/>
         <source>Inserted</source>
         <translation>Insertado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="124"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="124"/>
         <source>Current Game</source>
         <translation>Juego actual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="141"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="141"/>
         <source>Patch Manager</source>
         <translation>Administrador de parches</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="169"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="169"/>
         <source>Dump Decompressed NSOs</source>
         <translation>Volcar NSOs descomprimidos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="176"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="176"/>
         <source>Dump ExeFS</source>
         <translation>Volcar ExeFS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="185"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="185"/>
         <source>Mod Load Root</source>
         <translation>Carpeta raíz de carga de mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="192"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="192"/>
         <source>Dump Root</source>
         <translation>Carpeta raíz de volcado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="218"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="218"/>
         <source>Caching</source>
         <translation>Cargando caché</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="226"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="226"/>
         <source>Cache Game List Metadata</source>
         <translation>Metadatos de lista de juegos en caché</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.ui" line="233"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.ui" line="233"/>
         <source>Reset Metadata Cache</source>
         <translation>Reiniciar caché de metadatos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="105"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="105"/>
         <source>Select Emulated NAND Directory...</source>
         <translation>Selecciona el directorio de NAND emulado...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="108"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="108"/>
         <source>Select Emulated SD Directory...</source>
         <translation>Seleccione el directorio de SD emulado...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="111"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="159"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="111"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="159"/>
         <source>Select Save Data Directory...</source>
         <translation>Seleccione directorio de Datos guardados...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="114"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="114"/>
         <source>Select Gamecard Path...</source>
         <translation>Seleccione la ruta del cartucho...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="117"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="117"/>
         <source>Select Dump Directory...</source>
         <translation>Seleccione directorio de volcado...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="120"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="120"/>
         <source>Select Mod Load Directory...</source>
         <translation>Seleccione el directorio de carga de mods...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="148"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="148"/>
         <source>Save Data Directory</source>
         <translation>Directorio de Datos guardados...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="149"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="149"/>
         <source>Choose an action for the save data directory:</source>
         <translation>Elige un acción para el directorio de datos guardados:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="151"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="151"/>
         <source>Set Custom Path</source>
         <translation>Configura una ruta personalizado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="152"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="152"/>
         <source>Reset to NAND</source>
         <translation>Restablecer a NAND</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="208"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="208"/>
         <source>Save data exists in both the old and new locations.
 
 Old: %1
@@ -3437,7 +3437,7 @@ Nuevo: %2
 AUXILIO: ¡Esto sobrescribirá cualquier partida guardada existente en el nuevo directorio!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="216"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="216"/>
         <source>Would you like to migrate your save data to the new location?
 
 From: %1
@@ -3448,45 +3448,45 @@ Desde: %1
 A: %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="224"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="224"/>
         <source>Migrate Save Data</source>
         <translation>Migrar datos de guardado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="231"/>
         <source>Migrating save data...</source>
         <translation>Migrando los datos de guardado...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="231"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="239"/>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="252"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="239"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="252"/>
         <source>Migration Failed</source>
         <translation>Migración fallida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="240"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="240"/>
         <source>Failed to create destination directory.</source>
         <translation>Fallo al crear el directorio de destino.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="253"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="253"/>
         <source>Failed to migrate save data:
 %1</source>
         <translation>Fallo al migrar los datos de guardado:
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="258"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="258"/>
         <source>Migration Complete</source>
         <translation>Migración completada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_filesystem.cpp" line="259"/>
+        <location filename="../../src/lichii/configuration/configure_filesystem.cpp" line="259"/>
         <source>Save data has been migrated successfully.
 
 Would you like to delete the old save data?</source>
@@ -3498,68 +3498,68 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureGeneral</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="17"/>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="25"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="52"/>
         <source>External Content</source>
         <translation>Contenido externo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="58"/>
         <source>Add directories to scan for DLCs and Updates without installing to NAND</source>
         <translation>Añadir directorios para buscar contenido descargable y actualizaciones sin instalarlo en la NAND</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="77"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="77"/>
         <source>Add Directory</source>
         <translation>Añadir directorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="84"/>
         <source>Remove Selected</source>
         <translation>Eliminar seleccionado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.ui" line="142"/>
+        <location filename="../../src/lichii/configuration/configure_general.ui" line="142"/>
         <source>Reset All Settings</source>
         <translation>Reiniciar todos los ajustes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="101"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="101"/>
         <source>Eden</source>
         <translation>Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="102"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="102"/>
         <source>This reset all settings and remove all per-game configurations. This will not delete game directories, profiles, or input profiles. Proceed?</source>
         <translation>Esto reiniciará y eliminará todas las configuraciones de los juegos. No eliminará ni los directorios de juego, ni los perfiles, ni los perfiles de los mandos. ¿Continuar?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="140"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="140"/>
         <source>Select External Content Directory...</source>
         <translation>Seleccionar el directorio de contenido externo...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="153"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="153"/>
         <source>Directory Already Added</source>
         <translation>Directorio ya ha sido añadido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="154"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="154"/>
         <source>This directory is already in the list.</source>
         <translation>Este directorio ya está en la lista.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_general.cpp" line="101"/>
+        <location filename="../../src/lichii/configuration/configure_general.cpp" line="101"/>
         <source>Lichii</source>
         <translation>Lichii</translation>
     </message>
@@ -3567,68 +3567,68 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureGraphics</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.ui" line="17"/>
         <source>Graphics</source>
         <translation>Gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.ui" line="25"/>
         <source>API Settings</source>
         <translation>Ajustes de la API</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.ui" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.ui" line="58"/>
         <source>Graphics Settings</source>
         <translation>Ajustes gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.ui" line="103"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.ui" line="103"/>
         <source>Background Color:</source>
         <translation>Color de fondo:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="234"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="234"/>
         <source>%</source>
         <comment>FSR/SGSR sharpening percentage (e.g. 50%)</comment>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="310"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="310"/>
         <source>Configure Effects...</source>
         <translation>Configurar efectos...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="388"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="388"/>
         <source>Off</source>
         <translation>Desactivado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="389"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="389"/>
         <source>VSync Off</source>
         <translation>VSync Desactivado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="391"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="391"/>
         <source>Recommended</source>
         <translation>Recomendado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="396"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="396"/>
         <source>On</source>
         <translation>Activado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="397"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="397"/>
         <source>VSync On</source>
         <translation>VSync Activado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics.cpp" line="246"/>
+        <location filename="../../src/lichii/configuration/configure_graphics.cpp" line="246"/>
         <source> Hz</source>
         <comment>Frame rate limit (e.g. 120 Hz)</comment>
         <translation> Hz</translation>
@@ -3637,17 +3637,17 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureGraphicsAdvanced</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_advanced.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_advanced.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_advanced.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_advanced.ui" line="17"/>
         <source>Advanced</source>
         <translation>Avanzado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_advanced.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_advanced.ui" line="23"/>
         <source>Advanced Graphics Settings</source>
         <translation>Ajustes avanzados de gráficos</translation>
     </message>
@@ -3655,38 +3655,38 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureGraphicsExtensions</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.ui" line="14"/>
         <source>Form</source>
         <translation>Forma</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.ui" line="17"/>
         <source>Extras</source>
         <translation>Extras</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.ui" line="23"/>
         <source>Hacks</source>
         <translation>Hacks</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.ui" line="29"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.ui" line="29"/>
         <source>Changing these options from their default may cause issues. Novitii cavete!</source>
         <translation>Cambiar estas opciones predeterminadas puede causar problemas. ¡Cuidado!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.ui" line="62"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.ui" line="62"/>
         <source>Vulkan Extensions</source>
         <translation>Extensiones de Vulkan</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.cpp" line="49"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.cpp" line="49"/>
         <source>%</source>
         <comment>Sample Shading percentage (e.g. 50%)</comment>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_graphics_extensions.cpp" line="68"/>
+        <location filename="../../src/lichii/configuration/configure_graphics_extensions.cpp" line="68"/>
         <source>Extended Dynamic State is disabled on macOS due to MoltenVK compatibility issues that cause black screens.</source>
         <translation>Estado extendido dinamico esta desactivado en macOS por parte de los incompatibilidades en MoltenVK que causa pantallas negras.</translation>
     </message>
@@ -3694,100 +3694,100 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureHotkeys</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.ui" line="14"/>
         <source>Hotkey Settings</source>
         <translation>Configuración de teclas de acceso rápido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.ui" line="17"/>
         <source>Hotkeys</source>
         <translation>Teclas de acceso rápido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.ui" line="25"/>
         <source>Double-click on a binding to change it.</source>
         <translation>Haz doble-clic para cambiar la asignación de teclas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.ui" line="45"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.ui" line="45"/>
         <source>Clear All</source>
         <translation>Borrar todo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.ui" line="52"/>
         <source>Restore Defaults</source>
         <translation>Restaurar valores predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="115"/>
         <source>Action</source>
         <translation>Acción</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="115"/>
         <source>Hotkey</source>
         <translation>Tecla de acceso rápido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="115"/>
         <source>Controller Hotkey</source>
         <translation>Teclas de atajo del control</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="155"/>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="181"/>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="421"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="155"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="181"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="421"/>
         <source>Conflicting Key Sequence</source>
         <translation>Combinación de teclas en conflicto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="156"/>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="182"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="156"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="182"/>
         <source>The entered key sequence is already assigned to: %1</source>
         <translation>La combinación de teclas introducida ya ha sido asignada a: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="194"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="194"/>
         <source>[waiting]</source>
         <translation>[esperando]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="271"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="271"/>
         <source>Invalid</source>
         <translation>No válido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="343"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="343"/>
         <source>Invalid hotkey settings</source>
         <translation>Configuración de teclas de atajo no válida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="344"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="344"/>
         <source>An error occurred. Please report this issue on github.</source>
         <translation>Ha ocurrido un error. Por favor, repórtelo en Github.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="384"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="384"/>
         <source>Restore Default</source>
         <translation>Restaurar valor predeterminado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="385"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="385"/>
         <source>Clear</source>
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="406"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="406"/>
         <source>Conflicting Button Sequence</source>
         <translation>Secuencia de botones en conflicto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="407"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="407"/>
         <source>The default button sequence is already assigned to: %1</source>
         <translation>La secuencia de botones por defecto ya esta asignada a: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="422"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="422"/>
         <source>The default key sequence is already assigned to: %1</source>
         <translation>La combinación de teclas predeterminada ya ha sido asignada a: %1</translation>
     </message>
@@ -3795,157 +3795,157 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureInput</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="14"/>
         <source>ConfigureInput</source>
         <translation>Configurarentrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="39"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="42"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="39"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="42"/>
         <source>Player 1</source>
         <translation>Jugador 1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="47"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="50"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="50"/>
         <source>Player 2</source>
         <translation>Jugador 2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="55"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="55"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="58"/>
         <source>Player 3</source>
         <translation>Jugador 3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="63"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="66"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="63"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="66"/>
         <source>Player 4</source>
         <translation>Jugador 4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="71"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="71"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="74"/>
         <source>Player 5</source>
         <translation>Jugador 5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="79"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="79"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="82"/>
         <source>Player 6</source>
         <translation>Jugador 6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="87"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="90"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="87"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="90"/>
         <source>Player 7</source>
         <translation>Jugador 7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="95"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="98"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="95"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="98"/>
         <source>Player 8</source>
         <translation>Jugador 8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="103"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="106"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="103"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="106"/>
         <source>Advanced</source>
         <translation>Avanzado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="138"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="138"/>
         <source>Console Mode</source>
         <translation>Modo consola</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="159"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="159"/>
         <source>Docked</source>
         <translation>Sobremesa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="169"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="169"/>
         <source>Handheld</source>
         <translation>Portátil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="179"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="179"/>
         <source>Vibration</source>
         <translation>Vibración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="215"/>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="261"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="215"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="261"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="225"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="225"/>
         <source>Motion</source>
         <translation>Movimiento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="296"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="296"/>
         <source>Controllers</source>
         <translation>Mandos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="324"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="324"/>
         <source>1</source>
         <translation>1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="365"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="365"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="375"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="375"/>
         <source>3</source>
         <translation>3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="385"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="385"/>
         <source>4</source>
         <translation>4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="395"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="395"/>
         <source>5</source>
         <translation>5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="405"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="405"/>
         <source>6</source>
         <translation>6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="415"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="415"/>
         <source>7</source>
         <translation>7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="425"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="425"/>
         <source>8</source>
         <translation>8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="435"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="435"/>
         <source>Connected</source>
         <translation>Conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="494"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="494"/>
         <source>Defaults</source>
         <translation>Predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.ui" line="537"/>
+        <location filename="../../src/lichii/configuration/configure_input.ui" line="537"/>
         <source>Clear</source>
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input.cpp" line="149"/>
+        <location filename="../../src/lichii/configuration/configure_input.cpp" line="149"/>
         <source>Microphone</source>
         <translation>Micrófono</translation>
     </message>
@@ -3953,220 +3953,220 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureInputAdvanced</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="14"/>
         <source>Configure Input</source>
         <translation>Configurar controles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="74"/>
         <source>Joycon Colors</source>
         <translation>Colores de los Joycon</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="125"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="125"/>
         <source>Player 1</source>
         <translation>Jugador 1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="164"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="450"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="754"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1040"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1365"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1651"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1955"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2241"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="164"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="450"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="754"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1040"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1365"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1651"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1955"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2241"/>
         <source>L Body</source>
         <translation>Parte L</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="219"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="505"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="809"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1095"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1420"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1706"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2010"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2296"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="505"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="809"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1095"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1420"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1706"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2010"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2296"/>
         <source>L Button</source>
         <translation>Botón L</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="295"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="581"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="885"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1171"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1496"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1782"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2086"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2372"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="295"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="581"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="885"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1171"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1496"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1782"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2086"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2372"/>
         <source>R Body</source>
         <translation>Parte R</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="350"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="636"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="940"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1226"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1551"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1837"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2141"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2427"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="350"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="636"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="940"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1226"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1551"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1837"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2141"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2427"/>
         <source>R Button</source>
         <translation>Botón R</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="411"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="411"/>
         <source>Player 2</source>
         <translation>Jugador 2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="715"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="715"/>
         <source>Player 3</source>
         <translation>Jugador 3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1001"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1001"/>
         <source>Player 4</source>
         <translation>Jugador 4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1326"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1326"/>
         <source>Player 5</source>
         <translation>Jugador 5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1612"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1612"/>
         <source>Player 6</source>
         <translation>Jugador 6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="1916"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="1916"/>
         <source>Player 7</source>
         <translation>Jugador 7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2202"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2202"/>
         <source>Player 8</source>
         <translation>Jugador 8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2533"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2533"/>
         <source>Emulated Devices</source>
         <translation>Dispositivos emulados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2545"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2545"/>
         <source>Keyboard</source>
         <translation>Teclado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2558"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2558"/>
         <source>Mouse</source>
         <translation>Ratón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2565"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2565"/>
         <source>Touchscreen</source>
         <translation>Pantalla táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2588"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2588"/>
         <source>Advanced</source>
         <translation>Avanzado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2595"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2595"/>
         <source>Debug Controller</source>
         <translation>Depurar controlador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2602"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2616"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2630"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2756"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2602"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2616"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2630"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2756"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2609"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2609"/>
         <source>Ring Controller</source>
         <translation>Mando Ring</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2623"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2623"/>
         <source>Infrared Camera</source>
         <translation>Cámara infrarroja</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2640"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2640"/>
         <source>Other</source>
         <translation>Otros</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2652"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2652"/>
         <source>Emulate Analog with Keyboard Input</source>
         <translation>Emular entradas analógicas con teclado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2659"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2701"/>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2717"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2659"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2701"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2717"/>
         <source>Requires restarting Eden</source>
         <translation>Require reiniciar Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2668"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2668"/>
         <source>Enable XInput 8 player support (disables web applet)</source>
         <translation>Activar soporte para 8 jugadores XInput (desactiva la web applet)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2681"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2681"/>
         <source>Enable UDP controllers (not needed for motion)</source>
         <translation>Habilitar controladores UDP (no necesarios para el movimiento)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2694"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2694"/>
         <source>Controller navigation</source>
         <translation>Navegación de controles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2710"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2710"/>
         <source>Enable direct JoyCon driver</source>
         <translation>Activar driver directo JoyCon</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2726"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2726"/>
         <source>Enable direct Pro Controller driver [EXPERIMENTAL]</source>
         <translation>Activar driver directo del Mando Pro [EXPERIMENTAL]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2733"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2733"/>
         <source>Allows unlimited uses of the same Amiibo in games that would otherwise limit you to one use.</source>
         <translation>Permite usos ilimitados del mismo Amiibo en juegos que, de otra manera, solo te permiten usarlo una vez.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2742"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2742"/>
         <source>Use random Amiibo ID</source>
         <translation>Usar un ID de Amiibo aleatorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2749"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2749"/>
         <source>Motion / Touch</source>
         <translation>Movimiento / táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2763"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2763"/>
         <source>Aimed to disable SDL GUIDE button hack: synthetic GUIDE(HOME) event when SELECT(MINUS) + START(PLUS) pressed. May impact Win related trigger/rumble/etc stuff</source>
         <translation>Pensado para desactivar el truco del botón GUIDE de SDL: un evento GUIDE(HOME) sintético al pulsar SELECT(MENOS) + START(MÁS). Puede afectar a funciones de Windows relacionadas con gatillos, vibración, etc.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2772"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2772"/>
         <source>Disable SDL WGI/XInput (Requires restart)</source>
         <translation>Desactivar SDL WGI/XInput (reinicio obligatorio)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_advanced.ui" line="2659"/>
+        <location filename="../../src/lichii/configuration/configure_input_advanced.ui" line="2659"/>
         <source>Requires restarting Lichii</source>
         <translation>Requiere reiniciar Lichii</translation>
     </message>
@@ -4174,67 +4174,67 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureInputPerGame</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="17"/>
         <source>Graphics</source>
         <translation>Gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="28"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="28"/>
         <source>Input Profiles</source>
         <translation>Perfiles de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="49"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="49"/>
         <source>Player 1 Profile</source>
         <translation>Perfil del jugador 1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="84"/>
         <source>Player 2 Profile</source>
         <translation>Perfil del jugador 2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="119"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="119"/>
         <source>Player 3 Profile</source>
         <translation>Perfil del jugador 3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="154"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="154"/>
         <source>Player 4 Profile</source>
         <translation>Perfil del jugador 4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="189"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="189"/>
         <source>Player 5 Profile</source>
         <translation>Perfil del jugador 5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="224"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="224"/>
         <source>Player 6 Profile</source>
         <translation>Perfil del jugador 6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="259"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="259"/>
         <source>Player 7 Profile</source>
         <translation>Perfil del jugador 7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.ui" line="294"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.ui" line="294"/>
         <source>Player 8 Profile</source>
         <translation>Perfil del jugador 8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.cpp" line="35"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.cpp" line="35"/>
         <source>Use global input configuration</source>
         <translation>Utilizar la configuración global de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_per_game.cpp" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_input_per_game.cpp" line="47"/>
         <source>Player %1 profile</source>
         <translation>Perfil del jugador %1</translation>
     </message>
@@ -4242,495 +4242,495 @@ Would you like to delete the old save data?</source>
 <context>
     <name>ConfigureInputPlayer</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="14"/>
         <source>Configure Input</source>
         <translation>Configurar controles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="63"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="63"/>
         <source>Connect Controller</source>
         <translation>Conectar controlador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="100"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="100"/>
         <source>Input Device</source>
         <translation>Dispositivo de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="137"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="137"/>
         <source>Profile</source>
         <translation>Perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="177"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="177"/>
         <source>Save</source>
         <translation>Guardar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="193"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="193"/>
         <source>New</source>
         <translation>Crear</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="209"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="209"/>
         <source>Delete</source>
         <translation>Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="272"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1369"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="272"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1369"/>
         <source>Left Stick</source>
         <translation>Palanca izquierda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="317"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="356"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="800"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="839"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2425"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2464"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="317"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="356"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="800"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="839"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2425"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2464"/>
         <source>Down</source>
         <translation>Abajo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="366"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="405"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="898"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="937"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1938"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2376"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2415"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="366"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="405"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="898"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="937"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1938"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2376"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2415"/>
         <source>Right</source>
         <translation>Derecha</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="415"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="454"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="849"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="888"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1889"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2474"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2513"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="415"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="454"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="849"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="888"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1889"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2474"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2513"/>
         <source>Left</source>
         <translation>Izquierda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="464"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="506"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="947"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="986"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2523"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2562"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="464"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="506"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="947"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="986"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2523"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2562"/>
         <source>Up</source>
         <translation>Arriba</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="524"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="563"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2601"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2640"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="524"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="563"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2601"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2640"/>
         <source>Pressed</source>
         <translation>Presionado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="573"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="612"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2650"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2689"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="573"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="612"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2650"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2689"/>
         <source>Modifier</source>
         <translation>Modificador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="622"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2699"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="622"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2699"/>
         <source>Range</source>
         <translation>Rango</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="655"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2732"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="655"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2732"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="698"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2772"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="698"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2772"/>
         <source>Deadzone: 0%</source>
         <translation>Punto muerto: 0%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="722"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2796"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="722"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2796"/>
         <source>Modifier Range: 0%</source>
         <translation>Rango del modificador: 0%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="755"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="755"/>
         <source>D-Pad</source>
         <translation>Cruceta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1059"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1098"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1694"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1733"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1059"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1098"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1694"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1733"/>
         <source>SR</source>
         <translation>SR</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1108"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1147"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1743"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1782"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1108"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1147"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1743"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1782"/>
         <source>SL</source>
         <translation>SL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1218"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1257"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1366"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1218"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1257"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1366"/>
         <source>ZL</source>
         <translation>ZL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1283"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1322"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1374"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1283"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1322"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1374"/>
         <source>L</source>
         <translation>L</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1369"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1408"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1369"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1408"/>
         <source>Minus</source>
         <translation>Menos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1418"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1457"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1365"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1418"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1457"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1365"/>
         <source>Plus</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1525"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1564"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1367"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1525"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1564"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1367"/>
         <source>ZR</source>
         <translation>ZR</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1590"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1629"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1368"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1375"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1590"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1629"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1368"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1375"/>
         <source>R</source>
         <translation>R</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1850"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1850"/>
         <source>Motion 1</source>
         <translation>Movimiento 1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1899"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1899"/>
         <source>Motion 2</source>
         <translation>Movimiento 2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1948"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1987"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1948"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1987"/>
         <source>Capture</source>
         <translation>Captura</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="1997"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2036"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="1997"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2036"/>
         <source>Home</source>
         <translation>Inicio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2075"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2075"/>
         <source>Face Buttons</source>
         <translation>Botones frontales</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2120"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2159"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2120"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2159"/>
         <source>X</source>
         <translation>X</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2169"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2208"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2169"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2208"/>
         <source>B</source>
         <translation>B</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2218"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2257"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2218"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2257"/>
         <source>A</source>
         <translation>A</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2267"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2306"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2267"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2306"/>
         <source>Y</source>
         <translation>Y</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2328"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1370"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2328"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1370"/>
         <source>Right Stick</source>
         <translation>Palanca derecha</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2851"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2851"/>
         <source>Mouse panning</source>
         <translation>Desplazamiento del ratón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.ui" line="2875"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.ui" line="2875"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="387"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="472"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="570"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="665"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="387"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="472"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="570"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="665"/>
         <source>Clear</source>
         <translation>Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="389"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="474"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="574"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="593"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="667"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="389"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="474"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="574"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="593"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="667"/>
         <source>[not set]</source>
         <translation>[no definido]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="392"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="418"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="679"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="392"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="418"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="679"/>
         <source>Invert button</source>
         <translation>Invertir botón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="398"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="670"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="398"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="670"/>
         <source>Toggle button</source>
         <translation>Alternar botón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="404"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="404"/>
         <source>Turbo button</source>
         <translation>Botón turbo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="412"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="621"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="412"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="621"/>
         <source>Invert axis</source>
         <translation>Invertir ejes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="424"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="428"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="481"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="424"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="428"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="481"/>
         <source>Set threshold</source>
         <translation>Configurar umbral</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="428"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="481"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="428"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="481"/>
         <source>Choose a value between 0% and 100%</source>
         <translation>Seleccione un valor entre 0% y 100%.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="440"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="440"/>
         <source>Toggle axis</source>
         <translation>Alternar ejes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="477"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="477"/>
         <source>Set gyro threshold</source>
         <translation>Configurar umbral del Giroscopio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="486"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="486"/>
         <source>Calibrate sensor</source>
         <translation>Calibrar sensor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="526"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="526"/>
         <source>Map Analog Stick</source>
         <translation>Configuración de palanca analógico</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="527"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="527"/>
         <source>After pressing OK, first move your joystick horizontally, and then vertically.
 To invert the axes, first move your joystick vertically, and then horizontally.</source>
         <translation>Después de pulsar OK, mueve primero el joystick de manera horizontal, y luego verticalmente.
 Para invertir los ejes, mueve primero el joystick de manera vertical, y luego horizontalmente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="595"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="595"/>
         <source>Center axis</source>
         <translation>Centrar ejes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="703"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1068"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="703"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1068"/>
         <source>Deadzone: %1%</source>
         <translation>Punto muerto: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="712"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1073"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="712"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1073"/>
         <source>Modifier Range: %1%</source>
         <translation>Rango del modificador: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="753"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1098"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="753"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1098"/>
         <source>Pro Controller</source>
         <translation>Controlador Pro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1102"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1102"/>
         <source>Dual Joycons</source>
         <translation>Joycons duales</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1106"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1106"/>
         <source>Left Joycon</source>
         <translation>Joycon izquierdo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1110"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1110"/>
         <source>Right Joycon</source>
         <translation>Joycon derecho</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1114"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1114"/>
         <source>Handheld</source>
         <translation>Portátil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1118"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1118"/>
         <source>GameCube Controller</source>
         <translation>Controlador de GameCube</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1127"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1127"/>
         <source>Poke Ball Plus</source>
         <translation>Poke Ball Plus</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1131"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1131"/>
         <source>NES Controller</source>
         <translation>Controlador NES</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1135"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1135"/>
         <source>SNES Controller</source>
         <translation>Controlador SNES</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1139"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1139"/>
         <source>N64 Controller</source>
         <translation>Controlador N64</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1143"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1143"/>
         <source>Sega Genesis</source>
         <translation>Sega Genesis</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1373"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1373"/>
         <source>Start / Pause</source>
         <translation>Inicio / Pausa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1376"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1376"/>
         <source>Z</source>
         <translation>Z</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1377"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1377"/>
         <source>Control Stick</source>
         <translation>Palanca de control</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1378"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1378"/>
         <source>C-Stick</source>
         <translation>C-Stick</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1479"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1479"/>
         <source>Shake!</source>
         <translation>¡Agita!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1481"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1481"/>
         <source>[waiting]</source>
         <translation>[esperando]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1578"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1578"/>
         <source>New Profile</source>
         <translation>Nuevo perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1578"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1578"/>
         <source>Enter a profile name:</source>
         <translation>Introduce un nombre de perfil:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1586"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1594"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1586"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1594"/>
         <source>Create Input Profile</source>
         <translation>Crear perfil de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1587"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1587"/>
         <source>The given profile name is not valid!</source>
         <translation>¡El nombre de perfil introducido no es válido!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1595"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1595"/>
         <source>Failed to create the input profile &quot;%1&quot;</source>
         <translation>Error al crear el perfil de entrada &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1615"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1615"/>
         <source>Delete Input Profile</source>
         <translation>Eliminar perfil de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1616"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1616"/>
         <source>Failed to delete the input profile &quot;%1&quot;</source>
         <translation>Error al eliminar el perfil de entrada &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1638"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1638"/>
         <source>Load Input Profile</source>
         <translation>Cargar perfil de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1639"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1639"/>
         <source>Failed to load the input profile &quot;%1&quot;</source>
         <translation>Error al cargar el perfil de entrada &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1664"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1664"/>
         <source>Save Input Profile</source>
         <translation>Guardar perfil de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="1665"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="1665"/>
         <source>Failed to save the input profile &quot;%1&quot;</source>
         <translation>Error al guardar el perfil de entrada &quot;%1&quot;</translation>
     </message>
@@ -4738,17 +4738,17 @@ Para invertir los ejes, mueve primero el joystick de manera vertical, y luego ho
 <context>
     <name>ConfigureInputProfileDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_profile_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_input_profile_dialog.ui" line="14"/>
         <source>Create Input Profile</source>
         <translation>Crear perfil de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_profile_dialog.ui" line="40"/>
+        <location filename="../../src/lichii/configuration/configure_input_profile_dialog.ui" line="40"/>
         <source>Clear</source>
         <translation>Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_profile_dialog.ui" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_input_profile_dialog.ui" line="47"/>
         <source>Defaults</source>
         <translation>Predeterminados</translation>
     </message>
@@ -4756,150 +4756,150 @@ Para invertir los ejes, mueve primero el joystick de manera vertical, y luego ho
 <context>
     <name>ConfigureMotionTouch</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="6"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="6"/>
         <source>Configure Motion / Touch</source>
         <translation>Configurar: movimiento / táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="15"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="15"/>
         <source>Touch</source>
         <translation>Táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="23"/>
         <source>UDP Calibration:</source>
         <translation>Calibración UDP:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="30"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="30"/>
         <source>(100, 50) - (1800, 850)</source>
         <translation>(100, 50) - (1800, 850)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="46"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="73"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="235"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="46"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="73"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="235"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="57"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="57"/>
         <source>Touch from button profile:</source>
         <translation>Tocar desde el perfil del botón:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="85"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="85"/>
         <source>CemuhookUDP Config</source>
         <translation>Configuración CemuhookUDP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="91"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="91"/>
         <source>You may use any Cemuhook compatible UDP input source to provide motion and touch input.</source>
         <translation>Puedes utilizar cualquier fuente de entrada UDP compatible con Cemuhook para proporcionar una entrada de movimiento y táctil.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="134"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="134"/>
         <source>Server:</source>
         <translation>Servidor:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="161"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="161"/>
         <source>Port:</source>
         <translation>Puerto:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="194"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="258"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="194"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="258"/>
         <source>Test</source>
         <translation>Probar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="207"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="207"/>
         <source>Add Server</source>
         <translation>Añadir servidor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.ui" line="240"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.ui" line="240"/>
         <source>Remove Server</source>
         <translation>Eliminar servidor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="161"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="161"/>
         <source>%1:%2</source>
         <translation>%1:%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="166"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="170"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="174"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="180"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="186"/>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="280"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="166"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="170"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="174"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="180"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="186"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="280"/>
         <source>Eden</source>
         <translation>Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="166"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="166"/>
         <source>Port number has invalid characters</source>
         <translation>El número del puerto tiene caracteres que no son válidos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="170"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="170"/>
         <source>Port has to be in range 0 and 65353</source>
         <translation>El puerto debe estar en un rango entre 0 y 65353</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="174"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="174"/>
         <source>IP address is not valid</source>
         <translation>Dirección IP no válida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="180"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="180"/>
         <source>This UDP server already exists</source>
         <translation>Este servidor UDP ya existe</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="186"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="186"/>
         <source>Unable to add more than 8 servers</source>
         <translation>No es posible añadir más de 8 servidores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="202"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="202"/>
         <source>Testing</source>
         <translation>Probando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="218"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="218"/>
         <source>Configuring</source>
         <translation>Configurando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="249"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="249"/>
         <source>Test Successful</source>
         <translation>Prueba existosa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="250"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="250"/>
         <source>Successfully received data from the server.</source>
         <translation>Se han recibido con éxito los datos del servidor.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="252"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="252"/>
         <source>Test Failed</source>
         <translation>Prueba fallida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="253"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="253"/>
         <source>Could not receive valid data from the server.&lt;br&gt;Please verify that the server is set up correctly and the address and port are correct.</source>
         <translation>No se han podido recibir datos válidos del servidor.&lt;br&gt;Por favor, verifica que el servidor esté configurado correctamente y que la dirección y el puerto sean correctos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="281"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="281"/>
         <source>UDP Test or calibration configuration is in progress.&lt;br&gt;Please wait for them to finish.</source>
         <translation>La prueba de UDP o la configuración de la calibración está en curso.&lt;br&gt;Por favor, espera a que termine el proceso.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_motion_touch.cpp" line="166"/>
+        <location filename="../../src/lichii/configuration/configure_motion_touch.cpp" line="166"/>
         <source>Lichii</source>
         <translation>Lichii</translation>
     </message>
@@ -4907,98 +4907,98 @@ Para invertir los ejes, mueve primero el joystick de manera vertical, y luego ho
 <context>
     <name>ConfigureMousePanning</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="6"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="6"/>
         <source>Configure mouse panning</source>
         <translation>Configurar desplazamiento del ratón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="12"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="12"/>
         <source>Enable mouse panning</source>
         <translation>Activar desplazamiento del ratón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="15"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="15"/>
         <source>Can be toggled via a hotkey. Default hotkey is Ctrl + F9</source>
         <translation>Puede alternarse a través de una tecla de acceso rápido. La tecla de acceso rápido por defecto es Ctrl + F9</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="24"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="24"/>
         <source>Sensitivity</source>
         <translation>Sensibilidad</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="30"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="30"/>
         <source>Horizontal</source>
         <translation>Horizontal</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="40"/>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="66"/>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="104"/>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="139"/>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="165"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="40"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="66"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="104"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="139"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="165"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="56"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="56"/>
         <source>Vertical</source>
         <translation>Vertical</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="85"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="85"/>
         <source>Deadzone counterweight</source>
         <translation>Contrapeso de la zona muerta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="88"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="88"/>
         <source>Counteracts a game&apos;s built-in deadzone</source>
         <translation>Contrarresta la zona muerta por defecto de un juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="94"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="94"/>
         <source>Deadzone</source>
         <translation>Zona muerta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="123"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="123"/>
         <source>Stick decay</source>
         <translation>Caída del stick</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="129"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="129"/>
         <source>Strength</source>
         <translation>Fuerza</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="155"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="155"/>
         <source>Minimum</source>
         <translation>Mínimo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.ui" line="195"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.ui" line="195"/>
         <source>Default</source>
         <translation>Predeterminado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.cpp" line="43"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.cpp" line="43"/>
         <source>Mouse panning works better with a deadzone of 0% and a range of 100%.
 Current values are %1% and %2% respectively.</source>
         <translation>El desplazamiento del ratón funciona mejor con una zona muerta del 0% y un rango del 100%.
 Los valores actuales son %1% y %2% respectivamente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.cpp" line="50"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.cpp" line="50"/>
         <source>Emulated mouse is enabled. This is incompatible with mouse panning.</source>
         <translation>El ratón emulado está activado. Ésto es incompatible con el desplazamiento del ratón.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.cpp" line="83"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.cpp" line="83"/>
         <source>Emulated mouse is enabled</source>
         <translation>El ratón emulado está activado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_mouse_panning.cpp" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_mouse_panning.cpp" line="84"/>
         <source>Real mouse input and mouse panning are incompatible. Please disable the emulated mouse in input advanced settings to allow mouse panning.</source>
         <translation>La entrada de un ratón real y la panoramización del ratón son incompatibles. Por favor, desactive el ratón emulado en la configuración avanzada de entrada para permitir así la panoramización del ratón.</translation>
     </message>
@@ -5006,27 +5006,27 @@ Los valores actuales son %1% y %2% respectivamente.</translation>
 <context>
     <name>ConfigureNetwork</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_network.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_network.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_network.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_network.ui" line="17"/>
         <source>Network</source>
         <translation>Red</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_network.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_network.ui" line="25"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_network.ui" line="34"/>
+        <location filename="../../src/lichii/configuration/configure_network.ui" line="34"/>
         <source>Network Interface</source>
         <translation>Interfaz de red</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_network.ui" line="41"/>
+        <location filename="../../src/lichii/configuration/configure_network.ui" line="41"/>
         <source>Enable Airplane Mode</source>
         <translation>Activa modo avión</translation>
     </message>
@@ -5034,197 +5034,197 @@ Los valores actuales son %1% y %2% respectivamente.</translation>
 <context>
     <name>ConfigurePerGame</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="20"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="20"/>
         <source>Dialog</source>
         <translation>Diálogo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="34"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="34"/>
         <source>Info</source>
         <translation>Información</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="93"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="93"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="100"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="100"/>
         <source>Title ID</source>
         <translation>ID del título</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="137"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="137"/>
         <source>Filename</source>
         <translation>Nombre del archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="164"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="164"/>
         <source>Format</source>
         <translation>Formato</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="171"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="171"/>
         <source>Version</source>
         <translation>Versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="178"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="178"/>
         <source>Size</source>
         <translation>Tamaño</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="185"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="185"/>
         <source>Developer</source>
         <translation>Desarrollador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="240"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="240"/>
         <source>Some settings are only available when a game is not running.</source>
         <translation>Algunos ajustes solo están disponibles cuando no se estén ejecutando los juegos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="78"/>
         <source>Add-Ons</source>
         <translation>Complementos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="79"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="79"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="80"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="80"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="81"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="81"/>
         <source>Graphics</source>
         <translation>Gráficos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="82"/>
         <source>Adv. Graphics</source>
         <translation>Gráficos avanz.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="83"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="83"/>
         <source>Ext. Graphics</source>
         <translation>Extensiones Gráficas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="84"/>
         <source>Audio</source>
         <translation>Audio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="85"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="85"/>
         <source>Input Profiles</source>
         <translation>Perfiles de entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="86"/>
         <source>Network</source>
         <translation>Red</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="87"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="87"/>
         <source>Applets</source>
         <translation>Applets</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="90"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="90"/>
         <source>Properties</source>
         <translation>Propiedades</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="107"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="107"/>
         <source>Preview a local icon next to the archive. Online lookup is optional. Apply or OK saves changes.</source>
         <translation>Muestra una vista previa de un icono local junto al archivo. La búsqueda en línea es opcional. Aplicar o Aceptar guarda los cambios.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="110"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="110"/>
         <source>Detect Icon</source>
         <translation>Detectar icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="123"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="123"/>
         <source>Preview a local image as the game icon. Apply or OK saves changes.</source>
         <translation>Muestra una vista previa de una imagen local como icono del juego. Aplicar o Aceptar guarda los cambios.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="126"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="126"/>
         <source>Upload Icon...</source>
         <translation>Subir icono...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="133"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="133"/>
         <source>Allow online lookup</source>
         <translation>Permitir búsqueda en línea</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.ui" line="136"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.ui" line="136"/>
         <source>If no local icon is found, send the game name to GitHub, Wikipedia and Bing to look for an icon. Disabled by default.</source>
         <translation>Si no se encuentra un icono local, envía el nombre del juego a GitHub, Wikipedia y Bing para buscar un icono. Desactivado por defecto.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="544"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="544"/>
         <source>Enter game name...</source>
         <translation>Escriba el nombre del juego...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="546"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="546"/>
         <source>Edit the game name stored in the NUP metadata</source>
         <translation>Editar el nombre del juego guardado en los metadatos del NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="621"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="621"/>
         <source>Select Game Icon</source>
         <translation>Seleccionar icono del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="622"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="622"/>
         <source>Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)</source>
         <translation>Imágenes (*.png *.jpg *.jpeg *.bmp *.webp);;Todos los archivos (*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="628"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="628"/>
         <source>Invalid Image</source>
         <translation>Imagen no válida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="629"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="629"/>
         <source>Select a PNG, JPEG, BMP or WebP image up to 8 MiB, 8192 pixels per side and 16 megapixels.</source>
         <translation>Seleccione una imagen PNG, JPEG, BMP o WebP de hasta 8 MiB, 8192 píxeles por lado y 16 megapíxeles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="656"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="656"/>
         <source>Please enter a game name first so the icon can be detected.</source>
         <translation>Primero escriba el nombre del juego para poder detectar el icono.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="661"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="661"/>
         <source>The game name is too long to search.</source>
         <translation>El nombre del juego es demasiado largo para buscarlo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="666"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="666"/>
         <source>Detecting...</source>
         <translation>Detectando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="874"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="874"/>
         <source>Update NUP Metadata</source>
         <translation>Actualizar metadatos del NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="875"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="875"/>
         <source>Stop emulation before changing NUP metadata.</source>
         <translation>Detenga la emulación antes de cambiar los metadatos del NUP.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game.cpp" line="897"/>
+        <location filename="../../src/lichii/configuration/configure_per_game.cpp" line="897"/>
         <source>Failed to update NUP metadata:
 %1</source>
         <translation>No se pudieron actualizar los metadatos del NUP:
@@ -5234,52 +5234,52 @@ Los valores actuales son %1% y %2% respectivamente.</translation>
 <context>
     <name>ConfigurePerGameAddons</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.ui" line="17"/>
         <source>Add-Ons</source>
         <translation>Complementos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.ui" line="23"/>
         <source>Import Mod from ZIP</source>
         <translation>Importar mod desde un archivo comprimido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.ui" line="30"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.ui" line="30"/>
         <source>Import Mod from Folder</source>
         <translation>Importar mod desde una carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="56"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="56"/>
         <source>Patch Name</source>
         <translation>Nombre del parche</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="57"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="57"/>
         <source>Version</source>
         <translation>Versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="153"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="153"/>
         <source>Mod Install Succeeded</source>
         <translation>Mod instalado con éxito</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="154"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="154"/>
         <source>Successfully installed all mods.</source>
         <translation>Instalados todos los mods con éxito.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="163"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="163"/>
         <source>Mod Install Failed</source>
         <translation>Fallo al instalar mod</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="164"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="164"/>
         <source>Failed to install the following mods:
 	%1
 Check the log for details.</source>
@@ -5288,67 +5288,67 @@ Check the log for details.</source>
 Compruebe los registros para más detalles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="183"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="183"/>
         <source>Mod Folder</source>
         <translation>Carpeta del mod</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="194"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="194"/>
         <source>Zipped Mod Location</source>
         <translation>Ubicación del mod comprimido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="196"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="196"/>
         <source>Zipped Archives (*.zip)</source>
         <translation>Archivos comprimidos (*.zip)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="214"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="214"/>
         <source>Invalid Selection</source>
         <translation>Selección inválida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="215"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="215"/>
         <source>Only mods, cheats, and patches can be deleted.
 To delete NAND-installed updates, right-click the game in the game list and click Remove -&gt; Remove Installed Update.</source>
         <translation>Solo mods, trucos y parches pueden ser borrados.
 Para borrar las actualizaciones instaladas en la NAND, haga clic derecho en el juego de la lista de juegos y haga clic en Eliminar -&gt; Eliminar actualización instalada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="221"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="221"/>
         <source>You are about to delete the following installed mods:
 </source>
         <translation>Está a punto de eliminar los siguientes mods instalados:
 </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="227"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="227"/>
         <source>
 Once deleted, these can NOT be recovered. Are you 100% sure you want to delete them?</source>
         <translation>Una vez eliminados, estos NO se pueden recuperar. ¿Está 100% seguro de que desea eliminarlos?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="232"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="232"/>
         <source>Delete add-on(s)?</source>
         <translation>¿Borrar complemento(s)?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="243"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="243"/>
         <source>Successfully deleted</source>
         <translation>Éxito al borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="244"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="244"/>
         <source>Successfully deleted all selected mods.</source>
         <translation>Éxito al borrar los mods seleccionados.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="267"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="267"/>
         <source>&amp;Delete</source>
         <translation>&amp;Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_per_game_addons.cpp" line="274"/>
+        <location filename="../../src/lichii/configuration/configure_per_game_addons.cpp" line="274"/>
         <source>&amp;Open in File Manager</source>
         <translation>&amp;Abrir en el gestor de archivos</translation>
     </message>
@@ -5356,124 +5356,124 @@ Once deleted, these can NOT be recovered. Are you 100% sure you want to delete t
 <context>
     <name>ConfigurePostProcessing</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="67"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="67"/>
         <source>Post-Processing Effects</source>
         <translation>Efectos de posprocesado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="74"/>
         <source>Changes apply immediately while a game is running.</source>
         <translation>Los cambios se aplican de inmediato mientras se ejecuta un juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="78"/>
         <source>Enable post-processing</source>
         <translation>Activar posprocesado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="86"/>
         <source>Preset:</source>
         <translation>Preajuste:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="91"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="91"/>
         <source>Apply</source>
         <translation>Aplicar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="102"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="102"/>
         <source>Reset Values</source>
         <translation>Restablecer valores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="103"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="103"/>
         <source>Return every effect to the values the preset ships with.</source>
         <translation>Devuelve cada efecto a los valores originales del preajuste.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="114"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="114"/>
         <source>Save As...</source>
         <translation>Guardar como...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="118"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="118"/>
         <source>Save Preset</source>
         <translation>Guardar preajuste</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="118"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="118"/>
         <source>Preset name:</source>
         <translation>Nombre del preajuste:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="129"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="129"/>
         <source>Clear</source>
         <translation>Limpiar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="130"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="130"/>
         <source>Remove every effect in use and deselect the preset.</source>
         <translation>Quita todos los efectos en uso y deselecciona el preajuste.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="155"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="155"/>
         <source>Add Effect</source>
         <translation>Añadir efecto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="202"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="202"/>
         <source>None</source>
         <translation>Ninguno</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="231"/>
         <source>No effects in use. Pick a preset and press Apply, or add effects one by one.</source>
         <translation>No hay efectos en uso. Elija un preajuste y pulse Aplicar, o agregue efectos uno por uno.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="235"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="235"/>
         <source>Custom chain. Pick a preset above and press Apply to replace it.</source>
         <translation>Cadena personalizada. Elija un preajuste arriba y pulse Aplicar para reemplazarla.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="241"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="241"/>
         <source>Active preset: %1 (modified). Press Reset Values to go back to how it ships.</source>
         <translation>Preajuste activo: %1 (modificado). Pulse Restablecer valores para volver a los valores originales.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="246"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="246"/>
         <source>Active preset: %1</source>
         <translation>Preajuste activo: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="307"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="307"/>
         <source>Enabled</source>
         <translation>Activado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="308"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="308"/>
         <source>Disabled</source>
         <translation>Desactivado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="420"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="420"/>
         <source>Reset to defaults</source>
         <translation>Restaurar los valores predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="455"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="455"/>
         <source>Effect &apos;%1&apos; was not found.</source>
         <translation>No se encontró el efecto &apos;%1&apos;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="464"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="464"/>
         <source>Effect failed to compile:
 %1</source>
         <translation>No se pudo compilar el efecto:
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_post_processing.cpp" line="505"/>
+        <location filename="../../src/lichii/configuration/configure_post_processing.cpp" line="505"/>
         <source>No usable ReShade FX effects were found. Place .fx files in the post_shaders folder.</source>
         <translation>No se encontraron efectos ReShade FX utilizables. Coloque archivos .fx en la carpeta post_shaders.</translation>
     </message>
@@ -5481,42 +5481,42 @@ Once deleted, these can NOT be recovered. Are you 100% sure you want to delete t
 <context>
     <name>ConfigureProfileManager</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="17"/>
         <source>Profiles</source>
         <translation>Perfiles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="25"/>
         <source>Profile Manager</source>
         <translation>Administrador de perfiles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="42"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="42"/>
         <source>Current User</source>
         <translation>Usuario actual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="86"/>
         <source>Username</source>
         <translation>Nombre de usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="126"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="126"/>
         <source>Add</source>
         <translation>Añadir</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.ui" line="138"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.ui" line="138"/>
         <source>Profile management is available only when game is not running.</source>
         <translation>El sistema de perfiles solo se encuentra disponible cuando no se estén ejecutando los juegos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="58"/>
         <source>%1
 %2</source>
         <comment>%1 is the profile username, %2 is the formatted UUID (e.g. 00112233-4455-6677-8899-AABBCCDDEEFF))</comment>
@@ -5524,62 +5524,62 @@ Once deleted, these can NOT be recovered. Are you 100% sure you want to delete t
 %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="139"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="139"/>
         <source>Users</source>
         <translation>Usuarios</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="194"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="194"/>
         <source>Error deleting image</source>
         <translation>Error al eliminar la imagen</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="195"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="195"/>
         <source>Error occurred attempting to overwrite previous image at: %1.</source>
         <translation>Ha ocurrido un error al intentar sobrescribir la imagen anterior en: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="203"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="203"/>
         <source>Error deleting file</source>
         <translation>Error al eliminar el archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="204"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="204"/>
         <source>Unable to delete existing file: %1.</source>
         <translation>No se puede eliminar el archivo existente: %1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="211"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="211"/>
         <source>Error creating user image directory</source>
         <translation>Error al crear el directorio de imagen del usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="212"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="212"/>
         <source>Unable to create directory %1 for storing user images.</source>
         <translation>No se pudo crear el directorio %1 para almacenar las imágenes del usuario.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="217"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="217"/>
         <source>Error saving user image</source>
         <translation>Error al guardar el imagen de usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="218"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="218"/>
         <source>Unable to save image to file</source>
         <translation>Error al guardar el imagen al archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="230"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="230"/>
         <source>&amp;Edit</source>
         <translation>&amp;Editar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="231"/>
         <source>&amp;Delete</source>
         <translation>&amp;Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="291"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="291"/>
         <source>Edit User</source>
         <translation>Editar usuario</translation>
     </message>
@@ -5587,17 +5587,17 @@ Once deleted, these can NOT be recovered. Are you 100% sure you want to delete t
 <context>
     <name>ConfigureProfileManagerDeleteDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="359"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="359"/>
         <source>Delete this user? All of the user&apos;s save data will be deleted.</source>
         <translation>¿Eliminar este usuario? Todos los datos de guardado del usuario serán eliminados.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="374"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="374"/>
         <source>Confirm Delete</source>
         <translation> Confirmar eliminación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_profile_manager.cpp" line="397"/>
+        <location filename="../../src/lichii/configuration/configure_profile_manager.cpp" line="397"/>
         <source>Name: %1
 UUID: %2</source>
         <translation>Nombre: %1
@@ -5607,127 +5607,127 @@ UUID: %2</translation>
 <context>
     <name>ConfigureRingController</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="14"/>
         <source>Configure Ring Controller</source>
         <translation>Configurar mando Ring</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="26"/>
         <source>To use Ring-Con, configure player 1 as right Joy-Con (both physical and emulated), and player 2 as left Joy-Con (left physical and dual emulated) before starting the game.</source>
         <translation>Para usar el Ring-Con, configure al jugador 1 como el Joy-Con derecho (tanto físico como emulado) y al jugador 2 como el Joy-Con izquierdo (tanto físico como emulado) antes de ejecutar el juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="52"/>
         <source>Virtual Ring Sensor Parameters</source>
         <translation>Parámetros del sensor del mando Ring virtual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="84"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="123"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="123"/>
         <source>Pull</source>
         <translation>Tirar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="133"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="172"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="133"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="172"/>
         <source>Push</source>
         <translation>Empujar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="206"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="206"/>
         <source>Deadzone: 0%</source>
         <translation>Punto muerto: 0%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="233"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="233"/>
         <source>Direct Joycon Driver</source>
         <translation>Driver directo del JoyCon</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="293"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="293"/>
         <source>Enable Ring Input</source>
         <translation>Activar entrada del Ring</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="300"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="320"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="300"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="320"/>
         <source>Enable</source>
         <translation>Activar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="307"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="307"/>
         <source>Ring Sensor Value</source>
         <translation>Valor del sensor Ring</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="314"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="285"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="314"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="285"/>
         <source>Not connected</source>
         <translation>No conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.ui" line="344"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.ui" line="344"/>
         <source>Restore Defaults</source>
         <translation>Restaurar valores predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="171"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="171"/>
         <source>Clear</source>
         <translation>Limpiar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="173"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="173"/>
         <source>[not set]</source>
         <translation>[no definido]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="175"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="175"/>
         <source>Invert axis</source>
         <translation>Invertir ejes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="194"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="260"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="194"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="260"/>
         <source>Deadzone: %1%</source>
         <translation>Punto muerto: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="282"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="282"/>
         <source>Error enabling ring input</source>
         <translation>Error al activar la entrada del Ring</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="288"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="288"/>
         <source>Direct Joycon driver is not enabled</source>
         <translation>El driver directo JoyCon no está activo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="293"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="293"/>
         <source>Configuring</source>
         <translation>Configurando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="305"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="305"/>
         <source>The current mapped device doesn&apos;t support the ring controller</source>
         <translation>El dispositivo de entrada actual no soporta el mando ring.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="309"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="309"/>
         <source>The current mapped device doesn&apos;t have a ring attached</source>
         <translation>El dispositivo de entrada actual no tiene el ring incorporado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="312"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="312"/>
         <source>The current mapped device is not connected</source>
         <translation>El dispositivo de entrada actual no está conectado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="316"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="316"/>
         <source>Unexpected driver result %1</source>
         <translation>Resultado inesperado del driver %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="339"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="339"/>
         <source>[waiting]</source>
         <translation>[esperando]</translation>
     </message>
@@ -5735,23 +5735,23 @@ UUID: %2</translation>
 <context>
     <name>ConfigureSystem</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_system.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_system.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_system.ui" line="17"/>
-        <location filename="../../src/yuzu/configuration/configure_system.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_system.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_system.ui" line="25"/>
         <source>System</source>
         <translation>Sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_system.ui" line="62"/>
+        <location filename="../../src/lichii/configuration/configure_system.ui" line="62"/>
         <source>Core</source>
         <translation>Núcleo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_system.cpp" line="71"/>
+        <location filename="../../src/lichii/configuration/configure_system.cpp" line="71"/>
         <source>Warning: &quot;%1&quot; is not a valid language for region &quot;%2&quot;</source>
         <translation>Aviso: &quot;%1&quot; no es un idioma válido para la región &quot;%2&quot;</translation>
     </message>
@@ -5759,62 +5759,62 @@ UUID: %2</translation>
 <context>
     <name>ConfigureTas</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="11"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="11"/>
         <source>TAS</source>
         <translation>TAS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="17"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Reads controller input from scripts in the same format as TAS-nx scripts.&lt;br/&gt;For a more detailed explanation, please consult the user handbook.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lee la entrada del mando desde los scripts en el mismo formato que los scripts TAS-nx.&lt;br/&gt;Para una explicación más detallada, por favor consulta el manual de usuario.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="27"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="27"/>
         <source>To check which hotkeys control the playback/recording, please refer to the Hotkey settings (Configure -&gt; General -&gt; Hotkeys).</source>
         <translation>Para comprobar qué teclas de acceso rápido controlan la reproducción/grabación, por favor, revisa la configuración de las Teclas de acceso rápido (Configuración -&gt; General -&gt; Teclas de acceso rápido)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="37"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="37"/>
         <source>WARNING: This is an experimental feature.&lt;br/&gt;It will not play back scripts frame perfectly with the current, imperfect syncing method.</source>
         <translation>ADVERTENCIA: Esta es una función experimental.&lt;br/&gt;No se reproducirán perfectamente los scripts con el actual método imperfecto de sincronización.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="54"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="54"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="60"/>
         <source>Enable TAS features</source>
         <translation>Activar funciones TAS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="67"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="67"/>
         <source>Loop script</source>
         <translation>Repetir script en bucle</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="77"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="77"/>
         <source>Pause execution during loads</source>
         <translation>Pausar ejecución durante las cargas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="84"/>
         <source>Show recording dialog</source>
         <translation>Mostrar diálogo de grabación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="98"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="98"/>
         <source>Script Directory</source>
         <translation>Directorio de scripts</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="104"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="104"/>
         <source>Path</source>
         <translation>Ruta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.ui" line="111"/>
+        <location filename="../../src/lichii/configuration/configure_tas.ui" line="111"/>
         <source>...</source>
         <translation>...</translation>
     </message>
@@ -5822,12 +5822,12 @@ UUID: %2</translation>
 <context>
     <name>ConfigureTasDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.cpp" line="22"/>
+        <location filename="../../src/lichii/configuration/configure_tas.cpp" line="22"/>
         <source>TAS Configuration</source>
         <translation>Configuración del TAS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_tas.cpp" line="55"/>
+        <location filename="../../src/lichii/configuration/configure_tas.cpp" line="55"/>
         <source>Select TAS Load Directory...</source>
         <translation>Seleccione el directorio de carga del TAS...</translation>
     </message>
@@ -5835,91 +5835,91 @@ UUID: %2</translation>
 <context>
     <name>ConfigureTouchFromButton</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="14"/>
         <source>Configure Touchscreen Mappings</source>
         <translation>Configurar las asignaciones de la pantalla táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="22"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="22"/>
         <source>Mapping:</source>
         <translation>Asignaciones:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="48"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="48"/>
         <source>New</source>
         <translation>Nuevo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="61"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="61"/>
         <source>Delete</source>
         <translation>Borrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="74"/>
         <source>Rename</source>
         <translation>Renombrar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="92"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="92"/>
         <source>Click the bottom area to add a point, then press a button to bind.
 Drag points to change position, or double-click table cells to edit values.</source>
         <translation>Haga clic en el área inferior para añadir un punto, y luego presione un botón para vincularlo.
 Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas de la tabla para editar los valores.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.ui" line="116"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.ui" line="116"/>
         <source>Delete Point</source>
         <translation>Borrar punto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="78"/>
         <source>Button</source>
         <translation>Botón</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="78"/>
         <source>X</source>
         <comment>X axis</comment>
         <translation>X</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="78"/>
         <source>Y</source>
         <comment>Y axis</comment>
         <translation>Y</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="195"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="195"/>
         <source>New Profile</source>
         <translation>Crear perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="195"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="195"/>
         <source>Enter the name for the new profile.</source>
         <translation>Introduzca un nombre para el nuevo perfil:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="206"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="206"/>
         <source>Delete Profile</source>
         <translation>Borrar perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="206"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="206"/>
         <source>Delete profile %1?</source>
         <translation>¿Borrar el perfil %1?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="219"/>
         <source>Rename Profile</source>
         <translation>Renombrar perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="219"/>
         <source>New name:</source>
         <translation>Nuevo nombre:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="231"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="231"/>
         <source>[press key]</source>
         <translation>[presione una tecla]</translation>
     </message>
@@ -5927,42 +5927,42 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ConfigureTouchscreenAdvanced</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="14"/>
         <source>Configure Touchscreen</source>
         <translation>Configurar pantalla táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="26"/>
         <source>Warning: The settings in this page affect the inner workings of Eden&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
         <translation>Advertencia: Los ajustes en esta página afectan al funcionamiento interno de la pantalla táctil emulada de Eden. Cambiando estos ajustes pueden resultar en comportamientos indeseados, por ejemplo que la pantalla táctil no funcione parcial o totalmente. Solo debería usar esta página si sabe lo que está haciendo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="52"/>
         <source>Touch Parameters</source>
         <translation>Parámetros táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="71"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="71"/>
         <source>Touch Diameter Y</source>
         <translation>Diámetro táctil Y</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="91"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="91"/>
         <source>Touch Diameter X</source>
         <translation>Diámetro táctil X</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="98"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="98"/>
         <source>Rotational Angle</source>
         <translation>Ángulo rotacional</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="132"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="132"/>
         <source>Restore Defaults</source>
         <translation>Recuperar ajustes predeterminados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touchscreen_advanced.ui" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_touchscreen_advanced.ui" line="26"/>
         <source>Warning: The settings in this page affect the inner workings of Lichii&apos;s emulated touchscreen. Changing them may result in undesirable behavior, such as the touchscreen partially or not working. You should only use this page if you know what you are doing.</source>
         <translation>Advertencia: Los ajustes de esta página afectan al funcionamiento interno de la pantalla táctil emulada de Lichii. Cambiarlos puede provocar comportamientos indeseados, por ejemplo que la pantalla táctil funcione solo en parte o no funcione. Solo debería usar esta página si sabe lo que está haciendo.</translation>
     </message>
@@ -5970,43 +5970,43 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ConfigureUI</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="35"/>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="35"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="47"/>
         <source>None</source>
         <translation>Ninguno</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="36"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="36"/>
         <source>Small (24x24)</source>
         <translation>Pequeño (24x24)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="37"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="37"/>
         <source>Standard (48x48)</source>
         <translation>Estándar (48x48)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="38"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="38"/>
         <source>Large (72x72)</source>
         <translation>Grande (72x72)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="43"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="43"/>
         <source>Filename</source>
         <translation>Nombre del archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="44"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="44"/>
         <source>Filetype</source>
         <translation>Tipo de archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="45"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="45"/>
         <source>Title ID</source>
         <translation>ID del título</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="46"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="46"/>
         <source>Title Name</source>
         <translation>Nombre del título</translation>
     </message>
@@ -6014,122 +6014,122 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ConfigureUi</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="14"/>
         <source>Form</source>
         <translation>Forma</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="17"/>
         <source>UI</source>
         <translation>Interfaz</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="23"/>
         <source>General</source>
         <translation>General</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="31"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="31"/>
         <source>Note: Changing language will apply your configuration.</source>
         <translation>Nota: cambiar el idioma afectará a tu configuración actual.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="43"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="43"/>
         <source>Interface language:</source>
         <translation>Idioma de la interfaz:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="57"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="57"/>
         <source>Theme:</source>
         <translation>Tema:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="74"/>
         <source>Game List</source>
         <translation>Lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="82"/>
         <source>Show Add-Ons Column</source>
         <translation>Mostrar la columna de complementos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="89"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="89"/>
         <source>Show Size Column</source>
         <translation>Mostrar columna de tamaño</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="96"/>
         <source>Show File Types Column</source>
         <translation>Mostrar columna de tipos de archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="103"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="103"/>
         <source>Show Play Time Column</source>
         <translation>Mostrar columna de tiempo de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="112"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="112"/>
         <source>Folder Icon Size:</source>
         <translation>Tamaño de los iconos de la carpeta:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="126"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="126"/>
         <source>Row 1 Text:</source>
         <translation>Texto de fila 1:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="140"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="140"/>
         <source>Row 2 Text:</source>
         <translation>Texto de fila 2:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="157"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="157"/>
         <source>Screenshots</source>
         <translation>Capturas de pantalla</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="165"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="165"/>
         <source>Ask Where To Save Screenshots (Windows Only)</source>
         <translation>Preguntar dónde guardar las capturas de pantalla (solo en Windows)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="174"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="174"/>
         <source>Screenshots Path: </source>
         <translation>Ruta de las capturas de pantalla:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="184"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="184"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="200"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="200"/>
         <source>TextLabel</source>
         <translation>TextLabel</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.ui" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_ui.ui" line="219"/>
         <source>Resolution:</source>
         <translation>Resolución:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="132"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="132"/>
         <source>Select Screenshots Path...</source>
         <translation>Selecciona la ruta de las capturas de pantalla:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="227"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="227"/>
         <source>&lt;System&gt;</source>
         <translation>&lt;System&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="228"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="228"/>
         <source>English</source>
         <translation>Inglés</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ui.cpp" line="311"/>
+        <location filename="../../src/lichii/configuration/configure_ui.cpp" line="311"/>
         <source>Auto (%1 x %2, %3 x %4)</source>
         <comment>Screenshot width value</comment>
         <translation>Auto (%1 x %2, %3 x %4)</translation>
@@ -6138,79 +6138,79 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ConfigureVibration</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="14"/>
         <source>Configure Vibration</source>
         <translation>Configurar vibración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="23"/>
         <source>Press any controller button to vibrate the controller.</source>
         <translation>Presiona cualquier botón para hacer vibrar el control.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="30"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="30"/>
         <source>Vibration</source>
         <translation>Vibración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="63"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="63"/>
         <source>Player 1</source>
         <translation>Jugador 1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="96"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="148"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="200"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="252"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="322"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="374"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="426"/>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="478"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="148"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="200"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="252"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="322"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="374"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="426"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="478"/>
         <source>%</source>
         <translation>%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="115"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="115"/>
         <source>Player 2</source>
         <translation>Jugador 2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="167"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="167"/>
         <source>Player 3</source>
         <translation>Jugador 3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="219"/>
         <source>Player 4</source>
         <translation>Jugador 4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="289"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="289"/>
         <source>Player 5</source>
         <translation>Jugador 5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="341"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="341"/>
         <source>Player 6</source>
         <translation>Jugador 6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="393"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="393"/>
         <source>Player 7</source>
         <translation>Jugador 7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="445"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="445"/>
         <source>Player 8</source>
         <translation>Jugador 8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="503"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="503"/>
         <source>Settings</source>
         <translation>Ajustes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_vibration.ui" line="509"/>
+        <location filename="../../src/lichii/configuration/configure_vibration.ui" line="509"/>
         <source>Enable Accurate Vibration</source>
         <translation>Activar vibración precisa</translation>
     </message>
@@ -6218,71 +6218,71 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ConfigureWeb</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="17"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="17"/>
         <source>Web</source>
         <translation>Web</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="25"/>
         <source>Eden Web Service</source>
         <translation>Servicio Web de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="33"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="33"/>
         <source>Token: </source>
         <translation>Token: </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="46"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="46"/>
         <source>Username: </source>
         <translation>Nombre de usuario:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="105"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="105"/>
         <source>Generate</source>
         <translation>Generar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="130"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="130"/>
         <source>Web Service configuration can only be changed when a public room isn&apos;t being hosted.</source>
         <translation>La configuración del servicio web solo puede ser cambiada cuando una sala pública no esté siendo alojada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="142"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="142"/>
         <source>Discord Presence</source>
         <translation>Presencia de Discord</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="148"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="148"/>
         <source>Show Current Game in your Discord Status</source>
         <translation>Mostrar el juego actual en el estado de Discord</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.cpp" line="110"/>
-        <location filename="../../src/yuzu/configuration/configure_web.cpp" line="118"/>
+        <location filename="../../src/lichii/configuration/configure_web.cpp" line="110"/>
+        <location filename="../../src/lichii/configuration/configure_web.cpp" line="118"/>
         <source>All Good</source>
         <comment>Tooltip</comment>
         <translation>Todo bien</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.cpp" line="113"/>
+        <location filename="../../src/lichii/configuration/configure_web.cpp" line="113"/>
         <source>Must be between 4-20 characters</source>
         <comment>Tooltip</comment>
         <translation>Debe tener entre 4-20 caracteres</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.cpp" line="122"/>
+        <location filename="../../src/lichii/configuration/configure_web.cpp" line="122"/>
         <source>Must be 48 characters, and lowercase a-z</source>
         <comment>Tooltip</comment>
         <translation>Debe tener 48 caracteres, solo letras minúsculas a-z</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_web.ui" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_web.ui" line="25"/>
         <source>Lichii Web Service</source>
         <translation>Servicio web de Lichii</translation>
     </message>
@@ -6290,12 +6290,12 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ControllerDialog</name>
     <message>
-        <location filename="../../src/yuzu/debugger/controller.cpp" line="23"/>
+        <location filename="../../src/lichii/debugger/controller.cpp" line="23"/>
         <source>Controller P1</source>
         <translation>Controlador J1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/debugger/controller.cpp" line="60"/>
+        <location filename="../../src/lichii/debugger/controller.cpp" line="60"/>
         <source>&amp;Controller P1</source>
         <translation>&amp;Controlador J1</translation>
     </message>
@@ -6303,37 +6303,37 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>DataDialog</name>
     <message>
-        <location filename="../../src/yuzu/data_dialog.ui" line="26"/>
+        <location filename="../../src/lichii/data_dialog.ui" line="26"/>
         <source>Data Manager</source>
         <translation>Gestor de datos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.ui" line="48"/>
+        <location filename="../../src/lichii/data_dialog.ui" line="48"/>
         <source>Deleting ANY data is IRREVERSABLE!</source>
         <translation>¡Eliminar CUALQUIER dato es IRREVERSIBLE!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="31"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="31"/>
         <source>Shaders</source>
         <translation>Sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="32"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="32"/>
         <source>User NAND</source>
         <translation>NAND del usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="33"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="33"/>
         <source>System NAND</source>
         <translation>NAND del sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="34"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="34"/>
         <source>Mods</source>
         <translation>Mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="35"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="35"/>
         <source>Saves</source>
         <translation>Guardados</translation>
     </message>
@@ -6341,37 +6341,37 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>DataWidget</name>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="14"/>
+        <location filename="../../src/lichii/data_widget.ui" line="14"/>
         <source>Form</source>
         <translation>Formulario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="22"/>
+        <location filename="../../src/lichii/data_widget.ui" line="22"/>
         <source>Tooltip</source>
         <translation>Información sobre herramienta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="70"/>
+        <location filename="../../src/lichii/data_widget.ui" line="70"/>
         <source>Open with your system file manager</source>
         <translation>Abrir con el gestor de archivos de su sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="106"/>
+        <location filename="../../src/lichii/data_widget.ui" line="106"/>
         <source>Delete all data in this directory. THIS IS 100% IRREVERSABLE!</source>
         <translation>Eliminar todos los datos en este directorio. ¡ESTO ES 100% IRREVERSIBLE!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="142"/>
+        <location filename="../../src/lichii/data_widget.ui" line="142"/>
         <source>Export all data in this directory. This may take a while!</source>
         <translation>Exportar todos los datos en este directorio. ¡Esto puede tomar un tiempo!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_widget.ui" line="178"/>
+        <location filename="../../src/lichii/data_widget.ui" line="178"/>
         <source>Import data for this directory. This may take a while, and will delete ALL EXISTING DATA!</source>
         <translation>Importar todos los datos en este directorio. Esto puede tomar un tiempo, ¡y borrará TODOS LOS DATOS EXISTENTES!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/data_dialog.cpp" line="95"/>
+        <location filename="../../src/lichii/data_dialog.cpp" line="95"/>
         <source>Calculating...</source>
         <translation>Calculando...</translation>
     </message>
@@ -6379,42 +6379,42 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>DepsDialog</name>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="14"/>
         <source>Eden Dependencies</source>
         <translation>Dependencias de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="72"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="72"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Eden Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Eden&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="85"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="85"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Eden possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hicieron Eden posible &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.cpp" line="22"/>
+        <location filename="../../src/lichii/deps_dialog.cpp" line="22"/>
         <source>Dependency</source>
         <translation>Dependencia</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.cpp" line="22"/>
+        <location filename="../../src/lichii/deps_dialog.cpp" line="22"/>
         <source>Version</source>
         <translation>Versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="14"/>
         <source>Lichii Dependencies</source>
         <translation>Dependencias de Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="72"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="72"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Lichii Dependencies&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:28pt;&quot;&gt;Dependencias de Lichii&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/deps_dialog.ui" line="85"/>
+        <location filename="../../src/lichii/deps_dialog.ui" line="85"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The projects that make Lichii possible&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Los proyectos que hacen posible Lichii&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
@@ -6422,42 +6422,42 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>DirectConnect</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="14"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="14"/>
         <source>Direct Connect</source>
         <translation>Conexión directa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="47"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="47"/>
         <source>Server Address</source>
         <translation>Dirección del servidor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="54"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="54"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Server address of the host&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dirección del servidor del anfitrión&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="64"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="64"/>
         <source>Port</source>
         <translation>Puerto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="71"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="71"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Port number the host is listening on&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Número de puerto en el que el anfitrión está trabajando&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="97"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="97"/>
         <source>Nickname</source>
         <translation>Apodo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="111"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="111"/>
         <source>Password</source>
         <translation>Contraseña</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.ui" line="153"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.ui" line="153"/>
         <source>Connect</source>
         <translation>Conectar</translation>
     </message>
@@ -6465,12 +6465,12 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>DirectConnectWindow</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.cpp" line="123"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.cpp" line="123"/>
         <source>Connecting</source>
         <translation>Conectando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/direct_connect.cpp" line="128"/>
+        <location filename="../../src/lichii/multiplayer/direct_connect.cpp" line="128"/>
         <source>Connect</source>
         <translation>Conectar</translation>
     </message>
@@ -6478,111 +6478,111 @@ Arrastre los puntos para cambiar de posición, o haga doble clic en las celdas d
 <context>
     <name>ErrorManager</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="11"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="11"/>
         <source>Username is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation>El nombre de usuario no es válido. Debe tener entre 4 y 20 caracteres alfanuméricos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="13"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="13"/>
         <source>Room name is not valid. Must be 4 to 20 alphanumeric characters.</source>
         <translation>El nombre de la sala no es válido. Debe tener entre 4 y 20 caracteres alfanuméricos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="15"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="15"/>
         <source>Username is already in use or not valid. Please choose another.</source>
         <translation>El nombre de usuario ya está en uso o no es válido. Por favor, selecciona otro.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="17"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="17"/>
         <source>IP is not a valid IPv4 address.</source>
         <translation>Esta IP no es una dirección IPv4 válida.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="19"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="19"/>
         <source>Port must be a number between 0 to 65535.</source>
         <translation>El puerto debe ser un numero entre 0 y 65535.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="20"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="20"/>
         <source>You must choose a Preferred Game to host a room. If you do not have any games in your game list yet, add a game folder by clicking on the plus icon in the game list.</source>
         <translation>Debe elegir un Juego preferente para alojar una sala. Si todavía no tiene ningún juego en la lista de juegos, agregue una carpeta de juegos haciendo clic en el icono de suma en la lista de juegos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="24"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="24"/>
         <source>Unable to find an internet connection. Check your internet settings.</source>
         <translation>No se puedo encontrar ninguna conexión al internet. Revisa tu configuración de internet.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="26"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="26"/>
         <source>Unable to connect to the host. Verify that the connection settings are correct. If you still cannot connect, contact the room host and verify that the host is properly configured with the external port forwarded.</source>
         <translation>No se pudo conectar al anfitrión. Revisa que los configuraciones de conexión estan correctos. Si todavía no puedes conectarte, contacta con el anfitrión de la sala y verifica que el anfitrión tiene configurado correctamente el puerto externo direccionado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="30"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="30"/>
         <source>Unable to connect to the room because it is already full.</source>
         <translation>No se pudo conectar a la sala porque esta llena.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="32"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="32"/>
         <source>Creating a room failed. Please retry. Restarting Eden might be necessary.</source>
         <translation>Error en crear una sala. Por favor reintentelo. Reiniciando Eden podría ser necesario.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="34"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="34"/>
         <source>The host of the room has banned you. Speak with the host to unban you or try a different room.</source>
         <translation>El anfitrión de la sala te ha prohibido. Habla con el anfitrión para remover el prohibición o intenta usar una sala diferente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="37"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="37"/>
         <source>Version mismatch! Please update to the latest version of Eden. If the problem persists, contact the room host and ask them to update the server.</source>
         <translation>Incompatibilidad de versiones! Por favor intenta actualizar al version mas nuevo de Eden. Si la problema persiste, intenta contactar el anfitrión de la sala y pregunta si pueden actualizar el servidor.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="39"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="39"/>
         <source>Incorrect password.</source>
         <translation>Contraseña incorrecta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="40"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="40"/>
         <source>An unknown error occurred. If this error continues to occur, please open an issue</source>
         <translation>Ha ocurrido un error desconocido. Si este error persiste, por favor abra una solicitud de fallos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="43"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="43"/>
         <source>Connection to room lost. Try to reconnect.</source>
         <translation>El conexión a la sala se perdió. Intenta reconectarte.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="45"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="45"/>
         <source>You have been kicked by the room host.</source>
         <translation>Has sido expulsado por el anfitrión.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="47"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="47"/>
         <source>IP address is already in use. Please choose another.</source>
         <translation>La dirección IP ya se encuentra en uso. Por favor, seleccione otra.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="49"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="49"/>
         <source>You do not have enough permission to perform this action.</source>
         <translation>No tienes suficiente permisión para realizar esta acción.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="50"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="50"/>
         <source>The user you are trying to kick/ban could not be found.
 They may have left the room.</source>
         <translation>El usuario que estás intentando expulsar/prohibir no se pudo encontrar.
 Es posible que haya abandonado la sala.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="52"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="52"/>
         <source>No valid network interface is selected.
 Please go to Configure -&gt; System -&gt; Network and make a selection.</source>
         <translation>No se ha seleccionado ninguna interfaz de red válida.
 Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interfaz.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="63"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="63"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -6590,55 +6590,55 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>GRenderWindow</name>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="845"/>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="862"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="845"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="862"/>
         <source>OpenGL not available!</source>
         <translation>¡OpenGL no está disponible!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="846"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="846"/>
         <source>OpenGL shared contexts are not supported.</source>
         <translation>Los contextos compartidos de OpenGL no son compatibles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="863"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="863"/>
         <source>Eden has not been compiled with OpenGL support.</source>
         <translation>Eden no ha sido compilado con soporte para OpenGL.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="887"/>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="905"/>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="915"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="887"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="905"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="915"/>
         <source>Error while initializing OpenGL!</source>
         <translation>¡Error al inicializar OpenGL!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="888"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="888"/>
         <source>Your GPU may not support OpenGL, or you do not have the latest graphics driver.</source>
         <translation>Tu GPU no soporta OpenGL, o no tienes instalados los últimos controladores gráficos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="897"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="897"/>
         <source>Error while initializing OpenGL 4.6!</source>
         <translation>¡Error al iniciar OpenGL 4.6!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="898"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="898"/>
         <source>Your GPU may not support OpenGL 4.6, or you do not have the latest graphics driver.&lt;br&gt;&lt;br&gt;GL Renderer:&lt;br&gt;%1</source>
         <translation>Tu GPU no soporta OpenGL 4.6, o no tienes instalado el último controlador de la tarjeta gráfica.&lt;br&gt;&lt;br&gt;GL Renderer:&lt;br&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="906"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="906"/>
         <source>Your GPU may not support one or more required OpenGL extensions. Please ensure you have the latest graphics driver.&lt;br&gt;&lt;br&gt;GL Renderer:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Unsupported extensions:&lt;br&gt;%2</source>
         <translation>Es posible que la GPU no soporte una o más extensiones necesarias de OpenGL . Por favor, asegúrate de tener los últimos controladores de la tarjeta gráfica.&lt;br&gt;&lt;br&gt;GL Renderer:&lt;br&gt;%1&lt;br&gt;&lt;br&gt;Extensiones no soportadas:&lt;br&gt;%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="916"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="916"/>
         <source>This build doesn&apos;t have OpenGL support.</source>
         <translation>Esta compilación no tiene soporte para OpenGL.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/bootmanager.cpp" line="866"/>
+        <location filename="../../src/lichii/bootmanager.cpp" line="866"/>
         <source>Lichii has not been compiled with OpenGL support.</source>
         <translation>Lichii no se compiló con soporte para OpenGL.</translation>
     </message>
@@ -6646,208 +6646,208 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>GameList</name>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="417"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="417"/>
         <source>&amp;Add New Game Directory</source>
         <translation>&amp;Añadir un nuevo directorio de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="451"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="451"/>
         <source>Favorite</source>
         <translation>Favorito</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="453"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="453"/>
         <source>Start Game</source>
         <translation>Iniciar juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="455"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="455"/>
         <source>Start Game without Custom Configuration</source>
         <translation>Iniciar juego sin la configuración personalizada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="457"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="457"/>
         <source>Open Save Data Location</source>
         <translation>Abrir ubicación de los archivos de guardado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="458"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="458"/>
         <source>Open Mod Data Location</source>
         <translation>Abrir ubicación de los mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="460"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="460"/>
         <source>Open Transferable Pipeline Cache</source>
         <translation>Abrir caché de canalización de shaders transferibles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="461"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="461"/>
         <source>Link to Ryujinx</source>
         <translation>Enlace a Ryujinx</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="463"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="463"/>
         <source>Remove</source>
         <translation>Eliminar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="464"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="464"/>
         <source>Remove Installed Update</source>
         <translation>Eliminar la actualización instalada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="465"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="465"/>
         <source>Remove All Installed DLC</source>
         <translation>Eliminar todos los DLC instalados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="466"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="466"/>
         <source>Remove Custom Configuration</source>
         <translation>Eliminar la configuración personalizada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="467"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="467"/>
         <source>Remove Cache Storage</source>
         <translation>Quitar almacenamiento de caché</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="468"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="468"/>
         <source>Remove OpenGL Pipeline Cache</source>
         <translation>Eliminar caché de canalización de OpenGL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="469"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="469"/>
         <source>Remove Vulkan Pipeline Cache</source>
         <translation>Eliminar caché de canalización de Vulkan</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="471"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="471"/>
         <source>Remove All Pipeline Caches</source>
         <translation>Eliminar todas las cachés de canalización</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="472"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="472"/>
         <source>Remove All Installed Contents</source>
         <translation>Eliminar todo el contenido instalado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="473"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="473"/>
         <source>Manage Play Time</source>
         <translation>Gestionar tiempo de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="474"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="474"/>
         <source>Edit Play Time Data</source>
         <translation>Editar los datos del tiempo de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="475"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="475"/>
         <source>Remove Play Time Data</source>
         <translation>Eliminar información del tiempo de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="476"/>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="477"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="476"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="477"/>
         <source>Dump RomFS</source>
         <translation>Volcar RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="478"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="478"/>
         <source>Dump RomFS to SDMC</source>
         <translation>Volcar RomFS a SDMC</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="479"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="479"/>
         <source>Verify Integrity</source>
         <translation>Verificar integridad</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="480"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="480"/>
         <source>Copy Title ID to Clipboard</source>
         <translation>Copiar la ID del título al portapapeles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="482"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="482"/>
         <source>Create Shortcut</source>
         <translation>Crear acceso directo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="483"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="483"/>
         <source>Add to Desktop</source>
         <translation>Añadir al escritorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="485"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="485"/>
         <source>Add to Applications Menu</source>
         <translation>Añadir al menú de aplicaciones</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="488"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="488"/>
         <source>Configure Game</source>
         <translation>Configurar juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="581"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="581"/>
         <source>Scan Subfolders</source>
         <translation>Escanear subdirectorios</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="582"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="582"/>
         <source>Remove Game Directory</source>
         <translation>Eliminar directorio de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="601"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="601"/>
         <source>▲ Move Up</source>
         <translation>▲ Mover hacia arriba</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="602"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="602"/>
         <source>▼ Move Down</source>
         <translation>▼ Mover hacia abajo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="603"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="603"/>
         <source>Open Directory Location</source>
         <translation>Abrir ubicación del directorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="643"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="643"/>
         <source>Clear</source>
         <translation>Limpiar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="486"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="486"/>
         <source>Rebuild Shader Precache</source>
         <translation>Reconstruir la precompilación de sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="486"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="486"/>
         <source>Build Shader Precache</source>
         <translation>Crear la precompilación de sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="489"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="489"/>
         <source>Delete Shader Precache</source>
         <translation>Eliminar la precompilación de sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="511"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="511"/>
         <source>Dump NUP...</source>
         <translation>Volcar NUP...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="521"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="521"/>
         <source>Convert to NUP...</source>
         <translation>Convertir a NUP...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="533"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="533"/>
         <source>Edit NUP Metadata...</source>
         <translation>Editar metadatos del NUP...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="538"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="538"/>
         <source>Submit compatibility report…</source>
         <translation>Enviar reporte de compatibilidad…</translation>
     </message>
@@ -6946,7 +6946,7 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>GameListPlaceholder</name>
     <message>
-        <location filename="../../src/yuzu/game/game_list.cpp" line="785"/>
+        <location filename="../../src/lichii/game/game_list.cpp" line="785"/>
         <source>Double-click to add a new folder to the game list</source>
         <translation>Haz doble clic para agregar un nuevo directorio a la lista de juegos.</translation>
     </message>
@@ -6954,17 +6954,17 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>GameListSearchField</name>
     <message numerus="yes">
-        <location filename="../../src/yuzu/game/search_field.cpp" line="67"/>
+        <location filename="../../src/lichii/game/search_field.cpp" line="67"/>
         <source>%1 of %n result(s)</source>
         <translation><numerusform>%1 de %n resulto(s)</numerusform><numerusform>%1 de %n resultado(s)</numerusform><numerusform>%1 de %n resultado(s)</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/search_field.cpp" line="122"/>
+        <location filename="../../src/lichii/game/search_field.cpp" line="122"/>
         <source>Filter:</source>
         <translation>Búsqueda:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/game/search_field.cpp" line="123"/>
+        <location filename="../../src/lichii/game/search_field.cpp" line="123"/>
         <source>Enter pattern to filter</source>
         <translation>Introduce un patrón para buscar</translation>
     </message>
@@ -6972,67 +6972,67 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>HostRoom</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="14"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="14"/>
         <source>Create Room</source>
         <translation>Crear sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="37"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="37"/>
         <source>Room Name</source>
         <translation>Nombre de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="51"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="51"/>
         <source>Preferred Game</source>
         <translation>Juego preferido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="61"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="61"/>
         <source>Max Players</source>
         <translation>Jugadores máx.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="91"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="91"/>
         <source>Username</source>
         <translation>Nombre de usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="101"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="101"/>
         <source>(Leave blank for open game)</source>
         <translation>(Dejar vacío para crear sala abierta)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="118"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="118"/>
         <source>Password</source>
         <translation>Contraseña</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="125"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="125"/>
         <source>Port</source>
         <translation>Puerto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="139"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="139"/>
         <source>Room Description</source>
         <translation>Descripción de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="153"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="153"/>
         <source>Load Previous Ban List</source>
         <translation>Cargar lista de vetos anteriores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="184"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="184"/>
         <source>Public</source>
         <translation>Pública</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="189"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="189"/>
         <source>Unlisted</source>
         <translation>Privada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.ui" line="197"/>
+        <location filename="../../src/lichii/multiplayer/host_room.ui" line="197"/>
         <source>Host Room</source>
         <translation>Crear sala</translation>
     </message>
@@ -7040,12 +7040,12 @@ Por favor, vaya a Configuración -&gt; Sistema -&gt; Red y selecciona una interf
 <context>
     <name>HostRoomWindow</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.cpp" line="186"/>
+        <location filename="../../src/lichii/multiplayer/host_room.cpp" line="186"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/host_room.cpp" line="187"/>
+        <location filename="../../src/lichii/multiplayer/host_room.cpp" line="187"/>
         <source>Failed to announce the room to the public lobby. In order to host a room publicly, you must have a valid Eden account configured in Emulation -&gt; Configure -&gt; Web. If you do not want to publish a room in the public lobby, then select Unlisted instead.
 Debug Message: </source>
         <translation>Se fallo anunciar la sala al vestíbulo público. En orden para Anfitrar el sala publicamente, se require que tienes una cuenta de Eden valida en Emulacion -&gt; Configura -&gt; Web. Si no quieres publicar una sala en el vestibulo publico, seleccione no listada en ves.
@@ -7257,7 +7257,7 @@ Mensaje de depuración:</translation>
         <translation>Alternar superposición de rendimiento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_hotkeys.cpp" line="29"/>
+        <location filename="../../src/lichii/configuration/configure_hotkeys.cpp" line="29"/>
         <source>Exit Lichii</source>
         <translation>Salir de Lichii</translation>
     </message>
@@ -7270,22 +7270,22 @@ Mensaje de depuración:</translation>
 <context>
     <name>InstallDialog</name>
     <message>
-        <location filename="../../src/yuzu/install_dialog.cpp" line="32"/>
+        <location filename="../../src/lichii/install_dialog.cpp" line="32"/>
         <source>Please confirm these are the files you wish to install.</source>
         <translation>Por favor, confirma que estos son los archivos que desea instalar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/install_dialog.cpp" line="35"/>
+        <location filename="../../src/lichii/install_dialog.cpp" line="35"/>
         <source>Installing an Update or DLC will overwrite the previously installed one.</source>
         <translation>Instalar una actualización o DLC reemplazará la instalada previamente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/install_dialog.cpp" line="39"/>
+        <location filename="../../src/lichii/install_dialog.cpp" line="39"/>
         <source>Install</source>
         <translation>Instalar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/install_dialog.cpp" line="52"/>
+        <location filename="../../src/lichii/install_dialog.cpp" line="52"/>
         <source>Install Files to NAND</source>
         <translation>Instalar archivos al NAND...</translation>
     </message>
@@ -7293,7 +7293,7 @@ Mensaje de depuración:</translation>
 <context>
     <name>LimitableInputDialog</name>
     <message>
-        <location filename="../../src/yuzu/util/limitable_input_dialog.cpp" line="60"/>
+        <location filename="../../src/lichii/util/limitable_input_dialog.cpp" line="60"/>
         <source>The text can't contain any of the following characters:
 %1</source>
         <translation>El texto no puede tener ninguno de estos caracteres:
@@ -7303,52 +7303,52 @@ Mensaje de depuración:</translation>
 <context>
     <name>LoadingScreen</name>
     <message>
-        <location filename="../../src/yuzu/loading_screen.ui" line="84"/>
+        <location filename="../../src/lichii/loading_screen.ui" line="84"/>
         <source>Loading Shaders 387 / 1628</source>
         <translation>Cargando sombreadores 387 / 1628</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.ui" line="121"/>
+        <location filename="../../src/lichii/loading_screen.ui" line="121"/>
         <source>Loading Shaders %v out of %m</source>
         <translation>Cargando sombreadores %v de %m</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.ui" line="135"/>
+        <location filename="../../src/lichii/loading_screen.ui" line="135"/>
         <source>Estimated Time 5m 4s</source>
         <translation>Tiempo estimado 5m 4s</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="86"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="86"/>
         <source>Loading...</source>
         <translation>Cargando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="87"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="87"/>
         <source>Loading Shaders %1 / %2</source>
         <translation>Cargando sombreadores %1 / %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="88"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="88"/>
         <source>Launching...</source>
         <translation>Iniciando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="173"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="173"/>
         <source>Estimated Time %1</source>
         <translation>Tiempo estimado %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="101"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="101"/>
         <source>Skip</source>
         <translation>Omitir</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="103"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="103"/>
         <source>Start the game now. The shaders not precached yet are precached on a later launch.</source>
         <translation>Iniciar el juego ahora. Los sombreadores que aún no se han precompilado se precompilarán en un próximo inicio.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/loading_screen.cpp" line="117"/>
+        <location filename="../../src/lichii/loading_screen.cpp" line="117"/>
         <source>Precaching shaders %1 / %2</source>
         <translation>Precompilando sombreadores %1 / %2</translation>
     </message>
@@ -7356,83 +7356,83 @@ Mensaje de depuración:</translation>
 <context>
     <name>Lobby</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="14"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="14"/>
         <source>Public Room Browser</source>
         <translation>Explorador de salas públicas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="32"/>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="39"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="32"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="39"/>
         <source>Nickname</source>
         <translation>Apodo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="59"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="59"/>
         <source>Filters</source>
         <translation>Filtros</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="66"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="66"/>
         <source>Search</source>
         <translation>Buscar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="76"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="76"/>
         <source>Games I Own</source>
         <translation>Juegos que tengo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="83"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="83"/>
         <source>Hide Empty Rooms</source>
         <translation>Ocultar salas vacías</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="90"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="90"/>
         <source>Hide Full Rooms</source>
         <translation>Ocultar salas llenas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.ui" line="110"/>
+        <location filename="../../src/lichii/multiplayer/lobby.ui" line="110"/>
         <source>Refresh Lobby</source>
         <translation>Actualizar la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="122"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="122"/>
         <source>Password Required to Join</source>
         <translation>Contraseña necesaria para unirse</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="122"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="122"/>
         <source>Password:</source>
         <translation>Contraseña:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="229"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="229"/>
         <source>Players</source>
         <translation>Jugadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="230"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="230"/>
         <source>Room Name</source>
         <translation>Nombre de sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="231"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="231"/>
         <source>Preferred Game</source>
         <translation>Juego preferente</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="232"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="232"/>
         <source>Host</source>
         <translation>Anfitrión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="239"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="239"/>
         <source>Refreshing</source>
         <translation>Actualizando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby.cpp" line="296"/>
+        <location filename="../../src/lichii/multiplayer/lobby.cpp" line="296"/>
         <source>Refresh List</source>
         <translation>Actualizar lista</translation>
     </message>
@@ -7440,825 +7440,825 @@ Mensaje de depuración:</translation>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="14"/>
-        <source>yuzu</source>
-        <translation>yuzu</translation>
+        <location filename="../../src/lichii/main.ui" line="14"/>
+        <source>Lichii</source>
+        <translation>Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="53"/>
+        <location filename="../../src/lichii/main.ui" line="53"/>
         <source>&amp;File</source>
         <translation>&amp;Archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="57"/>
+        <location filename="../../src/lichii/main.ui" line="57"/>
         <source>&amp;Recent Files</source>
         <translation>&amp;Archivos recientes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="62"/>
+        <location filename="../../src/lichii/main.ui" line="62"/>
         <source>Open &amp;Eden Folders</source>
         <translation>Abrir carpetas de &amp;Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="85"/>
+        <location filename="../../src/lichii/main.ui" line="85"/>
         <source>&amp;Emulation</source>
         <translation>&amp;Emulación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="96"/>
+        <location filename="../../src/lichii/main.ui" line="96"/>
         <source>&amp;View</source>
         <translation>&amp;Ver</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="100"/>
+        <location filename="../../src/lichii/main.ui" line="100"/>
         <source>&amp;Reset Window Size</source>
         <translation>&amp;Reiniciar tamaño de ventana</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="105"/>
+        <location filename="../../src/lichii/main.ui" line="105"/>
         <source>&amp;Debugging</source>
         <translation>&amp;Depuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="110"/>
+        <location filename="../../src/lichii/main.ui" line="110"/>
         <source>&amp;Game List Mode</source>
         <translation>Modo de la lista de &amp;juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="118"/>
+        <location filename="../../src/lichii/main.ui" line="118"/>
         <source>Game &amp;Icon Size</source>
         <translation>Tamaño del &amp;icono de los juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="123"/>
+        <location filename="../../src/lichii/main.ui" line="123"/>
         <source>Reset Window Size to &amp;720p</source>
         <translation>Reiniciar el tamaño de la ventana a &amp;720p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="126"/>
+        <location filename="../../src/lichii/main.ui" line="126"/>
         <source>Reset Window Size to 720p</source>
         <translation>Reiniciar el tamaño de la ventana a 720p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="131"/>
+        <location filename="../../src/lichii/main.ui" line="131"/>
         <source>Reset Window Size to &amp;900p</source>
         <translation>Reiniciar el tamaño de la ventana a &amp;900p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="134"/>
+        <location filename="../../src/lichii/main.ui" line="134"/>
         <source>Reset Window Size to 900p</source>
         <translation>Reiniciar el tamaño de la ventana a 900p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="139"/>
+        <location filename="../../src/lichii/main.ui" line="139"/>
         <source>Reset Window Size to &amp;1080p</source>
         <translation>Reiniciar el tamaño de la ventana a &amp;1080p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="142"/>
+        <location filename="../../src/lichii/main.ui" line="142"/>
         <source>Reset Window Size to 1080p</source>
         <translation>Reiniciar el tamaño de la ventana a 1080p</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="164"/>
+        <location filename="../../src/lichii/main.ui" line="164"/>
         <source>&amp;Multiplayer</source>
         <translation>&amp;Multijugador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="175"/>
+        <location filename="../../src/lichii/main.ui" line="175"/>
         <source>&amp;Tools</source>
         <translation>&amp;Herramientas</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="179"/>
+        <location filename="../../src/lichii/main.ui" line="179"/>
         <source>Am&amp;iibo</source>
         <translation>Am&amp;iibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="188"/>
+        <location filename="../../src/lichii/main.ui" line="188"/>
         <source>Launch &amp;Applet</source>
         <translation>Ejecutar &amp;Applet</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="197"/>
+        <location filename="../../src/lichii/main.ui" line="197"/>
         <source>&amp;TAS</source>
         <translation>&amp;TAS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="207"/>
+        <location filename="../../src/lichii/main.ui" line="207"/>
         <source>&amp;Create Home Menu Shortcut</source>
         <translation>&amp;Crear un acceso directo al menú de inicio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="214"/>
+        <location filename="../../src/lichii/main.ui" line="214"/>
         <source>Install &amp;Firmware</source>
         <translation>Instalar &amp;Firmware</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="233"/>
+        <location filename="../../src/lichii/main.ui" line="233"/>
         <source>&amp;Help</source>
         <translation>&amp;Ayuda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="254"/>
+        <location filename="../../src/lichii/main.ui" line="254"/>
         <source>&amp;Install Files to NAND...</source>
         <translation>&amp;Instalar archivos en NAND...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="259"/>
+        <location filename="../../src/lichii/main.ui" line="259"/>
         <source>L&amp;oad File...</source>
         <translation>C&amp;argar archivo...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="264"/>
+        <location filename="../../src/lichii/main.ui" line="264"/>
         <source>Load &amp;Folder...</source>
         <translation>Cargar &amp;carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="269"/>
+        <location filename="../../src/lichii/main.ui" line="269"/>
         <source>E&amp;xit</source>
         <translation>S&amp;alir</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="277"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="1661"/>
+        <location filename="../../src/lichii/main.ui" line="277"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1661"/>
         <source>&amp;Pause</source>
         <translation>&amp;Pausar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="285"/>
+        <location filename="../../src/lichii/main.ui" line="285"/>
         <source>&amp;Stop</source>
         <translation>&amp;Detener</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="290"/>
+        <location filename="../../src/lichii/main.ui" line="290"/>
         <source>&amp;Verify Installed Contents</source>
         <translation>&amp;Verificar los contenidos instalados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="295"/>
+        <location filename="../../src/lichii/main.ui" line="295"/>
         <source>&amp;About Eden</source>
         <translation>&amp;Acerca de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="303"/>
+        <location filename="../../src/lichii/main.ui" line="303"/>
         <source>Single &amp;Window Mode</source>
         <translation>Modo &amp;ventana</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="308"/>
+        <location filename="../../src/lichii/main.ui" line="308"/>
         <source>Con&amp;figure...</source>
         <translation>Con&amp;figurar...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="311"/>
+        <location filename="../../src/lichii/main.ui" line="311"/>
         <source>Ctrl+,</source>
         <translation>Ctrl+,</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="322"/>
+        <location filename="../../src/lichii/main.ui" line="322"/>
         <source>Enable Overlay Display Applet</source>
         <translation>Activar applet de visualización superpuesta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="330"/>
+        <location filename="../../src/lichii/main.ui" line="330"/>
         <source>Show &amp;Filter Bar</source>
         <translation>Mostrar barra de &amp;búsqueda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="338"/>
+        <location filename="../../src/lichii/main.ui" line="338"/>
         <source>Show &amp;Status Bar</source>
         <translation>Mostrar barra de &amp;estado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="341"/>
+        <location filename="../../src/lichii/main.ui" line="341"/>
         <source>Show Status Bar</source>
         <translation>Mostrar barra de estado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="349"/>
+        <location filename="../../src/lichii/main.ui" line="349"/>
         <source>&amp;Browse Public Game Lobby</source>
         <translation>&amp;Buscar en la sala de juegos públicos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="357"/>
+        <location filename="../../src/lichii/main.ui" line="357"/>
         <source>&amp;Create Room</source>
         <translation>&amp;Crear sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="365"/>
+        <location filename="../../src/lichii/main.ui" line="365"/>
         <source>&amp;Leave Room</source>
         <translation>&amp;Abandonar sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="370"/>
+        <location filename="../../src/lichii/main.ui" line="370"/>
         <source>&amp;Direct Connect to Room</source>
         <translation>&amp;Conexión directa a una sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="378"/>
+        <location filename="../../src/lichii/main.ui" line="378"/>
         <source>&amp;Show Current Room</source>
         <translation>&amp;Mostrar sala actual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="386"/>
+        <location filename="../../src/lichii/main.ui" line="386"/>
         <source>F&amp;ullscreen</source>
         <translation>P&amp;antalla completa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="394"/>
+        <location filename="../../src/lichii/main.ui" line="394"/>
         <source>&amp;Restart</source>
         <translation>&amp;Reiniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="402"/>
+        <location filename="../../src/lichii/main.ui" line="402"/>
         <source>Load/Remove &amp;Amiibo...</source>
         <translation>Cargar/Eliminar &amp;Amiibo...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="407"/>
+        <location filename="../../src/lichii/main.ui" line="407"/>
         <source>Open &amp;Mods Page</source>
         <translation>Abrir página de &amp;mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="412"/>
+        <location filename="../../src/lichii/main.ui" line="412"/>
         <source>&amp;User Handbook</source>
         <translation>Manual de &amp;usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="420"/>
+        <location filename="../../src/lichii/main.ui" line="420"/>
         <source>&amp;Capture Screenshot</source>
         <translation>&amp;Captura de pantalla</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="425"/>
+        <location filename="../../src/lichii/main.ui" line="425"/>
         <source>&amp;Album</source>
         <translation>&amp;Álbum</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="430"/>
+        <location filename="../../src/lichii/main.ui" line="430"/>
         <source>&amp;Set Nickname and Owner</source>
         <translation>&amp;Darle nombre y propietario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="435"/>
+        <location filename="../../src/lichii/main.ui" line="435"/>
         <source>&amp;Delete Game Data</source>
         <translation>&amp;Borrar datos de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="440"/>
+        <location filename="../../src/lichii/main.ui" line="440"/>
         <source>&amp;Restore Amiibo</source>
         <translation>&amp;Restaurar Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="445"/>
+        <location filename="../../src/lichii/main.ui" line="445"/>
         <source>&amp;Format Amiibo</source>
         <translation>&amp;Formatear Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="450"/>
+        <location filename="../../src/lichii/main.ui" line="450"/>
         <source>&amp;Mii Editor</source>
         <translation>&amp;Editor de Mii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="455"/>
+        <location filename="../../src/lichii/main.ui" line="455"/>
         <source>&amp;Configure TAS...</source>
         <translation>&amp;Configurar TAS...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="466"/>
+        <location filename="../../src/lichii/main.ui" line="466"/>
         <source>Configure C&amp;urrent Game...</source>
         <translation>Configurar el j&amp;uego actual...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="477"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4156"/>
+        <location filename="../../src/lichii/main.ui" line="477"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4156"/>
         <source>&amp;Start</source>
         <translation>&amp;Iniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="485"/>
+        <location filename="../../src/lichii/main.ui" line="485"/>
         <source>&amp;Reset</source>
         <translation>&amp;Reiniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="493"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4157"/>
+        <location filename="../../src/lichii/main.ui" line="493"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4157"/>
         <source>R&amp;ecord</source>
         <translation>G&amp;rabar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="498"/>
+        <location filename="../../src/lichii/main.ui" line="498"/>
         <source>Open &amp;Controller Menu</source>
         <translation>Abrir el menú de &amp;mandos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="503"/>
+        <location filename="../../src/lichii/main.ui" line="503"/>
         <source>Install Decryption &amp;Keys</source>
         <translation>Instalar &amp;llaves de desencriptación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="508"/>
+        <location filename="../../src/lichii/main.ui" line="508"/>
         <source>&amp;Home Menu</source>
         <translation>&amp;Menú de inicio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="513"/>
+        <location filename="../../src/lichii/main.ui" line="513"/>
         <source>&amp;Desktop</source>
         <translation>&amp;Escritorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="518"/>
+        <location filename="../../src/lichii/main.ui" line="518"/>
         <source>&amp;Application Menu</source>
         <translation>&amp;Menú de la aplicación </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="523"/>
+        <location filename="../../src/lichii/main.ui" line="523"/>
         <source>&amp;Root Data Folder</source>
         <translation>Carpeta de datos &amp;raíz</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="528"/>
+        <location filename="../../src/lichii/main.ui" line="528"/>
         <source>&amp;NAND Folder</source>
         <translation>Carpeta &amp;NAND</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="533"/>
+        <location filename="../../src/lichii/main.ui" line="533"/>
         <source>&amp;SDMC Folder</source>
         <translation>Carpeta &amp;SDMC</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="538"/>
+        <location filename="../../src/lichii/main.ui" line="538"/>
         <source>&amp;Mod Folder</source>
         <translation>Carpeta de &amp;mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="543"/>
+        <location filename="../../src/lichii/main.ui" line="543"/>
         <source>&amp;Log Folder</source>
         <translation>Carpeta de &amp;registros</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="548"/>
+        <location filename="../../src/lichii/main.ui" line="548"/>
         <source>From Folder</source>
         <translation>Desde una carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="553"/>
+        <location filename="../../src/lichii/main.ui" line="553"/>
         <source>From ZIP</source>
         <translation>Desde un archivo ZIP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="558"/>
+        <location filename="../../src/lichii/main.ui" line="558"/>
         <source>&amp;Eden Dependencies</source>
         <translation>&amp;Dependencias de Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="563"/>
+        <location filename="../../src/lichii/main.ui" line="563"/>
         <source>&amp;Data Manager</source>
         <translation>Gestor de &amp;datos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="571"/>
+        <location filename="../../src/lichii/main.ui" line="571"/>
         <source>&amp;Tree View</source>
         <translation>Vista en &amp;árbol</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="579"/>
+        <location filename="../../src/lichii/main.ui" line="579"/>
         <source>&amp;Grid View</source>
         <translation>Vista en &amp;cuadrícula</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="584"/>
+        <location filename="../../src/lichii/main.ui" line="584"/>
         <source>Game Icon Size</source>
         <translation>Tamaño del icono de los juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="589"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="331"/>
+        <location filename="../../src/lichii/main.ui" line="589"/>
+        <location filename="../../src/lichii/main_window.cpp" line="331"/>
         <location filename="../../src/qt_common/config/shared_translation.h" line="31"/>
         <source>None</source>
         <translation>Nada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="597"/>
+        <location filename="../../src/lichii/main.ui" line="597"/>
         <source>Show Game &amp;Name</source>
         <translation>Mostrar el &amp;nombre del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="605"/>
+        <location filename="../../src/lichii/main.ui" line="605"/>
         <source>Show &amp;Performance Overlay</source>
         <translation>Mostrar superposición de &amp;rendimiento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="610"/>
+        <location filename="../../src/lichii/main.ui" line="610"/>
         <source>Post-Processing &amp;Shaders...</source>
         <translation>&amp;Sombreadores de posprocesado...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="618"/>
+        <location filename="../../src/lichii/main.ui" line="618"/>
         <source>&amp;Carousel View</source>
         <translation>Vista de &amp;carrusel</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="332"/>
+        <location filename="../../src/lichii/main_window.cpp" line="332"/>
         <source>Small (32x32)</source>
         <translation>Pequeño (32x32)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="333"/>
+        <location filename="../../src/lichii/main_window.cpp" line="333"/>
         <source>Standard (64x64)</source>
         <translation>Estandar (64x64)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="334"/>
+        <location filename="../../src/lichii/main_window.cpp" line="334"/>
         <source>Large (128x128)</source>
         <translation>Grande (128x128)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="335"/>
+        <location filename="../../src/lichii/main_window.cpp" line="335"/>
         <source>Full Size (256x256)</source>
         <translation>Tamaño completo (256x256)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="481"/>
+        <location filename="../../src/lichii/main_window.cpp" line="481"/>
         <source>Broken Vulkan Installation Detected</source>
         <translation>Detectada instalación fallida de Vulkan</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="482"/>
+        <location filename="../../src/lichii/main_window.cpp" line="482"/>
         <source>Vulkan initialization failed during boot.</source>
         <translation>La inicialización de Vulkan falló durante el arranque.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="503"/>
+        <location filename="../../src/lichii/main_window.cpp" line="503"/>
         <source>Running a game</source>
-        <extracomment>TRANSLATORS: This string is shown to the user to explain why yuzu needs to prevent the computer from sleeping</extracomment>
+        <extracomment>TRANSLATORS: This string is shown to the user to explain why Lichii needs to prevent the computer from sleeping</extracomment>
         <translation>Ejecutando un juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="786"/>
+        <location filename="../../src/lichii/main_window.cpp" line="786"/>
         <source>Loading Web Applet...</source>
         <translation>Cargando applet web...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="836"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="839"/>
+        <location filename="../../src/lichii/main_window.cpp" line="836"/>
+        <location filename="../../src/lichii/main_window.cpp" line="839"/>
         <source>Disable Web Applet</source>
         <translation>Desactivar applet web</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="840"/>
+        <location filename="../../src/lichii/main_window.cpp" line="840"/>
         <source>Disabling the web applet can lead to undefined behavior and should only be used with Super Mario 3D All-Stars. Are you sure you want to disable the web applet?
 (This can be re-enabled in the Debug settings.)</source>
         <translation>Desactivar el applet web puede causar comportamientos inesperados y debería solo ser usado con Super Mario 3D All-Stars. ¿Está seguro de que quiere desactivar el applet web?
 (Puede ser activado en las ajustes de depuración.)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="954"/>
+        <location filename="../../src/lichii/main_window.cpp" line="954"/>
         <source>The amount of shaders currently being built</source>
         <translation>La cantidad de sombreadores que se están contruyendo actualmente</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="956"/>
+        <location filename="../../src/lichii/main_window.cpp" line="956"/>
         <source>The current selected resolution scaling multiplier.</source>
         <translation>El multiplicador de escalado de resolución seleccionado actualmente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="959"/>
+        <location filename="../../src/lichii/main_window.cpp" line="959"/>
         <source>Current emulation speed. Values higher or lower than 100% indicate emulation is running faster or slower than a Switch.</source>
         <translation>Velocidad de emulación actual. Los valores superiores o inferiores al 100% indican que la emulación se ejecuta más rápida o más lenta que en una Switch.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="962"/>
+        <location filename="../../src/lichii/main_window.cpp" line="962"/>
         <source>How many frames per second the game is currently displaying. This will vary from game to game and scene to scene.</source>
         <translation>La cantidad de fotogramas por segundo que muestra el juego actualmente. Esto varía según el juego y la escena.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="966"/>
+        <location filename="../../src/lichii/main_window.cpp" line="966"/>
         <source>Time taken to emulate a Switch frame, not counting framelimiting or v-sync. For full-speed emulation this should be at most 16.67 ms.</source>
         <translation>Tiempo empleado en emular un fotograma de la Switch, sin contar la limitación de fotogramas ni la sincronización vertical. Para una emulación a máxima velocidad, debería ser de 16,67 ms como máximo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1027"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1027"/>
         <source>Unmute</source>
         <translation>Desilenciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1027"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1027"/>
         <source>Mute</source>
         <translation>Silenciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1032"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1032"/>
         <source>Reset Volume</source>
         <translation>Restablecer volumen</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1070"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1070"/>
         <source>Configure Effects...</source>
         <translation>Configurar efectos...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1242"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1242"/>
         <source>&amp;Clear Recent Files</source>
         <translation>&amp;Limpiar archivos recientes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1659"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1659"/>
         <source>&amp;Continue</source>
         <translation>&amp;Continuar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1821"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1821"/>
         <source>Warning: Outdated Game Format</source>
         <translation>Advertencia: formato del juego obsoleto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1822"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1822"/>
         <source>You are using the deconstructed ROM directory format for this game, which is an outdated format that has been superseded by others such as NCA, NAX, XCI, or NSP. Deconstructed ROM directories lack icons, metadata, and update support.&lt;br&gt;For an explanation of the various Switch formats Eden supports, out our user handbook. This message will not be shown again.</source>
         <translation>Estás usando el formato de directorio ROM deconstruido para este juego, el cual es un formato obsoleto que ha sido reemplazado por otros como NCA, NAX, XCI o NSP. Los directorios ROM deconstruidos carecen de iconos, metadatos y compatibilidad con actualizaciones.&lt;br&gt;Para obtener una explicación de los distintos formatos de Switch compatibles con Eden, consulta nuestro manual de usuario. Este mensaje no volverá a aparecer de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1833"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="1863"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1833"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1863"/>
         <source>Error while loading ROM!</source>
         <translation>¡Error al cargar la ROM!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1834"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1834"/>
         <source>The ROM format is not supported.</source>
         <translation>El formato de la ROM no está soportado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1838"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1838"/>
         <source>An error occurred initializing the video core.</source>
         <translation>Se produjo un error al inicializar el núcleo de video.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1839"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1839"/>
         <source>This is usually caused by outdated GPU drivers. Please see the log for more details. See: &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/HowToAccessLogs.md&apos;&gt;How to access log files&lt;/a&gt;.</source>
         <translation>Esto suele deberse a controladores de GPU desactualizados. Consulte el registro para más detalles. Vea: &lt;a href=&apos;https://git.eden-emu.dev/eden-emu/eden/src/branch/master/docs/user/HowToAccessLogs.md&apos;&gt;Cómo acceder a los archivos de registro&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1852"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1852"/>
         <source>Error while loading ROM! %1</source>
         <comment>%1 signifies a numeric error code.</comment>
         <translation>¡Error al cargar la ROM! %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1855"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1855"/>
         <source>%1&lt;br&gt;Please redump your files or ask on Discord/Stoat for help.</source>
         <comment>%1 signifies an error string.</comment>
         <translation>%1&lt;br&gt;Por favor vuelva a volcar sus archivos, o pida ayuda en Discord/Stoat.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1864"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1864"/>
         <source>An unknown error occurred. Please see the log for more details.</source>
         <translation>Ha ocurrido un error desconocido. Por favor mire el registro para más detalles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2038"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4069"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2038"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4069"/>
         <source>(64-bit)</source>
         <translation>(64-bit)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2038"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4069"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2038"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4069"/>
         <source>(32-bit)</source>
         <translation>(32-bit)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2039"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4071"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2039"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4071"/>
         <source>%1 %2</source>
         <comment>%1 is the title name. %2 indicates if the title is 64-bit or 32-bit</comment>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2117"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2117"/>
         <source>Closing software...</source>
         <translation>Cerrando el programa...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2283"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2283"/>
         <source>Save Data</source>
         <translation>Datos de guardado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2314"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2314"/>
         <source>Mod Data</source>
         <translation>Datos del mod</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2327"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2327"/>
         <source>Error Opening %1 Folder</source>
         <translation>Error abriendo la carpeta %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2328"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="2661"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2328"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2661"/>
         <source>Folder does not exist!</source>
         <translation>¡La carpeta no existe!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2406"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2406"/>
         <source>Remove Installed Game Contents?</source>
         <translation>¿Eliminar el contenido instalado del juego?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2408"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2408"/>
         <source>Remove Installed Game Update?</source>
         <translation>¿Eliminar la actualización instalada del juego?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2410"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2410"/>
         <source>Remove Installed Game DLC?</source>
         <translation>¿Eliminar el contenido descargable instalado del juego?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2416"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2416"/>
         <source>Remove Entry</source>
         <translation>Eliminar entrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2446"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2446"/>
         <source>Delete OpenGL Transferable Shader Cache?</source>
         <translation>¿Desea eliminar el caché transferible de sombreadores de OpenGL?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2448"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2448"/>
         <source>Delete Vulkan Transferable Shader Cache?</source>
         <translation>¿Desea eliminar el caché transferible de sombreadores de Vulkan?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2450"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2450"/>
         <source>Delete All Transferable Shader Caches?</source>
         <translation>¿Desea eliminar todo el caché transferible de sombreadores?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2452"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2452"/>
         <source>Remove Custom Game Configuration?</source>
         <translation>¿Borrar configuración personalizada del juego?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2454"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2454"/>
         <source>Remove Cache Storage?</source>
         <translation>¿Borrar el almacenamiento de caché?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2460"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2460"/>
         <source>Remove File</source>
         <translation>Eliminar archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2497"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2497"/>
         <source>Remove Play Time Data</source>
         <translation>Eliminar datos del tiempo de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2497"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2497"/>
         <source>Reset play time?</source>
         <translation>¿Reiniciar el tiempo de juego?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2510"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="2595"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2510"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2595"/>
         <source>RomFS Extraction Failed!</source>
         <translation>¡Fallo al extraer el RomFS!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2511"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2511"/>
         <source>There was an error copying the RomFS files or the user cancelled the operation.</source>
         <translation>Ocurrió un error al copiar los archivos de la RomFS o el usuario canceló la operación.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2570"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2570"/>
         <source>Full</source>
         <translation>Completo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2570"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2570"/>
         <source>Skeleton</source>
         <translation>Esqueleto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2572"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2572"/>
         <source>Select RomFS Dump Mode</source>
         <translation>Seleccione el método de volcado del RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2573"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2573"/>
         <source>Please select the how you would like the RomFS dumped.&lt;br&gt;Full will copy all of the files into the new directory while &lt;br&gt;skeleton will only create the directory structure.</source>
         <translation>Por favor selecciona como quieres que sea volcada la RomFS.&lt;br&gt;Completa copiará todos los archivos en el nuevo directorio mientras que &lt;br&gt;esqueleto solo creará la estructura de los directorios.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2596"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2596"/>
         <source>There is not enough free space at %1 to extract the RomFS. Please free up space or select a different dump directory at Emulation &gt; Configure &gt; System &gt; Filesystem &gt; Dump Root</source>
         <translation>No hay suficiente espacio libre en %1 para extraer la RomFS. Por favor libera espacio o selecciona un directorio de volcado diferente en Emulación &gt; Configurar &gt; Sistema &gt; Sistema de archivos &gt; Volcado raiz</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2603"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2603"/>
         <source>Extracting RomFS...</source>
         <translation>Extrayendo el RomFS...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2603"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="2845"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2603"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2845"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2613"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2613"/>
         <source>RomFS Extraction Succeeded!</source>
         <translation>¡La extracción del RomFS ha sido un éxito!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2614"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2614"/>
         <source>The operation completed successfully.</source>
         <translation>La operación se completó con éxito.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2660"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2660"/>
         <source>Error Opening %1</source>
         <translation>Error al abrir %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2669"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2669"/>
         <source>Select Directory</source>
         <translation>Seleccionar directorio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2698"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2698"/>
         <source>Properties</source>
         <translation>Propiedades</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2699"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2699"/>
         <source>The game properties could not be loaded.</source>
         <translation>No se pudieron cargar las propiedades del juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2761"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2761"/>
         <source>Switch Executable (%1);;All Files (*.*)</source>
         <comment>%1 is an identifier for the Switch executable file extensions.</comment>
         <translation>Ejecutable de Switch (%1);;Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2765"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2765"/>
         <source>Load File</source>
         <translation>Cargar archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2778"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2778"/>
         <source>Open Extracted ROM Directory</source>
         <translation>Abrir directorio de la ROM extraída</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2789"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2789"/>
         <source>Invalid Directory Selected</source>
         <translation>Seleccionado directorio inválido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2790"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2790"/>
         <source>The directory you have selected does not contain a &apos;main&apos; file.</source>
         <translation>El directorio seleccionado no contiene un archivo &apos;main&apos;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2800"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2800"/>
         <source>Installable Switch File (*.nca *.nsp *.xci);;Nintendo Content Archive (*.nca);;Nintendo Submission Package (*.nsp);;NX Cartridge Image (*.xci)</source>
         <translation>Archivo de Switch instalable (*.nca *.nsp *.xci);;Archivo de contenido de Nintendo (*.nca);;Paquete de envío de Nintendo (*.nsp);;Imagen de cartucho NX (*.xci)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2805"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2805"/>
         <source>Install Files</source>
         <translation>Instalar archivos</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/yuzu/main_window.cpp" line="2852"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2852"/>
         <source>%n file(s) remaining</source>
         <translation><numerusform>%n archivo(s) restantes</numerusform><numerusform>%n archivo(s) restantes</numerusform><numerusform>%n archivo(s) restantes</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2854"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2854"/>
         <source>Installing file &quot;%1&quot;...</source>
         <translation>Instalando el archivo &quot;%1&quot;...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2908"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="2922"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2908"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2922"/>
         <source>Install Results</source>
         <translation>Resultados de la instalación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2909"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2909"/>
         <source>To avoid possible conflicts, we discourage users from installing base games to the NAND.
 Please, only use this feature to install updates and DLC.</source>
         <translation>Para evitar posibles conflictos, desaconsejamos instalar juegos base en la NAND.
 Por favor, use solo esta función para instalar actualizaciones y contenido descargable.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/yuzu/main_window.cpp" line="2915"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2915"/>
         <source>%n file(s) were newly installed
 </source>
         <translation><numerusform>%n archivo(s) se instalaron recientemente
@@ -8267,7 +8267,7 @@ Por favor, use solo esta función para instalar actualizaciones y contenido desc
 </numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/yuzu/main_window.cpp" line="2918"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2918"/>
         <source>%n file(s) were overwritten
 </source>
         <translation><numerusform>%n archivo(s) fueron sobreescritos
@@ -8276,7 +8276,7 @@ Por favor, use solo esta función para instalar actualizaciones y contenido desc
 </numerusform></translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/yuzu/main_window.cpp" line="2920"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2920"/>
         <source>%n file(s) failed to install
 </source>
         <translation><numerusform>fallo al instalar %n archivo(s)
@@ -8285,324 +8285,324 @@ Por favor, use solo esta función para instalar actualizaciones y contenido desc
 </numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2930"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2930"/>
         <source>System Application</source>
         <translation>Aplicación del sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2931"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2931"/>
         <source>System Archive</source>
         <translation>Archivo del sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2932"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2932"/>
         <source>System Application Update</source>
         <translation>Actualización de la aplicación del sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2933"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2933"/>
         <source>Firmware Package (Type A)</source>
         <translation>Paquete de firmware (Tipo A)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2934"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2934"/>
         <source>Firmware Package (Type B)</source>
         <translation>Paquete de firmware (Tipo B)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2935"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2935"/>
         <source>Game</source>
         <translation>Juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2936"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2936"/>
         <source>Game Update</source>
         <translation>Actualización del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2937"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2937"/>
         <source>Game DLC</source>
         <translation>Contenido descargable del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2938"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2938"/>
         <source>Delta Title</source>
         <translation>Título Delta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2941"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2941"/>
         <source>Select NCA Install Type...</source>
         <translation>Seleccione el tipo de instalación NCA...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2942"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2942"/>
         <source>Please select the type of title you would like to install this NCA as:
 (In most instances, the default &apos;Game&apos; is fine.)</source>
         <translation>Seleccione el tipo de título en el que desea instalar este NCA:
 (En la mayoría de los casos, la opción predeterminada &quot;Juego&quot; es suficiente).</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2948"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2948"/>
         <source>Failed to Install</source>
         <translation>Fallo al instalar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2949"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2949"/>
         <source>The title type you selected for the NCA is invalid.</source>
         <translation>El tipo de título que ha seleccionado para el NCA es inválido.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2984"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2984"/>
         <source>File not found</source>
         <translation>Archivo no encontrado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2985"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2985"/>
         <source>File &quot;%1&quot; not found</source>
         <translation>Archivo &quot;%1&quot; no encontrado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3123"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3123"/>
         <source>OK</source>
         <translation>Aceptar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3141"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3141"/>
         <source>Function Disabled</source>
         <translation>Función desactivada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3142"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3142"/>
         <source>Compatibility list reporting is currently disabled. Check back later!</source>
         <translation>Los informes de la lista de compatibilidad están deshabilitados. ¡Vuelva más tarde!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3184"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3184"/>
         <source>Error opening URL</source>
         <translation>Error abriendo URL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3185"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3185"/>
         <source>Unable to open the URL &quot;%1&quot;.</source>
         <translation>No se pudo abrir URL &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3560"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3560"/>
         <source>TAS Recording</source>
         <translation>Grabación TAS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3560"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3560"/>
         <source>Overwrite file of player 1?</source>
         <translation>¿Sobrescribir el archivo del jugador 1?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3584"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3584"/>
         <source>Invalid config detected</source>
         <translation>Detectada configuración inválida</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3585"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3585"/>
         <source>Handheld controller can&apos;t be used on docked mode. Pro controller will be selected.</source>
         <translation>El mando del modo portátil no puede usarse en el modo sobremesa. El mando pro será seleccionado en su lugar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3736"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="3787"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3736"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3787"/>
         <source>Amiibo</source>
         <translation>Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3736"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="3787"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3736"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3787"/>
         <source>The current amiibo has been removed</source>
         <translation>El amiibo actual fue borrado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3741"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3741"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3741"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="3799"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3741"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3799"/>
         <source>The current game is not looking for amiibos</source>
         <translation>El juego actual no está buscando amiibos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3747"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3747"/>
         <source>Amiibo File (%1);; All Files (*.*)</source>
         <translation>Archivo Amiibo (%1);; Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3748"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3748"/>
         <source>Load Amiibo</source>
         <translation>Cargar Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3783"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3783"/>
         <source>Error loading Amiibo data</source>
         <translation>Error al cargar los datos del Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3793"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3793"/>
         <source>The selected file is not a valid amiibo</source>
         <translation>El archivo seleccionado no es un amiibo válido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3796"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3796"/>
         <source>The selected file is already on use</source>
         <translation>El archivo seleccionado se encuentra en uso</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3802"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3802"/>
         <source>An unknown error occurred</source>
         <translation>Ha ocurrido un error desconocido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3922"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3922"/>
         <source>No firmware available</source>
         <translation>No hay firmware disponible</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3926"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3926"/>
         <source>Firmware Corrupted</source>
         <translation>Firmware corrompido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3992"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3992"/>
         <source>Unknown applet</source>
         <translation>Applet desconocido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3993"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3993"/>
         <source>Applet doesn&apos;t map to a known value.</source>
         <translation>Applet no asigna a un valor conocido.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3996"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3996"/>
         <source>Record not found</source>
         <translation>Grabación no encontrada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3997"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3997"/>
         <source>Applet not found. Please reinstall firmware.</source>
         <translation>Apple no encontrado. Por favor vuelva a instalar el firmware.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4029"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4029"/>
         <source>Capture Screenshot</source>
         <translation>Captura de pantalla</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4030"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4030"/>
         <source>PNG Image (*.png)</source>
         <translation>Imagen PNG (*.png)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4132"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4132"/>
         <source>TAS state: Running %1/%2</source>
         <translation>Estado de TAS: Ejecutando %1/%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4136"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4136"/>
         <source>TAS state: Recording %1</source>
         <translation>Estado de TAS: Grabando %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4138"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4138"/>
         <source>TAS state: Idle %1/%2</source>
         <translation>Estado de TAS: Inactivo %1/%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4142"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4142"/>
         <source>TAS State: Invalid</source>
         <translation>Estado de TAS: Inválido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4156"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4156"/>
         <source>&amp;Stop Running</source>
         <translation>&amp;Parar de ejecutarse</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4157"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4157"/>
         <source>Stop R&amp;ecording</source>
         <translation>&amp;Parar grabación</translation>
     </message>
     <message numerus="yes">
-        <location filename="../../src/yuzu/main_window.cpp" line="4182"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4182"/>
         <source>Building: %n shader(s)</source>
         <translation><numerusform>Construyendo: %n sombreador(es)</numerusform><numerusform>Construyendo: %n sombreador(es)</numerusform><numerusform>Construyendo: %n sombreador(es)</numerusform></translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4191"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4191"/>
         <source>Scale: %1x</source>
         <comment>%1 is the resolution scaling factor</comment>
         <translation>Escala: %1x</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4194"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4194"/>
         <source>Speed: %1% / %2%</source>
         <translation>Velocidad: %1% / %2%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4198"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4198"/>
         <source>Speed: %1%</source>
         <translation>Velocidad: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4201"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4201"/>
         <source>Game: %1 FPS</source>
         <translation>Juego: %1 FPS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4207"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4207"/>
         <source>Frame: %1 ms</source>
         <translation>Fotograma: %1 ms</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4248"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4248"/>
         <source>NO AA</source>
         <translation>NO AA</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4258"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4258"/>
         <source>NO FX</source>
         <translation>SIN FX</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4264"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4264"/>
         <source>FX</source>
         <translation>FX</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4277"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4277"/>
         <source>VOLUME: MUTE</source>
         <translation>VOLUMEN: SILENCIADO</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4280"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4280"/>
         <source>VOLUME: %1%</source>
         <comment>Volume percentage (e.g. 50%)</comment>
         <translation>VOLUMEN: %1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4343"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4343"/>
         <source>Derivation Components Missing</source>
         <translation>Componentes de derivación ausentes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4344"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4344"/>
         <source>Decryption keys are missing. Install them now?</source>
         <translation>Las claves de desencriptado están ausentes. ¿Desea instalarlas ahora?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4374"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4374"/>
         <source>Wayland Detected!</source>
         <translation>¡Wayland detectado!</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4376"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4376"/>
         <source>Wayland is known to have significant performance issues and mysterious bugs.
 It's recommended to use X11 instead.
 
@@ -8613,74 +8613,74 @@ Se recomienda usar X11 en su lugar.
 ¿Le gustaría forzar a usarlo en futuras ejecuciones?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4381"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4381"/>
         <source>Use X11</source>
         <translation>Usar X11</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4382"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4382"/>
         <source>Continue with Wayland</source>
         <translation>Continuar con Wayland</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4385"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4385"/>
         <source>Don&apos;t show again</source>
         <translation>No mostrar de nuevo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4399"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4399"/>
         <source>Restart Required</source>
         <translation>Reinicio requerido</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4400"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4400"/>
         <source>Restart Eden to apply the X11 backend.</source>
         <translation>Reinicie Eden para aplicar el motor X11.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4438"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4438"/>
         <source>Slow</source>
         <translation>Lento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4441"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4441"/>
         <source>Turbo</source>
         <translation>Turbo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4445"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4445"/>
         <source>Unlocked</source>
         <translation>Desbloqueado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4495"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4495"/>
         <source>Select RomFS Dump Target</source>
         <translation>Seleccione el destinatario para el volcado del RomFS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4496"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4496"/>
         <source>Please select which RomFS you would like to dump.</source>
         <translation>Por favor seleccione que RomFS desea volcar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4519"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4519"/>
         <source>Are you sure you want to close Eden?</source>
         <translation>¿Está seguro de que quiere cerrar Eden?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4520"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4608"/>
-        <location filename="../../src/yuzu/main_window.cpp" line="4620"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4520"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4608"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4620"/>
         <source>Eden</source>
         <translation>Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4609"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4609"/>
         <source>Are you sure you want to stop the emulation? Any unsaved progress will be lost.</source>
         <translation>¿Está seguro de que desea parar la emulación? Cualquier progreso sin guardar se perderá.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4617"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4617"/>
         <source>The currently running application has requested Eden to not exit.
 
 Would you like to bypass this and exit anyway?</source>
@@ -8819,87 +8819,87 @@ Would you like to bypass this and exit anyway?</source>
         <translation>Nulo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="14"/>
+        <location filename="../../src/lichii/main.ui" line="14"/>
         <source>Lichii</source>
         <translation>Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="62"/>
+        <location filename="../../src/lichii/main.ui" line="62"/>
         <source>Open &amp;Lichii Folders</source>
         <translation>Abrir carpetas de &amp;Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="295"/>
+        <location filename="../../src/lichii/main.ui" line="295"/>
         <source>&amp;About Lichii</source>
         <translation>&amp;Acerca de Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main.ui" line="558"/>
+        <location filename="../../src/lichii/main.ui" line="558"/>
         <source>&amp;Lichii Dependencies</source>
         <translation>&amp;Dependencias de Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1690"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1690"/>
         <source>Restore Previous Version...</source>
         <translation>Restaurar versión anterior...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1720"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1720"/>
         <source>Restore Previous Version</source>
         <translation>Restaurar versión anterior</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1721"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1721"/>
         <source>Go back to the version this one replaced? Your settings and data are not changed.</source>
         <translation>¿Desea volver a la versión que esta reemplazó? Su configuración y sus datos no cambian.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1735"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1735"/>
         <source>Failed to restore</source>
         <translation>No se pudo restaurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1736"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1736"/>
         <source>Could not restore the previous version: %1</source>
         <translation>No se pudo restaurar la versión anterior: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1947"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1947"/>
         <source>Not enough memory to start the game</source>
         <translation>No hay suficiente memoria para iniciar el juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="1948"/>
+        <location filename="../../src/lichii/main_window.cpp" line="1948"/>
         <source>Lichii could not allocate the game&apos;s memory. Close other applications and check that your system has enough available memory and paging-file space, then try again.</source>
         <translation>Lichii no pudo reservar la memoria del juego. Cierre otras aplicaciones y compruebe que su sistema tenga suficiente memoria disponible y espacio en el archivo de paginación; luego inténtelo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2014"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2014"/>
         <source>Conversion in Progress</source>
         <translation>Conversión en curso</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2015"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2015"/>
         <source>This game cannot be started while its dump is being converted.</source>
         <translation>Este juego no se puede iniciar mientras se convierte su volcado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2020"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2020"/>
         <source>Shader Precache in Progress</source>
         <translation>Precompilación de sombreadores en curso</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2021"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2021"/>
         <source>Games cannot be started while the shader precache is being built. Wait for it to finish or cancel it.</source>
         <translation>No se pueden iniciar juegos mientras se crea la precompilación de sombreadores. Espere a que termine o cancélela.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2092"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2092"/>
         <source>Recommended Mario Kart World settings</source>
         <translation>Configuración recomendada para Mario Kart World</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2093"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2093"/>
         <source>Use the recommended settings for Mario Kart World?
 
 Vulkan, 1x resolution, GPU Fast, asynchronous shaders, BC3, conservative VRAM, reactive flushing off, FIFO Relaxed VSync, handheld mode, ScaleForce, and FXAA.
@@ -8912,99 +8912,99 @@ Vulkan, resolución 1x, GPU Rápido, sombreadores asíncronos, BC3, VRAM conserv
 Se aplica a Mario Kart World hasta que cierre Lichii. Su configuración guardada no cambia.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2130"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2130"/>
         <source>Preparing game files...</source>
         <translation>Preparando los archivos del juego...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2149"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2149"/>
         <source>Unable to prepare game files</source>
         <translation>No se pudieron preparar los archivos del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="2150"/>
+        <location filename="../../src/lichii/main_window.cpp" line="2150"/>
         <source>Game preparation failed. See the log for details.</source>
         <translation>Falló la preparación del juego. Consulte el registro para más detalles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="3151"/>
+        <location filename="../../src/lichii/main_window.cpp" line="3151"/>
         <source>Installable Switch File (*.nca *.nsp *.nsz *.xci *.xcz);;Nintendo Content Archive (*.nca);;Nintendo Submission Package (*.nsp *.nsz);;NX Cartridge Image (*.xci *.xcz)</source>
         <translation>Archivo de Switch instalable (*.nca *.nsp *.nsz *.xci *.xcz);;Archivo de contenido de Nintendo (*.nca);;Paquete de envío de Nintendo (*.nsp *.nsz);;Imagen de cartucho NX (*.xci *.xcz)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4307"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4307"/>
         <source>Convert to NUP</source>
         <translation>Convertir a NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4311"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4311"/>
         <source>The target archive already exists:
 %1</source>
         <translation>El archivo de destino ya existe:
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4322"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4322"/>
         <source>Resume Conversion</source>
         <translation>Reanudar conversión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4323"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4323"/>
         <source>Resume the interrupted conversion?</source>
         <translation>¿Desea reanudar la conversión interrumpida?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4351"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4351"/>
         <source>Converting to NUP</source>
         <translation>Convirtiendo a NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4398"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4398"/>
         <source>Conversion Complete</source>
         <translation>Conversión completada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4399"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4399"/>
         <source>The NUP was created and the loose folder was removed.</source>
         <translation>Se creó el NUP y se eliminó la carpeta suelta.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4401"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4401"/>
         <source>The NUP was created. You can delete the loose folder if you no longer need it.</source>
         <translation>Se creó el NUP. Puede eliminar la carpeta suelta si ya no la necesita.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4407"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4407"/>
         <source>Conversion Cancelled</source>
         <translation>Conversión cancelada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4408"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4408"/>
         <source>The conversion can be resumed by choosing Convert to NUP again.</source>
         <translation>Puede reanudar la conversión eligiendo de nuevo Convertir a NUP.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4413"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4413"/>
         <source>Conversion Failed</source>
         <translation>Falló la conversión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4449"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4449"/>
         <source>Precache Shaders</source>
         <translation>Precompilar sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4450"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4450"/>
         <source>Close the running game first.</source>
         <translation>Cierre primero el juego en ejecución.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4455"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4455"/>
         <source>This game is being converted. Try again when it is done.</source>
         <translation>Este juego se está convirtiendo. Inténtelo de nuevo cuando termine.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4487"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4487"/>
         <source>The shaders of this game are not precached yet. Precache them now?
 
 The game starts when they are done. The first time, the game files are read and their shaders are built on every CPU thread, with the shaders earlier play sessions saved, which takes a few minutes. Later launches only build what is new, until the GPU driver changes. The loading screen has a Skip button.
@@ -9017,194 +9017,194 @@ El juego empieza cuando terminen. La primera vez se leen los archivos del juego 
 Puede cambiar esto en Configurar, Gráficos, Avanzado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4495"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4495"/>
         <source>Precache now</source>
         <translation>Precompilar ahora</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4496"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4496"/>
         <source>Start without</source>
         <translation>Iniciar sin precompilar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4529"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4529"/>
         <source>Delete Shader Precache</source>
         <translation>Eliminar la precompilación de sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4530"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4530"/>
         <source>Shaders are being precached. Try again when it is done.</source>
         <translation>Se están precompilando sombreadores. Inténtelo de nuevo cuando termine.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4536"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4536"/>
         <source>Delete the shader precache files of this game? They are built again the next time the game is precached.</source>
         <translation>¿Desea eliminar los archivos de precompilación de sombreadores de este juego? Se volverán a crear la próxima vez que se precompile el juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4544"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4544"/>
         <source>The files could not be deleted: %1</source>
         <translation>No se pudieron eliminar los archivos: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4558"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4558"/>
         <source>Extract NUP</source>
         <translation>Extraer NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4567"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4567"/>
         <source>The target directory already exists:
 %1</source>
         <translation>La carpeta de destino ya existe:
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4573"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4573"/>
         <source>Extracting NUP</source>
         <translation>Extrayendo NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4633"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4633"/>
         <source>Extraction Complete</source>
         <translation>Extracción completada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4634"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4634"/>
         <source>The NUP was extracted. You can delete the NUP file if you no longer need it.</source>
         <translation>Se extrajo el NUP. Puede eliminar el archivo NUP si ya no lo necesita.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4644"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4644"/>
         <source>Extraction Failed</source>
         <translation>Falló la extracción</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4678"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4678"/>
         <source>Editing NUP Metadata</source>
         <translation>Editando metadatos del NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4726"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4726"/>
         <source>Edit Complete</source>
         <translation>Edición completada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4727"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4727"/>
         <source>The NUP metadata was updated.</source>
         <translation>Se actualizaron los metadatos del NUP.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4738"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4738"/>
         <source>Edit Failed</source>
         <translation>Falló la edición</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4878"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4878"/>
         <source>Could not check for updates: GitHub rate limit reached. Lichii will try again at the next start.</source>
         <translation>No se pudo buscar actualizaciones: se alcanzó el límite de consultas de GitHub. Lichii lo intentará de nuevo en el próximo inicio.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="4885"/>
+        <location filename="../../src/lichii/main_window.cpp" line="4885"/>
         <source>Could not check for updates: GitHub answered with HTTP %1.</source>
         <translation>No se pudo buscar actualizaciones: GitHub respondió con HTTP %1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5151"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5151"/>
         <source>NO FG</source>
         <translation>SIN FG</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5152"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5152"/>
         <source>Frame generation is off.</source>
         <translation>La generación de fotogramas está desactivada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5161"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5161"/>
         <source>FG %1 %2X</source>
         <translation>FG %1 %2X</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5162"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5162"/>
         <source>FG %1 AUTO</source>
         <translation>FG %1 AUTO</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5165"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5165"/>
         <source> It adds up to %1 frames per game frame to reach %2 FPS.</source>
         <translation> Agrega hasta %1 fotogramas por cada fotograma del juego para llegar a %2 FPS.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5172"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5172"/>
         <source>Frame generation is on.%1 Whether it runs shows here once a game starts.</source>
         <translation>La generación de fotogramas está activada.%1 Aquí se mostrará si funciona una vez que empiece un juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5183"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5183"/>
         <source>Frame generation needs the Vulkan renderer.</source>
         <translation>La generación de fotogramas necesita el renderizador Vulkan.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5186"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5186"/>
         <source>This build was compiled without frame generation.</source>
         <translation>Esta compilación se hizo sin generación de fotogramas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5189"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5189"/>
         <source>This GPU lacks Vulkan features LSFG needs (Vulkan memory model, null descriptors and 16-bit floats). The Optical Flow type may still work.</source>
         <translation>Esta GPU no tiene las funciones de Vulkan que necesita LSFG (modelo de memoria de Vulkan, descriptores nulos y números de coma flotante de 16 bits). El tipo Flujo óptico podría funcionar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5193"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5193"/>
         <source>This GPU can&apos;t write to the window&apos;s swapchain format from a shader, so generated frames can&apos;t be presented.</source>
         <translation>Esta GPU no puede escribir desde un sombreador en el formato de la cadena de intercambio (swapchain) de la ventana, así que no se pueden presentar los fotogramas generados.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5197"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5197"/>
         <source>LSFG needs Lossless.dll from Lossless Scaling in the &quot;lossless&quot; folder of the user directory. It is missing or could not be loaded.</source>
         <translation>LSFG necesita Lossless.dll de Lossless Scaling en la carpeta &quot;lossless&quot; del directorio de usuario. Falta o no se pudo cargar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5204"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5204"/>
         <source>FG UNAVAILABLE</source>
         <translation>FG NO DISPONIBLE</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5206"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5206"/>
         <source>Frame generation is on but not running. %1</source>
         <translation>La generación de fotogramas está activada, pero no está funcionando. %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5212"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5212"/>
         <source>Frame generation is running.%1</source>
         <translation>La generación de fotogramas está funcionando.%1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5219"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5219"/>
         <source> It also pauses while the game already reaches %1 FPS.</source>
         <translation> También se pausa mientras el juego ya llega a %1 FPS.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5220"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5220"/>
         <source>%1 (IDLE)</source>
         <translation>%1 (INACTIVO)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5222"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5222"/>
         <source>Frame generation is on but generated no frames in the last half second. It pauses while it warms up, for a second after a frame takes longer than 100 ms, and while frames arrive in bursts.%1</source>
         <translation>La generación de fotogramas está activada, pero no generó ningún fotograma en el último medio segundo. Se pausa mientras se prepara, durante un segundo después de un fotograma que tarde más de 100 ms y mientras los fotogramas llegan en ráfagas.%1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5362"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5362"/>
         <source>Restart Lichii to apply the X11 backend.</source>
         <translation>Reinicie Lichii para aplicar el backend X11.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5481"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5481"/>
         <source>Are you sure you want to close Lichii?</source>
         <translation>¿Seguro que desea cerrar Lichii?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/main_window.cpp" line="5597"/>
+        <location filename="../../src/lichii/main_window.cpp" line="5597"/>
         <source>The currently running application has requested Lichii to not exit.
 
 Would you like to bypass this and exit anyway?</source>
@@ -9236,14 +9236,14 @@ Would you like to bypass this and exit anyway?</source>
 <context>
     <name>MigrationWorker</name>
     <message>
-        <location filename="../../src/yuzu/migration_worker.cpp" line="52"/>
+        <location filename="../../src/lichii/migration_worker.cpp" line="52"/>
         <source>Linking the old directory failed. You may need to re-run with administrative privileges on Windows.
 OS gave error: %1</source>
         <translation>Conectando el directorio anticuado se fallo. A lo mejor necesitas iniciar con privilegios de administrador en Windows.
 SO dio error: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/migration_worker.cpp" line="70"/>
+        <location filename="../../src/lichii/migration_worker.cpp" line="70"/>
         <source>
 
 Note that your configuration and data will be shared with %1.
@@ -9260,7 +9260,7 @@ Si esto no es deseable, borre los siguientes archivos:
 %4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/migration_worker.cpp" line="110"/>
+        <location filename="../../src/lichii/migration_worker.cpp" line="110"/>
         <source>
 
 If you wish to clean up the files which were left in the old data location, you can do so by deleting the following directory:
@@ -9271,7 +9271,7 @@ Si quieres limpiar los archivos que se quedaron en el ubicacion de datos anticua
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/migration_worker.h" line="73"/>
+        <location filename="../../src/lichii/migration_worker.h" line="73"/>
         <source>Data was migrated successfully.</source>
         <translation>Datos se migraron con exito.</translation>
     </message>
@@ -9279,12 +9279,12 @@ Si quieres limpiar los archivos que se quedaron en el ubicacion de datos anticua
 <context>
     <name>ModSelectDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/addon/mod_select_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/addon/mod_select_dialog.ui" line="14"/>
         <source>Import Mods</source>
         <translation>Importar mods</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/addon/mod_select_dialog.ui" line="20"/>
+        <location filename="../../src/lichii/configuration/addon/mod_select_dialog.ui" line="20"/>
         <source>The specified folder or archive contains the following mods. Select which ones to install.</source>
         <translation>La carpeta o archivo indicado contiene los siguientes mods. Seleccione cuáles desea instalar.</translation>
     </message>
@@ -9292,48 +9292,48 @@ Si quieres limpiar los archivos que se quedaron en el ubicacion de datos anticua
 <context>
     <name>ModerationDialog</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.ui" line="6"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.ui" line="6"/>
         <source>Moderation</source>
         <translation>Moderación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.ui" line="20"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.ui" line="20"/>
         <source>Ban List</source>
         <translation>Lista de vetos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.ui" line="41"/>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="75"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.ui" line="41"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="75"/>
         <source>Refreshing</source>
         <translation>Actualizando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.ui" line="51"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.ui" line="51"/>
         <source>Unban</source>
         <translation>Quitar veto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="42"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="42"/>
         <source>Subject</source>
         <translation>Asunto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="43"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="43"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="85"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="85"/>
         <source>Forum Username</source>
         <translation>Nombre de usuario del foro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="90"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="90"/>
         <source>IP Address</source>
         <translation>Dirección IP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/moderation_dialog.cpp" line="97"/>
+        <location filename="../../src/lichii/multiplayer/moderation_dialog.cpp" line="97"/>
         <source>Refresh</source>
         <translation>Actualizar</translation>
     </message>
@@ -9341,37 +9341,37 @@ Si quieres limpiar los archivos que se quedaron en el ubicacion de datos anticua
 <context>
     <name>MultiplayerState</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="92"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="92"/>
         <source>Current connection status</source>
         <translation>Estado de la conexión actual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="119"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="119"/>
         <source>Not Connected. Click here to find a room!</source>
         <translation>No conectado. Haz clic aquí para buscar una sala.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="125"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="125"/>
         <source>Not Connected</source>
         <translation>No conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="131"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="131"/>
         <source>Connected</source>
         <translation>Conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="138"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="138"/>
         <source>New Messages Received</source>
         <translation>Nuevos mensajes recibidos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="209"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="209"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/state.cpp" line="210"/>
+        <location filename="../../src/lichii/multiplayer/state.cpp" line="210"/>
         <source>Failed to update the room information. Please check your Internet connection and try hosting the room again.
 Debug Message: </source>
         <translation>No se ha podido actualizar la información de la sala. Por favor, comprueba tu conexión a internet e intenta alojar la sala de nuevo.
@@ -9381,34 +9381,34 @@ Mensaje de depuración: </translation>
 <context>
     <name>NetworkMessage</name>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="68"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="68"/>
         <source>Game already running</source>
         <translation>El juego ya se está ejecutando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="69"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="69"/>
         <source>Joining a room when the game is already running is discouraged and can cause the room feature not to work correctly.
 Proceed anyway?</source>
         <translation>No se recomienda unirse a una sala cuando el juego ya se está ejecutando porque puede provocar que la funcionalidad de la sala no funcione correctamente.
 ¿Proceder de todos modos?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="75"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="75"/>
         <source>Leave Room</source>
         <translation>Salir de la sala</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="76"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="76"/>
         <source>You are about to close the room. Any network connections will be closed.</source>
         <translation>Estás a punto de abandonar la sala. Las conexiones de red serán interrumpidas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="81"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="81"/>
         <source>Disconnect</source>
         <translation>Desconectar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/message.cpp" line="82"/>
+        <location filename="../../src/lichii/multiplayer/message.cpp" line="82"/>
         <source>You are about to leave the room. Any network connections will be closed.</source>
         <translation>Estás a punto de abandonar la sala. Las conexiones de red serán interrumpidas.</translation>
     </message>
@@ -9416,133 +9416,133 @@ Proceed anyway?</source>
 <context>
     <name>NewUserDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="14"/>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="61"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="61"/>
         <source>New User</source>
         <translation>Nuevo usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="30"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="30"/>
         <source>Change Avatar</source>
         <translation>Cambiar avatar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="37"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="37"/>
         <source>Set Image</source>
         <translation>Seleccionar imagen</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="53"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="53"/>
         <source>UUID</source>
         <translation>UUID</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="60"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="60"/>
         <source>Eden</source>
         <translation>Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="70"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="70"/>
         <source>Username</source>
         <translation>Nombre de usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="82"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="82"/>
         <source>UUID must be 32 hex characters (0-9, A-F)</source>
         <translation>UUID debe ser 32 caracteres hexadecimales (0-9, A-F)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="89"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="89"/>
         <source>Generate</source>
         <translation>Generar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="138"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="138"/>
         <source>Select User Image</source>
         <translation>Seleccionar imagen de usuario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="139"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="139"/>
         <source>Image Formats (*.jpg *.jpeg *.png *.bmp)</source>
         <translation>Formatos de imagen (*.jpg *.jpeg *.png *.bmp)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="171"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="171"/>
         <source>No firmware available</source>
         <translation>No hay firmware disponible</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="172"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="172"/>
         <source>Please install the firmware to use firmware avatars.</source>
         <translation>Por favor instala el firmware para usar los avatares del firmware.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="177"/>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="184"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="177"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="184"/>
         <source>Error loading archive</source>
         <translation>Error al cargar archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="178"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="178"/>
         <source>Archive is not available. Please install/reinstall firmware.</source>
         <translation>Archivo no disponible. Por favor instalar/reinstala el firmware.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="185"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="185"/>
         <source>Could not locate RomFS. Your file or decryption keys may be corrupted.</source>
         <translation>No se ha podido ubicar la RomFS. Su archivo o claves de desencriptación pueden estar corruptas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="191"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="191"/>
         <source>Error extracting archive</source>
         <translation>Error al descomprimir archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="192"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="192"/>
         <source>Could not extract RomFS. Your file or decryption keys may be corrupted.</source>
         <translation>No se ha podido extraer la RomFS. Su archivo o claves de desencriptación pueden estar corruptas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="197"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="197"/>
         <source>Error finding image directory</source>
         <translation>Error al buscar el directorio de imágenes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="198"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="198"/>
         <source>Failed to find image directory in the archive.</source>
         <translation>No se pudo encontrar el directorio de imágenes en el archivo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="218"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="218"/>
         <source>No images found</source>
         <translation>No se encontraron imágenes</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="219"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="219"/>
         <source>No avatar images were found in the archive.</source>
         <translation>No se encontraron imágenes de avatar en el archivo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="338"/>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="346"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="338"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="346"/>
         <source>All Good</source>
         <comment>Tooltip</comment>
         <translation>Todo está bien</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="341"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="341"/>
         <source>Must be 32 hex characters (0-9, a-f)</source>
         <comment>Tooltip</comment>
         <translation>Debe ser 32 caracteres hexadecimales (0-9, a-f)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.cpp" line="349"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.cpp" line="349"/>
         <source>Must be between 1 and 32 characters</source>
         <comment>Tooltip</comment>
         <translation>Debe ser entre 1 y 32 caracteres</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/new_user_dialog.ui" line="60"/>
+        <location filename="../../src/lichii/configuration/system/new_user_dialog.ui" line="60"/>
         <source>Lichii</source>
         <translation>Lichii</translation>
     </message>
@@ -9550,24 +9550,24 @@ Proceed anyway?</source>
 <context>
     <name>OverlayDialog</name>
     <message>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="14"/>
         <source>Dialog</source>
         <translation>Diálogo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="134"/>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="353"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="134"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="353"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="152"/>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="371"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="152"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="371"/>
         <source>OK</source>
         <translation>Aceptar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/overlay_dialog.ui" line="313"/>
+        <location filename="../../src/lichii/util/overlay_dialog.ui" line="313"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -9583,73 +9583,73 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>PerformanceOverlay</name>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="14"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="14"/>
         <source>Form</source>
         <translation>Forma</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="32"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="32"/>
         <source>Frametime</source>
         <translation>Tiempo de fotograma</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="45"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="45"/>
         <source>0 ms</source>
         <translation>0 ms</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="63"/>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="143"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="63"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="143"/>
         <source>Min: 0</source>
         <translation>Mín: 0</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="77"/>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="157"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="77"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="157"/>
         <source>Max: 0</source>
         <translation>Máx: 0</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="91"/>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="171"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="91"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="171"/>
         <source>Avg: 0</source>
         <translation>Prom: 0</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="112"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="112"/>
         <source>FPS</source>
         <translation>FPS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.ui" line="125"/>
+        <location filename="../../src/lichii/render/performance_overlay.ui" line="125"/>
         <source>0 fps</source>
         <translation>0 fps</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="103"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="103"/>
         <source>%1 fps</source>
         <translation>%1 fps</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="124"/>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="174"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="124"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="174"/>
         <source>Avg: %1</source>
         <translation>Prom: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="133"/>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="163"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="133"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="163"/>
         <source>Min: %1</source>
         <translation>Mín: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="134"/>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="164"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="134"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="164"/>
         <source>Max: %1</source>
         <translation>Máx: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/render/performance_overlay.cpp" line="151"/>
+        <location filename="../../src/lichii/render/performance_overlay.cpp" line="151"/>
         <source>%1 ms</source>
         <translation>%1 ms</translation>
     </message>
@@ -9657,7 +9657,7 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>PlayerControlPreview</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player_widget.cpp" line="1652"/>
+        <location filename="../../src/lichii/configuration/configure_input_player_widget.cpp" line="1652"/>
         <source>START/PAUSE</source>
         <translation>INICIO/PAUSAR</translation>
     </message>
@@ -9665,22 +9665,22 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>ProfileAvatarDialog</name>
     <message>
-        <location filename="../../src/yuzu/configuration/system/profile_avatar_dialog.cpp" line="18"/>
+        <location filename="../../src/lichii/configuration/system/profile_avatar_dialog.cpp" line="18"/>
         <source>Select</source>
         <translation>Seleccionar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/profile_avatar_dialog.cpp" line="19"/>
+        <location filename="../../src/lichii/configuration/system/profile_avatar_dialog.cpp" line="19"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/profile_avatar_dialog.cpp" line="20"/>
+        <location filename="../../src/lichii/configuration/system/profile_avatar_dialog.cpp" line="20"/>
         <source>Background Color</source>
         <translation>Color de fondo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/system/profile_avatar_dialog.cpp" line="41"/>
+        <location filename="../../src/lichii/configuration/system/profile_avatar_dialog.cpp" line="41"/>
         <source>Select Firmware Avatar</source>
         <translation>Seleccionar avatar del firmware</translation>
     </message>
@@ -9688,34 +9688,34 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="43"/>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="121"/>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="148"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="43"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="121"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="148"/>
         <source>Migration</source>
         <translation>Migracion</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="57"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="57"/>
         <source>Clear Shader Cache</source>
         <translation>Limpiar caché de sombreador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="66"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="66"/>
         <source>Keep Old Data</source>
         <translation>Mantener los datos antiguos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="67"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="67"/>
         <source>Clear Old Data</source>
         <translation>Limpiar los datos antiguos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="68"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="68"/>
         <source>Link Old Directory</source>
         <translation>Vincular directorio antiguo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="98"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="98"/>
         <source>
 
 </source>
@@ -9724,412 +9724,412 @@ p, li { white-space: pre-wrap; }
 </translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="102"/>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="108"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="102"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="108"/>
         <source>No</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="122"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="122"/>
         <source>You can manually re-trigger this prompt by deleting the new config directory:
 %1</source>
         <translation>Puede volver a activar este mensaje manualmente si eliminas el nuevo directorio de configuración:
 %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="133"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="133"/>
         <source>Migrating</source>
         <translation>Migrando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/user_data_migration.cpp" line="134"/>
+        <location filename="../../src/lichii/user_data_migration.cpp" line="134"/>
         <source>Migrating, this may take a while...</source>
         <translation>Migrando, Esto se puede tardar...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="21"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="35"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="45"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="21"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="35"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="45"/>
         <source>Shift</source>
         <translation>Shift</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="23"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="37"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="23"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="37"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="47"/>
         <source>Ctrl</source>
         <translation>Ctrl</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="25"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="39"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="49"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="25"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="39"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="49"/>
         <source>Alt</source>
         <translation>Alt</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="35"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="396"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="462"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="183"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="251"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="35"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="396"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="462"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="183"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="251"/>
         <source>[not set]</source>
         <translation>[no definido]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="47"/>
         <source>Hat %1 %2</source>
         <translation>Rotación %1 %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="54"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="485"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="489"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="493"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="497"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="274"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="278"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="282"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="286"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="54"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="485"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="489"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="493"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="497"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="274"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="278"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="282"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="286"/>
         <source>Axis %1%2</source>
         <translation>Eje %1%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="60"/>
         <source>Button %1</source>
         <translation>Botón %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_touch_from_button.cpp" line="66"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="456"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="470"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="500"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="245"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="259"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="289"/>
+        <location filename="../../src/lichii/configuration/configure_touch_from_button.cpp" line="66"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="456"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="470"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="500"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="245"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="259"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="289"/>
         <source>[unknown]</source>
         <translation>[desconocido]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="50"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="60"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="148"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="50"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="148"/>
         <source>Left</source>
         <translation>Izquierda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="52"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="62"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="151"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="52"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="62"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="151"/>
         <source>Right</source>
         <translation>Derecha</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="54"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="64"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="157"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="54"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="64"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="157"/>
         <source>Down</source>
         <translation>Abajo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="56"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="66"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="154"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="56"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="66"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="154"/>
         <source>Up</source>
         <translation>Arriba</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="58"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="68"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="58"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="68"/>
         <source>Z</source>
         <translation>Z</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="60"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="70"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="70"/>
         <source>R</source>
         <translation>R</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="62"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="72"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="62"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="72"/>
         <source>L</source>
         <translation>L</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="64"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="64"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="86"/>
         <source>A</source>
         <translation>A</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="66"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="88"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="66"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="88"/>
         <source>B</source>
         <translation>B</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="68"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="90"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="68"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="90"/>
         <source>X</source>
         <translation>X</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="70"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="92"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="70"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="92"/>
         <source>Y</source>
         <translation>Y</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="72"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="94"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="72"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="94"/>
         <source>Start</source>
         <translation>Comenzar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="74"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="104"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="104"/>
         <source>L1</source>
         <translation>L1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="76"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="106"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="76"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="106"/>
         <source>L2</source>
         <translation>L2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="78"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="108"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="108"/>
         <source>L3</source>
         <translation>L3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="80"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="110"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="80"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="110"/>
         <source>R1</source>
         <translation>R1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="82"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="112"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="112"/>
         <source>R2</source>
         <translation>R2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="84"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="114"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="114"/>
         <source>R3</source>
         <translation>R3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="86"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="116"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="116"/>
         <source>Circle</source>
         <translation>Círculo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="88"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="118"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="88"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="118"/>
         <source>Cross</source>
         <translation>Cruz</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="90"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="120"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="90"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="120"/>
         <source>Square</source>
         <translation>Cuadrado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="92"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="122"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="92"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="122"/>
         <source>Triangle</source>
         <translation>Triángulo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="94"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="124"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="94"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="124"/>
         <source>Share</source>
         <translation>Compartir</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="96"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="126"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="126"/>
         <source>Options</source>
         <translation>Opciones</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="98"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="142"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="98"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="142"/>
         <source>[undefined]</source>
         <translation>[sin definir]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="406"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="406"/>
         <source>%1%2</source>
         <translation>%1%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="410"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="199"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="410"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="199"/>
         <source>[invalid]</source>
         <translation>[inválido]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="420"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="444"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="420"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="444"/>
         <source>%1%2Hat %3</source>
         <translation>%1%2Rotación %3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="424"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="447"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="450"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="239"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="424"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="447"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="450"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="239"/>
         <source>%1%2Axis %3</source>
         <translation>%1%2Eje %3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="430"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="219"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="430"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="219"/>
         <source>%1%2Axis %3,%4,%5</source>
         <translation>%1%2Eje %3,%4,%5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="434"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="223"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="434"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="223"/>
         <source>%1%2Motion %3</source>
         <translation>%1%2Movimiento %3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="438"/>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="453"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="438"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="453"/>
         <source>%1%2Button %3</source>
         <translation>%1%2Botón %3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_ringcon.cpp" line="480"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="269"/>
+        <location filename="../../src/lichii/configuration/configure_ringcon.cpp" line="480"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="269"/>
         <source>[unused]</source>
         <translation>[no usado]</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="74"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="74"/>
         <source>ZR</source>
         <translation>ZR</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="76"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="76"/>
         <source>ZL</source>
         <translation>ZL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="78"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="78"/>
         <source>SR</source>
         <translation>SR</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="80"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="80"/>
         <source>SL</source>
         <translation>SL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="82"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="82"/>
         <source>Stick L</source>
         <translation>Palanca L</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="84"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="84"/>
         <source>Stick R</source>
         <translation>Palanca R</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="96"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="96"/>
         <source>Plus</source>
         <translation>Más</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="98"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="98"/>
         <source>Minus</source>
         <translation>Menos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="100"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="128"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="100"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="128"/>
         <source>Home</source>
         <translation>Inicio</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="102"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="102"/>
         <source>Capture</source>
         <translation>Captura</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="130"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="130"/>
         <source>Touch</source>
         <translation>Táctil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="132"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="132"/>
         <source>Wheel</source>
         <comment>Indicates the mouse wheel</comment>
         <translation>Rueda</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="134"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="134"/>
         <source>Backward</source>
         <translation>Atrás</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="136"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="136"/>
         <source>Forward</source>
         <translation>Adelante</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="138"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="138"/>
         <source>Task</source>
         <translation>Tarea</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="140"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="140"/>
         <source>Extra</source>
         <translation>Extra</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="195"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="195"/>
         <source>%1%2%3%4</source>
         <translation>%1%2%3%4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="209"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="233"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="209"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="233"/>
         <source>%1%2%3Hat %4</source>
         <translation>%1%2%3Rotación %4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="213"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="236"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="213"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="236"/>
         <source>%1%2%3Axis %4</source>
         <translation>%1%2%3Axis %4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="227"/>
-        <location filename="../../src/yuzu/configuration/configure_input_player.cpp" line="242"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="227"/>
+        <location filename="../../src/lichii/configuration/configure_input_player.cpp" line="242"/>
         <source>%1%2%3Button %4</source>
         <translation>%1%2%3Botón %4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/chat_room.cpp" line="143"/>
+        <location filename="../../src/lichii/multiplayer/chat_room.cpp" line="143"/>
         <source>Not playing a game</source>
         <translation>No jugando ningún juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby_p.h" line="263"/>
+        <location filename="../../src/lichii/multiplayer/lobby_p.h" line="263"/>
         <source>%1 is not playing a game</source>
         <translation>%1 no está jugando ningún juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/multiplayer/lobby_p.h" line="265"/>
+        <location filename="../../src/lichii/multiplayer/lobby_p.h" line="265"/>
         <source>%1 is playing %2</source>
         <translation>%1 esta jugando %2</translation>
     </message>
@@ -10187,112 +10187,112 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>QtAmiiboSettingsDialog</name>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="14"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="14"/>
         <source>Amiibo Settings</source>
         <translation>Ajustes de Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="169"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="169"/>
         <source>Amiibo Info</source>
         <translation>Info. de Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="177"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="177"/>
         <source>Series</source>
         <translation>Serie</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="197"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="197"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="217"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="217"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="242"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="242"/>
         <source>Amiibo Data</source>
         <translation>Datos de Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="250"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="250"/>
         <source>Custom Name</source>
         <translation>Nombre personalizado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="270"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="270"/>
         <source>Owner</source>
         <translation>Propietario</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="290"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="290"/>
         <source>Creation Date</source>
         <translation>Fecha de creación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="307"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="307"/>
         <source>dd/MM/yyyy</source>
         <translation>dd/mm/aaaa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="314"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="314"/>
         <source>Modification Date</source>
         <translation>Fecha de modificación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="331"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="331"/>
         <source>dd/MM/yyyy </source>
         <translation>dd/mm/aaaa</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="349"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="349"/>
         <source>Game Data</source>
         <translation>Datos del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="355"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="355"/>
         <source>Game Id</source>
         <translation>Id del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="384"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="384"/>
         <source>Mount Amiibo</source>
         <translation>Soporte Amiibo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="390"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="390"/>
         <source>...</source>
         <translation>...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.ui" line="413"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.ui" line="413"/>
         <source>File Path</source>
         <translation>Ruta del archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.cpp" line="196"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.cpp" line="196"/>
         <source>No game data present</source>
         <translation>No existen datos de juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.cpp" line="236"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.cpp" line="236"/>
         <source>The following amiibo data will be formatted:</source>
         <translation>Los siguientes datos de amiibo serán formateados:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.cpp" line="239"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.cpp" line="239"/>
         <source>The following game data will removed:</source>
         <translation>Los siguientes datos del juego serán eliminados:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.cpp" line="242"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.cpp" line="242"/>
         <source>Set nickname and owner:</source>
         <translation>Establece un apodo y un propietario:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_amiibo_settings.cpp" line="245"/>
+        <location filename="../../src/lichii/applets/qt_amiibo_settings.cpp" line="245"/>
         <source>Do you wish to restore this amiibo?</source>
         <translation>¿Deseas reestablecer este amiibo?</translation>
     </message>
@@ -11143,254 +11143,254 @@ Se recomienda si deseas compartir datos entre emuladores.</translation>
 <context>
     <name>QtControllerSelectorDialog</name>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="14"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="14"/>
         <source>Controller Applet</source>
         <translation>Controlador Applet</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="129"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="129"/>
         <source>Supported Controller Types:</source>
         <translation>Tipos de controladores soportados:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="282"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="282"/>
         <source>Players:</source>
         <translation>Jugadores:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="300"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="300"/>
         <source>1 - 8</source>
         <translation>1 - 8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="418"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="418"/>
         <source>P4</source>
         <translation>J4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="514"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="711"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="912"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1222"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1459"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1656"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1857"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2054"/>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="470"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="514"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="711"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="912"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1222"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1459"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1656"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1857"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2054"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="470"/>
         <source>Pro Controller</source>
         <translation>Controlador Pro</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="519"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="716"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="917"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1227"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1464"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1661"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1862"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2059"/>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="474"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="519"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="716"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="917"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1227"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1464"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1661"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1862"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2059"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="474"/>
         <source>Dual Joycons</source>
         <translation>Joycons duales</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="524"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="721"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="922"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1232"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1469"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1666"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1867"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2064"/>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="478"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="524"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="721"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="922"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1232"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1469"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1666"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1867"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2064"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="478"/>
         <source>Left Joycon</source>
         <translation>Joycon izquierdo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="529"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="726"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="927"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1237"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1474"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1671"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1872"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2069"/>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="482"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="529"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="726"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="927"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1237"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1474"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1671"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1872"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2069"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="482"/>
         <source>Right Joycon</source>
         <translation>Joycon derecho</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="538"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="735"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="941"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1246"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1483"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1680"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1881"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2078"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="538"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="735"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="941"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1246"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1483"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1680"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1881"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2078"/>
         <source>Use Current Config</source>
         <translation>Usar configuración actual</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="615"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="615"/>
         <source>P2</source>
         <translation>J2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="812"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="812"/>
         <source>P1</source>
         <translation>J1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="932"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2303"/>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="486"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="932"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2303"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="486"/>
         <source>Handheld</source>
         <translation>Portátil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1126"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1126"/>
         <source>P3</source>
         <translation>J3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1363"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1363"/>
         <source>P7</source>
         <translation>J7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1560"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1560"/>
         <source>P8</source>
         <translation>J8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1757"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1757"/>
         <source>P5</source>
         <translation>J5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="1958"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="1958"/>
         <source>P6</source>
         <translation>J6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2272"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2272"/>
         <source>Console Mode</source>
         <translation>Modo consola</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2293"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2293"/>
         <source>Docked</source>
         <translation>Acoplado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2313"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2313"/>
         <source>Vibration</source>
         <translation>Vibración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2349"/>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2395"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2349"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2395"/>
         <source>Configure</source>
         <translation>Configurar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2359"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2359"/>
         <source>Motion</source>
         <translation>Movimiento</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2405"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2405"/>
         <source>Profiles</source>
         <translation>Perfiles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2432"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2432"/>
         <source>Create</source>
         <translation>Crear</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2467"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2467"/>
         <source>Controllers</source>
         <translation>Controladores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2481"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2481"/>
         <source>1</source>
         <translation>1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2508"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2508"/>
         <source>2</source>
         <translation>2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2518"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2518"/>
         <source>4</source>
         <translation>4</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2528"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2528"/>
         <source>3</source>
         <translation>3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2538"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2538"/>
         <source>Connected</source>
         <translation>Conectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2552"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2552"/>
         <source>5</source>
         <translation>5</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2569"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2569"/>
         <source>7</source>
         <translation>7</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2586"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2586"/>
         <source>6</source>
         <translation>6</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2596"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2596"/>
         <source>8</source>
         <translation>8</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.ui" line="2653"/>
+        <location filename="../../src/lichii/applets/qt_controller.ui" line="2653"/>
         <source>Not enough controllers</source>
         <translation>No hay suficientes mandos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="490"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="490"/>
         <source>GameCube Controller</source>
         <translation>Controlador de GameCube</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="499"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="499"/>
         <source>Poke Ball Plus</source>
         <translation>Poke Ball Plus</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="503"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="503"/>
         <source>NES Controller</source>
         <translation>Control de NES</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="507"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="507"/>
         <source>SNES Controller</source>
         <translation>Control de SNES</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="511"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="511"/>
         <source>N64 Controller</source>
         <translation>Control de N64</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_controller.cpp" line="515"/>
+        <location filename="../../src/lichii/applets/qt_controller.cpp" line="515"/>
         <source>Sega Genesis</source>
         <translation>Sega Genesis</translation>
     </message>
@@ -11398,28 +11398,28 @@ Se recomienda si deseas compartir datos entre emuladores.</translation>
 <context>
     <name>QtErrorDisplay</name>
     <message>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="30"/>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="43"/>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="58"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="30"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="43"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="58"/>
         <source>Error Code: %1-%2 (0x%3)</source>
         <translation>Código de error: %1-%2 (0x%3)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="34"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="34"/>
         <source>An error has occurred.
 Please try again or contact the developer of the software.</source>
         <translation>Ha ocurrido un error.
 Por favor, inténtalo de nuevo o contacta con el desarrollador del software.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="47"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="47"/>
         <source>An error occurred on %1 at %2.
 Please try again or contact the developer of the software.</source>
         <translation>Ha ocurrido un error en %1 a las %2
 Por favor, inténtalo de nuevo o contacta con el desarrollador del software.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_error.cpp" line="62"/>
+        <location filename="../../src/lichii/applets/qt_error.cpp" line="62"/>
         <source>An error has occurred.
 
 %1
@@ -11435,7 +11435,7 @@ Por favor, inténtalo de nuevo o contacta con el desarrollador del software.</tr
 <context>
     <name>QtProfileSelectionDialog</name>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="28"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="28"/>
         <source>%1
 %2</source>
         <comment>%1 is the profile username, %2 is the formatted UUID (e.g. 00112233-4455-6677-8899-AABBCCDDEEFF))</comment>
@@ -11443,78 +11443,78 @@ Por favor, inténtalo de nuevo o contacta con el desarrollador del software.</tr
 %2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="90"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="90"/>
         <source>Users</source>
         <translation>Usuarios</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="169"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="169"/>
         <source>Profile Creator</source>
         <translation>Creador de perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="172"/>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="190"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="172"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="190"/>
         <source>Profile Selector</source>
         <translation>Selector de perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="175"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="175"/>
         <source>Profile Icon Editor</source>
         <translation>Editor de icono de perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="178"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="178"/>
         <source>Profile Nickname Editor</source>
         <translation>Editor de nombre de perfil</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="200"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="200"/>
         <source>Who will receive the points?</source>
         <translation>¿Quién recibirá los puntos?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="203"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="203"/>
         <source>Who is using Nintendo eShop?</source>
         <translation>¿Quién va a utilizar Nintendo eShop?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="206"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="206"/>
         <source>Who is making this purchase?</source>
         <translation>¿Quién está haciendo la compra?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="209"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="209"/>
         <source>Who is posting?</source>
         <translation>¿Quién está publicando esto?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="212"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="212"/>
         <source>Select a user to link to a Nintendo Account.</source>
         <translation>Elige un usuario para vincularlo a una Cuenta Nintendo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="215"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="215"/>
         <source>Change settings for which user?</source>
         <translation>¿Para qué usuario desea cambiar la configuración?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="218"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="218"/>
         <source>Format data for which user?</source>
         <translation>¿Para qué usuario se borrarán los datos?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="221"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="221"/>
         <source>Which user will be transferred to another console?</source>
         <translation>¿Qué usuario será transferido a otra consola?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="224"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="224"/>
         <source>Send save data for which user?</source>
         <translation>¿A qué usuario se le enviarán los datos guardados?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_profile_select.cpp" line="228"/>
+        <location filename="../../src/lichii/applets/qt_profile_select.cpp" line="228"/>
         <source>Select a user:</source>
         <translation>Seleccione un usuario:</translation>
     </message>
@@ -11522,17 +11522,17 @@ Por favor, inténtalo de nuevo o contacta con el desarrollador del software.</tr
 <context>
     <name>QtSoftwareKeyboardDialog</name>
     <message>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.ui" line="14"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.ui" line="14"/>
         <source>Software Keyboard</source>
         <translation>Software del teclado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.ui" line="199"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.ui" line="199"/>
         <source>Enter Text</source>
         <translation>Introducir texto</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.ui" line="479"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.ui" line="479"/>
         <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
@@ -11545,13 +11545,13 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.cpp" line="405"/>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.cpp" line="415"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.cpp" line="405"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.cpp" line="415"/>
         <source>OK</source>
         <translation>Aceptar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/applets/qt_software_keyboard.cpp" line="415"/>
+        <location filename="../../src/lichii/applets/qt_software_keyboard.cpp" line="415"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
@@ -11559,12 +11559,12 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>RyujinxDialog</name>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="14"/>
         <source>Ryujinx Link</source>
         <translation>Enlace a Ryujinx</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="26"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="26"/>
         <source>Linking save data to Ryujinx lets both Ryujinx and Eden reference the same save files for your games.
 
 By selecting &quot;From Eden&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
@@ -11573,32 +11573,32 @@ By selecting &quot;From Eden&quot;, previous save data stored in Ryujinx will be
 Seleccionando &quot;Desde Eden&quot;, los datos de guardado anteriores alojados en Ryujinx se borrarán, y vice versa para &quot;Desde Ryujinx&quot;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="40"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="40"/>
         <source>From Eden</source>
         <translation>Desde Eden</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="47"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="47"/>
         <source>From Ryujinx</source>
         <translation>Desde Ryujinx</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="54"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="54"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.cpp" line="37"/>
+        <location filename="../../src/lichii/ryujinx_dialog.cpp" line="37"/>
         <source>Failed to link save data</source>
         <translation>Fallo al enlazar datos de guardado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.cpp" line="38"/>
+        <location filename="../../src/lichii/ryujinx_dialog.cpp" line="38"/>
         <source>OS returned error: %1</source>
         <translation>El sistema operativo devolvió el error: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="26"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="26"/>
         <source>Linking save data to Ryujinx lets both Ryujinx and Lichii reference the same save files for your games.
 
 By selecting &quot;From Lichii&quot;, previous save data stored in Ryujinx will be deleted, and vice versa for &quot;From Ryujinx&quot;.</source>
@@ -11607,7 +11607,7 @@ By selecting &quot;From Lichii&quot;, previous save data stored in Ryujinx will 
 Si elige &quot;Desde Lichii&quot;, se eliminarán los datos de guardado anteriores almacenados en Ryujinx, y al revés si elige &quot;Desde Ryujinx&quot;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/ryujinx_dialog.ui" line="40"/>
+        <location filename="../../src/lichii/ryujinx_dialog.ui" line="40"/>
         <source>From Lichii</source>
         <translation>Desde Lichii</translation>
     </message>
@@ -11615,7 +11615,7 @@ Si elige &quot;Desde Lichii&quot;, se eliminarán los datos de guardado anterior
 <context>
     <name>SequenceDialog</name>
     <message>
-        <location filename="../../src/yuzu/util/sequence_dialog/sequence_dialog.cpp" line="10"/>
+        <location filename="../../src/lichii/util/sequence_dialog/sequence_dialog.cpp" line="10"/>
         <source>Enter a hotkey</source>
         <translation>Introduce una combinación de teclas</translation>
     </message>
@@ -11623,27 +11623,27 @@ Si elige &quot;Desde Lichii&quot;, se eliminarán los datos de guardado anterior
 <context>
     <name>SetPlayTimeDialog</name>
     <message>
-        <location filename="../../src/yuzu/set_play_time_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/set_play_time_dialog.ui" line="14"/>
         <source>Set Play Time Data</source>
         <translation>Establece los datos de tiempo de juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/set_play_time_dialog.ui" line="25"/>
+        <location filename="../../src/lichii/set_play_time_dialog.ui" line="25"/>
         <source>Hours:</source>
         <translation>Horas:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/set_play_time_dialog.ui" line="39"/>
+        <location filename="../../src/lichii/set_play_time_dialog.ui" line="39"/>
         <source>Minutes:</source>
         <translation>Minutos:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/set_play_time_dialog.ui" line="53"/>
+        <location filename="../../src/lichii/set_play_time_dialog.ui" line="53"/>
         <source>Seconds:</source>
         <translation>Segundos:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/set_play_time_dialog.cpp" line="49"/>
+        <location filename="../../src/lichii/set_play_time_dialog.cpp" line="49"/>
         <source>Total play time reached maximum.</source>
         <translation>Se ha alcanzado el límite total de tiempo de juego.</translation>
     </message>
@@ -11651,158 +11651,158 @@ Si elige &quot;Desde Lichii&quot;, se eliminarán los datos de guardado anterior
 <context>
     <name>UpdateDialog</name>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="14"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="14"/>
         <source>Update Available</source>
         <translation>Actualización disponible</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="20"/>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="31"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="20"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="31"/>
         <source>&lt;a href=&quot;%1&quot;&gt;View on Forgejo&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;%1&quot;&gt;Ver en Forgejo&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="33"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="33"/>
         <source>Would you like to install this update?</source>
         <translation>¿Desea instalar esta actualización?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="50"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="50"/>
         <source>Available Versions</source>
         <translation>Versiones disponibles</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="58"/>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="29"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="58"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="29"/>
         <source>%1 is available for download.</source>
         <translation>%1 está disponible para descargar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="80"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="80"/>
         <source>New Version Location</source>
         <translation>Ubicación de la nueva versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="82"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="82"/>
         <source>All Files (*.*)</source>
         <translation>Todos los archivos (*.*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="90"/>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="130"/>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="145"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="90"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="130"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="145"/>
         <source>Failed to save file</source>
         <translation>Fallo al guardar el archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="91"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="91"/>
         <source>Could not open file %1 for writing.</source>
         <translation>No se pudo abrir el archivo %1 para su escritura.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="113"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="113"/>
         <source>Downloading...</source>
         <translation>Descargando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="113"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="113"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="131"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="131"/>
         <source>Could not write to file %1.</source>
         <translation>No se pudo escribir en el archivo %1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="146"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="146"/>
         <source>Could not commit to file %1.</source>
         <translation>No se pudo cometer en el archivo %1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="158"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="158"/>
         <source>Failed to download file</source>
         <translation>Fallo al descargar el archivo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="159"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="159"/>
         <source>Could not download from %1%2
 Error code: %3</source>
         <translation>No se pudo descargar desde %1%2
 Código de error: %3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="172"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="172"/>
         <source>Download Complete</source>
         <translation>Descarga completada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="173"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="173"/>
         <source>Successfully downloaded %1. Would you like to open it?</source>
         <translation>%1 descargado con éxito. ¿Desea abrirlo?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.ui" line="33"/>
+        <location filename="../../src/lichii/updater/update_dialog.ui" line="33"/>
         <source>Would you like to download this update?</source>
         <translation>¿Desea descargar esta actualización?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="44"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="44"/>
         <source>&lt;a href=&quot;%1&quot;&gt;View on GitHub&lt;/a&gt;</source>
         <translation>&lt;a href=&quot;%1&quot;&gt;Ver en GitHub&lt;/a&gt;</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="53"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="53"/>
         <source>Remind Me Later</source>
         <translation>Recordármelo más tarde</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="54"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="54"/>
         <source>Skip This Version</source>
         <translation>Omitir esta versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="73"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="73"/>
         <source> This release has no PGO build, so the standard build will be downloaded.</source>
         <translation> Esta versión no tiene compilación PGO, así que se descargará la compilación estándar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="135"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="135"/>
         <source>Failed to restart</source>
         <translation>No se pudo reiniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="136"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="136"/>
         <source>Please start %1 again yourself.</source>
         <translation>Inicie %1 de nuevo manualmente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="154"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="154"/>
         <source>Failed to install the update</source>
         <translation>No se pudo instalar la actualización</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="155"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="155"/>
         <source>Could not start the update installer.</source>
         <translation>No se pudo iniciar el instalador de la actualización.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="229"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="229"/>
         <source>Another Lichii window is already updating this installation.</source>
         <translation>Otra ventana de Lichii ya está actualizando esta instalación.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="245"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="245"/>
         <source>Could not replace %1. Your installation was not changed.</source>
         <translation>No se pudo reemplazar %1. Su instalación no se modificó.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="252"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="252"/>
         <source>Update Installed</source>
         <translation>Actualización instalada</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="253"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="253"/>
         <source>The new version is installed. The previous version is kept as %1.
 
 Restart now?</source>
@@ -11811,27 +11811,27 @@ Restart now?</source>
 ¿Desea reiniciar ahora?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="280"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="280"/>
         <source>Could not create a folder for the update.</source>
         <translation>No se pudo crear una carpeta para la actualización.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="288"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="288"/>
         <source>Unpacking...</source>
         <translation>Descomprimiendo...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="301"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="301"/>
         <source>The downloaded update could not be unpacked.</source>
         <translation>No se pudo descomprimir la actualización descargada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="307"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="307"/>
         <source>Update Ready</source>
         <translation>Actualización lista</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="308"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="308"/>
         <source>Lichii will close, install the update and start again. The previous version is kept, and your settings and data are not changed.
 
 Restart now?</source>
@@ -11840,12 +11840,12 @@ Restart now?</source>
 ¿Desea reiniciar ahora?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="414"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="414"/>
         <source>Download failed verification</source>
         <translation>La descarga no pasó la verificación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/updater/update_dialog.cpp" line="415"/>
+        <location filename="../../src/lichii/updater/update_dialog.cpp" line="415"/>
         <source>The downloaded file does not match the checksum GitHub published for it, so it was discarded. Try again later.</source>
         <translation>El archivo descargado no coincide con la suma de verificación que GitHub publicó para él, así que se descartó. Inténtelo de nuevo más tarde.</translation>
     </message>
@@ -11853,297 +11853,297 @@ Restart now?</source>
 <context>
     <name>CompatibilityReporting::Dialog</name>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="98"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="98"/>
         <source>Submit compatibility report</source>
         <translation>Enviar reporte de compatibilidad</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="102"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="102"/>
         <source>Share your experience with the latest completed session. Nothing is sent until you choose Search or Submit. Logs are not uploaded. No account is required.</source>
         <translation>Comparta su experiencia con la última sesión completada. No se envía nada hasta que elija Buscar o Enviar. Los registros no se suben. No se requiere una cuenta.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="111"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="111"/>
         <source>Game title to search</source>
         <translation>Título del juego a buscar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="112"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="112"/>
         <source>Search catalog</source>
         <translation>Buscar en el catálogo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="117"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="117"/>
         <source>Search sends only the text above to lichii.zortos.me. The service sees your IP address.</source>
         <translation>La búsqueda envía solo el texto de arriba a lichii.zortos.me. El servicio ve su dirección IP.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="125"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="125"/>
         <source>Previous</source>
         <translation>Anterior</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="126"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="126"/>
         <source>Next</source>
         <translation>Siguiente</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="129"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="129"/>
         <source>Confirm game</source>
         <translation>Confirmar juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="136"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="136"/>
         <source>No catalog game confirmed.</source>
         <translation>No se ha confirmado ningún juego del catálogo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="169"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="169"/>
         <source>Experience</source>
         <translation>Experiencia</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="170"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="170"/>
         <source>Public nickname</source>
         <translation>Apodo público</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="171"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="171"/>
         <source>X handle (optional)</source>
         <translation>Usuario de X (opcional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="174"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="174"/>
         <source>Choose your assessment</source>
         <translation>Elija su valoración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="178"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="178"/>
         <source>Compatibility</source>
         <translation>Compatibilidad</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="179"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="179"/>
         <source>Summary</source>
         <translation>Resumen</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="180"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="180"/>
         <source>How far did you play?</source>
         <translation>¿Hasta dónde jugó?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="181"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="181"/>
         <source>What worked or failed?</source>
         <translation>¿Qué funcionó o qué falló?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="182"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="182"/>
         <source>Steps to reproduce (optional)</source>
         <translation>Pasos para reproducirlo (opcional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="183"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="183"/>
         <source>System and settings</source>
         <translation>Sistema y configuración</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="185"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="185"/>
         <source>Prefilled values describe launch settings, not measured performance. Review changes made during play. Unknown means not collected. Do not paste logs, paths, keys or private details.</source>
         <translation>Los valores ya rellenados describen la configuración al iniciar, no el rendimiento medido. Revise los cambios que haya hecho durante el juego. Desconocido significa que no se recopiló. No pegue registros, rutas, claves ni datos privados.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="190"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="190"/>
         <source>Lichii build</source>
         <translation>Compilación de Lichii</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="191"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="191"/>
         <source>Game version</source>
         <translation>Versión del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="192"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="192"/>
         <source>CPU</source>
         <translation>CPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="193"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="193"/>
         <source>GPU</source>
         <translation>GPU</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="194"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="194"/>
         <source>GPU driver / OpenGL version</source>
         <translation>Controlador de GPU / versión de OpenGL</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="195"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="195"/>
         <source>Operating system</source>
         <translation>Sistema operativo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="196"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="196"/>
         <source>RAM (optional)</source>
         <translation>RAM (opcional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="202"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="202"/>
         <source>Graphics API</source>
         <translation>API gráfica</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="203"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="203"/>
         <source>Launch settings</source>
         <translation>Configuración al iniciar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="204"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="204"/>
         <source>Updates (optional)</source>
         <translation>Actualizaciones (opcional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="205"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="205"/>
         <source>Mods (optional)</source>
         <translation>Mods (opcional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="209"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="209"/>
         <source>Public preview</source>
         <translation>Vista previa pública</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="211"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="211"/>
         <source>All report fields in the preview will be public. Logs, files, local title IDs and play history are not sent. The server uses your IP address for rate limiting. Review and clear anything you do not want to share.</source>
         <translation>Todos los campos del reporte que aparecen en la vista previa serán públicos. No se envían registros, archivos, IDs de título locales ni el historial de juego. El servidor usa su dirección IP para limitar la frecuencia de envíos. Revise y borre lo que no quiera compartir.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="218"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="218"/>
         <source>I understand my name, optional X handle, report text, hardware and settings will be public.</source>
         <translation>Entiendo que mi nombre, mi usuario de X opcional, el texto del reporte, el hardware y la configuración serán públicos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="221"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="221"/>
         <source>My report contains no game files, keys, firmware, saves or private account details.</source>
         <translation>Mi reporte no contiene archivos de juegos, claves, firmware, partidas guardadas ni datos privados de cuentas.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="234"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="234"/>
         <source>Clear draft</source>
         <translation>Borrar borrador</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="235"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="235"/>
         <source>Submit report</source>
         <translation>Enviar reporte</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="236"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="236"/>
         <source>Open public report</source>
         <translation>Abrir reporte público</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="343"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="343"/>
         <source>Draft cleared. Nothing was sent by clearing it.</source>
         <translation>Borrador eliminado. Al borrarlo no se envió nada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="364"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="364"/>
         <source>Search for and confirm the catalog game first.</source>
         <translation>Primero busque y confirme el juego en el catálogo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="371"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="371"/>
         <source>Check %1: required fields must be filled, within their length limit, and contain no control characters.</source>
         <translation>Revise %1: los campos obligatorios deben estar llenos, dentro de su límite de longitud y sin caracteres de control.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="379"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="379"/>
         <source>An X handle must contain 1–15 letters, digits or underscores, with an optional @.</source>
         <translation>Un usuario de X debe tener de 1 a 15 letras, dígitos o guiones bajos, con una @ opcional.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="383"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="383"/>
         <source>Choose your own compatibility assessment.</source>
         <translation>Elija su propia valoración de compatibilidad.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="386"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="386"/>
         <source>The report is too large.</source>
         <translation>El reporte es demasiado grande.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="421"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="421"/>
         <source>Check the search text.</source>
         <translation>Revise el texto de búsqueda.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="428"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="428"/>
         <source>Searching catalog… Cancel closes the dialog and stops this request.</source>
         <translation>Buscando en el catálogo… Cancelar cierra el diálogo y detiene esta solicitud.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="442"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="442"/>
         <source>Confirmed: %1 (catalog ID %2)</source>
         <translation>Confirmado: %1 (ID del catálogo %2)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="462"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="462"/>
         <source>Submitting… Closing stops waiting, but cannot retract a report the server already received. There are no automatic retries.</source>
         <translation>Enviando… Cerrar deja de esperar, pero no puede retirar un reporte que el servidor ya recibió. No hay reintentos automáticos.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="534"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="534"/>
         <source>Rate limit reached. Wait %1 seconds, then retry explicitly. Nothing will be retried automatically.</source>
         <translation>Se alcanzó el límite de envíos. Espere %1 segundos y luego vuelva a intentarlo manualmente. No se reintentará nada automáticamente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="551"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="551"/>
         <source>The server rejected the report. Review the fields and length limits before submitting again.</source>
         <translation>El servidor rechazó el reporte. Revise los campos y los límites de longitud antes de enviarlo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="553"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="553"/>
         <source>The server rejected these fields: %1. Review them before submitting again.</source>
         <translation>El servidor rechazó estos campos: %1. Revíselos antes de enviarlo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="558"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="558"/>
         <source>The server rejected this submission identity. Edit the draft to start a new submission; first check whether your report was already accepted.</source>
         <translation>El servidor rechazó esta identidad de envío. Edite el borrador para iniciar un envío nuevo; antes, compruebe si su reporte ya fue aceptado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="562"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="562"/>
         <source>The server rejected the request (HTTP %1). No automatic retry was made.</source>
         <translation>El servidor rechazó la solicitud (HTTP %1). No se hizo ningún reintento automático.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="566"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="566"/>
         <source>No valid receipt was received. Delivery may have succeeded. An explicit retry of this unchanged draft uses the same submission identity. Closing loses that identity; do not create a duplicate.</source>
         <translation>No se recibió un comprobante válido. Es posible que el envío se haya completado. Un reintento manual de este borrador sin cambios usa la misma identidad de envío. Al cerrar se pierde esa identidad; no cree un duplicado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="569"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="569"/>
         <source>Catalog search failed. Check your connection and retry explicitly.</source>
         <translation>Falló la búsqueda en el catálogo. Revise su conexión y vuelva a intentarlo manualmente.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="588"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="588"/>
         <source>Report submitted. It is public. Thank you.</source>
         <translation>Reporte enviado. Ya es público. Gracias.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="590"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="590"/>
         <source>The server returned an invalid receipt. The report may have been accepted. Only retry this unchanged draft explicitly.</source>
         <translation>El servidor devolvió un comprobante no válido. Es posible que el reporte se haya aceptado. Reintente este borrador sin cambios solo de forma manual.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="615"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="615"/>
         <source>Page %1 of %2. Select the exact game and press Confirm game.</source>
         <translation>Página %1 de %2. Seleccione el juego exacto y pulse Confirmar juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/compatibility_report.cpp" line="620"/>
+        <location filename="../../src/lichii/compatibility_report.cpp" line="620"/>
         <source>The catalog returned an invalid response. No game was confirmed.</source>
         <translation>El catálogo devolvió una respuesta no válida. No se confirmó ningún juego.</translation>
     </message>
@@ -12151,82 +12151,82 @@ Restart now?</source>
 <context>
     <name>ConfigureMicrophone</name>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="24"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="24"/>
         <source>Microphone</source>
         <translation>Micrófono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="26"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="26"/>
         <source>Choose the microphone used by games. Start a test and speak to check the input level.</source>
         <translation>Elija el micrófono que usan los juegos. Inicie una prueba y hable para comprobar el nivel de entrada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="33"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="33"/>
         <source>Input device:</source>
         <translation>Dispositivo de entrada:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="34"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="34"/>
         <source>Refresh devices</source>
         <translation>Actualizar dispositivos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="39"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="39"/>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="43"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="43"/>
         <source>Microphone volume:</source>
         <translation>Volumen del micrófono:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="47"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="47"/>
         <source>Input level:</source>
         <translation>Nivel de entrada:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="49"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="49"/>
         <source>Start microphone test</source>
         <translation>Iniciar prueba de micrófono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="60"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="60"/>
         <source>Microphone disconnected or capture failed.</source>
         <translation>El micrófono se desconectó o falló la captura.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="86"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="86"/>
         <source>Stop emulation to change the microphone input device or volume.</source>
         <translation>Detenga la emulación para cambiar el dispositivo de entrada o el volumen del micrófono.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="102"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="102"/>
         <source>System default</source>
         <translation>Predeterminado del sistema</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="111"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="111"/>
         <source>%1 (unavailable)</source>
         <translation>%1 (no disponible)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="125"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="125"/>
         <source>Microphone input is unavailable. Choose an available input device.</source>
         <translation>La entrada del micrófono no está disponible. Elija un dispositivo de entrada disponible.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="137"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="137"/>
         <source>Unable to open the microphone. Check the device and microphone permissions in your operating system.</source>
         <translation>No se pudo abrir el micrófono. Revise el dispositivo y los permisos del micrófono en su sistema operativo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="141"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="141"/>
         <source>Stop microphone test</source>
         <translation>Detener prueba de micrófono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/configure_microphone.cpp" line="142"/>
+        <location filename="../../src/lichii/configuration/configure_microphone.cpp" line="142"/>
         <source>Listening. Speak into your microphone.</source>
         <translation>Escuchando. Hable a su micrófono.</translation>
     </message>
@@ -12247,22 +12247,22 @@ Restart now?</source>
 <context>
     <name>IconDropZone</name>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="156"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="156"/>
         <source>Drop an image here or click to browse</source>
         <translation>Suelte una imagen aquí o haga clic para buscarla</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="176"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="176"/>
         <source>Drop to replace</source>
         <translation>Suelte para reemplazar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="189"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="189"/>
         <source>Release to use this image</source>
         <translation>Suelte para usar esta imagen</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="190"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="190"/>
         <source>Drop an icon here
 or click to browse</source>
         <translation>Suelte un icono aquí
@@ -12272,67 +12272,67 @@ o haga clic para buscarlo</translation>
 <context>
     <name>IconSearch</name>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="558"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="558"/>
         <source>Find Icon</source>
         <translation>Buscar icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="559"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="559"/>
         <source>Please enter a game name first so the icon can be found.</source>
         <translation>Primero escriba el nombre del juego para poder encontrar el icono.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="581"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="581"/>
         <source>Choose an Icon</source>
         <translation>Elegir un icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="584"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="584"/>
         <source>SteamGridDB has several icons for this game. Pick one:</source>
         <translation>SteamGridDB tiene varios iconos para este juego. Elija uno:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="618"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="618"/>
         <source>No matching icon was found on switchiconshowdown.com. A SteamGridDB API key enables a fallback search.</source>
         <translation>No se encontró ningún icono en switchiconshowdown.com. Con una clave de API de SteamGridDB se puede hacer una búsqueda alternativa.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="620"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="620"/>
         <source>SteamGridDB rejected the saved API key.</source>
         <translation>SteamGridDB rechazó la clave de API guardada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="623"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="623"/>
         <source>Create a free key on the &lt;a href=&quot;%1&quot;&gt;SteamGridDB API preferences&lt;/a&gt; page.</source>
         <translation>Cree una clave gratuita en la página de &lt;a href=&quot;%1&quot;&gt;preferencias de API de SteamGridDB&lt;/a&gt;.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="627"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="627"/>
         <source>SteamGridDB API Key</source>
         <translation>Clave de API de SteamGridDB</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="636"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="636"/>
         <source>API key</source>
         <translation>Clave de API</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="683"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="683"/>
         <source>No matching icon was found on switchiconshowdown.com or SteamGridDB. Try a different game name or choose an icon file.</source>
         <translation>No se encontró ningún icono en switchiconshowdown.com ni en SteamGridDB. Pruebe con otro nombre de juego o elija un archivo de icono.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="693"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="693"/>
         <source>Searching for an icon took longer than %1 seconds and was stopped. Check your connection and try again.</source>
         <translation>La búsqueda de un icono tardó más de %1 segundos y se detuvo. Revise su conexión e inténtelo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="698"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="698"/>
         <source>Could not reach the icon sources (%1). Check your connection and try again.</source>
         <translation>No se pudo conectar con las fuentes de iconos (%1). Revise su conexión e inténtelo de nuevo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/util/icon_search.cpp" line="704"/>
+        <location filename="../../src/lichii/util/icon_search.cpp" line="704"/>
         <source>Searching for an icon failed unexpectedly: %1</source>
         <translation>La búsqueda de un icono falló de forma inesperada: %1</translation>
     </message>
@@ -12340,202 +12340,202 @@ o haga clic para buscarlo</translation>
 <context>
     <name>NupEditDialog</name>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="115"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="115"/>
         <source>English (UK)</source>
         <translation>Inglés (Reino Unido)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="116"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="116"/>
         <source>Japanese</source>
         <translation>Japonés</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="117"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="117"/>
         <source>French</source>
         <translation>Francés</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="118"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="118"/>
         <source>German</source>
         <translation>Alemán</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="119"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="119"/>
         <source>Spanish (Latin America)</source>
         <translation>Español (Latinoamérica)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="120"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="120"/>
         <source>Spanish</source>
         <translation>Español</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="121"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="121"/>
         <source>Italian</source>
         <translation>Italiano</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="122"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="122"/>
         <source>Dutch</source>
         <translation>Neerlandés</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="123"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="123"/>
         <source>French (Canada)</source>
         <translation>Francés (Canadá)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="124"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="124"/>
         <source>Portuguese</source>
         <translation>Portugués</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="125"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="125"/>
         <source>Russian</source>
         <translation>Ruso</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="126"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="126"/>
         <source>Korean</source>
         <translation>Coreano</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="127"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="127"/>
         <source>Chinese (Traditional)</source>
         <translation>Chino (tradicional)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="128"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="128"/>
         <source>Chinese (Simplified)</source>
         <translation>Chino (simplificado)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="129"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="129"/>
         <source>Portuguese (Brazil)</source>
         <translation>Portugués (Brasil)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="538"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="538"/>
         <source>Edit NUP Metadata</source>
         <translation>Editar metadatos del NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="547"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="547"/>
         <source>Choose Icon...</source>
         <translation>Elegir icono...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="548"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="548"/>
         <source>Find Icon Online...</source>
         <translation>Buscar icono en línea...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="549"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="549"/>
         <source>Remove Icon</source>
         <translation>Quitar icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="555"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="555"/>
         <source>Searching...</source>
         <translation>Buscando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="572"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="572"/>
         <source>Name shown in the game list</source>
         <translation>Nombre que se muestra en la lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="576"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="576"/>
         <source>Publisher shown in the game list</source>
         <translation>Editor que se muestra en la lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="580"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="580"/>
         <source>e.g. 1.2.0</source>
         <translation>p. ej. 1.2.0</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="587"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="587"/>
         <source>Icon</source>
         <translation>Icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="620"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="620"/>
         <source>Same as Name</source>
         <translation>Igual que el nombre</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="634"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="634"/>
         <source>Localized names (%1 set)</source>
         <translation>Nombres localizados (%1 definidos)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="635"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="635"/>
         <source>Localized names</source>
         <translation>Nombres localizados</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="637"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="637"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="639"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="639"/>
         <source>Publisher</source>
         <translation>Editor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="640"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="640"/>
         <source>Version</source>
         <translation>Versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="642"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="642"/>
         <source>&lt;b&gt;File&lt;/b&gt;&lt;br&gt;%1</source>
         <translation>&lt;b&gt;Archivo&lt;/b&gt;&lt;br&gt;%1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="647"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="647"/>
         <source>Empty fields remove that metadata. The change is written in place; game data is untouched.</source>
         <translation>Los campos vacíos eliminan esos metadatos. El cambio se escribe en el mismo archivo; los datos del juego no se tocan.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="719"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="719"/>
         <source>Choose Icon</source>
         <translation>Elegir icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="719"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="719"/>
         <source>Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)</source>
         <translation>Imágenes (*.png *.jpg *.jpeg *.bmp *.webp);;Todos los archivos (*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="728"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="728"/>
         <source>That file could not be read as an image.</source>
         <translation>Ese archivo no se pudo leer como imagen.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="743"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="743"/>
         <source>The icon that was found could not be read.</source>
         <translation>No se pudo leer el icono encontrado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="763"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="763"/>
         <source>Icon will be removed.</source>
         <translation>Se quitará el icono.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="766"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="766"/>
         <source>Custom icon, stored as %1x%1 JPEG.</source>
         <translation>Icono personalizado, guardado como JPEG de %1x%1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="769"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="769"/>
         <source>Current icon in the NUP.</source>
         <translation>Icono actual del NUP.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="771"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="771"/>
         <source>No icon in the NUP. Add one, or it will have none.</source>
         <translation>El NUP no tiene icono. Agregue uno o se quedará sin icono.</translation>
     </message>
@@ -12543,122 +12543,122 @@ o haga clic para buscarlo</translation>
 <context>
     <name>NupMetadataDialog</name>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="235"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="235"/>
         <source>Convert to NUP</source>
         <translation>Convertir a NUP</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="244"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="244"/>
         <source>Choose Icon...</source>
         <translation>Elegir icono...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="245"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="245"/>
         <source>Use Detected</source>
         <translation>Usar el detectado</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="264"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="264"/>
         <source>Name shown in the game list</source>
         <translation>Nombre que se muestra en la lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="268"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="268"/>
         <source>Publisher shown in the game list</source>
         <translation>Editor que se muestra en la lista de juegos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="273"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="273"/>
         <source>Auto-detect (nothing found in the dump)</source>
         <translation>Detección automática (no se encontró nada en el volcado)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="275"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="275"/>
         <source>Auto-detect: %1 (from %2)</source>
         <translation>Detección automática: %1 (de %2)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="279"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="279"/>
         <source>Set manually:</source>
         <translation>Definir manualmente:</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="281"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="281"/>
         <source>e.g. 1.2.0</source>
         <translation>p. ej. 1.2.0</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="296"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="296"/>
         <source>Icon</source>
         <translation>Icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="297"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="297"/>
         <source>Name</source>
         <translation>Nombre</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="298"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="298"/>
         <source>Publisher</source>
         <translation>Editor</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="299"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="299"/>
         <source>Version</source>
         <translation>Versión</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="301"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="301"/>
         <source>&lt;b&gt;Source&lt;/b&gt;&lt;br&gt;%1&lt;br&gt;&lt;b&gt;Target&lt;/b&gt;&lt;br&gt;%2</source>
         <translation>&lt;b&gt;Origen&lt;/b&gt;&lt;br&gt;%1&lt;br&gt;&lt;b&gt;Destino&lt;/b&gt;&lt;br&gt;%2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="308"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="308"/>
         <source>Approximate space needed: %1 MB. Free on the target volume: %2 MB.</source>
         <translation>Espacio aproximado necesario: %1 MB. Libre en el volumen de destino: %2 MB.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="314"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="314"/>
         <source>Free space is less than the estimate.</source>
         <translation>El espacio libre es menor que el estimado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="317"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="317"/>
         <source>Low storage: delete the original files as they are packed (cannot be undone)</source>
         <translation>Poco almacenamiento: eliminar los archivos originales a medida que se empaquetan (no se puede deshacer)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="321"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="321"/>
         <source>Convert</source>
         <translation>Convertir</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="380"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="380"/>
         <source>Choose Icon</source>
         <translation>Elegir icono</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="380"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="380"/>
         <source>Images (*.png *.jpg *.jpeg *.bmp *.webp);;All Files (*)</source>
         <translation>Imágenes (*.png *.jpg *.jpeg *.bmp *.webp);;Todos los archivos (*)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="389"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="389"/>
         <source>That file could not be read as an image.</source>
         <translation>Ese archivo no se pudo leer como imagen.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="405"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="405"/>
         <source>Custom icon, stored as %1x%1 JPEG.</source>
         <translation>Icono personalizado, guardado como JPEG de %1x%1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="408"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="408"/>
         <source>Icon found in the dump.</source>
         <translation>Icono encontrado en el volcado.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="410"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="410"/>
         <source>No icon found in the dump. Add one, or the NUP will have none.</source>
         <translation>No se encontró ningún icono en el volcado. Agregue uno o el NUP se quedará sin icono.</translation>
     </message>
@@ -12666,34 +12666,34 @@ o haga clic para buscarlo</translation>
 <context>
     <name>NupProgressDialog</name>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="445"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="445"/>
         <source>Preparing...</source>
         <translation>Preparando...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="465"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="465"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="488"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="488"/>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="490"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="490"/>
         <source>%1 / %2 MB  -  %3 / %4 files</source>
         <translation>%1 / %2 MB  -  %3 / %4 archivos</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="498"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="498"/>
         <source>
 %1 MB/s  -  about %2:%3 left</source>
         <translation>
 %1 MB/s  -  quedan unos %2:%3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/nup_dialogs.cpp" line="509"/>
+        <location filename="../../src/lichii/nup_dialogs.cpp" line="509"/>
         <source>Cancelling...</source>
         <translation>Cancelando...</translation>
     </message>
@@ -12701,107 +12701,107 @@ o haga clic para buscarlo</translation>
 <context>
     <name>ShaderWarmDialog</name>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="42"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="42"/>
         <source>Reading game files</source>
         <translation>Leyendo los archivos del juego</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="45"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="45"/>
         <source>Extracting shaders</source>
         <translation>Extrayendo sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="48"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="48"/>
         <source>Converting shaders</source>
         <translation>Convirtiendo sombreadores</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="51"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="51"/>
         <source>Writing the precache file</source>
         <translation>Escribiendo el archivo de precompilación</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="62"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="62"/>
         <source>Precache shaders: %1</source>
         <translation>Precompilar sombreadores: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="67"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="67"/>
         <source>Starting</source>
         <translation>Iniciando</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="74"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="74"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="155"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="155"/>
         <source>Stopping</source>
         <translation>Deteniendo</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="165"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="165"/>
         <source>%1: %L2 / %L3</source>
         <translation>%1: %L2 / %L3</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="169"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="169"/>
         <source>%1: %L2</source>
         <translation>%1: %L2</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="185"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="185"/>
         <source>Shader precache is ready.</source>
         <translation>La precompilación de sombreadores está lista.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="188"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="188"/>
         <source>This game keeps its shaders in a format Lichii can&apos;t read, so none are prepared from the game files.</source>
         <translation>Este juego guarda sus sombreadores en un formato que Lichii no puede leer, así que no se prepara ninguno a partir de los archivos del juego.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="190"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="190"/>
         <source>The game files have no compute shaders to prepare.</source>
         <translation>Los archivos del juego no tienen sombreadores de cómputo que preparar.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="192"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="192"/>
         <source>The shaders your earlier play sessions saved are still precached.</source>
         <translation>Los sombreadores que guardaron sus sesiones de juego anteriores siguen precompilados.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="194"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="194"/>
         <source>Compute programs: %L1</source>
         <translation>Programas de cómputo: %L1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="199"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="199"/>
         <source>Skipped (could not be read or converted): %L1</source>
         <translation>Omitidos (no se pudieron leer ni convertir): %L1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="203"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="203"/>
         <source>It is built on the loading screen when Precache shaders before game start is on.</source>
         <translation>Se crea en la pantalla de carga cuando la opción Precompilar sombreadores antes de iniciar el juego está activada.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="206"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="206"/>
         <source>Shader precache stopped.</source>
         <translation>Se detuvo la precompilación de sombreadores.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="208"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="208"/>
         <source>Shader precache could not be built.</source>
         <translation>No se pudo crear la precompilación de sombreadores.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="209"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="209"/>
         <source>No details were given.</source>
         <translation>No se dieron más detalles.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/shader_warm_dialog.cpp" line="214"/>
+        <location filename="../../src/lichii/shader_warm_dialog.cpp" line="214"/>
         <source>Close</source>
         <translation>Cerrar</translation>
     </message>
@@ -12809,112 +12809,112 @@ o haga clic para buscarlo</translation>
 <context>
     <name>NvidiaDlssPanel</name>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="332"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="332"/>
         <source>Open Folder</source>
         <translation>Abrir carpeta</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="335"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="335"/>
         <source>Where do these files come from?</source>
         <translation>¿De dónde vienen estos archivos?</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="338"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="338"/>
         <source>NVIDIA&apos;s Streamline releases on GitHub. The files are in bin\x64 of the release zip.</source>
         <translation>De las versiones de Streamline de NVIDIA en GitHub. Los archivos están en bin\x64 del zip de la versión.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="369"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="369"/>
         <source>%1 from the NVIDIA app</source>
         <translation>%1 de la aplicación de NVIDIA</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="375"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="375"/>
         <source>&lt;b&gt;Ready.&lt;/b&gt; Found %1 and %2.</source>
         <translation>&lt;b&gt;Listo.&lt;/b&gt; Se encontraron %1 y %2.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="378"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="378"/>
         <source>&lt;b&gt;One file needed:&lt;/b&gt; NVIDIA&apos;s Streamline loader (sl.interposer.dll). %1 will be used. Until then, games use AMD FSR 3.1.</source>
         <translation>&lt;b&gt;Falta un archivo:&lt;/b&gt; el cargador Streamline de NVIDIA (sl.interposer.dll). Se usará %1. Mientras tanto, los juegos usan AMD FSR 3.1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="381"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="381"/>
         <source>Download from NVIDIA (1 MB)</source>
         <translation>Descargar de NVIDIA (1 MB)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="383"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="383"/>
         <source>&lt;b&gt;One file needed:&lt;/b&gt; NVIDIA DLSS (nvngx_dlss.dll). Until then, games use AMD FSR 3.1.</source>
         <translation>&lt;b&gt;Falta un archivo:&lt;/b&gt; NVIDIA DLSS (nvngx_dlss.dll). Mientras tanto, los juegos usan AMD FSR 3.1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="385"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="385"/>
         <source>Download from NVIDIA (31 MB)</source>
         <translation>Descargar de NVIDIA (31 MB)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="387"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="387"/>
         <source>&lt;b&gt;NVIDIA&apos;s files needed:&lt;/b&gt; the Streamline loader and DLSS (sl.interposer.dll and nvngx_dlss.dll). Until then, games use AMD FSR 3.1.</source>
         <translation>&lt;b&gt;Faltan los archivos de NVIDIA:&lt;/b&gt; el cargador Streamline y DLSS (sl.interposer.dll y nvngx_dlss.dll). Mientras tanto, los juegos usan AMD FSR 3.1.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="389"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="389"/>
         <source>Download from NVIDIA (32 MB)</source>
         <translation>Descargar de NVIDIA (32 MB)</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="395"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="395"/>
         <source>Folder: %1</source>
         <translation>Carpeta: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="415"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="415"/>
         <source>NVIDIA DLSS</source>
         <translation>NVIDIA DLSS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="416"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="416"/>
         <source>Could not download NVIDIA&apos;s files: %1</source>
         <translation>No se pudieron descargar los archivos de NVIDIA: %1</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="424"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="424"/>
         <source>Contacting NVIDIA&apos;s download...</source>
         <translation>Conectando con la descarga de NVIDIA...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="436"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="436"/>
         <source>NVIDIA Streamline</source>
         <translation>NVIDIA Streamline</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="459"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="459"/>
         <source>Download NVIDIA DLSS</source>
         <translation>Descargar NVIDIA DLSS</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="462"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="462"/>
         <source>Lichii will download %1 from NVIDIA&apos;s Streamline %2 release on GitHub into %3.&lt;br&gt;These files are NVIDIA&apos;s, under NVIDIA&apos;s licence terms below.</source>
         <translation>Lichii descargará %1 de la versión %2 de Streamline de NVIDIA en GitHub a %3.&lt;br&gt;Estos archivos son de NVIDIA y están sujetos a los términos de licencia de NVIDIA que aparecen abajo.</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="472"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="472"/>
         <source>Accept and Download</source>
         <translation>Aceptar y descargar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="494"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="494"/>
         <source>Downloading NVIDIA&apos;s DLSS files...</source>
         <translation>Descargando los archivos DLSS de NVIDIA...</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="494"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="494"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>
     <message>
-        <location filename="../../src/yuzu/configuration/nvidia_dlss_panel.cpp" line="558"/>
+        <location filename="../../src/lichii/configuration/nvidia_dlss_panel.cpp" line="558"/>
         <source>NVIDIA DLSS is ready. It is used the next time a game starts.</source>
         <translation>NVIDIA DLSS está listo. Se usará la próxima vez que inicie un juego.</translation>
     </message>

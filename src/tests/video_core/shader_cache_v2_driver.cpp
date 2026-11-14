@@ -406,6 +406,57 @@ TEST_CASE("Shader cache v2 driver blobs: the file stays under its size cap",
     REQUIRE(V2::ReadLogFile(file).parsed.stats.dead_bytes == 0);
 }
 
+TEST_CASE("Shader cache v2 driver blobs: a session cap keeps what the session used past the cap",
+          "[video_core][shader_cache_v2]") {
+    TempDir temp;
+    const auto file = temp.path / V2::DriverFileName;
+    const auto payload = [](u64 index) {
+        V2::PipelineBinaries binaries = TestBinaries(index, 4000);
+        binaries.binaries.resize(1);
+        return V2::EncodeBinaries(binaries);
+    };
+    const u64 record = V2::RecordSize(payload(0).size());
+    V2::DriverBlobOptions options{.max_bytes = record * 20,
+                                  .target_bytes = record * 15,
+                                  .min_dead_bytes = ~u64{0},
+                                  .ceiling_bytes = record * 100,
+                                  .session_cap_bytes = record * 60,
+                                  .writer = FastWriter};
+    {
+        V2::DriverBlobStore store{file, TestIdentity(), options};
+        for (u64 i = 0; i < 10; ++i) {
+            store.Store(RecordKind::GraphicsBinary, i, payload(i));
+        }
+    }
+    {
+        // A precache-like session: uses nothing it had and writes 40 more, twice max_bytes
+        V2::DriverBlobStore store{file, TestIdentity(), options};
+        for (u64 i = 10; i < 50; ++i) {
+            store.Store(RecordKind::GraphicsBinary, i, payload(i));
+        }
+    }
+    {
+        V2::DriverBlobStore store{file, TestIdentity(), options};
+        // Every blob the session wrote is kept; the unused older ones go
+        REQUIRE(store.Counts().loaded == 40);
+        for (u64 i = 10; i < 50; ++i) {
+            REQUIRE(store.Find(RecordKind::GraphicsBinary, i).has_value());
+            // Find doesn't mark a blob used; without this the store compacts to its target here
+            store.Used(RecordKind::GraphicsBinary, i);
+        }
+    }
+    // Past the session cap, the cap bounds it
+    options.session_cap_bytes = record * 30;
+    {
+        V2::DriverBlobStore store{file, TestIdentity(), options};
+        REQUIRE(store.Counts().loaded == 40);
+        for (u64 i = 10; i < 50; ++i) {
+            store.Used(RecordKind::GraphicsBinary, i);
+        }
+    }
+    REQUIRE(std::filesystem::file_size(file) <= record * 30 + 4096);
+}
+
 TEST_CASE("Shader cache v2 driver blobs: replaced blobs are compacted away",
           "[video_core][shader_cache_v2]") {
     TempDir temp;

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -12,6 +11,7 @@
 #include <type_traits>
 #include <queue>
 #include <unordered_set>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -73,6 +73,35 @@ auto BreadthFirstSearch(Value value, Pred&& pred, Resolve&& resolve = {})
     }
     // SSA tree has been traversed and the result hasn't been found
     return std::nullopt;
+}
+
+/// BreadthFirstSearch for many searches with the same predicate and resolver over IR that does
+/// not change. `exhausted` holds instructions from which nothing reachable matches: a failed
+/// search adds every instruction it visited, and later searches resolve those to an immediate
+/// and skip them. The result is BreadthFirstSearch's: what a skipped instruction reaches is
+/// exhausted too, so the instructions left are queued by the same ones in the same order.
+template <typename Pred, typename Resolve = std::identity>
+auto BreadthFirstSearchPruned(Value value, Pred&& pred, std::unordered_set<const Inst*>& exhausted,
+                              Resolve&& resolve = {})
+    -> std::invoke_result_t<Pred, const Inst*> {
+    std::vector<const Inst*> visited;
+    const auto result{BreadthFirstSearch(
+        value,
+        [&](const Inst* inst) {
+            visited.push_back(inst);
+            return pred(inst);
+        },
+        [&](const Value& operand) {
+            const Value resolved{resolve(operand)};
+            if (!resolved.IsImmediate() && exhausted.contains(resolved.InstRecursive())) {
+                return Value{u32{0}};
+            }
+            return resolved;
+        })};
+    if (!result) {
+        exhausted.insert(visited.begin(), visited.end());
+    }
+    return result;
 }
 
 } // namespace Shader::IR

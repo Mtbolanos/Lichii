@@ -95,7 +95,7 @@ Caveat for Debug Builds:
 Also see the root CMakeLists.txt for more build options. Usually the default will provide the best experience, however.
 
 ```sh
-cmake -S . -B build -G "<GENERATOR>" -DCMAKE_BUILD_TYPE=<BUILD_TYPE> -DYUZU_TESTS=OFF
+cmake -S . -B build -G "<GENERATOR>" -DCMAKE_BUILD_TYPE=<BUILD_TYPE> -DLICHII_TESTS=OFF
 ```
 
 If you are on Windows and prefer to use Clang:
@@ -168,14 +168,14 @@ Otherwise, feel free to ask for help in Stoat or Discord.
 
 ### Linker errors with the bundled Qt on Visual Studio 2022
 
-On MSVC, a prebuilt static Qt is downloaded by default (`YUZU_USE_BUNDLED_QT`). It is built with a newer MSVC toolset than the one in Visual Studio 2022, so with VS 2022 (MSVC 14.44) configuring succeeds but linking `lichii.exe` fails with unresolved symbols such as `__std_rotate` or `__std_unique_4`, ending in `LNK1120`.
+On MSVC, a prebuilt static Qt is downloaded by default (`LICHII_USE_BUNDLED_QT`). It is built with a newer MSVC toolset than the one in Visual Studio 2022, so with VS 2022 (MSVC 14.44) configuring succeeds but linking `lichii.exe` fails with unresolved symbols such as `__std_rotate` or `__std_unique_4`, ending in `LNK1120`.
 
 Use the same Qt as CI instead of the bundled one:
 
 ```powershell
 python -m pip install aqtinstall
 python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -m qtcharts -O C:\Qt
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DYUZU_USE_BUNDLED_QT=OFF -DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DLICHII_USE_BUNDLED_QT=OFF -DQt6_DIR=C:/Qt/6.8.3/msvc2022_64/lib/cmake/Qt6
 ```
 
 Configure into a fresh build directory, or delete `CMakeCache.txt` first: the bundled Qt is static and this one is not, so the old cache does not carry over.

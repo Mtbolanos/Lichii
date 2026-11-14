@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -125,8 +124,12 @@ constexpr IPv4Address TranslateIPv4(in_addr addr) {
 std::optional<IPv4Address> GetHostIPv4Address();
 
 /// @brief Returns the fake IPv4 address of the joined room, the emulated network while in a room
-/// @return nullopt outside a room and while still joining it
+/// @return nullopt outside a room, while still joining it and while LAN play is active
 std::optional<IPv4Address> GetRoomIPv4Address();
+
+/// While LAN play carries LDN, the guest keeps host sockets and its real address in a room too
+bool IsDirectLanActive();
+void SetDirectLanActive(bool active);
 
 std::string IPv4AddressToString(IPv4Address ip_addr);
 u32 IPv4AddressToInteger(IPv4Address ip_addr);

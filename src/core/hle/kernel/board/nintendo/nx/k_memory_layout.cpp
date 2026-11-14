@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "common/alignment.h"
 #include "common/literals.h"
+#include "common/logging.h"
 #include "core/hle/kernel/k_memory_layout.h"
 #include "core/hle/kernel/k_memory_manager.h"
 #include "core/hle/kernel/k_system_control.h"
@@ -128,10 +128,50 @@ void SetupPoolPartitionMemoryRegions(KMemoryLayout& memory_layout) {
     // On 5.0.0+, setup modern 4-pool-partition layout.
 
     // Get Application and Applet pool sizes.
-    const size_t application_pool_size = KSystemControl::Init::GetApplicationPoolSize();
+    size_t application_pool_size = KSystemControl::Init::GetApplicationPoolSize();
     const size_t applet_pool_size = KSystemControl::Init::GetAppletPoolSize();
     const size_t unsafe_system_pool_min_size =
         KSystemControl::Init::GetMinimumNonSecureSystemPoolSize();
+
+    // A title's pool growth must leave the pools below it, their management region and a nonempty
+    // system pool above the pool partitions start; otherwise the growth is dropped.
+    const auto pools_fit = [&](size_t application_size) {
+        if (application_size + applet_pool_size + unsafe_system_pool_min_size >=
+            pool_end - pool_partitions_start) {
+            return false;
+        }
+        const u64 application_start = pool_end - application_size;
+        const u64 applet_start = application_start - applet_pool_size;
+        const u64 unsafe_system_start = (std::min)(
+            kernel_dram_start + CarveoutSizeMax,
+            Common::AlignDown(applet_start - unsafe_system_pool_min_size, CarveoutAlignment));
+        if (unsafe_system_start <= pool_partitions_start) {
+            return false;
+        }
+        const u64 dram_midpoint = (dram_extents.GetAddress() + dram_extents.GetEndAddress()) / 2;
+        size_t overhead = 0;
+        if (dram_extents.GetEndAddress() <= dram_midpoint || dram_midpoint <= application_start) {
+            overhead += KMemoryManager::CalculateManagementOverheadSize(application_size);
+        } else {
+            overhead += KMemoryManager::CalculateManagementOverheadSize(dram_midpoint - application_start);
+            overhead += KMemoryManager::CalculateManagementOverheadSize(
+                application_start + application_size - dram_midpoint);
+        }
+        overhead += KMemoryManager::CalculateManagementOverheadSize(applet_pool_size);
+        overhead += KMemoryManager::CalculateManagementOverheadSize(applet_start - unsafe_system_start);
+        const u64 below_unsafe_system = unsafe_system_start - pool_partitions_start;
+        if (overhead >= below_unsafe_system) {
+            return false;
+        }
+        overhead += KMemoryManager::CalculateManagementOverheadSize(below_unsafe_system - overhead);
+        return overhead < below_unsafe_system;
+    };
+    if (!pools_fit(application_pool_size)) {
+        const size_t base_size = application_pool_size - KSystemControl::Init::GetApplicationPoolGrowth();
+        LOG_WARNING(Kernel, "Application pool of {} MiB does not fit, using the base size",
+                    application_pool_size / 1_MiB);
+        application_pool_size = base_size;
+    }
 
     // Decide on starting addresses for our pools.
     const u64 application_pool_start = pool_end - application_pool_size;

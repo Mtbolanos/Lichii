@@ -88,14 +88,14 @@ static jfieldID s_player_input_button_color_right_field;
 static jfieldID s_player_input_profile_name_field;
 static jfieldID s_player_input_use_system_vibrator_field;
 
-static jclass s_yuzu_input_device_interface;
-static jmethodID s_yuzu_input_device_get_name;
-static jmethodID s_yuzu_input_device_get_guid;
-static jmethodID s_yuzu_input_device_get_port;
-static jmethodID s_yuzu_input_device_get_supports_vibration;
-static jmethodID s_yuzu_input_device_vibrate;
-static jmethodID s_yuzu_input_device_get_axes;
-static jmethodID s_yuzu_input_device_has_keys;
+static jclass s_lichii_input_device_interface;
+static jmethodID s_lichii_input_device_get_name;
+static jmethodID s_lichii_input_device_get_guid;
+static jmethodID s_lichii_input_device_get_port;
+static jmethodID s_lichii_input_device_get_supports_vibration;
+static jmethodID s_lichii_input_device_vibrate;
+static jmethodID s_lichii_input_device_get_axes;
+static jmethodID s_lichii_input_device_has_keys;
 
 static jmethodID s_add_netplay_message;
 static jmethodID s_clear_chat;
@@ -382,36 +382,36 @@ namespace Common::Android {
         return s_player_input_use_system_vibrator_field;
     }
 
-    jclass GetYuzuInputDeviceInterface() {
-        return s_yuzu_input_device_interface;
+    jclass GetLichiiInputDeviceInterface() {
+        return s_lichii_input_device_interface;
     }
 
-    jmethodID GetYuzuDeviceGetName() {
-        return s_yuzu_input_device_get_name;
+    jmethodID GetLichiiDeviceGetName() {
+        return s_lichii_input_device_get_name;
     }
 
-    jmethodID GetYuzuDeviceGetGUID() {
-        return s_yuzu_input_device_get_guid;
+    jmethodID GetLichiiDeviceGetGUID() {
+        return s_lichii_input_device_get_guid;
     }
 
-    jmethodID GetYuzuDeviceGetPort() {
-        return s_yuzu_input_device_get_port;
+    jmethodID GetLichiiDeviceGetPort() {
+        return s_lichii_input_device_get_port;
     }
 
-    jmethodID GetYuzuDeviceGetSupportsVibration() {
-        return s_yuzu_input_device_get_supports_vibration;
+    jmethodID GetLichiiDeviceGetSupportsVibration() {
+        return s_lichii_input_device_get_supports_vibration;
     }
 
-    jmethodID GetYuzuDeviceVibrate() {
-        return s_yuzu_input_device_vibrate;
+    jmethodID GetLichiiDeviceVibrate() {
+        return s_lichii_input_device_vibrate;
     }
 
-    jmethodID GetYuzuDeviceGetAxes() {
-        return s_yuzu_input_device_get_axes;
+    jmethodID GetLichiiDeviceGetAxes() {
+        return s_lichii_input_device_get_axes;
     }
 
-    jmethodID GetYuzuDeviceHasKeys() {
-        return s_yuzu_input_device_has_keys;
+    jmethodID GetLichiiDeviceHasKeys() {
+        return s_lichii_input_device_has_keys;
     }
 
     jmethodID GetAddNetPlayMessage() {
@@ -449,7 +449,7 @@ namespace Common::Android {
         env->DeleteGlobalRef(s_integer_class);
         env->DeleteGlobalRef(s_boolean_class);
         env->DeleteGlobalRef(s_player_input_class);
-        env->DeleteGlobalRef(s_yuzu_input_device_interface);
+        env->DeleteGlobalRef(s_lichii_input_device_interface);
 
         // UnInitialize applets
         SoftwareKeyboard::CleanupJNI(env);
@@ -471,14 +471,14 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
     }
 
     // Initialize Java classes
-    const jclass native_library_class = env->FindClass("org/yuzu/yuzu_emu/NativeLibrary");
+    const jclass native_library_class = env->FindClass("io/github/zortos293/lichii/NativeLibrary");
     s_native_library_class = reinterpret_cast<jclass>(env->NewGlobalRef(native_library_class));
     s_disk_cache_progress_class = reinterpret_cast<jclass>(env->NewGlobalRef(
-        env->FindClass("org/yuzu/yuzu_emu/disk_shader_cache/DiskShaderCacheProgress")));
+        env->FindClass("io/github/zortos293/lichii/disk_shader_cache/DiskShaderCacheProgress")));
     s_load_callback_stage_class = reinterpret_cast<jclass>(env->NewGlobalRef(env->FindClass(
-        "org/yuzu/yuzu_emu/disk_shader_cache/DiskShaderCacheProgress$LoadCallbackStage")));
+        "io/github/zortos293/lichii/disk_shader_cache/DiskShaderCacheProgress$LoadCallbackStage")));
 
-    const jclass game_dir_class = env->FindClass("org/yuzu/yuzu_emu/model/GameDir");
+    const jclass game_dir_class = env->FindClass("io/github/zortos293/lichii/model/GameDir");
     s_game_dir_class = reinterpret_cast<jclass>(env->NewGlobalRef(game_dir_class));
     s_game_dir_constructor = env->GetMethodID(game_dir_class, "<init>",
                                               "(Ljava/lang/String;Z)V");
@@ -502,7 +502,7 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
     s_on_program_changed =
         env->GetStaticMethodID(s_native_library_class, "onProgramChanged", "(I)V");
 
-    const jclass game_class = env->FindClass("org/yuzu/yuzu_emu/model/Game");
+    const jclass game_class = env->FindClass("io/github/zortos293/lichii/model/Game");
     s_game_class = reinterpret_cast<jclass>(env->NewGlobalRef(game_class));
     s_game_constructor = env->GetMethodID(game_class, "<init>",
                                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
@@ -528,7 +528,7 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
     env->DeleteLocalRef(pair_class);
 
     const jclass overlay_control_data_class =
-        env->FindClass("org/yuzu/yuzu_emu/overlay/model/OverlayControlData");
+        env->FindClass("io/github/zortos293/lichii/overlay/model/OverlayControlData");
     s_overlay_control_data_class =
         reinterpret_cast<jclass>(env->NewGlobalRef(overlay_control_data_class));
     s_overlay_control_data_constructor =
@@ -548,7 +548,7 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
         env->GetFieldID(overlay_control_data_class, "individualScale", "F");
     env->DeleteLocalRef(overlay_control_data_class);
 
-    const jclass patch_class = env->FindClass("org/yuzu/yuzu_emu/model/Patch");
+    const jclass patch_class = env->FindClass("io/github/zortos293/lichii/model/Patch");
     s_patch_class = reinterpret_cast<jclass>(env->NewGlobalRef(patch_class));
     s_patch_constructor = env->GetMethodID(
         patch_class, "<init>",
@@ -580,7 +580,7 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
     env->DeleteLocalRef(boolean_class);
 
     const jclass player_input_class =
-        env->FindClass("org/yuzu/yuzu_emu/features/input/model/PlayerInput");
+        env->FindClass("io/github/zortos293/lichii/features/input/model/PlayerInput");
     s_player_input_class = reinterpret_cast<jclass>(env->NewGlobalRef(player_input_class));
     s_player_input_constructor = env->GetMethodID(
         player_input_class, "<init>",
@@ -610,25 +610,25 @@ void Initialize(JavaVM* vm, JNIEnv *env) {
         env->GetFieldID(player_input_class, "useSystemVibrator", "Z");
     env->DeleteLocalRef(player_input_class);
 
-    const jclass yuzu_input_device_interface =
-        env->FindClass("org/yuzu/yuzu_emu/features/input/YuzuInputDevice");
-    s_yuzu_input_device_interface =
-        reinterpret_cast<jclass>(env->NewGlobalRef(yuzu_input_device_interface));
-    s_yuzu_input_device_get_name =
-        env->GetMethodID(yuzu_input_device_interface, "getName", "()Ljava/lang/String;");
-    s_yuzu_input_device_get_guid =
-        env->GetMethodID(yuzu_input_device_interface, "getGUID", "()Ljava/lang/String;");
-    s_yuzu_input_device_get_port = env->GetMethodID(yuzu_input_device_interface, "getPort",
+    const jclass lichii_input_device_interface =
+        env->FindClass("io/github/zortos293/lichii/features/input/LichiiInputDevice");
+    s_lichii_input_device_interface =
+        reinterpret_cast<jclass>(env->NewGlobalRef(lichii_input_device_interface));
+    s_lichii_input_device_get_name =
+        env->GetMethodID(lichii_input_device_interface, "getName", "()Ljava/lang/String;");
+    s_lichii_input_device_get_guid =
+        env->GetMethodID(lichii_input_device_interface, "getGUID", "()Ljava/lang/String;");
+    s_lichii_input_device_get_port = env->GetMethodID(lichii_input_device_interface, "getPort",
                                                     "()I");
-    s_yuzu_input_device_get_supports_vibration =
-        env->GetMethodID(yuzu_input_device_interface, "getSupportsVibration", "()Z");
-    s_yuzu_input_device_vibrate = env->GetMethodID(yuzu_input_device_interface, "vibrate",
+    s_lichii_input_device_get_supports_vibration =
+        env->GetMethodID(lichii_input_device_interface, "getSupportsVibration", "()Z");
+    s_lichii_input_device_vibrate = env->GetMethodID(lichii_input_device_interface, "vibrate",
                                                    "(F)V");
-    s_yuzu_input_device_get_axes =
-        env->GetMethodID(yuzu_input_device_interface, "getAxes", "()[Ljava/lang/Integer;");
-    s_yuzu_input_device_has_keys =
-        env->GetMethodID(yuzu_input_device_interface, "hasKeys", "([I)[Z");
-    env->DeleteLocalRef(yuzu_input_device_interface);
+    s_lichii_input_device_get_axes =
+        env->GetMethodID(lichii_input_device_interface, "getAxes", "()[Ljava/lang/Integer;");
+    s_lichii_input_device_has_keys =
+        env->GetMethodID(lichii_input_device_interface, "hasKeys", "([I)[Z");
+    env->DeleteLocalRef(lichii_input_device_interface);
     s_add_netplay_message = env->GetStaticMethodID(s_native_library_class, "addNetPlayMessage",
                                                    "(ILjava/lang/String;)V");
     s_clear_chat = env->GetStaticMethodID(s_native_library_class, "clearChat", "()V");

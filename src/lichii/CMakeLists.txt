@@ -1,0 +1,509 @@
+# SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Set the RPATH for Qt Libraries
+# This must be done before the `lichii` target is created
+if (LICHII_USE_BUNDLED_QT AND LINUX)
+    set(CMAKE_BUILD_RPATH "${CMAKE_BINARY_DIR}/bin/lib/")
+endif()
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+if(LICHII_TESTS)
+    add_subdirectory(../tests/qt_compatibility ${CMAKE_BINARY_DIR}/qt_compatibility_tests)
+endif()
+
+add_executable(lichii
+    Info.plist
+    about_dialog.cpp
+    about_dialog.h
+    aboutdialog.ui
+    compatibility_report.cpp
+    compatibility_report.h
+    applets/qt_amiibo_settings.cpp
+    applets/qt_amiibo_settings.h
+    applets/qt_amiibo_settings.ui
+    applets/qt_controller.cpp
+    applets/qt_controller.h
+    applets/qt_controller.ui
+    applets/qt_error.cpp
+    applets/qt_error.h
+    applets/qt_profile_select.cpp
+    applets/qt_profile_select.h
+    applets/qt_software_keyboard.cpp
+    applets/qt_software_keyboard.h
+    applets/qt_software_keyboard.ui
+    applets/qt_web_browser.cpp
+    applets/qt_web_browser.h
+    applets/qt_web_browser_scripts.h
+    bootmanager.cpp
+    bootmanager.h
+    configuration/configuration_shared.cpp
+    configuration/configuration_shared.h
+    configuration/configure.ui
+    configuration/configure_applets.cpp
+    configuration/configure_applets.h
+    configuration/configure_applets.ui
+    configuration/configure_audio.cpp
+    configuration/configure_audio.h
+    configuration/configure_audio.ui
+    configuration/configure_camera.cpp
+    configuration/configure_camera.h
+    configuration/configure_camera.ui
+    configuration/configure_cpu.cpp
+    configuration/configure_cpu.h
+    configuration/configure_cpu.ui
+    configuration/configure_cpu_debug.cpp
+    configuration/configure_cpu_debug.h
+    configuration/configure_cpu_debug.ui
+    configuration/configure_debug.cpp
+    configuration/configure_debug.h
+    configuration/configure_debug.ui
+    configuration/configure_debug_controller.cpp
+    configuration/configure_debug_controller.h
+    configuration/configure_debug_controller.ui
+    configuration/configure_debug_tab.cpp
+    configuration/configure_debug_tab.h
+    configuration/configure_debug_tab.ui
+    configuration/configure_dialog.cpp
+    configuration/configure_dialog.h
+    configuration/configure_filesystem.cpp
+    configuration/configure_filesystem.h
+    configuration/configure_filesystem.ui
+    configuration/configure_general.cpp
+    configuration/configure_general.h
+    configuration/configure_general.ui
+    configuration/configure_graphics.cpp
+    configuration/configure_graphics.h
+    configuration/amd_fsr4_panel.cpp
+    configuration/amd_fsr4_panel.h
+    configuration/nvidia_dlss_panel.cpp
+    configuration/nvidia_dlss_panel.h
+    configuration/configure_graphics.ui
+    configuration/configure_graphics_advanced.cpp
+    configuration/configure_graphics_advanced.h
+    configuration/configure_graphics_advanced.ui
+    configuration/configure_graphics_extensions.cpp
+    configuration/configure_graphics_extensions.h
+    configuration/configure_graphics_extensions.ui
+    configuration/configure_hotkeys.cpp
+    configuration/configure_hotkeys.h
+    configuration/configure_hotkeys.ui
+    configuration/configure_input.cpp
+    configuration/configure_input.h
+    configuration/configure_input.ui
+    configuration/configure_input_advanced.cpp
+    configuration/configure_input_advanced.h
+    configuration/configure_input_advanced.ui
+    configuration/configure_input_per_game.cpp
+    configuration/configure_input_per_game.h
+    configuration/configure_input_per_game.ui
+    configuration/configure_input_player.cpp
+    configuration/configure_input_player.h
+    configuration/configure_input_player.ui
+    configuration/configure_input_player_widget.cpp
+    configuration/configure_input_player_widget.h
+    configuration/configure_input_profile_dialog.cpp
+    configuration/configure_input_profile_dialog.h
+    configuration/configure_input_profile_dialog.ui
+    configuration/configure_mouse_panning.cpp
+    configuration/configure_mouse_panning.h
+    configuration/configure_mouse_panning.ui
+    configuration/configure_microphone.cpp
+    configuration/configure_microphone.h
+    configuration/configure_motion_touch.cpp
+    configuration/configure_motion_touch.h
+    configuration/configure_motion_touch.ui
+    configuration/configure_per_game.cpp
+    configuration/configure_per_game.h
+    configuration/configure_per_game.ui
+    configuration/configure_per_game_addons.cpp
+    configuration/configure_per_game_addons.h
+    configuration/configure_per_game_addons.ui
+    configuration/configure_profile_manager.cpp
+    configuration/configure_profile_manager.h
+    configuration/configure_profile_manager.ui
+    configuration/configure_ringcon.cpp
+    configuration/configure_ringcon.h
+    configuration/configure_ringcon.ui
+    configuration/configure_network.cpp
+    configuration/configure_network.h
+    configuration/configure_network.ui
+    configuration/configure_system.cpp
+    configuration/configure_system.h
+    configuration/configure_system.ui
+    configuration/configure_tas.cpp
+    configuration/configure_tas.h
+    configuration/configure_tas.ui
+    configuration/configure_touch_from_button.cpp
+    configuration/configure_touch_from_button.h
+    configuration/configure_touch_from_button.ui
+    configuration/configure_touchscreen_advanced.cpp
+    configuration/configure_touchscreen_advanced.h
+    configuration/configure_touchscreen_advanced.ui
+    configuration/configure_touch_widget.h
+    configuration/configure_ui.cpp
+    configuration/configure_ui.h
+    configuration/configure_ui.ui
+    configuration/configure_vibration.cpp
+    configuration/configure_vibration.h
+    configuration/configure_vibration.ui
+    configuration/configure_web.cpp
+    configuration/configure_web.h
+    configuration/configure_web.ui
+    configuration/input_profiles.cpp
+    configuration/input_profiles.h
+    configuration/shared_widget.cpp
+    configuration/shared_widget.h
+    debugger/console.cpp
+    debugger/console.h
+    debugger/controller.cpp
+    debugger/controller.h
+
+    game/game_list.cpp game/game_list.h
+    game/game_grid.cpp game/game_grid.h
+
+    game/game_tree.h game/game_tree.cpp
+    game/game_card.h game/game_card.cpp
+    game/search_field.h game/search_field.cpp
+
+    hotkeys.cpp
+    hotkeys.h
+    install_dialog.cpp
+    install_dialog.h
+    loading_screen.cpp
+    loading_screen.h
+    loading_screen.ui
+
+    main.cpp
+    nx2_switches.h
+
+    multiplayer/chat_room.cpp
+    multiplayer/chat_room.h
+    multiplayer/chat_room.ui
+    multiplayer/client_room.h
+    multiplayer/client_room.cpp
+    multiplayer/client_room.ui
+    multiplayer/direct_connect.cpp
+    multiplayer/direct_connect.h
+    multiplayer/direct_connect.ui
+    multiplayer/host_room.cpp
+    multiplayer/host_room.h
+    multiplayer/host_room.ui
+    multiplayer/lobby.cpp
+    multiplayer/lobby.h
+    multiplayer/lobby.ui
+    multiplayer/lobby_p.h
+    multiplayer/message.cpp
+    multiplayer/message.h
+    multiplayer/moderation_dialog.cpp
+    multiplayer/moderation_dialog.h
+    multiplayer/moderation_dialog.ui
+    multiplayer/state.cpp
+    multiplayer/state.h
+    multiplayer/validation.h
+    startup_checks.cpp
+    startup_checks.h
+    set_play_time_dialog.cpp
+    set_play_time_dialog.h
+    util/clickable_label.cpp
+    util/clickable_label.h
+    util/controller_navigation.cpp
+    util/controller_navigation.h
+    util/limitable_input_dialog.cpp
+    util/limitable_input_dialog.h
+    util/overlay_dialog.cpp
+    util/overlay_dialog.h
+    util/overlay_dialog.ui
+    util/sequence_dialog/sequence_dialog.cpp
+    util/sequence_dialog/sequence_dialog.h
+    util/url_request_interceptor.cpp
+    util/url_request_interceptor.h
+    util/util.cpp
+    util/util.h
+    util/icon_search.cpp
+    util/icon_search.h
+
+    user_data_migration.h user_data_migration.cpp
+
+    lichii.qrc
+    lichii.rc
+    migration_dialog.h migration_dialog.cpp
+    nup_dialogs.h nup_dialogs.cpp
+    shader_warm_dialog.h shader_warm_dialog.cpp
+    recommended_settings_dialog.h recommended_settings_dialog.cpp
+    whats_new_dialog.h whats_new_dialog.cpp
+    bug_report_dialog.h bug_report_dialog.cpp
+    migration_worker.h migration_worker.cpp
+    libqt_common.h libqt_common.cpp
+
+    deps_dialog.cpp deps_dialog.h deps_dialog.ui
+
+    data_dialog.h data_dialog.cpp data_dialog.ui
+    data_widget.ui
+    ryujinx_dialog.h ryujinx_dialog.cpp ryujinx_dialog.ui
+    main_window.h main_window.cpp main.ui
+
+    configuration/system/new_user_dialog.h configuration/system/new_user_dialog.cpp configuration/system/new_user_dialog.ui
+    configuration/system/profile_avatar_dialog.h configuration/system/profile_avatar_dialog.cpp
+    configuration/addon/mod_select_dialog.h configuration/addon/mod_select_dialog.cpp configuration/addon/mod_select_dialog.ui
+
+    render/performance_overlay.h render/performance_overlay.cpp
+    updater/update_dialog.h updater/update_dialog.cpp updater/update_dialog.ui
+    game/common.h
+    game/carousel.h game/carousel.cpp
+)
+
+set_target_properties(lichii PROPERTIES OUTPUT_NAME "lichii")
+
+# Shipped next to the executable: the NX2 switches a GUI launch cannot set another way. Read at
+# startup (LoadNx2Switches in main.cpp); a user copy in %APPDATA%\lichii overrides it.
+add_custom_command(TARGET lichii POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PROJECT_SOURCE_DIR}/dist/nx2_switches.txt" "$<TARGET_FILE_DIR:lichii>/nx2_switches.txt"
+    VERBATIM)
+
+if (LICHII_CRASH_DUMPS)
+    target_sources(lichii PRIVATE
+        breakpad.cpp
+        breakpad.h)
+
+    target_link_libraries(lichii PRIVATE libbreakpad_client)
+    target_compile_definitions(lichii PRIVATE LICHII_CRASH_DUMPS)
+endif()
+
+if (ENABLE_RESHADE)
+    target_sources(lichii PRIVATE
+        configuration/configure_post_processing.cpp
+        configuration/configure_post_processing.h)
+endif()
+
+if (CXX_CLANG)
+    target_compile_definitions(lichii PRIVATE
+        $<$<VERSION_LESS:$<CXX_COMPILER_VERSION>,15>:CANNOT_EXPLICITLY_INSTANTIATE>)
+endif()
+
+file(GLOB_RECURSE ICONS ${PROJECT_SOURCE_DIR}/dist/icons/*)
+file(GLOB_RECURSE THEMES ${PROJECT_SOURCE_DIR}/dist/qt_themes/*)
+
+if (ENABLE_UPDATE_CHECKER)
+    target_compile_definitions(lichii PUBLIC ENABLE_UPDATE_CHECKER)
+endif()
+
+if (ENABLE_QT_TRANSLATION)
+    set(LICHII_QT_LANGUAGES "${PROJECT_SOURCE_DIR}/dist/languages" CACHE PATH "Path to the translation bundle for the Qt frontend")
+    option(GENERATE_QT_TRANSLATION "Generate en.ts as the translation source file" OFF)
+    option(WORKAROUND_BROKEN_LUPDATE "Run lupdate directly through CMake if Qt's convenience wrappers don't work" OFF)
+
+    # Update source TS file if enabled
+    if (GENERATE_QT_TRANSLATION)
+        get_target_property(SRCS lichii SOURCES)
+        # these calls to qt_create_translation also creates a rule to generate en.qm which conflicts with providing english plurals
+        # so we have to set a OUTPUT_LOCATION so that we don't have multiple rules to generate en.qm
+        set_source_files_properties(${LICHII_QT_LANGUAGES}/en.ts PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/translations")
+        if (WORKAROUND_BROKEN_LUPDATE)
+            add_custom_command(OUTPUT ${LICHII_QT_LANGUAGES}/en.ts
+                COMMAND lupdate
+                    -source-language en_US
+                    -target-language en_US
+                    ${SRCS}
+                    ${UIS}
+                    -ts ${LICHII_QT_LANGUAGES}/en.ts
+                DEPENDS
+                    ${SRCS}
+                    ${UIS}
+                WORKING_DIRECTORY
+                    ${CMAKE_CURRENT_SOURCE_DIR})
+        else()
+            qt_create_translation(QM_FILES
+                ${SRCS}
+                ${UIS}
+                ${LICHII_QT_LANGUAGES}/en.ts
+            OPTIONS
+                -source-language en_US
+                -target-language en_US)
+        endif()
+
+        # Generate plurals into dist/english_plurals/generated_en.ts so it can be used to revise dist/english_plurals/en.ts
+        set(GENERATED_PLURALS_FILE ${PROJECT_SOURCE_DIR}/dist/english_plurals/generated_en.ts)
+        set_source_files_properties(${GENERATED_PLURALS_FILE} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/plurals")
+        if (WORKAROUND_BROKEN_LUPDATE)
+            add_custom_command(OUTPUT ${GENERATED_PLURALS_FILE}
+                COMMAND lupdate
+                    -source-language en_US
+                    -target-language en_US
+                    ${SRCS}
+                    ${UIS}
+                    -ts ${GENERATED_PLURALS_FILE}
+                DEPENDS
+                    ${SRCS}
+                    ${UIS}
+                WORKING_DIRECTORY
+                    ${CMAKE_CURRENT_SOURCE_DIR})
+        else()
+            qt_create_translation(QM_FILES ${SRCS} ${UIS} ${GENERATED_PLURALS_FILE} OPTIONS -pluralonly -source-language en_US -target-language en_US)
+        endif()
+
+        add_custom_target(translation ALL DEPENDS ${LICHII_QT_LANGUAGES}/en.ts ${GENERATED_PLURALS_FILE})
+    endif()
+
+    # Find all TS files except en.ts
+    file(GLOB_RECURSE LANGUAGES_TS ${LICHII_QT_LANGUAGES}/*.ts)
+    list(REMOVE_ITEM LANGUAGES_TS ${LICHII_QT_LANGUAGES}/en.ts)
+
+    # Compile TS files to QM files
+    qt_add_translation(LANGUAGES_QM ${LANGUAGES_TS})
+
+    # Compile english plurals TS file to en.qm
+    qt_add_translation(LANGUAGES_QM ${PROJECT_SOURCE_DIR}/dist/english_plurals/en.ts)
+
+    # Build a QRC file from the QM file list
+    set(LANGUAGES_QRC ${CMAKE_CURRENT_BINARY_DIR}/languages.qrc)
+    file(WRITE ${LANGUAGES_QRC} "<RCC><qresource prefix=\"languages\">\n")
+    foreach (QM ${LANGUAGES_QM})
+        get_filename_component(QM_FILE ${QM} NAME)
+        file(APPEND ${LANGUAGES_QRC} "<file>${QM_FILE}</file>\n")
+    endforeach (QM)
+    file(APPEND ${LANGUAGES_QRC} "</qresource></RCC>")
+
+    # Add the QRC file to package in all QM files
+    qt_add_resources(LANGUAGES ${LANGUAGES_QRC})
+else()
+    set(LANGUAGES)
+endif()
+
+target_sources(lichii
+    PRIVATE
+        ${ICONS}
+        ${LANGUAGES}
+        ${THEMES})
+
+# TODO(crueter): Move Assets.car/icon/icns handling to its own Module.
+if (APPLE)
+    target_sources(lichii PRIVATE util/macos_sleep.cpp util/macos_sleep.h)
+
+    # Use the supplied Lichii artwork for all macOS generators.
+    set(_dist "${CMAKE_SOURCE_DIR}/dist")
+    set(_icons "${_dist}/lichii.icns")
+    if (CMAKE_GENERATOR MATCHES "Xcode")
+        set_target_properties(lichii PROPERTIES
+            MACOSX_BUNDLE_ICON_FILE lichii.icns
+            # Also force xcode to manage signing for us.
+            XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ON
+            XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED ON)
+    endif()
+
+    set_source_files_properties(${_icons} PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources)
+    target_sources(lichii PRIVATE ${_icons})
+
+    set_target_properties(lichii PROPERTIES MACOSX_BUNDLE TRUE)
+    set_target_properties(lichii PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist)
+
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib")
+    find_library(MOLTENVK_LIBRARY MoltenVK REQUIRED)
+    message(STATUS "Using MoltenVK at ${MOLTENVK_LIBRARY}.")
+
+    set_source_files_properties(${MOLTENVK_LIBRARY} PROPERTIES
+        MACOSX_PACKAGE_LOCATION Frameworks
+        XCODE_FILE_ATTRIBUTES "CodeSignOnCopy")
+    target_sources(lichii PRIVATE ${MOLTENVK_LIBRARY})
+elseif(WIN32)
+    # compile as a win32 gui application instead of a console application
+    target_link_libraries(lichii PRIVATE Qt6::EntryPointPrivate)
+    if(MSVC)
+        target_link_libraries(lichii PRIVATE version.lib)
+        set_target_properties(lichii PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
+    elseif(MINGW)
+        set_target_properties(lichii PROPERTIES LINK_FLAGS_RELEASE "-Wl,--subsystem,windows")
+        target_link_libraries(lichii PRIVATE dwmapi)
+    endif()
+endif()
+
+target_link_libraries(lichii PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(lichii PRIVATE common core input_common frontend_common network video_core qt_common)
+target_link_libraries(lichii PRIVATE Boost::headers Qt6::Widgets Qt6::Concurrent Qt6::Network)
+# Unpacks NVIDIA's files from the Streamline release (nvidia_dlss_panel.cpp).
+target_link_libraries(lichii PRIVATE ZLIB::ZLIB)
+if (WIN32)
+    target_link_libraries(lichii PRIVATE QuaZip::QuaZip)
+endif()
+target_link_libraries(lichii PRIVATE ${PLATFORM_LIBRARIES} Threads::Threads)
+if (ENABLE_OPENGL)
+    target_link_libraries(lichii PRIVATE glad)
+endif()
+
+if (UNIX AND NOT APPLE)
+    target_link_libraries(lichii PRIVATE Qt6::DBus)
+endif()
+
+if (ENABLE_WEB_SERVICE)
+    target_compile_definitions(lichii PRIVATE ENABLE_WEB_SERVICE)
+endif()
+
+if (LICHII_USE_QT_MULTIMEDIA)
+    target_link_libraries(lichii PRIVATE Qt6::Multimedia)
+    target_compile_definitions(lichii PRIVATE LICHII_USE_QT_MULTIMEDIA)
+endif ()
+
+if (LICHII_USE_QT_WEB_ENGINE)
+    target_link_libraries(lichii PRIVATE Qt6::WebEngineCore Qt6::WebEngineWidgets)
+    target_compile_definitions(lichii PRIVATE LICHII_USE_QT_WEB_ENGINE)
+endif ()
+
+if(UNIX AND NOT APPLE)
+    install(TARGETS lichii)
+endif()
+
+if (WIN32 AND NOT LICHII_USE_BUNDLED_QT)
+    # Copy the Qt DLLs and plugins next to the executable. WINDEPLOYQT_EXECUTABLE was never set, so
+    # this step ran the emulator itself with windeployqt's arguments and failed every build that
+    # uses an installed Qt (the Windows release workflow).
+    if (TARGET Qt6::windeployqt)
+        set(WINDEPLOYQT_EXECUTABLE "$<TARGET_FILE:Qt6::windeployqt>")
+    else()
+        find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt6 windeployqt
+                     HINTS "${QT_HOST_PATH}/bin" "${QT_TARGET_PATH}/bin")
+    endif()
+    file(GENERATE OUTPUT "$<TARGET_FILE_DIR:lichii>/qt.conf"
+         CONTENT "[Paths]\nPrefix=.\nPlugins=plugins\n")
+    if (WINDEPLOYQT_EXECUTABLE)
+        set(LICHII_EXE_DIR "$<TARGET_FILE_DIR:lichii>")
+        add_custom_command(TARGET lichii POST_BUILD COMMAND ${WINDEPLOYQT_EXECUTABLE} "$<TARGET_FILE:lichii>" --dir "${LICHII_EXE_DIR}" --libdir "${LICHII_EXE_DIR}" --plugindir "${LICHII_EXE_DIR}/plugins" --no-compiler-runtime --no-opengl-sw --no-system-d3d-compiler --no-translations --verbose 0)
+    else()
+        message(WARNING "windeployqt not found: copy the Qt DLLs next to the executable yourself")
+    endif()
+endif()
+
+if (ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64)
+    target_link_libraries(lichii PRIVATE dynarmic::dynarmic)
+endif()
+
+if (LICHII_ROOM)
+    target_link_libraries(lichii PRIVATE lichii-room)
+endif()
+
+if (NOT MSVC AND (APPLE OR NOT LICHII_STATIC_BUILD))
+    # needed for vma
+    target_compile_options(lichii PRIVATE
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-conversion>
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-variable>
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-unused-parameter>
+        $<$<COMPILE_LANGUAGE:C,CXX>:-Wno-missing-field-initializers>)
+endif()
+
+# Remember that the linker is incredibly stupid.
+target_link_libraries(lichii PRIVATE OpenSSL::SSL OpenSSL::Crypto SDL3::SDL3)
+
+# NX archive conversion and editing (nx_tools.cpp) runs nxformat in the process, linked statically.
+if (TARGET nxformat::static_nozstd)
+    target_sources(lichii PRIVATE nx_tools.h nx_tools.cpp)
+    target_link_libraries(lichii PRIVATE nxformat::static_nozstd)
+    target_compile_definitions(lichii PRIVATE LICHII_NX_TOOLS)
+endif()
+create_target_directory_groups(lichii)

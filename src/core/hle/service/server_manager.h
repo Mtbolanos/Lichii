@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -60,6 +59,9 @@ public:
     void SetDeferralCancelHandler(DeferralCancelHandler&& handler);
 
     Result LoopProcess();
+    /// Instead of LoopProcess, when the kernel refuses to run the server: stops the additional
+    /// host threads, so nothing serves requests, and the destructor waits for no loop.
+    void SkipLoop();
     void StartAdditionalHostThreads(const char* name, size_t num_threads);
 
     static void RunServer(std::unique_ptr<ServerManager>&& server);
@@ -111,6 +113,7 @@ private:
     Common::Event m_stopped{};
     std::vector<std::jthread> m_threads{};
     std::stop_source m_stop_source{};
+    bool m_loop_skipped{};
 };
 
 } // namespace Service

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -68,6 +67,70 @@ void ShaderCache::SyncGuestHost() {
     RemovePendingShaders();
 }
 
+namespace {
+
+std::vector<u8> ReadProgramBytes(Tegra::MemoryManager& gpu_memory, GPUVAddr address, size_t size) {
+    std::vector<u8> bytes(size);
+    gpu_memory.ReadBlockUnsafe(address, bytes.data(), bytes.size());
+    return bytes;
+}
+
+} // Anonymous namespace
+
+std::vector<CapturedProgram> ShaderCache::CaptureGraphicsPrograms(
+    const std::array<u64, NUM_PROGRAMS>& unique_hashes) const {
+    constexpr size_t native_header_size = 128;
+    std::vector<CapturedProgram> programs;
+    const auto& regs{maxwell3d->regs};
+    const bool native = maxwell3d->GetNativeMacroEngine().native_turing;
+    for (size_t index = 0; index < NUM_PROGRAMS; ++index) {
+        const ShaderInfo* const info = shader_infos[index];
+        if (unique_hashes[index] == 0 || !info || info->unique_hash != unique_hashes[index]) {
+            continue;
+        }
+        const auto& config{regs.pipelines[index]};
+        const GPUVAddr address{native ? (static_cast<u64>(config.reserved[0] & 0xff) << 32) |
+                                            config.reserved[1]
+                                      : regs.program_region.Address() + config.offset};
+        CapturedProgram program{
+            .slot = static_cast<u32>(index), .unique_hash = info->unique_hash, .address = address};
+        if (const auto& lowered = info->lowered_native) {
+            const size_t size = lowered->source_size;
+            program.native_key = lowered->native_program_key;
+            program.header =
+                ReadProgramBytes(*gpu_memory, address, (std::min)(size, native_header_size));
+            if (size > native_header_size) {
+                program.code = ReadProgramBytes(*gpu_memory, address + native_header_size,
+                                                size - native_header_size);
+            }
+        } else {
+            program.code = ReadProgramBytes(*gpu_memory, address, info->size_bytes);
+        }
+        programs.push_back(std::move(program));
+    }
+    return programs;
+}
+
+std::optional<CapturedProgram> ShaderCache::CaptureComputeProgram() const {
+    const GPUVAddr address{kepler_compute->regs.code_loc.Address() +
+                           kepler_compute->launch_description.program_start};
+    const std::optional<VAddr> cpu_address{gpu_memory->GpuToCpuAddress(address)};
+    const ShaderInfo* const info = cpu_address ? TryGet(*cpu_address) : nullptr;
+    if (!info) {
+        return std::nullopt;
+    }
+    const auto& lowered = info->lowered_native;
+    return CapturedProgram{
+        .slot = static_cast<u32>(NUM_PROGRAMS),
+        .unique_hash = info->unique_hash,
+        .native_key = lowered ? lowered->native_program_key : 0,
+        .address = address,
+        .header = {},
+        .code = ReadProgramBytes(*gpu_memory, address,
+                                 lowered ? lowered->source_size : info->size_bytes),
+    };
+}
+
 void ShaderCache::RefreshDebugRejections(bool unrejected) {
     std::vector<std::pair<VAddr, VAddr>> ranges;
     {
@@ -121,9 +184,11 @@ u64 ShaderCache::MeshStateHash() const {
 
 bool ShaderCache::RefreshStages(std::array<u64, 6>& unique_hashes) try {
     auto& dirty{maxwell3d->dirty.flags};
-    if (!dirty[VideoCommon::Dirty::Shaders]) {
+    const u64 removals{removal_serial.load(std::memory_order_acquire)};
+    if (!dirty[VideoCommon::Dirty::Shaders] && removals == seen_removal_serial) {
         return last_shaders_valid;
     }
+    seen_removal_serial = removals;
     dirty[VideoCommon::Dirty::Shaders] = false;
 
     const GPUVAddr base_addr{maxwell3d->regs.program_region.Address()};
@@ -381,8 +446,8 @@ void ShaderCache::Register(std::unique_ptr<ShaderInfo> data, VAddr addr, size_t 
     Entry* const entry = NewEntry(addr, addr_end, data.get());
     page_filter.Mark(addr, size);
 
-    const u64 page_end = (addr_end + YUZU_PAGESIZE - 1) >> YUZU_PAGEBITS;
-    for (u64 page = addr >> YUZU_PAGEBITS; page < page_end; ++page) {
+    const u64 page_end = (addr_end + LICHII_PAGESIZE - 1) >> LICHII_PAGEBITS;
+    for (u64 page = addr >> LICHII_PAGEBITS; page < page_end; ++page) {
         invalidation_cache[page].push_back(entry);
     }
 
@@ -402,8 +467,8 @@ void ShaderCache::InvalidatePagesInRegion(VAddr addr, size_t size) {
             return rejected.first >= addr && rejected.first < addr_end;
         });
     }
-    const u64 page_end = (addr_end + YUZU_PAGESIZE - 1) >> YUZU_PAGEBITS;
-    for (u64 page = addr >> YUZU_PAGEBITS; page < page_end; ++page) {
+    const u64 page_end = (addr_end + LICHII_PAGESIZE - 1) >> LICHII_PAGEBITS;
+    for (u64 page = addr >> LICHII_PAGEBITS; page < page_end; ++page) {
         auto it = invalidation_cache.find(page);
         if (it == invalidation_cache.end()) {
             continue;
@@ -433,6 +498,7 @@ void ShaderCache::RemovePendingShaders() {
 
     if (!removed_shaders.empty()) {
         Nx2FastDraw::Break(Nx2FastDraw::Reason::Invalidation);
+        removal_serial.fetch_add(1, std::memory_order_release);
         if (removed_shaders.size() > 16) {
             std::ranges::sort(removed_shaders, std::less<ShaderInfo*>{});
             std::erase_if(storage, [&removed_shaders](const std::unique_ptr<ShaderInfo>& shader) {
@@ -463,8 +529,8 @@ void ShaderCache::InvalidatePageEntries(std::vector<Entry*>& entries, VAddr addr
 }
 
 void ShaderCache::RemoveEntryFromInvalidationCache(const Entry* entry) {
-    const u64 page_end = (entry->addr_end + YUZU_PAGESIZE - 1) >> YUZU_PAGEBITS;
-    for (u64 page = entry->addr_start >> YUZU_PAGEBITS; page < page_end; ++page) {
+    const u64 page_end = (entry->addr_end + LICHII_PAGESIZE - 1) >> LICHII_PAGEBITS;
+    for (u64 page = entry->addr_start >> LICHII_PAGEBITS; page < page_end; ++page) {
         const auto entries_it = invalidation_cache.find(page);
         ASSERT(entries_it != invalidation_cache.end());
         std::vector<Entry*>& entries = entries_it->second;

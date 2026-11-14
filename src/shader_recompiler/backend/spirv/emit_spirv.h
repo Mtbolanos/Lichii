@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -47,21 +46,29 @@ constexpr u32 COOPERATIVE_HMMA_TEST_LANE_WORDS = 10;
 /// buffer (set 0, binding 0), to check at startup that the driver's matrix layout is the expected.
 [[nodiscard]] std::vector<u32> EmitCooperativeHmmaTest(u32 spirv_version);
 
+/// Index the emulation writes for the vertices of a point or line past the primitive count. The
+/// vertex shader moves such a vertex outside the clip volume. (Triangles get 0 0 0 instead, a
+/// degenerate triangle.)
+constexpr u32 MESH_EMULATION_UNUSED_VERTEX = ~0U;
+
 /// Mesh emulation without VK_EXT_mesh_shader. The mesh program runs as a compute shader
 /// (RuntimeInfo::mesh_as_compute) that writes one block per workgroup to a u32 storage buffer:
 /// max_vertices * vertex_lines words (vertex v, line l at v * vertex_lines + l), then
-/// max_primitives * 3 vertex indices (0 0 0 past the primitive count, a degenerate triangle).
+/// max_primitives * PrimitiveVertices() vertex indices (1 for points, 2 for lines, 3 for
+/// triangles).
 [[nodiscard]] inline u32 MeshEmulationBlockWords(const MeshInfo& mesh) {
     return mesh.max_vertices * static_cast<u32>(mesh.vertex_lines.size()) +
-           mesh.max_primitives * 3;
+           mesh.max_primitives * mesh.PrimitiveVertices();
 }
 
-/// Vertex shader drawing the emulation's output as a triangle list of
-/// groups * max_primitives * 3 vertices, with the mesh program's vertex outputs. With a task
-/// program (args_binding != ~0) the blocks start at the arguments' MESH_EMULATION_ARGS_BASE.
+/// Vertex shader drawing the emulation's output as a point, line or triangle list of
+/// groups * max_primitives * PrimitiveVertices() vertices, with the mesh program's vertex
+/// outputs. Points get point_size unless the program writes its own. With a task program
+/// (args_binding != ~0) the blocks start at the arguments' MESH_EMULATION_ARGS_BASE.
 [[nodiscard]] std::vector<u32> EmitMeshEmulationVertex(const Profile& profile,
                                                        const MeshInfo& mesh, u32 binding,
-                                                       u32 args_binding, bool convert_depth);
+                                                       u32 args_binding, bool convert_depth,
+                                                       float point_size = 1.0f);
 
 /// Mesh emulation with a task program: push constants of the distribution pass.
 struct MeshEmulationDistributionConstants {

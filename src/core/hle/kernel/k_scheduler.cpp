@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <bit>
@@ -20,6 +19,7 @@
 #include "core/hle/kernel/k_scoped_scheduler_lock_and_sleep.h"
 #include "core/hle/kernel/k_thread.h"
 #include "core/hle/kernel/kernel.h"
+#include "core/hle/kernel/nx2_thread_stats.h"
 #include "core/hle/kernel/physical_core.h"
 
 namespace Kernel {
@@ -354,6 +354,9 @@ void KScheduler::SwitchThread(KernelCore& kernel, KThread* next_thread) {
         cur_process->AddCpuTime(tick_diff);
     }
     m_last_context_switch_time = cur_tick;
+    if (Nx2ThreadStats::g_enabled) {
+        Nx2ThreadStats::OnSwitch(cur_thread, next_thread, cur_tick, tick_diff);
+    }
 
     // Update our previous thread.
     if (cur_process != nullptr) {
@@ -440,7 +443,7 @@ void KScheduler::ScheduleImplFiber(KernelCore& kernel) {
             // The next thread is nullptr!
 
             // Switch to the idle thread. Note: HOS treats idling as a special case for
-            // performance. This is not *required* for yuzu's purposes, and for singlecore
+            // performance. This is not *required* for Lichii's purposes, and for singlecore
             // compatibility, we can just move the logic that would go here into the execution
             // of the idle thread. If we ever remove singlecore, we should implement this
             // accurately to HOS.
@@ -529,6 +532,13 @@ void KScheduler::OnThreadStateChanged(KernelCore& kernel, KThread* thread, Threa
     ASSERT(IsSchedulerLockedByCurrentThread(kernel));
     // Check if the state has changed, because if it hasn't there's nothing to do.
     if (const ThreadState cur_state = thread->GetRawState(); cur_state != old_state) {
+        if (Nx2ThreadStats::g_enabled) {
+            Nx2ThreadStats::OnStateChanged(
+                thread, kernel.System().CoreTiming().GetClockTicks(),
+                (old_state & ThreadState::Mask) == ThreadState::Waiting,
+                cur_state == ThreadState::Runnable,
+                (cur_state & ThreadState::Mask) == ThreadState::Waiting);
+        }
         // Update the priority queues.
         if (old_state == ThreadState::Runnable) {
             // If we were previously runnable, then we're not runnable now, and we should remove.

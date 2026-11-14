@@ -9,7 +9,6 @@
 #include <optional>
 #include <stop_token>
 #include <string>
-#include <unordered_set>
 
 #include "common/common_types.h"
 #include "common/settings_enums.h"
@@ -38,33 +37,54 @@ std::filesystem::path WarmCountPath(const std::filesystem::path& warm_file);
 /// file of another size.
 u64 ReadWarmCount(const std::filesystem::path& warm_file);
 
-/// What a marker records: the precache file's size and last-write time, its entry count, the GPU
-/// driver version and device ID and the pipeline cache version.
+/// What a marker records: the precache file's size and content hash, its entry count, the GPU
+/// driver version and device ID, the pipeline cache version and the variant: a hash of the build's
+/// SPIR-V emission sources (EmissionStamp) and of the settings that change the SPIR-V or pipeline
+/// state of the precache builds (resolution scaling, for one).
+/// The content, not the last-write time: building the file again with the same shaders ("Precache
+/// Shaders" by hand) rebuilt every compute program (~3000, 8.5 min on a Ryzen 5 5600X). The
+/// variant: after an update that changes the SPIR-V, or a change to one of those settings, the
+/// programs are built again at boot, where before the marker still said "done" and they were
+/// built during play.
 struct WarmStamp {
     u64 size{};
-    s64 write_time{};
+    u64 content_hash{};
     u64 entries{};
     u32 driver{};
     u32 device_id{};
     u32 cache_version{};
+    u64 variant{};
 
-    /// True when `other` was written for the same file, driver, device and cache version (the
-    /// entry count is informative).
+    /// True when `other` was written for the same file contents, driver, device, cache version
+    /// and variant (the entry count is informative).
     [[nodiscard]] bool Matches(const WarmStamp& other) const noexcept {
-        return size == other.size && write_time == other.write_time && driver == other.driver &&
-               device_id == other.device_id && cache_version == other.cache_version;
+        return size == other.size && content_hash == other.content_hash &&
+               driver == other.driver && device_id == other.device_id &&
+               cache_version == other.cache_version && variant == other.variant;
     }
 };
 
-/// The stamp of `warm_file` as it is now, empty when its size or time cannot be read.
+/// A hash of this build's sources that shape the SPIR-V of guest shaders (the recompiler without
+/// its OpenGL backends, the native lowering, the shader environment and the Vulkan wrapper that
+/// calls the SPIR-V backend), made when it is built. It covers every source of the lowering stamp,
+/// and changes only with a build that may emit other SPIR-V, unlike the revision.
+[[nodiscard]] u64 EmissionStamp();
+
+/// The stamp of `warm_file` as it is now, empty when it cannot be read.
 std::optional<WarmStamp> CurrentWarmStamp(const std::filesystem::path& warm_file, u64 entries,
-                                          u32 driver, u32 device_id, u32 cache_version);
+                                          u32 driver, u32 device_id, u32 cache_version,
+                                          u64 variant = 0);
 
 /// The marker of `warm_file`, empty when there is none or it cannot be read.
 std::optional<WarmStamp> ReadWarmMarker(const std::filesystem::path& warm_file);
 
 /// Writes the marker of `warm_file`. Returns false when it cannot be written.
 bool WriteWarmMarker(const std::filesystem::path& warm_file, const WarmStamp& stamp);
+
+/// Removes the marker of `warm_file` before `new_file` replaces it, unless the marker was written
+/// for the same contents: a rebuild that comes out identical stays done.
+void DropStaleWarmMarker(const std::filesystem::path& warm_file,
+                         const std::filesystem::path& new_file);
 
 /// True when the title's precache has never finished: no precache file yet, or no marker next
 /// to it. A marker that no longer matches (new driver) is not seen here: the emulator checks that
@@ -89,30 +109,8 @@ bool TakeWarmBeforeStart();
 void RequestSkipWarm();
 bool TakeSkipWarm();
 
-/// The GPU driver, device and pipeline cache version pipelines were precached for.
-struct DriverStamp {
-    u32 driver{};
-    u32 device_id{};
-    u32 cache_version{};
-
-    bool operator==(const DriverStamp&) const = default;
-};
-
-/// The title's list of cached graphics pipelines an earlier precache built
-/// (<shader dir>/<title id>/precache-graphics.bin).
-std::filesystem::path PrecachedPipelinesPath(u64 title_id);
-
-/// The pipeline key hashes in `file`, empty when there is none or it was written for another
-/// driver, device or cache version.
-std::unordered_set<u64> ReadPrecachedPipelines(const std::filesystem::path& file,
-                                               const DriverStamp& stamp);
-
-/// Writes `hashes` for `stamp` to `file`. Returns false when it cannot be written.
-bool WritePrecachedPipelines(const std::filesystem::path& file, const DriverStamp& stamp,
-                             const std::unordered_set<u64>& hashes);
-
 /// Removes the title's precache file, its marker and count, the list of precached graphics
-/// pipelines and a leftover temporary file (rebuild or delete from the UI). Returns false when a file exists but cannot be removed, with
+/// pipelines older builds kept and a leftover temporary file (rebuild or delete from the UI). Returns false when a file exists but cannot be removed, with
 /// the reason in `error` when given.
 bool DeleteWarmFiles(u64 title_id, std::string* error = nullptr);
 
@@ -129,6 +127,11 @@ struct Result {
     size_t compute_programs{};   ///< Entries written to the precache file
     size_t skipped{};            ///< Programs that failed to extract or convert
 };
+
+/// Why a precache file must be built again: missing, of a cache version the emulator does not
+/// load, written by an older builder (WarmBuilderVersion) or changed since. Empty when it is
+/// current.
+std::optional<std::string> WarmFilesStale(const std::filesystem::path& warm_file);
 
 /// Builds the precache file for the game at `game_path` (any format the loader opens, Switch 2
 /// .nup first), from the user's own copy and keys, with no external tools. Runs on the calling

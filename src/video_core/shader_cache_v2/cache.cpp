@@ -124,13 +124,18 @@ void Cache::RecordProgram(const ProgramRecord& record) {
         std::scoped_lock lock{mutex};
         const auto [it, inserted] = programs.try_emplace(key, record.lowering_stamp);
         if (!inserted) {
-            if (it->second == record.lowering_stamp) {
+            if (it->second == record.lowering_stamp || keep_stale) {
                 return;
             }
             it->second = record.lowering_stamp;
         }
     }
     writer.Append(RecordKind::Program, key, EncodeProgram(record));
+}
+
+void Cache::KeepStalePrograms() {
+    std::scoped_lock lock{mutex};
+    keep_stale = true;
 }
 
 } // namespace VideoCommon::ShaderCacheV2

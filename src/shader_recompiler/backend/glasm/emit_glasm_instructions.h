@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -32,6 +31,9 @@ void EmitDemoteToHelperInvocation(EmitContext& ctx);
 void EmitBarrier(EmitContext& ctx);
 void EmitWorkgroupMemoryBarrier(EmitContext& ctx);
 void EmitDeviceMemoryBarrier(EmitContext& ctx);
+void EmitBarrierVoteInit(EmitContext& ctx);
+void EmitBarrierVote(EmitContext& ctx);
+void EmitVotedBarrier(EmitContext& ctx);
 void EmitPrologue(EmitContext& ctx);
 void EmitEpilogue(EmitContext& ctx);
 void EmitEmitVertex(EmitContext& ctx, ScalarS32 stream);

@@ -1,4 +1,3 @@
-@rem SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 @rem SPDX-License-Identifier: GPL-3.0-or-later
 
 @if "%DEBUG%" == "" @echo off

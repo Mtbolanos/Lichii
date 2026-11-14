@@ -8,7 +8,6 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "common/dkb_cpu_trace.h"
-#include "common/dkb_frame_trace.h"
 
 namespace {
 using namespace Common::DkbCpuTrace;
@@ -67,20 +66,19 @@ TEST_CASE("Thread CPU deltas reject missing or replaced counters", "[common][dkb
     REQUIRE_FALSE(CpuTimeDelta(after, before));
 }
 
-TEST_CASE("Thread CPU registrations are opt-in and track lifetime", "[common][dkb_cpu_trace]") {
+TEST_CASE("Thread CPU registrations track lifetime", "[common][dkb_cpu_trace]") {
     constexpr auto role = Role::GuestSingleCore;
     constexpr auto index = static_cast<size_t>(role);
-    const bool enabled = Common::DkbFrameTrace::Enabled();
     ThreadSample first;
     {
         Registration registration{role};
         first = ReadSnapshot().threads[index];
-        REQUIRE(first.active == enabled);
+        REQUIRE(first.active);
         {
             Registration duplicate{role};
             REQUIRE(ReadSnapshot().threads[index].generation == first.generation);
         }
-        REQUIRE(ReadSnapshot().threads[index].active == enabled);
+        REQUIRE(ReadSnapshot().threads[index].active);
     }
     REQUIRE_FALSE(ReadSnapshot().threads[index].active);
     REQUIRE_FALSE(ReadSnapshot().threads[index].cpu_ns);
@@ -88,9 +86,7 @@ TEST_CASE("Thread CPU registrations are opt-in and track lifetime", "[common][dk
     {
         Registration replacement{role};
         const auto second = ReadSnapshot().threads[index];
-        if (enabled) {
-            REQUIRE(second.generation > first.generation);
-        }
+        REQUIRE(second.generation > first.generation);
         REQUIRE_FALSE(CpuTimeDelta(first, second));
     }
 }
@@ -117,16 +113,14 @@ TEST_CASE("Thread CPU snapshots read the registered thread not the caller", "[co
     REQUIRE(after.wall_time >= before.wall_time);
     REQUIRE_FALSE(ReadSnapshot().threads[index].active);
 #if defined(_WIN32) || defined(__linux__)
-    if (Common::DkbFrameTrace::Enabled()) {
-        const auto delta = CpuTimeDelta(before.threads[index], after.threads[index]);
-        REQUIRE(busy);
-        REQUIRE(*busy > 0);
-        REQUIRE(delta);
-        REQUIRE(owner_before);
-        REQUIRE(owner_after);
-        REQUIRE(*before.threads[index].cpu_ns >= *owner_before);
-        REQUIRE(*after.threads[index].cpu_ns <= *owner_after);
-    }
+    const auto delta = CpuTimeDelta(before.threads[index], after.threads[index]);
+    REQUIRE(busy);
+    REQUIRE(*busy > 0);
+    REQUIRE(delta);
+    REQUIRE(owner_before);
+    REQUIRE(owner_after);
+    REQUIRE(*before.threads[index].cpu_ns >= *owner_before);
+    REQUIRE(*after.threads[index].cpu_ns <= *owner_after);
 #else
     REQUIRE_FALSE(busy);
     REQUIRE_FALSE(owner_before);

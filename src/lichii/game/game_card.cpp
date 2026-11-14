@@ -1,0 +1,170 @@
+// SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#include <QPainter>
+#include <QPainterPath>
+#include <QStringList>
+#include <QTextLayout>
+#include <QTextOption>
+#include "game_card.h"
+#include "qt_common/config/uisettings.h"
+
+GameCard::GameCard(QObject* parent) : QStyledItemDelegate{parent} {
+    setObjectName("GameCard");
+}
+
+void GameCard::paint(QPainter* painter, const QStyleOptionViewItem& option,
+                     const QModelIndex& index) const {
+    if (!index.isValid())
+        return;
+
+    painter->save();
+    painter->setRenderHint(QPainter::Antialiasing);
+
+    constexpr int cardCornerRadius = 10;
+
+    const QRect cardRect = getCardRect(option, index);
+
+    QPalette palette = option.palette;
+    QColor backgroundColor = palette.window().color();
+    QColor borderColor = palette.dark().color();
+    QColor textColor = palette.text().color();
+
+    // highlight on select or hover
+    if (option.state & QStyle::State_Selected) {
+        backgroundColor = palette.highlight().color();
+        borderColor = palette.highlight().color().lighter(150);
+        textColor = palette.highlightedText().color();
+    } else if (option.state & QStyle::State_MouseOver) {
+        backgroundColor = backgroundColor.lighter(120);
+    }
+
+    painter->setBrush(backgroundColor);
+    painter->setPen(QPen(borderColor, 1));
+    painter->drawRoundedRect(cardRect, cardCornerRadius, cardCornerRadius);
+
+    const u32 icon_size = UISettings::values.game_cover_size.GetValue();
+    QPixmap icon_pixmap = index.data(Qt::DecorationRole).value<QPixmap>();
+
+    QRect iconRect;
+    if (!icon_pixmap.isNull()) {
+        QSize scaled = icon_pixmap.size();
+        scaled.scale(icon_size, icon_size, Qt::KeepAspectRatio);
+
+        iconRect = {cardRect.left() + (cardRect.width() - scaled.width()) / 2,
+                    cardRect.top() + cardMargin - 1, scaled.width(), scaled.height()};
+
+        painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+        painter->save();
+        QPainterPath clip_path;
+        clip_path.addRoundedRect(iconRect, cardCornerRadius, cardCornerRadius);
+        painter->setClipPath(clip_path);
+        painter->drawPixmap(iconRect, icon_pixmap);
+        painter->restore();
+    } else {
+        iconRect = {cardRect.left() + cardMargin, cardRect.top() + cardMargin,
+                    static_cast<int>(icon_size), static_cast<int>(icon_size)};
+    }
+
+    if (UISettings::values.show_game_name.GetValue()) {
+        // Keep the title within the icon's width: at most two lines, cut with "..." beyond that.
+        // Without icons (size 0) it takes the card's width instead.
+        const int text_left = icon_size == 0 ? cardRect.left() + cardMargin : iconRect.left();
+        const int text_width = icon_size == 0 ? cardRect.width() - 2 * cardMargin : iconRect.width();
+        const QRect textRect(text_left, iconRect.bottom() + cardMargin, text_width,
+                             cardRect.bottom() - iconRect.bottom() - cardMargin);
+
+        QString title = index.data(Qt::DisplayRole).toString().split(QLatin1Char('\n')).first();
+
+        painter->setPen(textColor);
+        QFont font = option.font;
+        font.setBold(true);
+        font.setPixelSize(std::max(11.0, std::sqrt(static_cast<double>(icon_size))));
+        painter->setFont(font);
+
+        // Words wider than the box break anywhere; what doesn't fit on the second line is elided.
+        const QFontMetrics fm(font);
+        QTextOption text_option;
+        text_option.setWrapMode(QTextOption::WrapAtWordBoundaryOrAnywhere);
+        QTextLayout layout(title, font);
+        layout.setTextOption(text_option);
+        QStringList lines;
+        layout.beginLayout();
+        for (int i = 0; i < 2; ++i) {
+            QTextLine line = layout.createLine();
+            if (!line.isValid()) {
+                break;
+            }
+            line.setLineWidth(textRect.width());
+            lines.append(i == 0 ? title.mid(line.textStart(), line.textLength()).trimmed()
+                                : fm.elidedText(title.mid(line.textStart()).trimmed(),
+                                                Qt::ElideRight, textRect.width()));
+        }
+        layout.endLayout();
+        painter->drawText(textRect, Qt::AlignHCenter | Qt::AlignTop,
+                          lines.join(QLatin1Char('\n')));
+    }
+
+    painter->restore();
+}
+
+QRect GameCard::getCardRect(const QStyleOptionViewItem& option, const QModelIndex& index) const {
+    const int cell_width = option.rect.width();
+
+    const int card_width = cell_width - m_padding;
+
+    int card_left, card_top, card_height;
+
+    if (m_columns >= 1) {
+        // grid mode
+
+        // center everything in-line, such that the leftmost and rightmost cards
+        // have ~ equal padding to the edge of the viewport
+        // spacing between each card is larger, but equal to each other
+        const int column = index.row() % m_columns;
+
+        const int row_width = m_columns * cell_width;
+        const int total_gap = row_width - cardMargin * 2 - m_columns * card_width;
+        const int gap = (m_columns > 1) ? (total_gap / (m_columns - 1)) : 0;
+        card_left =
+            option.rect.left() - column * cell_width + cardMargin + column * (card_width + gap) + 4;
+
+        // fill cell vertically
+        card_top = option.rect.top() + cardMargin;
+        card_height = option.rect.height() - cardMargin - 1;
+    } else {
+        // carousel mode
+        card_left = option.rect.left() + cardMargin + 4;
+
+        // the delegate itself takes up the full height, but the card itself
+        // gets centered
+        const int content_height = m_contentSize.height() - cardMargin;
+        const int cell_height = option.rect.height();
+
+        card_height = std::min(content_height, cell_height - cardMargin * 2) - 1;
+        card_top = option.rect.top() + (cell_height - card_height) / 2;
+    }
+
+    return QRect(card_left, card_top, card_width - cardMargin, card_height);
+}
+
+bool GameCard::hitTest(const QPoint& point, const QModelIndex& index, const QWidget* widget,
+                       const QRect& cellRect) const {
+    QStyleOptionViewItem option;
+    option.initFrom(widget);
+    option.rect = cellRect;
+    return getCardRect(option, index).contains(point);
+}
+
+QSize GameCard::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
+    return m_size;
+}
+
+void GameCard::setSize(const QSize& newSize, const QSize& contentSize, const int padding,
+                       const int columns) {
+    m_size = newSize;
+    m_contentSize = contentSize;
+    m_padding = padding;
+    m_columns = columns;
+}

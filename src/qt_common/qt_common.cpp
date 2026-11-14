@@ -13,6 +13,9 @@
 #include "common/fs/fs.h"
 #include "common/fs/path_util.h"
 #include "common/logging.h"
+#ifdef _WIN32
+#include "common/windows/crash_handler.h"
+#endif
 #include "common/scm_rev.h"
 #include "common/cpu_features.h"
 #include "core/memory.h"
@@ -224,6 +227,9 @@ void Init(QWidget* root) {
 
     Common::Log::Initialize();
     Common::Log::Start();
+#ifdef _WIN32
+    Common::Windows::InstallCrashHandler(Common::FS::GetEdenPath(Common::FS::EdenPath::LogDir));
+#endif
 
     Network::Init();
 
@@ -234,15 +240,15 @@ void Init(QWidget* root) {
     const auto description = std::string(Common::g_scm_desc);
     const auto build_id = std::string(Common::g_build_id);
 
-    const auto yuzu_build =
+    const auto lichii_build =
         fmt::format("Lichii Development Build | {}-{}", branch_name, description);
     const auto override_build =
         fmt::format(fmt::runtime(std::string(Common::g_title_bar_format_idle)), build_id);
-    const auto yuzu_build_version = override_build.empty() ? yuzu_build : override_build;
+    const auto lichii_build_version = override_build.empty() ? lichii_build : override_build;
     const auto processor_count = std::thread::hardware_concurrency();
 
     // info logging
-    LOG_INFO(Frontend, "Lichii Version: {}", yuzu_build_version);
+    LOG_INFO(Frontend, "Lichii Version: {}", lichii_build_version);
     LogRuntimes();
 #ifdef ARCHITECTURE_x86_64
     const auto& caps = Common::g_cpu_caps;
@@ -265,6 +271,13 @@ void Init(QWidget* root) {
 #endif
     LOG_INFO(Frontend, "Host CPU Threads: {}", processor_count);
     LOG_INFO(Frontend, "Host OS: {}", PrettyProductName().toStdString());
+#ifdef __unix__
+    LOG_INFO(Frontend, "Qt platform: {} | Session type: {}",
+             QGuiApplication::platformName().toStdString(),
+             qEnvironmentVariable("XDG_SESSION_TYPE", QStringLiteral("unknown")).toStdString());
+#else
+    LOG_INFO(Frontend, "Qt platform: {}", QGuiApplication::platformName().toStdString());
+#endif
     LOG_INFO(Frontend, "Host RAM: {:.2f} GiB",
              Common::GetMemInfo().TotalPhysicalMemory / f64{1_GiB});
     LOG_INFO(Frontend, "Host Swap: {:.2f} GiB", Common::GetMemInfo().TotalSwapMemory / f64{1_GiB});

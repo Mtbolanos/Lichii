@@ -104,6 +104,13 @@ enum class VibrationAmplificationType {
     Exponential,
 };
 
+// Side of the emulated controller a vibration is for. Both is a single motor vibration.
+enum class VibrationSide {
+    Both,
+    Left,
+    Right,
+};
+
 // Analog properties for calibration
 struct AnalogProperties {
     // Anything below this value will be detected as zero
@@ -206,6 +213,7 @@ struct VibrationStatus {
     f32 high_amplitude{};
     f32 high_frequency{};
     VibrationAmplificationType type;
+    VibrationSide side{VibrationSide::Both};
 };
 
 // Physical controller LED pattern
@@ -360,6 +368,11 @@ public:
     }
 
     virtual bool IsVibrationEnabled() {
+        return false;
+    }
+
+    // True when the device smooths vibrations itself and takes every update without a rate limit
+    virtual bool IsVibrationStreamed() {
         return false;
     }
 

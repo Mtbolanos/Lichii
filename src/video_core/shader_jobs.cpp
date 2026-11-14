@@ -343,13 +343,17 @@ ShaderJobScheduler::JobPtr ShaderJobScheduler::Pick(bool driver, Clock::time_poi
         }
         return entries.empty() ? nullptr : &entries;
     }};
+    bool& aged_last{driver ? driver_aged_last : cpu_aged_last};
+    bool aged{aged_last};
     std::deque<JobPtr>* entries{front(ShaderJobPriority::NeedNow)};
     if (!entries) {
         std::deque<JobPtr>* const soon{front(ShaderJobPriority::Soon)};
         std::deque<JobPtr>* const background{front(ShaderJobPriority::Background)};
-        const bool aged{background && soon &&
-                        now - background->front()->submitted >= background_aging &&
-                        background->front()->submitted < soon->front()->submitted};
+        // An aged Background job ahead of the Soon jobs takes every other pick, so a backlog
+        // doesn't hold back the Soon jobs submitted after it.
+        aged = background && soon && !aged_last &&
+               now - background->front()->submitted >= background_aging &&
+               background->front()->submitted < soon->front()->submitted;
         entries = aged ? background : (soon ? soon : background);
     }
     if (!entries) {
@@ -366,6 +370,7 @@ ShaderJobScheduler::JobPtr ShaderJobScheduler::Pick(bool driver, Clock::time_poi
         budget_held = true;
         return nullptr;
     }
+    aged_last = aged;
     JobPtr picked{std::move(entries->front())};
     entries->pop_front();
     return picked;

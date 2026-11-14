@@ -526,6 +526,38 @@ TEST_CASE("Shader cache v2: compaction keeps the live records and only them",
     REQUIRE(compacted.parsed.live.size() == expected.size());
 }
 
+TEST_CASE("Shader cache v2: a record reads again at its offset until a compaction moves it",
+          "[video_core][shader_cache_v2]") {
+    TempDir temp;
+    const auto file = temp.path / "cache.bin";
+    {
+        V2::CacheWriter writer{file};
+        for (u64 i = 0; i < 20; ++i) {
+            writer.Append(RecordKind::Graphics, i, TestPayload(i));
+        }
+        writer.Append(RecordKind::Tombstone, 3, V2::TombstonePayload(RecordKind::Graphics));
+        REQUIRE(writer.Drain(5s));
+    }
+    const V2::LogFile log = V2::ReadLogFile(file);
+    REQUIRE(log.parsed.live.size() == 19);
+    for (const V2::LogRecord& record : log.parsed.live) {
+        const auto payload = V2::ReadRecordPayload(file, record.kind, record.key, record.offset,
+                                                   record.payload.size());
+        REQUIRE(payload);
+        REQUIRE(std::ranges::equal(*payload, record.payload));
+    }
+    const V2::LogRecord& last = log.parsed.live.back();
+    const u64 size = last.payload.size();
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, RecordKind::Compute, last.key, last.offset, size));
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, last.kind, last.key + 1, last.offset, size));
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, last.kind, last.key, last.offset, size - 1));
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, last.kind, last.key, last.offset + 8, size));
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, last.kind, last.key, log.bytes.size(), size));
+
+    REQUIRE(V2::CompactLog(file) == V2::WriteResult::Written);
+    REQUIRE_FALSE(V2::ReadRecordPayload(file, last.kind, last.key, last.offset, size));
+}
+
 TEST_CASE("Shader cache v2: two writers on one file lose no record",
           "[video_core][shader_cache_v2]") {
     TempDir temp;
@@ -610,6 +642,56 @@ TEST_CASE("Shader cache v2: appends follow a record cut off by a crash",
     WriteAll(other_file, other);
     REQUIRE(V2::AppendToLog(other_file, records) == V2::WriteResult::OtherVersion);
     REQUIRE(ReadAll(other_file) == std::vector<u8>(other.begin(), other.end()));
+}
+
+TEST_CASE("Shader cache v2: a log is built record by record", "[video_core][shader_cache_v2]") {
+    TempDir temp;
+    const auto file = temp.path / "cache.bin";
+    const std::array written{Written{RecordKind::Graphics, 0x11, TestPayload(1)},
+                             Written{RecordKind::Used, 0x22, TestPayload(2)}};
+
+    V2::LogBuilder builder;
+    REQUIRE(builder.Start(file) == V2::WriteResult::Written);
+    for (const Written& record : written) {
+        REQUIRE(builder.Append(record.kind, record.key, record.payload));
+    }
+    // Nothing is there before the commit: a reader never sees half a log
+    REQUIRE_FALSE(std::filesystem::exists(file));
+    REQUIRE(builder.Commit() == V2::WriteResult::Written);
+    REQUIRE(Live(V2::ReadLogFile(file).parsed) ==
+            std::vector<Written>(written.begin(), written.end()));
+    REQUIRE_FALSE(std::filesystem::exists(temp.path / "cache.bin.migrating"));
+
+    // A log that is there is never written over
+    const auto bytes = ReadAll(file);
+    V2::LogBuilder second;
+    REQUIRE(second.Start(file) == V2::WriteResult::Exists);
+    REQUIRE(ReadAll(file) == bytes);
+
+    // One that is given up on leaves the log as it was
+    const auto other = temp.path / "other.bin";
+    V2::LogBuilder discarded;
+    REQUIRE(discarded.Start(other) == V2::WriteResult::Written);
+    REQUIRE(discarded.Append(RecordKind::Used, 0x33, TestPayload(3)));
+    discarded.Discard();
+    REQUIRE_FALSE(std::filesystem::exists(other));
+    REQUIRE_FALSE(std::filesystem::exists(temp.path / "other.bin.migrating"));
+
+    // Enough records that the buffer is written out more than once: the whole point of the
+    // builder, since a source of this size used to be held in memory before it was written
+    const auto large_file = temp.path / "large.bin";
+    V2::LogBuilder large;
+    REQUIRE(large.Start(large_file) == V2::WriteResult::Written);
+    std::vector<Written> many;
+    for (u64 i = 0; i < 40; ++i) {
+        std::vector<u8> payload(256 * 1024, static_cast<u8>(i));
+        REQUIRE(large.Append(RecordKind::Used, 0x100 + i, payload));
+        many.push_back({RecordKind::Used, 0x100 + i, std::move(payload)});
+    }
+    REQUIRE(large.Commit() == V2::WriteResult::Written);
+    const V2::LogFile large_log = V2::ReadLogFile(large_file);
+    REQUIRE(Live(large_log.parsed) == many);
+    REQUIRE(large_log.parsed.stats.dead_bytes == 0);
 }
 
 #ifndef _WIN32

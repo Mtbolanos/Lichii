@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <thread>
 
 #include <ranges>
 #include "common/settings.h"
+#include "video_core/nx2.h"
 #include "video_core/nx2_profile.h"
 #include "video_core/renderer_vulkan/vk_master_semaphore.h"
 #include "video_core/vulkan_common/vulkan_device.h"
@@ -70,11 +70,15 @@ void MasterSemaphore::Refresh() {
     do {
         this_tick = gpu_tick.load(std::memory_order_acquire);
         counter = semaphore.GetCounter();
-        if (counter < this_tick) {
+        // Unchanged: no store, which would take the cache line from the threads reading it.
+        if (counter <= this_tick) {
             return;
         }
     } while (!gpu_tick.compare_exchange_weak(this_tick, counter, std::memory_order_release,
                                              std::memory_order_relaxed));
+    if (counter > this_tick) {
+        Tegra::Nx2PendingWake::Get().OnGpuTick(counter);
+    }
 }
 
 void MasterSemaphore::Wait(u64 tick) {
@@ -364,6 +368,7 @@ void MasterSemaphore::WaitThread(std::stop_token token) {
             gpu_tick.store(host_tick, std::memory_order_release);
         }
         gpu_tick.notify_one();
+        Tegra::Nx2PendingWake::Get().OnGpuTick(host_tick);
     }
 }
 

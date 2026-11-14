@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <span>
@@ -27,7 +26,7 @@ namespace {
         // caused them be identified as different applications by the OS."
         //
         // Keep in sync with cubeb_sink.cpp name.
-        SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "yuzu Latency Getter");
+        SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Lichii Latency Getter");
 #ifdef __ANDROID__
         SDL_SetHintWithPriority(SDL_HINT_AUDIO_DRIVER, "openslES", SDL_HINT_OVERRIDE);
         if (!SDL_InitSubSystem(SDL_INIT_AUDIO)) {

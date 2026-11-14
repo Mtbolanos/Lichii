@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -15,6 +14,7 @@
 #include <source_location>
 #include <vector>
 #include <span>
+#include <unordered_map>
 
 #include "common/common_types.h"
 #include "common/range_mutex.h"
@@ -57,6 +57,7 @@ public:
 
     /// Marks the memory behind [address, address + size) cold (Common::HostMemory::HintCold),
     /// from a low-priority thread: data the host GPU has its own copy of, e.g. uploaded textures.
+    /// Only while the host is short of RAM (Common::IsHostLowOnMemory).
     void HintCold(DAddr address, size_t size);
 
     DAddr Allocate(size_t size);
@@ -66,6 +67,16 @@ public:
     void Map(DAddr address, VAddr virtual_address, size_t size, Asid asid, bool track = false);
 
     void Unmap(DAddr address, size_t size);
+
+    /// Device pages without memory that keep the bytes written to them until Map gives them
+    /// memory, which then holds those bytes (a Switch 2 sparse block waiting for its memory).
+    /// Reads see the kept bytes meanwhile; Unmap drops them.
+    void KeepWrites(DAddr address, size_t size);
+    /// Read or write [address, +size) when it has kept pages (or pages mapped meanwhile): mapped
+    /// pages as usual, the others from the kept bytes. False, doing nothing that counts, when it
+    /// has neither.
+    bool ReadKept(DAddr address, void* dest_pointer, size_t size);
+    bool WriteKept(DAddr address, const void* src_pointer, size_t size);
 
     void TrackContinuityImpl(DAddr address, VAddr virtual_address, size_t size, Asid asid);
     void TrackContinuity(DAddr address, VAddr virtual_address, size_t size, Asid asid) {
@@ -144,6 +155,17 @@ public:
 
     // New batch API to update multiple ranges with a single lock acquisition.
     void UpdatePagesCachedBatch(std::span<const std::pair<DAddr, size_t>> ranges, s32 delta);
+
+    /// Held by a thread from before it drops the lock it untracked pages under until it has
+    /// applied their count changes (RasterizerVulkan::OnCPUWrite). Unmap waits for every holder
+    /// after invalidating the range: a change applied once the page has no backing is lost, and
+    /// the page would keep its count and never be protected again.
+    void BeginDeferredCachedUpdates() {
+        deferred_cached_updates.fetch_add(1, std::memory_order_relaxed);
+    }
+    void EndDeferredCachedUpdates() {
+        deferred_cached_updates.fetch_sub(1, std::memory_order_release);
+    }
 
     /// Traps the next guest CPU read of these pages, to learn which GPU writes the CPU reads.
     void ArmReadTraps(DAddr addr, size_t size);
@@ -286,6 +308,13 @@ private:
     std::unique_ptr<CachedPages> cached_pages;
     Common::RangeMutex counter_guard;
     std::mutex mapping_guard;
+    std::atomic<u32> deferred_cached_updates{};
+
+    /// Taken before mapping_guard. The pages KeepWrites keeps, by device page; null reads zero.
+    std::mutex kept_mutex;
+    std::atomic<size_t> kept_count{};
+    using KeptPage = std::array<u8, size_t{1} << page_bits>;
+    std::unordered_map<size_t, std::unique_ptr<KeptPage>> kept_pages;
 
 
 };

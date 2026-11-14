@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "common/android/android_common.h"
@@ -70,7 +69,7 @@ static RomMetadata GetRomMetadata(const std::string& path, bool reload = false) 
 
 extern "C" {
 
-jboolean Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getIsValid(JNIEnv* env, jobject obj, jstring jpath) {
+jboolean Java_io_github_zortos293_lichii_utils_GameMetadata_getIsValid(JNIEnv* env, jobject obj, jstring jpath) {
     if (auto const file = EmulationSession::GetInstance().System().GetFilesystem()->OpenFile(Common::Android::GetJString(env, jpath), FileSys::OpenMode::Read); file) {
         if (auto loader = Loader::GetLoader(EmulationSession::GetInstance().System(), file); loader) {
             auto const file_type = loader->GetFileType();
@@ -87,34 +86,34 @@ jboolean Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getIsValid(JNIEnv* env, jobj
     return false;
 }
 
-jstring Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getTitle(JNIEnv* env, jobject obj, jstring jpath) {
+jstring Java_io_github_zortos293_lichii_utils_GameMetadata_getTitle(JNIEnv* env, jobject obj, jstring jpath) {
     return Common::Android::ToJString(env, GetRomMetadata(Common::Android::GetJString(env, jpath)).title);
 }
 
-jstring Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getProgramId(JNIEnv* env, jobject obj, jstring jpath) {
+jstring Java_io_github_zortos293_lichii_utils_GameMetadata_getProgramId(JNIEnv* env, jobject obj, jstring jpath) {
     return Common::Android::ToJString(env, std::to_string(GetRomMetadata(Common::Android::GetJString(env, jpath)).programId));
 }
 
-jstring Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getDeveloper(JNIEnv* env, jobject obj, jstring jpath) {
+jstring Java_io_github_zortos293_lichii_utils_GameMetadata_getDeveloper(JNIEnv* env, jobject obj, jstring jpath) {
     return Common::Android::ToJString(env, GetRomMetadata(Common::Android::GetJString(env, jpath)).developer);
 }
 
-jstring Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getVersion(JNIEnv* env, jobject obj, jstring jpath, jboolean jreload) {
+jstring Java_io_github_zortos293_lichii_utils_GameMetadata_getVersion(JNIEnv* env, jobject obj, jstring jpath, jboolean jreload) {
     return Common::Android::ToJString(env, GetRomMetadata(Common::Android::GetJString(env, jpath), jreload).version);
 }
 
-jbyteArray Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getIcon(JNIEnv* env, jobject obj, jstring jpath) {
+jbyteArray Java_io_github_zortos293_lichii_utils_GameMetadata_getIcon(JNIEnv* env, jobject obj, jstring jpath) {
     auto icon_data = GetRomMetadata(Common::Android::GetJString(env, jpath)).icon;
     jbyteArray icon = env->NewByteArray(jsize(icon_data.size()));
     env->SetByteArrayRegion(icon, 0, env->GetArrayLength(icon), reinterpret_cast<jbyte*>(icon_data.data()));
     return icon;
 }
 
-jboolean Java_org_yuzu_yuzu_1emu_utils_GameMetadata_getIsHomebrew(JNIEnv* env, jobject obj, jstring jpath) {
+jboolean Java_io_github_zortos293_lichii_utils_GameMetadata_getIsHomebrew(JNIEnv* env, jobject obj, jstring jpath) {
     return jboolean(GetRomMetadata(Common::Android::GetJString(env, jpath)).isHomebrew);
 }
 
-void Java_org_yuzu_yuzu_1emu_utils_GameMetadata_resetMetadata(JNIEnv* env, jobject obj) {
+void Java_io_github_zortos293_lichii_utils_GameMetadata_resetMetadata(JNIEnv* env, jobject obj) {
     m_rom_metadata_cache.clear();
 }
 

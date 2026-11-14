@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -92,9 +93,23 @@ struct InputStep {
 /// nothing before start and from the end of the last step on.
 [[nodiscard]] std::optional<HID::InjectedInput> InputAt(std::span<const InputStep> steps, u64 start,
                                                        u64 now);
-/// Guest-present intervals within [begin_ns, end_ns], using only retained ring timestamps.
+/// Guest-present intervals within [begin_ns, end_ns], using only retained ring timestamps;
+/// intervals_ms lists the last recent_limit of them.
 [[nodiscard]] nlohmann::json ReadFrameTimes(u64 before, u64 after, u64 begin_ns, u64 end_ns,
-                                          double refresh_hz);
+                                          double refresh_hz, size_t recent_limit = 120);
+
+/// A PNG and its size.
+struct Png {
+    std::vector<u8> bytes;
+    u32 width;
+    u32 height;
+};
+
+/// The next presented frame as a PNG, height pixels high at 16:9 (the debug server's screenshot).
+/// Throws std::runtime_error when no frame is presented within timeout (paused or loading), when
+/// stop is set first, or when another screenshot request is pending.
+[[nodiscard]] Png CaptureScreenshot(System& system, u32 height, std::chrono::seconds timeout,
+                                    const std::atomic<bool>& stop);
 
 /// The service when EDEN_NX2_DEBUG_SERVER is set and it can listen, otherwise null.
 [[nodiscard]] std::unique_ptr<Service> MaybeStartService(System& system, std::string title,

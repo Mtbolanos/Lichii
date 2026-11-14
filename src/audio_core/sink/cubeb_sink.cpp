@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <span>
@@ -377,7 +376,7 @@ u32 GetCubebLatency() {
 #endif
 
     // Init cubeb
-    if (cubeb_init(&ctx, "yuzu Latency Getter", nullptr) != CUBEB_OK) {
+    if (cubeb_init(&ctx, "Lichii Latency Getter", nullptr) != CUBEB_OK) {
         LOG_CRITICAL(Audio_Sink, "cubeb_init failed");
         // Return a large latency so we choose SDL instead.
         return 10000u;

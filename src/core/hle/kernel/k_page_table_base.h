@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -53,8 +52,8 @@ class KResourceLimit;
 class KSystemResource;
 
 class KPageTableBase {
-    YUZU_NON_COPYABLE(KPageTableBase);
-    YUZU_NON_MOVEABLE(KPageTableBase);
+    LICHII_NON_COPYABLE(KPageTableBase);
+    LICHII_NON_MOVEABLE(KPageTableBase);
 
 public:
     using TraversalEntry = Common::PageTable::TraversalEntry;

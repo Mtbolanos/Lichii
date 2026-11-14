@@ -75,7 +75,7 @@ private:
         ControllerTypes type = ControllerTypes::None;
         PadIdentifier identifier{};
         bool enable_vibration = false;
-        u8 rumble_amplitude{};
+        bool rumble_on = false;
         std::array<u8, 6> axis_origin{};
         u8 reset_origin_counter{};
     };
@@ -129,7 +129,6 @@ private:
     u8 output_endpoint{0};
     u8 input_error_counter{0};
     u8 output_error_counter{0};
-    int vibration_counter{0};
 
     bool rumble_enabled{true};
     bool vibration_changed{true};

@@ -236,7 +236,20 @@ void DriverBlobStore::Close() {
     closed = true;
     // Before the compaction: Windows doesn't rename over a file that is open.
     reader.Close();
-    if (file_bytes > options.max_bytes ||
+    u64 max_bytes = options.max_bytes;
+    u64 target_bytes = options.target_bytes;
+    if (options.session_cap_bytes > max_bytes) {
+        // The device identity record is kept first
+        u64 session_bytes = RecordSize(EncodeIdentity(DeviceIdentity{}).size());
+        for (const auto& [entry_key, entry] : index) {
+            if (entry.used) {
+                session_bytes += RecordSize(entry.payload_size);
+            }
+        }
+        target_bytes = std::max(target_bytes, std::min(session_bytes, options.session_cap_bytes));
+        max_bytes = std::max(max_bytes, target_bytes);
+    }
+    if (file_bytes > max_bytes ||
         (dead_bytes >= options.min_dead_bytes && dead_bytes * 4 >= file_bytes)) {
         std::unordered_set<u64> first;
         for (const auto& [entry_key, entry] : index) {
@@ -247,8 +260,8 @@ void DriverBlobStore::Close() {
         LOG_INFO(Render_Vulkan, "Driver blobs: compacting {} ({} bytes, {} of them dead)",
                  Common::FS::PathToUTF8String(file), file_bytes, dead_bytes);
         writer->Compact({
-            .max_bytes = options.max_bytes,
-            .target_bytes = options.target_bytes,
+            .max_bytes = max_bytes,
+            .target_bytes = target_bytes,
             .rank = [first = std::move(first)](const LogRecord& record) -> u32 {
                 if (record.kind == RecordKind::DeviceIdentity) {
                     return 0;

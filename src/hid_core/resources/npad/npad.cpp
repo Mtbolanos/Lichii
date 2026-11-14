@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -441,7 +440,7 @@ void NPad::RequestPadStateUpdate(Kernel::KernelCore& kernel, u64 aruid, Core::HI
         InitNewlyAddedController(kernel, aruid, npad_id);
     }
 
-    // This function is unique to yuzu for the turbo buttons and motion to work properly
+    // This function is unique to Lichii for the turbo buttons and motion to work properly
     controller.device->StatusUpdate();
 
     auto& pad_entry = controller.npad_pad_state;

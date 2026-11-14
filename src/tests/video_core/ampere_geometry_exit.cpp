@@ -149,6 +149,44 @@ TEST_CASE("Ampere geometry exit setup results must be dead before the body reads
     code = Program;
     code[10] = Nop;
     RequireAccepted(code);
+
+    // ALD R3, a[0x70] of the vertex in R7 (Orbitals' layered geometry): writes R3; reading R3
+    // as the vertex does not.
+    code = Program;
+    code[9] = Instruction{{0xff037321, 0x00007007, 0x00000000, 0x000e2800}};
+    RequireAccepted(code);
+    code[9].words[1] = 0x00007003;
+    RequireRejected(code, reads, 0x90);
+    // OUT.EMIT R3, R7, RZ writes the next handle to R3; with the handle in R3 it reads it.
+    code = Program;
+    code[9] = Instruction{{0x07037324, 0xff, 0x00004000, 0x000e2800}};
+    RequireAccepted(code);
+    code[9].words[0] = 0x03037324;
+    RequireRejected(code, reads, 0x90);
+}
+
+TEST_CASE("Ampere geometry exit tracks the reverse-encoded global load predicate",
+          "[video_core][ampere]") {
+    constexpr Instruction load{{0x04087381, 0, 0x001e8900, 0}};
+    for (const u32 predicate : {0U, 6U, 8U, 14U}) {
+        auto code = Program;
+        code[6] = load;
+        code[6].words[2] |= predicate;
+        RequireAccepted(code);
+    }
+    for (const u32 predicate : {7U, 15U}) {
+        auto code = Program;
+        code[6] = load;
+        code[6].words[2] |= predicate;
+        RequireRejected(code, "native body reads exit setup state", 0x60);
+
+        // The original ISETP at index 8 overwrites P0 before this load reads it.
+        code = Program;
+        code[9] = load;
+        code[9].words[0] = 0x04037381;
+        code[9].words[2] |= predicate;
+        RequireAccepted(code);
+    }
 }
 
 TEST_CASE("Ampere geometry exit body cannot touch the handler state", "[video_core][ampere]") {

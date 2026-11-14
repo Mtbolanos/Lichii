@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
 
-// yuzu data directories
+// Lichii data directories
 
-#define EDEN_DIR "eden"
+#define EDEN_DIR "lichii"
+#define EDEN_LEGACY_DIR "eden"
 #define PORTABLE_DIR "user"
 
-// Sub-directories contained within a yuzu data directory
+// Sub-directories contained within a Lichii data directory
 #define AMIIBO_DIR "amiibo"
 #define CACHE_DIR "cache"
 #define CONFIG_DIR "config"
@@ -40,7 +40,7 @@
 #define SUYU_DIR "suyu"
 #define RYUJINX_DIR "Ryujinx"
 
-// yuzu-specific files
+// Lichii-specific files
 #define LOG_FILE "eden_log.txt"
 #define LOSSLESS_DLL_FILE "Lossless.dll"
 #define LOSSLESS_CACHE_FILE "lsfg_spirv.cache"

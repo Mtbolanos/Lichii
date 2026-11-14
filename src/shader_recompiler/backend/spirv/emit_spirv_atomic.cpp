@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <bit>
@@ -169,11 +168,11 @@ Id EmitSharedAtomicExchange64(EmitContext& ctx, Id offset, Id value) {
     LOG_WARNING(Shader_SPIRV, "Int64 atomics not supported, fallback to non-atomic");
     const Id pointer_1{SharedPointer(ctx, offset, 0)};
     const Id pointer_2{SharedPointer(ctx, offset, 1)};
-    const Id value_1{ctx.OpLoad(ctx.U32[1], pointer_1)};
-    const Id value_2{ctx.OpLoad(ctx.U32[1], pointer_2)};
+    const Id value_1{ctx.LoadShared(ctx.U32[1], pointer_1)};
+    const Id value_2{ctx.LoadShared(ctx.U32[1], pointer_2)};
     const Id new_vector{ctx.OpBitcast(ctx.U32[2], value)};
-    ctx.OpStore(pointer_1, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 0U));
-    ctx.OpStore(pointer_2, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 1U));
+    ctx.StoreShared(pointer_1, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 0U));
+    ctx.StoreShared(pointer_2, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 1U));
     return ctx.OpBitcast(ctx.U64, ctx.OpCompositeConstruct(ctx.U32[2], value_1, value_2));
 }
 
@@ -181,11 +180,11 @@ Id EmitSharedAtomicExchange32x2(EmitContext& ctx, Id offset, Id value) {
     LOG_WARNING(Shader_SPIRV, "Int64 atomics not supported, fallback to non-atomic");
     const Id pointer_1{SharedPointer(ctx, offset, 0)};
     const Id pointer_2{SharedPointer(ctx, offset, 1)};
-    const Id value_1{ctx.OpLoad(ctx.U32[1], pointer_1)};
-    const Id value_2{ctx.OpLoad(ctx.U32[1], pointer_2)};
+    const Id value_1{ctx.LoadShared(ctx.U32[1], pointer_1)};
+    const Id value_2{ctx.LoadShared(ctx.U32[1], pointer_2)};
     const Id new_vector{ctx.OpBitcast(ctx.U32[2], value)};
-    ctx.OpStore(pointer_1, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 0U));
-    ctx.OpStore(pointer_2, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 1U));
+    ctx.StoreShared(pointer_1, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 0U));
+    ctx.StoreShared(pointer_2, ctx.OpCompositeExtract(ctx.U32[1], new_vector, 1U));
     return ctx.OpCompositeConstruct(ctx.U32[2], value_1, value_2);
 }
 

@@ -18,24 +18,44 @@ constexpr u64 OutputProgramKey = 0x14b4222bbe23abeeULL;
 constexpr u64 PrepassProgramKey = 0x4cbf6eff32525aecULL;
 constexpr u64 StarFoxProgramId = 0x0400E88025B1A000ULL;
 constexpr u64 StarFoxPrepassProgramKey = 0xd686ca0b9fad9e6dULL;
+constexpr u64 StarFoxCutscenePrepassProgramKey = 0xebab31dd6f0fc08dULL;
 constexpr u64 StarFoxOutputProgramKey = 0x7d3764ff101bec27ULL;
+constexpr u64 DuskbloodsProgramId = 0x0400D1D02399A000ULL;
+constexpr u64 DuskbloodsPrepassProgramKey = 0xe5efe04581720f15ULL;
+constexpr u64 DuskbloodsOutputProgramKey = 0x50e47e31c31fc1f8ULL;
 constexpr u32 PrepassColorOffset = 0x278;
 constexpr u32 JitterOffset = 0x1b0;
 constexpr u32 OutputColorInputOffset = 0x328;
 constexpr u32 OutputColorOffset = 0x348;
+constexpr u32 RenderLastRowOffset = 0x394;
+constexpr u32 RenderLastColumnOffset = 0x39c;
 
 struct Passes {
     u64 prepass;
     u64 output;
     bool spatial_only;
+    // The game renders a varying region of a target the size of the output, and the network's
+    // constants give that region.
+    bool render_region = false;
+    u64 alternate_prepass{};
+
+    /// Match either captured prepass; a zero alternate key means no alternate is configured.
+    constexpr bool IsPrepass(u64 key) const {
+        return key == prepass || (alternate_prepass != 0 && key == alternate_prepass);
+    }
 };
 
+/// Return validated prepass/output fingerprints only for the supported game titles.
 constexpr std::optional<Passes> CapturedPasses(u64 program_id) {
     if (program_id == ProgramId) {
         return Passes{PrepassProgramKey, OutputProgramKey, false};
     }
     if (program_id == StarFoxProgramId) {
-        return Passes{StarFoxPrepassProgramKey, StarFoxOutputProgramKey, true};
+        return Passes{StarFoxPrepassProgramKey, StarFoxOutputProgramKey, true, false,
+                      StarFoxCutscenePrepassProgramKey};
+    }
+    if (program_id == DuskbloodsProgramId) {
+        return Passes{DuskbloodsPrepassProgramKey, DuskbloodsOutputProgramKey, false, true};
     }
     return std::nullopt;
 }

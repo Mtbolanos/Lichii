@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -18,8 +17,8 @@ namespace FileSys {
 using namespace Common::Literals;
 
 class AesCtrCounterExtendedStorage : public IReadOnlyStorage {
-    YUZU_NON_COPYABLE(AesCtrCounterExtendedStorage);
-    YUZU_NON_MOVEABLE(AesCtrCounterExtendedStorage);
+    LICHII_NON_COPYABLE(AesCtrCounterExtendedStorage);
+    LICHII_NON_MOVEABLE(AesCtrCounterExtendedStorage);
 
 public:
     static constexpr size_t BlockSize = 0x10;

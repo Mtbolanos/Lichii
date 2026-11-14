@@ -37,6 +37,7 @@ static RunCodeCallbacks GenRunCodeCallbacks(A64::UserCallbacks* cb, CodePtr (*Lo
         ArgCallback(Devirtualize<&A64::UserCallbacks::AddTicks>(cb)),
         ArgCallback(Devirtualize<&A64::UserCallbacks::GetTicksRemaining>(cb)),
         conf.enable_cycle_counting,
+        HostCallReturn(conf) ? std::optional<u32>{u32(offsetof(A64JitState, host_stack_base))} : std::nullopt,
     };
 }
 
@@ -48,7 +49,25 @@ static std::function<void(BlockOfCode&)> GenRCP(const A64::UserConfig& conf) {
         if (conf.fastmem_pointer) {
             code.mov(code.r13, *conf.fastmem_pointer);
         }
+        if (HostCallReturn(conf)) {
+            // A RET compares its target with the frame's [rsp + ABI_SHADOW_SPACE]; with no guest
+            // frame that is the first StackLayout word (the spills live in the JIT state), which
+            // holds a value no location descriptor has (bits 57-58 are never set in one).
+            code.mov(code.qword[code.rsp + ABI_SHADOW_SPACE], -1);
+            code.mov(code.qword[code.ABI_JIT_PTR + offsetof(A64JitState, host_stack_base)], code.rsp);
+            code.lea(code.rax, code.ptr[code.rsp - HostCallFrameSize * HostCallMaxDepth]);
+            code.mov(code.qword[code.ABI_JIT_PTR + offsetof(A64JitState, host_stack_limit)], code.rax);
+        }
     };
+}
+
+// Largest power of two <= conf.rsb_size, between 8 and A64JitState::RSB_SIZE, minus one.
+static size_t RsbPtrMask(const A64::UserConfig& conf) {
+    size_t size = A64JitState::RSB_SIZE;
+    while (size > 8 && size > conf.rsb_size) {
+        size >>= 1;
+    }
+    return size - 1;
 }
 
 static Optimization::PolyfillOptions GenPolyfillOptions(const BlockOfCode& code) {
@@ -62,7 +81,7 @@ struct Jit::Impl final {
 public:
     Impl(Jit* jit, UserConfig conf)
         : conf(conf)
-        , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this, conf), JitStateInfo{jit_state}, conf.code_cache_size, GenRCP(conf))
+        , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this, conf), JitStateInfo{jit_state, RsbPtrMask(conf)}, conf.code_cache_size, GenRCP(conf))
         , emitter(block_of_code, conf, jit)
         , polyfill_options(GenPolyfillOptions(block_of_code))
     {
@@ -78,7 +97,7 @@ public:
         // TODO: Check code alignment
         const CodePtr current_code_ptr = [this] {
             // RSB optimization
-            const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A64JitState::RSB_PTR_MASK;
+            const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & u32(RsbPtrMask(conf));
             if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
                 jit_state.rsb_ptr = new_rsb_ptr;
                 return CodePtr(jit_state.rsb_codeptrs[new_rsb_ptr]);
@@ -234,6 +253,9 @@ private:
     }
 
     CodePtr GetCurrentBlock() {
+        if (conf.counters) {
+            ++conf.counters->block_lookups;
+        }
         return GetBlock(GetCurrentLocation());
     }
 
@@ -260,6 +282,9 @@ private:
         ir_block.Reset(arch_descriptor);
         A64::Translate(ir_block, arch_descriptor, get_code, {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
         Optimization::Optimize(ir_block, conf, polyfill_options);
+        if (conf.counters) {
+            ++conf.counters->blocks_compiled;
+        }
         return emitter.Emit(ir_block).entrypoint;
     }
 
@@ -275,6 +300,9 @@ private:
 
             jit_state.ResetRSB();
             if (invalidate_entire_cache) {
+                if (conf.counters) {
+                    ++conf.counters->cache_clears;
+                }
                 block_of_code.ClearCache();
                 emitter.ClearCache();
             } else {

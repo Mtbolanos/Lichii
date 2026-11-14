@@ -22,7 +22,7 @@ if (NOT (GIT AND GNU_MAKE AND DATE_PROG) OR CMAKE_SYSTEM_NAME STREQUAL "Windows"
     set(CAN_BUILD_NX_TZDB false)
 endif()
 
-if (CAN_BUILD_NX_TZDB AND NOT YUZU_DOWNLOAD_TIME_ZONE_DATA)
+if (CAN_BUILD_NX_TZDB AND NOT LICHII_DOWNLOAD_TIME_ZONE_DATA)
     message(FATAL_ERROR "Building tzdb is currently unsupported. Check back later.")
     add_subdirectory(tzdb_to_nx)
     add_dependencies(nx_tzdb x80e)
@@ -31,8 +31,8 @@ if (CAN_BUILD_NX_TZDB AND NOT YUZU_DOWNLOAD_TIME_ZONE_DATA)
     set(NX_TZDB_TZ_DIR "${NX_TZDB_BASE_DIR}/zoneinfo")
 endif()
 
-if(NOT YUZU_TZDB_PATH STREQUAL "")
-    set(NX_TZDB_BASE_DIR "${YUZU_TZDB_PATH}")
+if(NOT LICHII_TZDB_PATH STREQUAL "")
+    set(NX_TZDB_BASE_DIR "${LICHII_TZDB_PATH}")
 elseif (MSVC AND NOT CXX_CLANG AND ENABLE_LTO)
     # TODO(crueter): boot up the windows vm
     set(NX_TZDB_VERSION "250725")

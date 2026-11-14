@@ -1,4 +1,3 @@
-// SPDX-FileCopyrightText: 2022 yuzu Emulator Project
 // SPDX-FileCopyrightText: 2022 Skyline Team and Contributors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -105,8 +104,13 @@ SessionId Container::OpenSession(Kernel::KProcess* process) {
         session.has_preallocated_area = false;
         auto start_region = region_size >= 32_MiB ? smmu.Allocate(region_size) : 0;
         if (start_region != 0) {
-            session.mapper = std::make_unique<HeapMapper>(region_start, start_region, region_size,
-                                                          asid, impl->host1x);
+            // Freed with the last owner, after any queued unmap through it has run.
+            session.mapper = std::shared_ptr<HeapMapper>(
+                new HeapMapper(region_start, start_region, region_size, asid, impl->host1x),
+                [&smmu, start_region, region_size](HeapMapper* mapper) {
+                    delete mapper;
+                    smmu.Free(start_region, region_size);
+                });
             smmu.TrackContinuity(start_region, region_start, region_size, asid);
             session.has_preallocated_area = true;
             LOG_DEBUG(Debug, "Preallocation created!");
@@ -124,10 +128,8 @@ void Container::CloseSession(SessionId session_id) {
     impl->file.UnmapAllHandles(session_id);
     auto& smmu = impl->host1x.MemoryManager();
     if (session.has_preallocated_area) {
-        const DAddr region_start = session.mapper->GetRegionStart();
-        const size_t region_size = session.mapper->GetRegionSize();
+        // Frees the region now, or once GPU-thread work still holding the mapper is done with it.
         session.mapper.reset();
-        smmu.Free(region_start, region_size);
         session.has_preallocated_area = false;
     }
     session.is_active = false;

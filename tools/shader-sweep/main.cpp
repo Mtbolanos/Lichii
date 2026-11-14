@@ -25,10 +25,12 @@
 #include "shader_recompiler/frontend/ampere/lower_to_maxwell.h"
 #include "shader_recompiler/frontend/ampere/program_address_map.h"
 #include "shader_recompiler/frontend/ampere/program_capture.h"
+#include "shader_recompiler/frontend/ampere/program_override.h"
 #include "shader_recompiler/frontend/ampere/trap_guards.h"
 #include "shader_recompiler/frontend/maxwell/structured_control_flow.h"
 #include "shader_recompiler/frontend/maxwell/translate_program.h"
 #include "shader_recompiler/host_translate_info.h"
+#include "shader_recompiler/ir_opt/passes.h"
 #ifdef SHADER_SWEEP_V2
 #include "common/unique_function.h"
 #include "video_core/pipeline_cache_files.h"
@@ -81,6 +83,22 @@ std::vector<u8> ReadFile(const std::filesystem::path& path) {
     return bytes;
 }
 
+// The same path, or another link to the same existing file (a hard link passes the path check).
+bool SameFile(const std::filesystem::path& a, const std::filesystem::path& b) {
+    if (std::filesystem::weakly_canonical(a) == std::filesystem::weakly_canonical(b))
+        return true;
+    std::error_code error;
+    return std::filesystem::equivalent(a, b, error) && !error;
+}
+
+// Range-checked before narrowing, so a value wider than 32 bits cannot wrap into a valid one.
+u32 ParseOptionValue(const std::string& option, const std::string& value, int base, u64 max) {
+    const u64 parsed = std::stoull(value, nullptr, base);
+    if (parsed > max)
+        throw std::runtime_error("Invalid " + option);
+    return static_cast<u32>(parsed);
+}
+
 class Reader {
 public:
     explicit Reader(std::span<const u8> bytes_) : bytes{bytes_} {}
@@ -124,8 +142,23 @@ u64 IndirectCbufKey(u32 bank, u32 offset, u32 indirect) {
     return (u64{1} << 63) | (u64{indirect & 0x3fffff} << 40) | CbufKey(bank, offset);
 }
 
+// --guess-missing: values used for reads the environment has no record of. The defaults
+// equal the emulator's warm-up loader guesses.
+struct Guesses {
+    bool enabled{};
+    u32 cbuf0{0x10000000};
+    u32 cbuf_other{0};
+    u32 texture_type{3};
+    u32 pixel_format{16};
+    bool storage_pointer{true};       // bank 0
+    bool storage_pointer_other{false}; // banks 1..17 (GuessMissing::storage_pointer_other)
+};
+
 class OfflineEnvironment final : public Shader::Environment {
 public:
+    Guesses guesses;
+    u32 guessed_reads{};
+
     void Load(Reader& reader, u32 version) {
         const u64 size = reader.Read<u64>();
         const u64 type_count = reader.Read<u64>();
@@ -265,21 +298,33 @@ public:
     bool HasNativeInstructions() const override {
         return IsNativeProgram();
     }
+    /// Recorded storage pointer classification, or the bank's guess when guessing is on.
     bool IsCbufStorageBufferPointer(u32 bank, u32 offset) override {
-        return Lookup(pointers, CbufKey(bank, offset), "storage pointer classification") != 0;
+        return Find(pointers, CbufKey(bank, offset), "storage pointer classification",
+                    u8{bank == 0 ? guesses.storage_pointer : guesses.storage_pointer_other}) != 0;
     }
+    /// Recorded storage pointer table classification, or the bank's guess when guessing is on.
     bool IsCbufIndirectStorageBufferPointer(u32 bank, u32 offset, u32 indirect) override {
-        return Lookup(pointers, IndirectCbufKey(bank, offset, indirect),
-                      "storage pointer table classification") != 0;
+        return Find(pointers, IndirectCbufKey(bank, offset, indirect),
+                    "storage pointer table classification",
+                    u8{bank == 0 ? guesses.storage_pointer : guesses.storage_pointer_other}) != 0;
     }
+    /// Recorded constant buffer value, or the bank's guess when guessing is on.
     u32 ReadCbufValue(u32 bank, u32 offset) override {
+        return Find(cbuf_values, CbufKey(bank, offset), "constant buffer value",
+                    bank == 0 ? guesses.cbuf0 : guesses.cbuf_other);
+    }
+    /// Recorded constant buffer value only, never a guess: throws MissingContext when absent.
+    u32 RecordedCbufValue(u32 bank, u32 offset) const {
         return Lookup(cbuf_values, CbufKey(bank, offset), "constant buffer value");
     }
     Shader::TextureType ReadTextureType(u32 handle) override {
-        return Lookup(texture_types, handle, "texture type");
+        return Find(texture_types, handle, "texture type",
+                    static_cast<Shader::TextureType>(guesses.texture_type));
     }
     Shader::TexturePixelFormat ReadTexturePixelFormat(u32 handle) override {
-        return Lookup(texture_formats, handle, "texture pixel format");
+        return Find(texture_formats, handle, "texture pixel format",
+                    static_cast<Shader::TexturePixelFormat>(guesses.pixel_format));
     }
     bool IsTexturePixelFormatInteger(u32 handle) override {
         using F = Shader::TexturePixelFormat;
@@ -338,6 +383,17 @@ public:
     std::vector<u64> code;
 
 private:
+    /// The recorded value for `key`. With guessing on, a missing value counts as a guessed read and
+    /// returns `guess`; otherwise it throws.
+    template <typename K, typename V>
+    V Find(const std::map<K, V>& values, K key, std::string_view name, V guess) {
+        if (guesses.enabled && !values.contains(key)) {
+            ++guessed_reads;
+            return guess;
+        }
+        return Lookup(values, key, name);
+    }
+
     u32 low{}, high{}, local_memory{}, shared_memory{}, viewport{1}, texture_bound{~0U};
     std::array<u32, 3> workgroup{1, 1, 1};
     std::map<u32, Shader::TextureType> texture_types;
@@ -548,7 +604,28 @@ Shader::RuntimeInfo Runtime(std::span<const u8> key, Stage stage, Json& assumpti
     return info;
 }
 
+// --device-profile: the HostTranslateInfo ("host") and Profile ("profile") fields that
+// PipelineCache's constructor takes from a device, in place of the offline defaults.
+Json device_profile = Json::object();
+
+template <typename Struct>
+void ApplyDeviceFields(std::string_view section, Struct& target, auto&& fields) {
+    const auto overrides = device_profile.find(section);
+    if (overrides == device_profile.end())
+        return;
+    size_t applied{};
+    fields([&](std::string_view name, auto Struct::*field) {
+        if (const auto value = overrides->find(name); value != overrides->end()) {
+            value->get_to(target.*field);
+            ++applied;
+        }
+    });
+    if (applied != overrides->size())
+        throw std::runtime_error(fmt::format("Unknown {} field in the device profile", section));
+}
+
 Shader::HostTranslateInfo OfflineHost() {
+    using H = Shader::HostTranslateInfo;
     Shader::HostTranslateInfo host{};
     host.support_float64 = true;
     host.support_float16 = true;
@@ -556,11 +633,44 @@ Shader::HostTranslateInfo OfflineHost() {
     host.support_conditional_barrier = true;
     host.support_viewport_index_layer = true;
     host.support_geometry_shader_passthrough = true;
+    host.support_handle_table_arrays = true;
+    ApplyDeviceFields("host", host, [](auto field) {
+        field("min_ssbo_alignment", &H::min_ssbo_alignment);
+        field("max_per_stage_descriptor_sampled_images",
+              &H::max_per_stage_descriptor_sampled_images);
+        field("max_per_stage_resources", &H::max_per_stage_resources);
+        field("max_per_stage_descriptor_storage_buffers",
+              &H::max_per_stage_descriptor_storage_buffers);
+        field("max_per_stage_descriptor_samplers", &H::max_per_stage_descriptor_samplers);
+        field("max_descriptor_set_samplers", &H::max_descriptor_set_samplers);
+        field("max_descriptor_set_uniform_buffers", &H::max_descriptor_set_uniform_buffers);
+        field("max_descriptor_set_uniform_buffers_dynamic",
+              &H::max_descriptor_set_uniform_buffers_dynamic);
+        field("max_descriptor_set_storage_buffers", &H::max_descriptor_set_storage_buffers);
+        field("max_descriptor_set_storage_buffers_dynamic",
+              &H::max_descriptor_set_storage_buffers_dynamic);
+        field("max_descriptor_set_sampled_images", &H::max_descriptor_set_sampled_images);
+        field("max_descriptor_set_storage_images", &H::max_descriptor_set_storage_images);
+        field("max_descriptor_set_input_attachements", &H::max_descriptor_set_input_attachements);
+        field("support_float64", &H::support_float64);
+        field("support_float16", &H::support_float16);
+        field("support_int64", &H::support_int64);
+        field("needs_demote_reorder", &H::needs_demote_reorder);
+        field("support_snorm_render_buffer", &H::support_snorm_render_buffer);
+        field("support_viewport_index_layer", &H::support_viewport_index_layer);
+        field("support_viewport_mask", &H::support_viewport_mask);
+        field("support_geometry_shader_passthrough", &H::support_geometry_shader_passthrough);
+        field("support_conditional_barrier", &H::support_conditional_barrier);
+        field("single_lane_geometry_subgroups", &H::single_lane_geometry_subgroups);
+        field("support_byte_addressed_r16", &H::support_byte_addressed_r16);
+        field("support_handle_table_arrays", &H::support_handle_table_arrays);
+    });
     host.ApplyDescriptorLimitPolicy();
     return host;
 }
 
 Shader::Profile OfflineProfile(const Shader::HostTranslateInfo& host) {
+    using P = Shader::Profile;
     Shader::Profile profile{};
     profile.supported_spirv = 0x00010400;
     profile.unified_descriptor_binding = true;
@@ -577,6 +687,68 @@ Shader::Profile OfflineProfile(const Shader::HostTranslateInfo& host) {
     profile.max_user_clip_distances = 8;
     profile.max_subgroup_size = 32;
     profile.support_typeless_image_loads = true;
+    // Handle table arrays are indexed per invocation, as with Vulkan.
+    profile.support_sampled_image_array_nonuniform_indexing = true;
+    ApplyDeviceFields("profile", profile, [](auto field) {
+        field("supported_spirv", &P::supported_spirv);
+        field("support_descriptor_aliasing", &P::support_descriptor_aliasing);
+        field("support_int8", &P::support_int8);
+        field("support_uniform_and_storage_buffer_8bit",
+              &P::support_uniform_and_storage_buffer_8bit);
+        field("support_storage_buffer_8bit", &P::support_storage_buffer_8bit);
+        field("support_int16", &P::support_int16);
+        field("support_uniform_and_storage_buffer_16bit",
+              &P::support_uniform_and_storage_buffer_16bit);
+        field("support_storage_buffer_16bit", &P::support_storage_buffer_16bit);
+        field("support_int64", &P::support_int64);
+        field("support_float_controls", &P::support_float_controls);
+        field("support_separate_denorm_behavior", &P::support_separate_denorm_behavior);
+        field("support_separate_rounding_mode", &P::support_separate_rounding_mode);
+        field("support_fp16_denorm_preserve", &P::support_fp16_denorm_preserve);
+        field("support_fp32_denorm_preserve", &P::support_fp32_denorm_preserve);
+        field("support_fp16_denorm_flush", &P::support_fp16_denorm_flush);
+        field("support_fp32_denorm_flush", &P::support_fp32_denorm_flush);
+        field("support_fp16_signed_zero_nan_preserve", &P::support_fp16_signed_zero_nan_preserve);
+        field("support_fp32_signed_zero_nan_preserve", &P::support_fp32_signed_zero_nan_preserve);
+        field("support_fp64_signed_zero_nan_preserve", &P::support_fp64_signed_zero_nan_preserve);
+        field("support_explicit_workgroup_layout", &P::support_explicit_workgroup_layout);
+        field("support_workgroup_layout_8bit_access", &P::support_workgroup_layout_8bit_access);
+        field("support_workgroup_layout_16bit_access", &P::support_workgroup_layout_16bit_access);
+        field("support_shader_quad_control", &P::support_shader_quad_control);
+        field("support_quad_shuffles", &P::support_quad_shuffles);
+        field("support_vote", &P::support_vote);
+        field("support_shuffle_relative", &P::support_shuffle_relative);
+        field("supported_subgroup_stages", &P::supported_subgroup_stages);
+        field("support_viewport_index_layer_non_geometry",
+              &P::support_viewport_index_layer_non_geometry);
+        field("support_viewport_mask", &P::support_viewport_mask);
+        field("support_typeless_image_loads", &P::support_typeless_image_loads);
+        field("support_demote_to_helper_invocation", &P::support_demote_to_helper_invocation);
+        field("support_int64_atomics", &P::support_int64_atomics);
+        field("support_shared_int64_atomics", &P::support_shared_int64_atomics);
+        field("support_derivative_control", &P::support_derivative_control);
+        field("support_geometry_shader_passthrough", &P::support_geometry_shader_passthrough);
+        field("support_native_ndc", &P::support_native_ndc);
+        field("support_scaled_attributes", &P::support_scaled_attributes);
+        field("support_multi_viewport", &P::support_multi_viewport);
+        field("support_geometry_streams", &P::support_geometry_streams);
+        field("support_sampled_image_array_nonuniform_indexing",
+              &P::support_sampled_image_array_nonuniform_indexing);
+        field("support_storage_image_array_nonuniform_indexing",
+              &P::support_storage_image_array_nonuniform_indexing);
+        field("support_uniform_texel_buffer_array_nonuniform_indexing",
+              &P::support_uniform_texel_buffer_array_nonuniform_indexing);
+        field("support_storage_texel_buffer_array_nonuniform_indexing",
+              &P::support_storage_texel_buffer_array_nonuniform_indexing);
+        field("select_global_memory_buffer", &P::select_global_memory_buffer);
+        field("warp_size_potentially_larger_than_guest",
+              &P::warp_size_potentially_larger_than_guest);
+        field("need_gather_subpixel_offset", &P::need_gather_subpixel_offset);
+        field("has_broken_spirv_fragment_shuffle", &P::has_broken_spirv_fragment_shuffle);
+        field("max_compute_shared_memory_size", &P::max_compute_shared_memory_size);
+        field("max_subgroup_size", &P::max_subgroup_size);
+        field("max_user_clip_distances", &P::max_user_clip_distances);
+    });
     return profile;
 }
 
@@ -734,6 +906,16 @@ std::vector<PipelineStage> CompileLegacyPipeline(std::span<OfflineEnvironment> e
         }
         stages.push_back({slot, env.ShaderStage(), {}});
     }
+    // The runtime fits the arrays of every stage the pipeline emits to one descriptor set.
+    std::array<Shader::IR::Program*, 6> emitted_programs{};
+    size_t num_programs{};
+    for (const PipelineStage& stage : stages) {
+        if (stage.slot != 0 || !uses_vertex_b) {
+            emitted_programs[num_programs++] = &programs[stage.slot];
+        }
+    }
+    Shader::Optimization::LimitPipelineSampledTextureArrays(
+        std::span{emitted_programs.data(), num_programs}, host);
     diagnostic["phase"] = "spirv";
     Shader::Backend::Bindings bindings;
     const Shader::IR::Program* previous = nullptr;
@@ -1138,6 +1320,9 @@ int RunPipeline(const std::string& record_path, u32 version, const std::string& 
 }
 } // namespace
 
+/// Parses the command line, reads the program (and its environment and pipeline key when given),
+/// translates it and writes the SPIR-V or lowered code. Prints a JSON report; the exit code is 2
+/// for bad input and 1 for a failed translation.
 int main(int argc, char** argv) {
     Json diagnostic{{"schema_version", 1}, {"status", "error"},           {"phase", "input"},
                     {"stage", nullptr},    {"input_format", nullptr},     {"source_bytes", 0},
@@ -1146,14 +1331,16 @@ int main(int argc, char** argv) {
         if constexpr (std::endian::native != std::endian::little) {
             throw std::runtime_error("Only little-endian hosts are supported");
         }
-        std::string input, output, environment, pipeline_key, pipeline, output_dir, list,
-            programs_log;
+        std::string input, output, environment, pipeline_key, override_out, pipeline, output_dir,
+            list, programs_log;
         std::string format{"instructions"}, path{"legacy"};
         std::optional<Stage> requested_stage;
         u32 version{};
         bool lower_only{};
         bool packed_code{};
         bool capture_extent{};
+        Guesses guesses;
+        bool storage_pointer_other_set{};
         for (int i = 1; i < argc; ++i) {
             const std::string arg{argv[i]};
             if (arg == "--help") {
@@ -1161,10 +1348,15 @@ int main(int argc, char** argv) {
                              "vertex|tess-control|tess-eval|geometry|fragment|compute|task|mesh]\n"
                              "  [--format instructions|native-header] [--environment FILE "
                              "--cache-version 46..54]\n"
-                             "  [--pipeline-key FILE] [--capture-extent] "
+                             "  [--guess-missing [--guess-cbuf0 HEX] [--guess-cbuf-other HEX]\n"
+                             "   [--guess-texture-type N] [--guess-pixel-format N] "
+                             "[--guess-storage-pointer 0|1]\n"
+                             "   [--guess-storage-pointer-other 0|1]]\n"
+                             "  [--pipeline-key FILE] [--capture-extent] [--override-out FILE] "
                              "(--output SPV | --lower-only WORDS | --packed-code WORDS)\n"
                              "shader-sweep --pipeline RECORD --cache-version 46..54 "
                              "--output-dir DIR [--path legacy|v2]\n"
+                             "  [--device-profile JSON] (any mode but --list)\n"
                              "shader-sweep --list CACHE --output-dir DIR [--path legacy|v2] "
                              "[--programs-log V2LOG]\n";
                 return 0;
@@ -1179,6 +1371,10 @@ int main(int argc, char** argv) {
                 capture_extent = true;
                 continue;
             }
+            if (arg == "--guess-missing") {
+                guesses.enabled = true;
+                continue;
+            }
             if (++i == argc)
                 throw std::runtime_error("Missing value for " + arg);
             const std::string value{argv[i]};
@@ -1188,9 +1384,33 @@ int main(int argc, char** argv) {
                 format = value;
             else if (arg == "--environment")
                 environment = value;
+            else if (arg == "--override-out")
+                override_out = value;
             else if (arg == "--pipeline-key")
                 pipeline_key = value;
-            else if (arg == "--pipeline")
+            else if (arg == "--guess-cbuf0")
+                guesses.cbuf0 = ParseOptionValue(arg, value, 16, std::numeric_limits<u32>::max());
+            else if (arg == "--guess-cbuf-other")
+                guesses.cbuf_other =
+                    ParseOptionValue(arg, value, 16, std::numeric_limits<u32>::max());
+            else if (arg == "--guess-texture-type")
+                guesses.texture_type =
+                    ParseOptionValue(arg, value, 0, Shader::NUM_TEXTURE_TYPES - 1);
+            else if (arg == "--guess-pixel-format")
+                guesses.pixel_format =
+                    ParseOptionValue(arg, value, 0, std::numeric_limits<u8>::max());
+            else if (arg == "--guess-storage-pointer") {
+                if (value != "0" && value != "1")
+                    throw std::runtime_error("Expected --guess-storage-pointer 0 or 1");
+                guesses.storage_pointer = value == "1";
+                if (!storage_pointer_other_set)
+                    guesses.storage_pointer_other = guesses.storage_pointer;
+            } else if (arg == "--guess-storage-pointer-other") {
+                if (value != "0" && value != "1")
+                    throw std::runtime_error("Expected --guess-storage-pointer-other 0 or 1");
+                guesses.storage_pointer_other = value == "1";
+                storage_pointer_other_set = true;
+            } else if (arg == "--pipeline")
                 pipeline = value;
             else if (arg == "--output-dir")
                 output_dir = value;
@@ -1198,6 +1418,13 @@ int main(int argc, char** argv) {
                 list = value;
             else if (arg == "--programs-log")
                 programs_log = value;
+            else if (arg == "--device-profile") {
+                std::ifstream file{value};
+                if (!file)
+                    throw std::runtime_error("Cannot open " + value);
+                device_profile = Json::parse(file);
+                OfflineProfile(OfflineHost());
+            }
             else if (arg == "--path") {
 #ifdef SHADER_SWEEP_V2
                 if (value == "v2") {
@@ -1231,34 +1458,43 @@ int main(int argc, char** argv) {
         }
         if (!list.empty()) {
             if (!input.empty() || !environment.empty() || !pipeline_key.empty() ||
-                !output.empty() || !pipeline.empty() || requested_stage || capture_extent ||
-                version != 0 || output_dir.empty() || (!programs_log.empty() && path != "v2")) {
+                !override_out.empty() || !output.empty() || !pipeline.empty() || requested_stage ||
+                capture_extent || version != 0 || output_dir.empty() ||
+                (!programs_log.empty() && path != "v2")) {
                 throw std::runtime_error("Invalid arguments; see --help");
             }
             return RunList(list, path, programs_log, output_dir, diagnostic);
         }
         if (!pipeline.empty()) {
             if (!input.empty() || !environment.empty() || !pipeline_key.empty() ||
-                !output.empty() || requested_stage || capture_extent || version == 0 ||
-                output_dir.empty() || !programs_log.empty()) {
+                !override_out.empty() || !output.empty() || requested_stage || capture_extent ||
+                version == 0 || output_dir.empty() || !programs_log.empty()) {
                 throw std::runtime_error("Invalid arguments; see --help");
             }
             return RunPipeline(pipeline, version, path, output_dir, diagnostic);
         }
         if (output.empty() || !output_dir.empty() || !programs_log.empty() || path != "legacy" ||
             (input.empty() && environment.empty()) || (environment.empty() != (version == 0)) ||
-            (lower_only && input.empty()) || (capture_extent && input.empty())) {
+            (input.empty() && (lower_only || capture_extent || !override_out.empty()))) {
             throw std::runtime_error("Invalid arguments; see --help");
         }
         if (format != "instructions" && format != "native-header")
             throw std::runtime_error("Invalid input format");
-        for (const auto& path : {input, environment, pipeline_key}) {
-            if (!path.empty() && std::filesystem::weakly_canonical(path) ==
-                                     std::filesystem::weakly_canonical(output)) {
-                throw std::runtime_error("Output must not overwrite an input");
+        if (!override_out.empty() && SameFile(output, override_out))
+            throw std::runtime_error("--override-out must not name the output file");
+        auto override_partial = override_out;
+        if (!override_out.empty())
+            override_partial += ".partial";
+        for (const auto& target : {output, override_out, override_partial}) {
+            if (target.empty())
+                continue;
+            for (const auto& path : {input, environment, pipeline_key}) {
+                if (!path.empty() && SameFile(path, target))
+                    throw std::runtime_error("Output must not overwrite an input");
             }
         }
         OfflineEnvironment env;
+        env.guesses = guesses;
         if (!environment.empty()) {
             const auto bytes = ReadFile(environment);
             Reader reader{bytes};
@@ -1343,7 +1579,9 @@ int main(int argc, char** argv) {
                                       Shader::Ampere::VerifyTrapGuards(
                                           std::span{native}.first(traps.back() / 16 + 1),
                                           [&](u32 bank, u32 offset) -> std::optional<u32> {
-                                              return env.ReadCbufValue(bank, offset);
+                                              // Guards are checked against captured values only,
+                                              // even with --guess-missing.
+                                              return env.RecordedCbufValue(bank, offset);
                                           });
                 if (!verified)
                     throw MissingContext("Native trap guards could not be verified");
@@ -1363,6 +1601,26 @@ int main(int argc, char** argv) {
                 return 1;
             }
             diagnostic["lowered_words"] = lowered.instructions.size();
+            // The emulator's key for this program (Shader::Ampere::NativeProgramKey over the
+            // captured source), and the lowering as a program override record
+            // (the tools/nx2/make_*_warm.py scripts read it).
+            diagnostic["native_key"] =
+                fmt::format("{:016x}", Shader::Ampere::NativeProgramKey(native));
+            if (!override_out.empty()) {
+                const auto record = Shader::Ampere::EncodeProgramOverride(native, lowered);
+                if (record.empty())
+                    throw std::runtime_error("Cannot encode the lowering as an override record");
+                // Larger records still serve the warm-file scripts; the emulator's loader
+                // (shader_environment.cpp) would refuse them as an override.
+                diagnostic["override_within_emulator_limits"] =
+                    Shader::Ampere::ProgramOverrideSourceSize(record) != 0 &&
+                    record.size() <= size_t{16} * 1024 * 1024;
+                // Renamed into place once complete, so a reader never sees a partial record.
+                auto partial = override_out;
+                partial += ".partial";
+                WriteFile(partial, record);
+                std::filesystem::rename(partial, override_out);
+            }
             if (lower_only) {
                 diagnostic["phase"] = "output";
                 if (packed_code) {
@@ -1398,8 +1656,11 @@ int main(int argc, char** argv) {
         const auto key = pipeline_key.empty() ? std::vector<u8>{} : ReadFile(pipeline_key);
         auto runtime = Runtime(key, env.ShaderStage(), diagnostic["assumptions"]);
         diagnostic["assumptions"].push_back(
-            "Offline SPIR-V 1.4 profile; no device feature probing, default shader settings, no "
-            "resolution scaling");
+            device_profile.empty()
+                ? "Offline SPIR-V 1.4 profile; no device feature probing, default shader settings, "
+                  "no resolution scaling"
+                : "Device profile from --device-profile; default shader settings, no resolution "
+                  "scaling");
         diagnostic["phase"] = "translate";
         Shader::ObjectPool<Shader::Maxwell::Flow::Block> flow_pool;
         Shader::Maxwell::Flow::CFG cfg{env, flow_pool, Shader::Maxwell::Location{env.EntryPoint()}};
@@ -1413,6 +1674,8 @@ int main(int argc, char** argv) {
         Shader::Backend::Bindings bindings{};
         const auto spirv = Shader::Backend::SPIRV::EmitSPIRV(profile, runtime, program, bindings);
         diagnostic["spirv_words"] = spirv.size();
+        if (guesses.enabled)
+            diagnostic["guessed_reads"] = env.guessed_reads;
         diagnostic["phase"] = "output";
         WriteFile(output, spirv);
         diagnostic["status"] = "ok";

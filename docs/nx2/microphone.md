@@ -75,7 +75,7 @@ Validation completed on Windows with Clang and LLD:
 Run the focused regression tests from a configured build with:
 
 ```sh
-cmake --build build --target yuzu tests --parallel 12
+cmake --build build --target lichii tests --parallel 12
 build/bin/tests '*Microphone*,*Audio input*,[sysmix],[sysmix_sink]'
 ```
 

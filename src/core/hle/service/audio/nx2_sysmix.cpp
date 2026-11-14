@@ -8,6 +8,7 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <string>
 
 #include "audio_core/sink/silent_input_stream.h"
@@ -29,6 +30,7 @@ constexpr u64 ReadOffset = 0x44;
 constexpr u64 WriteOffset = 0x1004;
 constexpr u64 PayloadOffset = 0x1040;
 constexpr u32 BlockFrames = 240;
+constexpr u32 MaxChannels = 6;
 
 u64 AlignUp(u64 value, u64 alignment) {
     return (value + alignment - 1) & ~(alignment - 1);
@@ -157,8 +159,8 @@ struct SysmixOutput::Impl {
     bool open{};
     bool engaged{};
     bool faulted{};
-    std::array<u8, BlockFrames * 2 * sizeof(f32)> input{};
-    std::array<s16, BlockFrames * 2> output{};
+    std::array<u8, BlockFrames * MaxChannels * sizeof(f32)> input{};
+    std::array<s16, BlockFrames * MaxChannels> output{};
     SysmixOutputCounters counters{};
 };
 
@@ -181,10 +183,11 @@ Result SysmixOutput::ValidateRegion(Kernel::KProcess& process, u64 buffer, u64 s
     R_SUCCEED();
 }
 
+/// Accept 48 kHz S16 or F32 output in stereo or 5.1; the host sink mixes 5.1 to its channels.
 bool SysmixOutput::IsFormatSupported(u32 sample_type, u32 channels, u32 rate) {
     return (sample_type == static_cast<u32>(AudioCore::SampleFormat::PcmInt16) ||
             sample_type == static_cast<u32>(AudioCore::SampleFormat::PcmFloat)) &&
-           channels == 2 && rate == 48000;
+           (channels == 2 || channels == MaxChannels) && rate == 48000;
 }
 
 /// Accept 48 kHz S16 or F32 microphone capture with one or two guest channels.
@@ -345,7 +348,7 @@ u32 SysmixOutput::GetState() const {
     return impl->open && !impl->faulted ? (impl->engaged ? 2 : 1) : 0;
 }
 
-/// Transfer a bounded PCM block between host audio and the guest ring, preserving cursor ownership.
+/// Transfer bounded PCM between host audio and the guest ring, preserving cursor ownership.
 void SysmixOutput::Pump() {
     auto& p = *impl;
     std::unique_lock lock{p.mutex, std::try_to_lock};
@@ -425,91 +428,115 @@ void SysmixOutput::Pump() {
         }
         return;
     }
-    const u32 taken = std::min(filled, BlockFrames);
-    // A short block is padded with silence. That is right for a real underrun, but while the host
-    // still has audio to play the guest is only a little behind this tick, and padding would cut a
-    // gap into continuous audio. Wait for a whole block until the host drains, so a guest that
-    // waits on fewer than BlockFrames frames (a high notification threshold) still makes progress.
-    // The queue size alone is not enough: it is zero while the last block is still playing.
-    if (taken < BlockFrames && p.host->HasPendingAudio()) {
-        ++p.counters.deferred;
-        p.Notify(filled);
-        return;
-    }
-    const u32 first = std::min(taken, p.slots - read);
-    const u32 second = taken - first;
-    auto& memory = p.process->GetMemory();
-    if ((first && !memory.ReadBlock(p.buffer + PayloadOffset + u64{read} * p.frame_bytes,
-                                    p.input.data(), first * p.frame_bytes)) ||
-        (second &&
-         !memory.ReadBlock(p.buffer + PayloadOffset, p.input.data() + first * p.frame_bytes,
-                           second * p.frame_bytes))) {
-        p.Fault();
-        return;
-    }
-    p.counters.copied_frames += taken;
-    p.output.fill(0);
-    u32 nonzero{};
-    for (u32 frame = 0; frame < taken; ++frame) {
-        bool audible{};
-        for (u32 channel = 0; channel < 2; ++channel) {
-            const u32 index = frame * 2 + channel;
-            f32 value;
-            if (p.format == AudioCore::SampleFormat::PcmInt16) {
-                s16 sample;
-                std::memcpy(&sample, p.input.data() + index * sizeof(sample), sizeof(sample));
-                value = static_cast<f32>(sample) / 32768.0f;
-            } else {
-                std::memcpy(&value, p.input.data() + index * sizeof(value), sizeof(value));
-            }
-            if (std::isfinite(value)) {
-                const auto sample =
-                    static_cast<s32>(std::clamp(value * p.gain, -1.0f, 1.0f) * 32768.0f);
-                p.output[index] = static_cast<s16>(std::clamp(sample, -32768, 32767));
-                audible |= p.output[index] != 0;
-            }
-        }
-        nonzero += audible;
-    }
-    AudioCore::Sink::SinkBuffer block{BlockFrames, 0, p.counters.admitted_blocks, false};
-    if (!p.host->TryAppendOutputBlock(block, p.output)) {
-        if (!p.host->IsReady()) {
-            p.Fault(ResultOperationFailed);
-            return;
-        }
+    // Host callbacks need several guest blocks at once (for example 1024 versus 240 frames).
+    // One block per tick leaves the host at a fragile clock phase: even submillisecond jitter
+    // can insert silence while PCM is still waiting in the guest ring. Refill the bounded host
+    // queue from available whole blocks. Snapshot the budget so a concurrent consumer cannot
+    // keep this timing callback running indefinitely; input capture keeps its one-block cadence.
+    const u32 queue_limit = p.host->SysmixQueueLimit();
+    const u32 queued = p.host->GetQueueSize();
+    if (queued >= queue_limit) {
         ++p.counters.backpressure;
-        p.counters.retried_frames += taken;
-        if (p.counters.backpressure <= 3) {
-            LOG_INFO(Service_Audio, "sysmix stream {} host full: accepted={} blocks={}", p.id,
-                     p.counters.accepted_frames, p.counters.admitted_blocks);
-        }
         if (p.counters.ticks % 400 == 0) {
             p.LogStatus(filled);
         }
         return;
     }
-    ++p.counters.admitted_blocks;
-    if (taken < BlockFrames) {
-        p.counters.padded_frames += BlockFrames - taken;
+    bool log_status = p.counters.admitted_blocks < 3 || p.counters.ticks % 400 == 0;
+    for (u32 block_index = queued; block_index < queue_limit; ++block_index) {
+        const u32 taken = std::min(filled, BlockFrames);
+        // A short block is padded with silence. That is right for a real underrun, but while the
+        // host still has audio to play the guest is only a little behind this tick, and padding
+        // would cut a gap into continuous audio. Wait for a whole block until the host drains, so a
+        // guest that waits on fewer than BlockFrames frames (a high notification threshold) still
+        // makes progress. The queue size alone is not enough: it is zero while the last block is
+        // still playing.
+        if (taken < BlockFrames && p.host->HasPendingAudio()) {
+            ++p.counters.deferred;
+            p.Notify(filled);
+            return;
+        }
+        const u32 first = std::min(taken, p.slots - read);
+        const u32 second = taken - first;
+        auto& memory = p.process->GetMemory();
+        if ((first && !memory.ReadBlock(p.buffer + PayloadOffset + u64{read} * p.frame_bytes,
+                                        p.input.data(), first * p.frame_bytes)) ||
+            (second &&
+             !memory.ReadBlock(p.buffer + PayloadOffset, p.input.data() + first * p.frame_bytes,
+                               second * p.frame_bytes))) {
+            p.Fault();
+            return;
+        }
+        p.counters.copied_frames += taken;
+        p.output.fill(0);
+        u32 nonzero{};
+        for (u32 frame = 0; frame < taken; ++frame) {
+            bool audible{};
+            for (u32 channel = 0; channel < p.channels; ++channel) {
+                const u32 index = frame * p.channels + channel;
+                f32 value;
+                if (p.format == AudioCore::SampleFormat::PcmInt16) {
+                    s16 sample;
+                    std::memcpy(&sample, p.input.data() + index * sizeof(sample), sizeof(sample));
+                    value = static_cast<f32>(sample) / 32768.0f;
+                } else {
+                    std::memcpy(&value, p.input.data() + index * sizeof(value), sizeof(value));
+                }
+                if (std::isfinite(value)) {
+                    const auto sample =
+                        static_cast<s32>(std::clamp(value * p.gain, -1.0f, 1.0f) * 32768.0f);
+                    p.output[index] = static_cast<s16>(std::clamp(sample, -32768, 32767));
+                    audible |= p.output[index] != 0;
+                }
+            }
+            nonzero += audible;
+        }
+        AudioCore::Sink::SinkBuffer block{BlockFrames, 0, p.counters.admitted_blocks, false};
+        if (!p.host->TryAppendOutputBlock(block,
+                                          std::span{p.output}.first(BlockFrames * p.channels))) {
+            if (!p.host->IsReady()) {
+                p.Fault(ResultOperationFailed);
+                return;
+            }
+            ++p.counters.backpressure;
+            p.counters.retried_frames += taken;
+            if (p.counters.backpressure <= 3) {
+                LOG_INFO(Service_Audio, "sysmix stream {} host full: accepted={} blocks={}", p.id,
+                         p.counters.accepted_frames, p.counters.admitted_blocks);
+            }
+            if (p.counters.ticks % 400 == 0) {
+                p.LogStatus(filled);
+            }
+            return;
+        }
+        ++p.counters.admitted_blocks;
+        if (taken < BlockFrames) {
+            p.counters.padded_frames += BlockFrames - taken;
+        }
+        const u32 next = (read + taken) % p.slots;
+        u32 checked{};
+        if (!memory.Read32Acquire(p.buffer + ReadOffset, checked) || checked != read ||
+            !memory.WriteExclusive32(p.buffer + ReadOffset, next, read) ||
+            !memory.Read32Acquire(p.buffer + ReadOffset, checked) || checked != next) {
+            p.Fault();
+            return;
+        }
+        p.consumer = next;
+        p.counters.accepted_frames += taken;
+        p.counters.nonzero_frames += nonzero;
+        if (!p.ReadOccupancy(read, write, filled)) {
+            p.Fault();
+            return;
+        }
+        p.Notify(filled);
+        log_status |= nonzero && p.counters.nonzero_frames == nonzero;
+        // Never pad another block merely to fill host headroom. Leave a short guest tail for the
+        // next tick; the existing empty-host path above can still pad a genuine underrun.
+        if (filled < BlockFrames) {
+            break;
+        }
     }
-    const u32 next = (read + taken) % p.slots;
-    u32 checked{};
-    if (!memory.Read32Acquire(p.buffer + ReadOffset, checked) || checked != read ||
-        !memory.WriteExclusive32(p.buffer + ReadOffset, next, read) ||
-        !memory.Read32Acquire(p.buffer + ReadOffset, checked) || checked != next) {
-        p.Fault();
-        return;
-    }
-    p.consumer = next;
-    p.counters.accepted_frames += taken;
-    p.counters.nonzero_frames += nonzero;
-    if (!p.ReadOccupancy(read, write, filled)) {
-        p.Fault();
-        return;
-    }
-    p.Notify(filled);
-    if (p.counters.admitted_blocks <= 3 || p.counters.ticks % 400 == 0 ||
-        (nonzero && p.counters.nonzero_frames == nonzero)) {
+    if (log_status) {
         p.LogStatus(filled);
     }
 }

@@ -92,7 +92,7 @@ INSERT(Settings,
 
 Add where it should be in the settings.
 
-Example: `src/android/app/src/main/java/org/yuzu/yuzu_emu/features/settings/model/BooleanSetting.kt`
+Example: `src/android/app/src/main/java/io/github/zortos293/lichii/features/settings/model/BooleanSetting.kt`
 
 ```kts
 RENDERER_YOUR_SETTING_NAME("your_setting_name"),
@@ -108,7 +108,7 @@ RENDERER_YOUR_SETTING_NAME("your_setting_name"),
 
 Add the toggle to the Kotlin (Android) UI
 
-Example: `src/android/app/src/main/java/org/yuzu/yuzu_emu/features/settings/model/view/SettingsItem.kt`
+Example: `src/android/app/src/main/java/io/github/zortos293/lichii/features/settings/model/view/SettingsItem.kt`
 
 ```kts
 put(
@@ -126,7 +126,7 @@ put(
 
 Add your setting within the right category.
 
-Example: `src/android/app/src/main/java/org/yuzu/yuzu_emu/features/settings/ui/SettingsFragmentPresenter.kt`
+Example: `src/android/app/src/main/java/io/github/zortos293/lichii/features/settings/ui/SettingsFragmentPresenter.kt`
 
 ```kts
 add(BooleanSetting.RENDERER_YOUR_SETTING_NAME.key)
@@ -221,7 +221,7 @@ bool another_feature = Settings::GetDebugKnobAt(15);
 
 ```kts
 //kotlin side
-import org.yuzu.yuzu_emu.features.settings.model.Settings
+import io.github.zortos293.lichii.features.settings.model.Settings
 
 //To use it as a general purpose uint var
 val debug_knobs: Int = UShortSetting.DEBUG_KNOBS.getInt()

@@ -22,6 +22,7 @@ layout(push_constant) uniform PushConstants {
     float clip_width;                 // neighbourhood clip of still pixels, in deviations
     float clip_motion;                // clip of pixels moving a pixel or more per frame
     float kernel_motion;              // kernel distance scale of moving pixels
+    ivec2 render_size;                // the part of the input the game rendered, in pixels
 };
 
 layout(location = 0) in vec2 texcoord;  // 0 to 1 across the output
@@ -81,7 +82,7 @@ vec3 SampleHistory(vec2 position) {
 }
 
 void main() {
-    const ivec2 input_size = textureSize(input_color, 0);
+    const ivec2 input_size = render_size;
     if (current_weight < 0.0) {
         const vec2 position = clamp(texcoord * vec2(input_size) + jitter,
                                     vec2(0.5), vec2(input_size) - vec2(0.5));
@@ -89,7 +90,10 @@ void main() {
         imageStore(next_history, ivec2(gl_FragCoord.xy), color);
         return;
     }
-    const ivec2 motion_size = textureSize(motion_vectors, 0);
+    // A rendered region sits on the same pixel grid in the colour and the motion targets, whatever
+    // their sizes; without one, the motion vectors cover the whole input at their own scale.
+    const bool has_region = render_size != textureSize(input_color, 0);
+    const ivec2 motion_size = has_region ? render_size : textureSize(motion_vectors, 0);
     // The output pixel's centre in input pixels. Input texel k sampled the scene at k + 0.5 - jitter
     // (the sign measured against consecutive frames).
     const vec2 target = texcoord * vec2(input_size);

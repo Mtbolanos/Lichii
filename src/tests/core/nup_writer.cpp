@@ -11,14 +11,18 @@
 #include <iterator>
 #include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <fmt/format.h>
 #include <openssl/evp.h>
 
+#include "core/file_sys/content_archive.h"
+#include "core/file_sys/control_metadata.h"
 #include "core/file_sys/nup_container.h"
 #include "core/file_sys/nup_writer.h"
-#include "core/file_sys/control_metadata.h"
+#include "core/file_sys/registered_cache.h"
+#include "core/file_sys/romfs.h"
 #include "core/file_sys/vfs/vfs_real.h"
 #include "core/file_sys/vfs/vfs_vector.h"
 #include "core/loader/nup.h"
@@ -145,6 +149,72 @@ std::map<std::string, std::string> PackedTree(const FileSys::VirtualDir& dir) {
 }
 
 constexpr u64 TitleId = 0x0400ABCD00010000ULL;
+
+TEST_CASE("NUP add-ons are readable through the manual content provider", "[nup][nup-content]") {
+    TempDir tmp;
+    const auto root = tmp.path / "dump";
+    Put(root / "base/exefs/main", "main");
+    Put(root / "base/exefs/main.npdm", Npdm(TitleId));
+    Put(root / "base/romfs/base.bin", "base");
+    Put(root / "dlc/0400ABCD00011001/0/romfs/addon.bin", "old addon");
+    Put(root / "dlc/0400ABCD00011001/1/romfs/addon.bin", "new addon");
+    Put(root / "dlc/0400ABCD00011002/0/romfs/second.bin", "second addon");
+    Put(root / "dlc/0400ABCD00021001/0/romfs/foreign.bin", "foreign addon");
+    const auto archive = tmp.path / "game.nup";
+    REQUIRE(FileSys::Nup::PackDump(root, archive) == FileSys::Nup::PackResult::Success);
+    auto bytes = ReadAll(archive);
+    const auto toc = Le(bytes, 8, 8);
+    bytes.at(toc + 0x30 + 2 * 0x40 + 0x14) = 1;
+    const auto hash = Sha256(std::string_view{bytes}.substr(toc, Le(bytes, 0x10, 8)));
+    std::copy(hash.begin(), hash.end(), bytes.begin() + 0x18);
+    Put(archive, bytes);
+
+    FileSys::RealVfsFilesystem vfs;
+    FileSys::VirtualFile file;
+    SECTION("memory-backed archive") {
+        file = std::make_shared<FileSys::VectorVfsFile>(std::vector<u8>(bytes.begin(), bytes.end()),
+                                                        "game.nup");
+    }
+    SECTION("disk-backed archive") {
+        file = vfs.OpenFile(archive.string(), FileSys::OpenMode::Read);
+    }
+    REQUIRE(file != nullptr);
+
+    FileSys::ManualContentProvider provider;
+    REQUIRE(provider.AddEntriesFromContainer(file, true, TitleId));
+    file.reset();
+    const auto entries =
+        provider.ListEntriesFilter(FileSys::TitleType::AOC, FileSys::ContentRecordType::Data, {});
+    REQUIRE(entries.size() == 2);
+    CHECK_FALSE(provider.HasEntry(TitleId, FileSys::ContentRecordType::Program));
+    CHECK_FALSE(provider.HasEntry(0x0400ABCD00021001ULL, FileSys::ContentRecordType::Data));
+    for (const auto& [id, name, expected] :
+         std::array{std::tuple{TitleId + 0x1001, "addon.bin", "new addon"},
+                    std::tuple{TitleId + 0x1002, "second.bin", "second addon"}}) {
+        const auto nca = provider.GetEntry(id, FileSys::ContentRecordType::Data);
+        REQUIRE(nca != nullptr);
+        REQUIRE(nca->GetStatus() == Loader::ResultStatus::Success);
+        CHECK(nca->GetTitleId() == id);
+        const auto romfs = FileSys::ExtractRomFS(nca->GetRomFS());
+        REQUIRE(romfs != nullptr);
+        const auto member = romfs->GetFile(name);
+        REQUIRE(member != nullptr);
+        CHECK(Read(member) == expected);
+    }
+
+    provider.ClearAllEntries();
+    CHECK(provider.ListEntriesFilter({}, {}, {}).empty());
+    REQUIRE(provider.AddEntriesFromContainer(std::make_shared<FileSys::VectorVfsFile>(
+        std::vector<u8>(bytes.begin(), bytes.end()), "game.nup")));
+    CHECK(provider.ListEntriesFilter(FileSys::TitleType::AOC, FileSys::ContentRecordType::Data, {})
+              .size() == 3);
+    provider.ClearAllEntries();
+    CHECK_FALSE(provider.AddEntriesFromContainer(
+        std::make_shared<FileSys::VectorVfsFile>(std::vector<u8>(bytes.begin(), bytes.end()),
+                                                 "game.nup"),
+        true, TitleId + 0x20000));
+    CHECK(provider.ListEntriesFilter({}, {}, {}).empty());
+}
 
 void MakeDump(const fs::path& root) {
     Put(root / "Base/ExeFS/main", "base main");

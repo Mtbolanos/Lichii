@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -166,11 +165,21 @@ enum class ResultStatus : u16 {
 std::string GetResultStatusString(ResultStatus status);
 std::ostream& operator<<(std::ostream& os, ResultStatus status);
 
+/// Returns whether a status means that decryption keys are missing or too old for the content.
+bool IsMissingKeyStatus(ResultStatus status);
+
+/**
+ * Returns the load status of an NSP or XCI's program content, the key error when it cannot be
+ * decrypted, ErrorNSPMissingProgramNCA when its content is an update or add-on, or
+ * ErrorBadPFSHeader when it does not open. Returns Success for other types.
+ */
+ResultStatus GetContainerProgramStatus(FileSys::VirtualFile file, FileType type);
+
 /// Interface for loading an application
 class AppLoader {
 public:
-    YUZU_NON_COPYABLE(AppLoader);
-    YUZU_NON_MOVEABLE(AppLoader);
+    LICHII_NON_COPYABLE(AppLoader);
+    LICHII_NON_MOVEABLE(AppLoader);
 
     struct LoadParameters {
         s32 main_thread_priority;

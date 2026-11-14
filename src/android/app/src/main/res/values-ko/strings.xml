@@ -243,8 +243,8 @@
     <string name="install_game_content_success_install">%1$d개를 설치했습니다.</string>
     <string name="install_game_content_success_overwrite">%1$d개를 덮어씌웠습니다.</string>
     <string name="custom_driver_not_supported">사용자 지정 드라이버는 지원하지 않습니다.</string>
-    <string name="manage_yuzu_data">Eden 데이터 관리</string>
-    <string name="manage_yuzu_data_description">펌웨어, 키 값, 유저 데이터 등을 가져오기 또는 내보내기</string>
+    <string name="manage_lichii_data">Eden 데이터 관리</string>
+    <string name="manage_lichii_data_description">펌웨어, 키 값, 유저 데이터 등을 가져오기 또는 내보내기</string>
     <string name="game_folders">게임 폴더</string>
     <string name="deep_scan">딥 스캔(하위 폴더 탐색)</string>
     <string name="add_game_folder">게임 폴더 추가</string>
@@ -302,7 +302,7 @@
     <string name="user_data">유저 데이터</string>
     <string name="exporting_user_data">유저 데이터 내보내는 중...</string>
     <string name="importing_user_data">유저 데이터 가져오는 중...</string>
-    <string name="invalid_yuzu_backup">올바르지 않은 Eden 백업 파일</string>
+    <string name="invalid_lichii_backup">올바르지 않은 Eden 백업 파일</string>
     <string name="user_data_export_success">유저 데이터를 내보냈습니다.</string>
     <string name="user_data_import_success">유저 데이터를 가져왔습니다.</string>
     <string name="user_data_export_cancelled">내보내기 취소됨</string>
@@ -551,8 +551,7 @@
     <string name="verify_no_result_description">파일 콘텐츠의 유효성 검사가 진행되지 않았습니다.</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">롬 파일이 암호화되어있음</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[<a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">게임 카드</a> 또는 <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">디지털 타이틀</a>을 다시 덤프하려면 가이드를 따르세요.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[게임을 해독할 수 있도록 <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> 파일이 설치되어 있는지 확인하세요.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[게임을 해독할 수 있도록 prod.keys 파일이 설치되어 있는지 확인하세요.]]></string>
     <string name="loader_error_video_core">비디오 코어를 초기화하는 동안 오류 발생</string>
     <string name="loader_error_video_core_description">일반적으로 이 문제는 호환되지 않는 GPU 드라이버로 인해 발생합니다. 사용자 지정 GPU 드라이버를 설치하면 이 문제가 해결될 수 있습니다.</string>
     <string name="loader_error_file_not_found">롬 파일이 존재하지 않음</string>

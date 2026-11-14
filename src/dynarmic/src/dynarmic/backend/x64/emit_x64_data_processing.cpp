@@ -138,15 +138,23 @@ void EmitX64::EmitTestBit(EmitContext& ctx, IR::Inst* inst) {
 
 static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bitsize) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    // Register moves leave the flags alone; loading an immediate may not (xor).
+    const bool flags_live = code.nzcv_live_pos != nullptr && code.nzcv_live_pos == code.getCurr() && !args[1].IsImmediate() && !args[2].IsImmediate();
+    const IR::Cond cond = args[0].GetImmediateCond();
     const Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr(code, HostLoc::RAX).cvt32();
     const Xbyak::Reg then_ = ctx.reg_alloc.UseGpr(code, args[1]).changeBit(bitsize);
     const Xbyak::Reg else_ = ctx.reg_alloc.UseScratchGpr(code, args[2]).changeBit(bitsize);
 
-    code.mov(nzcv, dword[code.ABI_JIT_PTR + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
+    if (flags_live) {
+        if (cond == IR::Cond::HI || cond == IR::Cond::LS) {
+            code.cmc();
+        }
+    } else {
+        code.mov(nzcv, dword[code.ABI_JIT_PTR + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
+        code.LoadRequiredFlagsForCondFromRax(cond);
+    }
 
-    code.LoadRequiredFlagsForCondFromRax(args[0].GetImmediateCond());
-
-    switch (args[0].GetImmediateCond()) {
+    switch (cond) {
     case IR::Cond::EQ:
         code.cmovz(else_, then_);
         break;
@@ -198,6 +206,9 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
     }
 
     ctx.reg_alloc.DefineValue(code, inst, else_);
+    if (flags_live && cond != IR::Cond::HI && cond != IR::Cond::LS) {
+        code.nzcv_live_pos = code.getCurr();
+    }
 }
 
 void EmitX64::EmitConditionalSelect32(EmitContext& ctx, IR::Inst* inst) {
@@ -919,6 +930,12 @@ static Xbyak::Reg64 DoNZCV(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* nzc
 }
 
 static void EmitAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
+    if (bitsize == 64 && !code.folded_address_adds.empty() && code.FoldedAddressDisp(inst)) {
+        // Folded into the address of the memory access that is its only use.
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        ctx.reg_alloc.DefineValue(code, inst, args[0]);
+        return;
+    }
     const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
     const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
     const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
@@ -995,6 +1012,11 @@ static void EmitAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, size_t 
         ctx.reg_alloc.DefineValue(code, overflow_inst, overflow);
     }
     ctx.reg_alloc.DefineValue(code, inst, result);
+    if (nzcv_inst) {
+        // setc/seto leave the flags alone: they still hold what lahf/seto captured.
+        code.nzcv_flags_pos = code.getCurr();
+        code.nzcv_flags_inst = nzcv_inst;
+    }
 }
 
 void EmitX64::EmitAdd32(EmitContext& ctx, IR::Inst* inst) {
@@ -1096,6 +1118,10 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
     }
     if (!is_cmp) {
         ctx.reg_alloc.DefineValue(code, inst, result);
+    }
+    if (nzcv_inst) {
+        code.nzcv_flags_pos = code.getCurr();
+        code.nzcv_flags_inst = nzcv_inst;
     }
 }
 
@@ -1509,6 +1535,12 @@ void EmitX64::EmitZeroExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    // Only a register is known to be zero-extended: a spill slot holds just the 32 bits written to
+    // it, and the 64-bit value aliasing it may be read straight from the slot as a memory operand.
+    if (code.elide_redundant_zext && !args[0].IsImmediate() && IsZeroExtendedU32Producer(args[0].GetInst()) && args[0].IsInGpr(ctx.reg_alloc)) {
+        ctx.reg_alloc.DefineValue(code, inst, args[0]);
+        return;
+    }
     const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(code, args[0]);
     code.mov(result.cvt32(), result.cvt32());  // x64 zeros upper 32 bits on a 32-bit move
     ctx.reg_alloc.DefineValue(code, inst, result);

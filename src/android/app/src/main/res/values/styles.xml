@@ -13,153 +13,153 @@
         <item name="android:paddingRight">32dp</item>
     </style>
 
-    <style name="YuzuSlider" parent="Widget.Material3.Slider">
+    <style name="LichiiSlider" parent="Widget.Material3.Slider">
         <item name="tickVisible">false</item>
         <item name="labelBehavior">gone</item>
     </style>
 
     <!-- Blue theme dialog -->
-    <style name="YuzuMaterialDialog.Blue" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_blue</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_blue</item>
-        <item name="colorSecondary">@color/yuzu_primary_blue</item>
-        <item name="android:textColorLink">@color/yuzu_primary_blue</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Blue</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Blue</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Blue</item>
+    <style name="LichiiMaterialDialog.Blue" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_blue</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_blue</item>
+        <item name="colorSecondary">@color/lichii_primary_blue</item>
+        <item name="android:textColorLink">@color/lichii_primary_blue</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Blue</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Blue</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Blue</item>
     </style>
 
-    <style name="YuzuButton.Blue" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_blue</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_blue</item>
+    <style name="LichiiButton.Blue" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_blue</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_blue</item>
     </style>
 
     <!-- Cyan theme dialog -->
-    <style name="YuzuMaterialDialog.Cyan" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_cyan</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_cyan</item>
-        <item name="colorSecondary">@color/yuzu_primary_cyan</item>
-        <item name="android:textColorLink">@color/yuzu_primary_cyan</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Cyan</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Cyan</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Cyan</item>
+    <style name="LichiiMaterialDialog.Cyan" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_cyan</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_cyan</item>
+        <item name="colorSecondary">@color/lichii_primary_cyan</item>
+        <item name="android:textColorLink">@color/lichii_primary_cyan</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Cyan</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Cyan</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Cyan</item>
     </style>
 
-    <style name="YuzuButton.Cyan" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_cyan</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_cyan</item>
+    <style name="LichiiButton.Cyan" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_cyan</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_cyan</item>
     </style>
 
     <!-- Red theme dialog -->
-    <style name="YuzuMaterialDialog.Red" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_red</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_red</item>
-        <item name="colorSecondary">@color/yuzu_primary_red</item>
-        <item name="android:textColorLink">@color/yuzu_primary_red</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Red</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Red</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Red</item>
+    <style name="LichiiMaterialDialog.Red" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_red</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_red</item>
+        <item name="colorSecondary">@color/lichii_primary_red</item>
+        <item name="android:textColorLink">@color/lichii_primary_red</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Red</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Red</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Red</item>
     </style>
 
-    <style name="YuzuButton.Red" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_red</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_red</item>
+    <style name="LichiiButton.Red" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_red</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_red</item>
     </style>
 
     <!-- Green theme dialog -->
-    <style name="YuzuMaterialDialog.Green" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_green</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_green</item>
-        <item name="colorSecondary">@color/yuzu_primary_green</item>
-        <item name="android:textColorLink">@color/yuzu_primary_green</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Green</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Green</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Green</item>
+    <style name="LichiiMaterialDialog.Green" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_green</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_green</item>
+        <item name="colorSecondary">@color/lichii_primary_green</item>
+        <item name="android:textColorLink">@color/lichii_primary_green</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Green</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Green</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Green</item>
     </style>
 
-    <style name="YuzuButton.Green" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_green</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_green</item>
+    <style name="LichiiButton.Green" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_green</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_green</item>
     </style>
 
     <!-- Yellow theme dialog -->
-    <style name="YuzuMaterialDialog.Yellow" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_yellow</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_yellow</item>
-        <item name="colorSecondary">@color/yuzu_primary_yellow</item>
-        <item name="android:textColorLink">@color/yuzu_primary_yellow</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Yellow</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Yellow</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Yellow</item>
+    <style name="LichiiMaterialDialog.Yellow" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_yellow</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_yellow</item>
+        <item name="colorSecondary">@color/lichii_primary_yellow</item>
+        <item name="android:textColorLink">@color/lichii_primary_yellow</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Yellow</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Yellow</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Yellow</item>
     </style>
 
-    <style name="YuzuButton.Yellow" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_yellow</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_yellow</item>
+    <style name="LichiiButton.Yellow" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_yellow</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_yellow</item>
     </style>
 
     <!-- Orange theme dialog -->
-    <style name="YuzuMaterialDialog.Orange" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_orange</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_orange</item>
-        <item name="colorSecondary">@color/yuzu_primary_orange</item>
-        <item name="android:textColorLink">@color/yuzu_primary_orange</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Orange</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Orange</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Orange</item>
+    <style name="LichiiMaterialDialog.Orange" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_orange</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_orange</item>
+        <item name="colorSecondary">@color/lichii_primary_orange</item>
+        <item name="android:textColorLink">@color/lichii_primary_orange</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Orange</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Orange</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Orange</item>
     </style>
 
-    <style name="YuzuButton.Orange" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_orange</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_orange</item>
+    <style name="LichiiButton.Orange" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_orange</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_orange</item>
     </style>
 
     <!-- Violet theme dialog -->
-    <style name="YuzuMaterialDialog.Violet" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_violet</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_violet</item>
-        <item name="colorSecondary">@color/yuzu_primary_violet</item>
-        <item name="android:textColorLink">@color/yuzu_primary_violet</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Violet</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Violet</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Violet</item>
+    <style name="LichiiMaterialDialog.Violet" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_violet</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_violet</item>
+        <item name="colorSecondary">@color/lichii_primary_violet</item>
+        <item name="android:textColorLink">@color/lichii_primary_violet</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Violet</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Violet</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Violet</item>
     </style>
 
-    <style name="YuzuButton.Violet" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_violet</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_violet</item>
+    <style name="LichiiButton.Violet" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_violet</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_violet</item>
     </style>
 
     <!-- Gray theme dialog -->
-    <style name="YuzuMaterialDialog.Gray" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_gray</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_gray</item>
-        <item name="colorSecondary">@color/yuzu_primary_gray</item>
-        <item name="android:textColorLink">@color/yuzu_primary_gray</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Gray</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Gray</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Gray</item>
+    <style name="LichiiMaterialDialog.Gray" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_gray</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_gray</item>
+        <item name="colorSecondary">@color/lichii_primary_gray</item>
+        <item name="android:textColorLink">@color/lichii_primary_gray</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Gray</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Gray</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Gray</item>
     </style>
 
-    <style name="YuzuButton.Gray" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_gray</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_gray</item>
+    <style name="LichiiButton.Gray" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_gray</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_gray</item>
     </style>
 
     <!-- pink theme dialog -->
-    <style name="YuzuMaterialDialog.PINK" parent="ThemeOverlay.Material3.MaterialAlertDialog">
-        <item name="colorPrimary">@color/yuzu_primaryContainer_pink</item>
-        <item name="colorSurface">@color/yuzu_primaryContainer_pink</item>
-        <item name="colorSecondary">@color/yuzu_primary_pink</item>
-        <item name="android:textColorLink">@color/yuzu_primary_pink</item>
-        <item name="buttonBarPositiveButtonStyle">@style/YuzuButton.Pink</item>
-        <item name="buttonBarNegativeButtonStyle">@style/YuzuButton.Pink</item>
-        <item name="buttonBarNeutralButtonStyle">@style/YuzuButton.Pink</item>
+    <style name="LichiiMaterialDialog.PINK" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorPrimary">@color/lichii_primaryContainer_pink</item>
+        <item name="colorSurface">@color/lichii_primaryContainer_pink</item>
+        <item name="colorSecondary">@color/lichii_primary_pink</item>
+        <item name="android:textColorLink">@color/lichii_primary_pink</item>
+        <item name="buttonBarPositiveButtonStyle">@style/LichiiButton.Pink</item>
+        <item name="buttonBarNegativeButtonStyle">@style/LichiiButton.Pink</item>
+        <item name="buttonBarNeutralButtonStyle">@style/LichiiButton.Pink</item>
     </style>
 
-    <style name="YuzuButton.Pink" parent="Widget.Material3.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/yuzu_primary_pink</item>
-        <item name="rippleColor">@color/yuzu_inversePrimary_pink</item>
+    <style name="LichiiButton.Pink" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/lichii_primary_pink</item>
+        <item name="rippleColor">@color/lichii_inversePrimary_pink</item>
     </style>
 
     <!-- Eden theme styles -->
@@ -210,7 +210,7 @@
     <style name="EdenPopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@drawable/popup_menu_background</item>
     </style>
-    <style name="YuzuPopupMenu" parent="Widget.Material3.PopupMenu">
+    <style name="LichiiPopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@drawable/popup_menu_background</item>
     </style>
 

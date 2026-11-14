@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-FileCopyrightText: 2018 yuzu Emulator Project
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 # Enable modules to include each other's files
 include_directories(.)
 
 # Dynarmic
-if ((ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64 OR ARCHITECTURE_riscv64 OR ARCHITECTURE_loongarch64) AND NOT YUZU_STATIC_ROOM)
+if ((ARCHITECTURE_x86_64 OR ARCHITECTURE_arm64 OR ARCHITECTURE_riscv64 OR ARCHITECTURE_loongarch64) AND NOT LICHII_STATIC_ROOM)
     add_subdirectory(dynarmic)
     add_library(dynarmic::dynarmic ALIAS dynarmic)
 endif()
@@ -17,7 +16,7 @@ endif()
 set_property(DIRECTORY APPEND PROPERTY
     COMPILE_DEFINITIONS $<$<CONFIG:Debug>:_DEBUG> $<$<NOT:$<CONFIG:Debug>>:NDEBUG>)
 
-if (YUZU_STATIC_BUILD)
+if (LICHII_STATIC_BUILD)
     add_compile_definitions(QT_STATICPLUGIN)
 endif()
 
@@ -27,9 +26,9 @@ if (NIGHTLY_BUILD)
 endif()
 
 # Legacy (android only)
-if (YUZU_LEGACY)
+if (LICHII_LEGACY)
     message(WARNING "Making legacy build. Performance may suffer.")
-    add_compile_definitions(YUZU_LEGACY)
+    add_compile_definitions(LICHII_LEGACY)
 endif()
 
 # Genshin Spoof (android only)
@@ -87,6 +86,41 @@ if (MSVC AND NOT CXX_CLANG)
     # /Zc:preprocessor    - Enable standards-conforming preprocessor
     # /Zc:throwingNew     - Let codegen assume `operator new` (without std::nothrow) will never return null
     # /GT                 - Supports fiber safety for data allocated using static thread-local storage
+
+    # Diagnostics the project does not accept. ENABLE_WERROR decides whether they are
+    # errors (/we) or warnings at level 4 (/w4), the same way it decides between
+    # -Werror=... and -W... for GCC and Clang below.
+    set(LICHII_MSVC_DIAGNOSTIC_CODES
+        4062 # Enumerator 'identifier' in a switch of enum 'enumeration' is not handled
+        4189 # 'identifier': local variable is initialized but not referenced
+        4265 # 'class': class has virtual functions, but destructor is not virtual
+        4388 # 'expression': signed/unsigned mismatch
+        4389 # 'operator': signed/unsigned mismatch
+        4456 # Declaration of 'identifier' hides previous local declaration
+        4457 # Declaration of 'identifier' hides function parameter
+        4458 # Declaration of 'identifier' hides class member
+        4459 # Declaration of 'identifier' hides global declaration
+        4547 # 'operator': operator before comma has no effect; expected operator with side-effect
+        4549 # 'operator1': operator before comma has no effect; did you intend 'operator2'?
+        4555 # Expression has no effect; expected expression with side-effect
+        4826 # Conversion from 'type1' to 'type2' is sign-extended. This may cause unexpected runtime behavior.
+        5038 # data member 'member1' will be initialized after data member 'member2'
+        5233 # explicit lambda capture 'identifier' is not used
+        5245 # 'function': unreferenced function with internal linkage has been removed
+    )
+
+    if (ENABLE_WERROR)
+        # This fork reports them as level-1 warnings (MSVC failed on C4459 and C4458 as /we).
+        set(LICHII_MSVC_DIAGNOSTIC_LEVEL /w1)
+    else()
+        set(LICHII_MSVC_DIAGNOSTIC_LEVEL /w4)
+    endif()
+
+    unset(LICHII_MSVC_DIAGNOSTICS)
+    foreach (code IN LISTS LICHII_MSVC_DIAGNOSTIC_CODES)
+        list(APPEND LICHII_MSVC_DIAGNOSTICS ${LICHII_MSVC_DIAGNOSTIC_LEVEL}${code})
+    endforeach()
+
     add_compile_options(
         /MP
         /Zm200
@@ -106,23 +140,8 @@ if (MSVC AND NOT CXX_CLANG)
         /external:anglebrackets # Treats all headers included by #include <header>, where the header file is enclosed in angle brackets (< >), as external headers
         /external:W0            # Sets the default warning level to 0 for external headers, effectively disabling warnings for them.
 
-        /w14062 # Enumerator 'identifier' in a switch of enum 'enumeration' is not handled
-        /w14189 # 'identifier': local variable is initialized but not referenced
-        /w14265 # 'class': class has virtual functions, but destructor is not virtual
-        /w14388 # 'expression': signed/unsigned mismatch
-        /w14389 # 'operator': signed/unsigned mismatch
-        /w14456 # Declaration of 'identifier' hides previous local declaration
-        /w14457 # Declaration of 'identifier' hides function parameter
-        /w14458 # Declaration of 'identifier' hides class member
-        /w14459 # Declaration of 'identifier' hides global declaration
+        ${LICHII_MSVC_DIAGNOSTICS} # /we or /w4, see above
         /w44505 # 'function': unreferenced local function has been removed
-        /w14547 # 'operator': operator before comma has no effect; expected operator with side-effect
-        /w14549 # 'operator1': operator before comma has no effect; did you intend 'operator2'?
-        /w14555 # Expression has no effect; expected expression with side-effect
-        /w14826 # Conversion from 'type1' to 'type2' is sign-extended. This may cause unexpected runtime behavior.
-        /w15038 # data member 'member1' will be initialized after data member 'member2'
-        /w15233 # explicit lambda capture 'identifier' is not used
-        /w15245 # 'function': unreferenced function with internal linkage has been removed
 
         /wd4100 # 'identifier': unreferenced formal parameter
         /wd4324 # 'struct_name': structure was padded due to __declspec(align())
@@ -237,10 +256,10 @@ else()
         add_compile_definitions(_FILE_OFFSET_BITS=64)
     endif()
 
-    if (YUZU_STATIC_BUILD AND NOT APPLE AND NOT MSVC)
+    if (LICHII_STATIC_BUILD AND NOT APPLE AND NOT MSVC)
         add_compile_options(-static)
 
-        # yuzu-cmd requires us to explicitly link libpthread, libgcc, and libstdc++ as static
+        # lichii-cmd requires us to explicitly link libpthread, libgcc, and libstdc++ as static
         add_link_options(-Wl,-Bstatic -static -lpthread)
         add_link_options(-static-libgcc -static-libstdc++)
     endif()
@@ -267,16 +286,16 @@ endif()
 add_subdirectory(common)
 add_subdirectory(network)
 
-if (YUZU_ROOM)
+if (LICHII_ROOM)
     add_subdirectory(dedicated_room)
 endif()
 
-if (YUZU_ROOM_STANDALONE)
-    add_subdirectory(yuzu_room_standalone)
-    set_target_properties(yuzu-room PROPERTIES OUTPUT_NAME "eden-room")
+if (LICHII_ROOM_STANDALONE)
+    add_subdirectory(lichii_room_standalone)
+    set_target_properties(lichii-room PROPERTIES OUTPUT_NAME "eden-room")
 endif()
 
-if (YUZU_STATIC_ROOM)
+if (LICHII_STATIC_ROOM)
     return()
 endif()
 
@@ -288,7 +307,7 @@ add_subdirectory(input_common)
 add_subdirectory(frontend_common)
 add_subdirectory(shader_recompiler)
 
-if (YUZU_TESTS)
+if (LICHII_TESTS)
     add_subdirectory(tests)
 endif()
 
@@ -296,16 +315,39 @@ if (LICHII_FUZZERS)
     add_subdirectory(fuzz)
 endif()
 
-if (YUZU_CMD)
-    add_subdirectory(yuzu_cmd)
-    set_target_properties(yuzu-cmd PROPERTIES OUTPUT_NAME "eden-cli")
+# Version resource for the programs in the Windows zips: antivirus heuristics count an unsigned
+# program without file metadata against it.
+function(lichii_add_version_info target description file_name)
+    if (NOT WIN32)
+        return()
+    endif()
+    if (LICHII_BUILD_TAG MATCHES "^build-([0-9]+)$")
+        set(LICHII_VERSION_NUMBER ${CMAKE_MATCH_1})
+        set(LICHII_VERSION_STRING ${LICHII_BUILD_TAG})
+    else()
+        set(LICHII_VERSION_NUMBER 0)
+        set(LICHII_VERSION_STRING "local build")
+    endif()
+    set(LICHII_FILE_DESCRIPTION ${description})
+    set(LICHII_FILE_NAME ${file_name})
+    set(rc ${CMAKE_CURRENT_BINARY_DIR}/${target}_version.rc)
+    configure_file(${PROJECT_SOURCE_DIR}/dist/version_info.rc.in ${rc} @ONLY)
+    target_sources(${target} PRIVATE ${rc})
+endfunction()
+
+if (LICHII_CMD)
+    add_subdirectory(lichii_cmd)
+    set_target_properties(lichii-cmd PROPERTIES OUTPUT_NAME "eden-cli")
+    lichii_add_version_info(lichii-cmd "Lichii command line" eden-cli.exe)
 endif()
 
 if (ENABLE_QT)
     add_subdirectory(qt_common)
-    add_subdirectory(yuzu)
+    add_subdirectory(lichii)
+    lichii_add_version_info(lichii "Lichii" lichii.exe)
     if (WIN32 AND ENABLE_UPDATE_CHECKER)
         add_subdirectory(updater)
+        lichii_add_version_info(lichii-updater "Lichii update installer" lichii-updater.exe)
     endif()
 endif()
 
@@ -315,7 +357,7 @@ endif()
 
 if (ANDROID)
     add_subdirectory(android/app/src/main/jni)
-    target_include_directories(yuzu-android PRIVATE android/app/src/main)
+    target_include_directories(lichii-android PRIVATE android/app/src/main)
 endif()
 
 include(GenerateDepHashes)

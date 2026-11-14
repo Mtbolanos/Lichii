@@ -7,6 +7,7 @@
 #pragma once
 
 #include <chrono>
+#include <filesystem>
 #include <algorithm>
 #include <string>
 #include <type_traits>
@@ -89,6 +90,15 @@ enum class Class : u8 {
 /// Logs a message to the global logger, using fmt
 void FmtLogMessageImpl(Class log_class, Level log_level, const char* filename, unsigned int line_num, const char* function, fmt::string_view format, const fmt::format_args& args);
 
+/// Writes a Critical message to the log file alone and flushes it, for the crash handler: the
+/// other backends take locks that a crashed thread may hold.
+void FmtCrashMessageImpl(const char* filename, unsigned int line_num, const char* function, fmt::string_view format, const fmt::format_args& args) noexcept;
+
+template <typename... Args>
+void FmtCrashMessage(const char* filename, unsigned int line_num, const char* function, fmt::format_string<Args...> format, const Args&... args) {
+    FmtCrashMessageImpl(filename, line_num, function, format.get(), fmt::make_format_args(args...));
+}
+
 /// Returns true if a message of this class and level would pass the global filter.
 [[nodiscard]] bool IsLevelEnabled(Class log_class, Level log_level);
 
@@ -140,6 +150,13 @@ void Start();
 
 /// Explicitly stops the logger thread and flushes the buffers
 void Stop();
+
+/// Writes buffered lines to the log file, so a copy of it is complete.
+void Flush();
+
+/// The file this session logs to (eden_log.txt, or eden_log_2.txt when that one was busy); empty
+/// without a file log. The previous session's log is this path plus ".old.txt".
+[[nodiscard]] std::filesystem::path FilePath();
 
 /// The global filter will prevent any messages from even being processed if they are filtered.
 void SetGlobalFilter(const Filter& filter);

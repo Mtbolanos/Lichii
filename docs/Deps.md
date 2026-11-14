@@ -46,13 +46,13 @@ If you are on **Windows** and building with **MSVC** or **clang-cl**, you may go
 
 The following are handled by Eden's externals:
 
-* [FFmpeg](https://ffmpeg.org/) (should use `-DYUZU_USE_EXTERNAL_FFMPEG=ON`)
-* [SDL3](https://www.libsdl.org/download-2.0.php) 3.2.10+ (Use `-DYUZU_USE_BUNDLED_SDL2=ON` to reduce compile time)
+* [FFmpeg](https://ffmpeg.org/) (should use `-DLICHII_USE_EXTERNAL_FFMPEG=ON`)
+* [SDL3](https://www.libsdl.org/download-2.0.php) 3.2.10+ (Use `-DLICHII_USE_BUNDLED_SDL2=ON` to reduce compile time)
 
-All other dependencies will be downloaded and built by [CPM](https://github.com/cpm-cmake/CPM.cmake/) if `YUZU_USE_CPM` is on, but will always use system dependencies if available (UNIX-like only):
+All other dependencies will be downloaded and built by [CPM](https://github.com/cpm-cmake/CPM.cmake/) if `LICHII_USE_CPM` is on, but will always use system dependencies if available (UNIX-like only):
 
 * [Boost](https://www.boost.org/users/download/) 1.57.0+
-* [Catch2](https://github.com/catchorg/Catch2) 3.0.1 if `YUZU_TESTS` or `DYNARMIC_TESTS` are on
+* [Catch2](https://github.com/catchorg/Catch2) 3.0.1 if `LICHII_TESTS` or `DYNARMIC_TESTS` are on
 * [fmt](https://fmt.dev/) 8.0.1+
 * [lz4](http://www.lz4.org)
 * [nlohmann\_json](https://github.com/nlohmann/json) 3.8+
@@ -170,7 +170,7 @@ sudo apt-get install autoconf cmake g++ gcc git glslang-tools libglu1-mesa-dev l
 ```
 
 * Ubuntu 26.04, Linux Mint 22.3, or Debian 13 or later is required.
-* To enable QT Web Engine, add `-DYUZU_USE_QT_WEB_ENGINE=ON` when running CMake.
+* To enable QT Web Engine, add `-DLICHII_USE_QT_WEB_ENGINE=ON` when running CMake.
 
 </details>
 
@@ -183,7 +183,7 @@ Fedora:
 sudo dnf install autoconf cmake fmt-devel gcc{,-c++} glslang hidapi-devel json-devel libtool libusb1-devel libzstd-devel lz4-devel nasm ninja-build openssl-devel pulseaudio-libs-devel qt6-linguist qt6-qtbase{-private,}-devel qt6-qtwebengine-devel qt6-qtmultimedia-devel qt6-charts-devel speexdsp-devel wayland-devel zlib-devel ffmpeg-devel libXext-devel boost jq
 ```
 
-AlmaLinux (use `YUZU_USE_CPM=ON`):
+AlmaLinux (use `LICHII_USE_CPM=ON`):
 
 ```sh
 # vvv - Only if RPMfusion is not installed or EPEL isn't either
@@ -233,7 +233,7 @@ Yes, `nlohmann-json` is just named `json-c++`. Why?
 
 A convenience script is provided on the root of this project [shell.nix](../shell.nix). Run the usual `nix-shell`.
 
-If you're going for a pure build (i.e no downloaded deps), use `-DYUZU_USE_CPM=ON -DCPMUTIL_FORCE_SYSTEM=ON`.
+If you're going for a pure build (i.e no downloaded deps), use `-DLICHII_USE_CPM=ON -DCPMUTIL_FORCE_SYSTEM=ON`.
 
 </details>
 <details>
@@ -341,7 +341,7 @@ pacman -Syuu --needed --noconfirm $packages
 ```
 
 * Notes:
-  * Using `qt6-static` is possible as well, provided you build with `-DYUZU_STATIC_BUILD=ON`.
+  * Using `qt6-static` is possible as well, provided you build with `-DLICHII_STATIC_BUILD=ON`.
   * Other environments are entirely untested, but should theoretically work provided you install all the necessary packages.
   * GCC is proven to work better with the MinGW environment. On ARM, only Clang is available through the CLANGARM64 environment, so use that until a GNU ARM environment is available.
   * Add `qt-creator` to the `MINGW` variable to install Qt Creator. You can then create a Start Menu shortcut to the MinGW Qt Creator by running `powershell "\$s=(New-Object -COM WScript.Shell).CreateShortcut('C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Qt Creator.lnk');\$s.TargetPath='C:\\msys64\\mingw64\\bin\\qtcreator.exe';\$s.Save()"` in Git Bash or MSYS2.

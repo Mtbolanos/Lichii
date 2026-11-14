@@ -5,9 +5,13 @@
 #include <filesystem>
 #include <fstream>
 #include <limits>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 #include <catch2/catch_test_macros.hpp>
 #define SPV_ENABLE_UTILITY_CODE
@@ -132,7 +136,8 @@ Profile MakeProfile() {
 // A one-triangle mesh program (or the task program launching it), as the frontend lowers them.
 // With lane_id the mesh program writes its lane as the vertex's first attribute word.
 std::vector<u32> EmitProgram(Stage stage, bool as_compute, bool with_task,
-                             Profile profile = MakeProfile(), bool lane_id = false) {
+                             Profile profile = MakeProfile(), bool lane_id = false,
+                             bool culled = false) {
     ObjectPool<IR::Inst> pool;
     IR::Block block{pool};
     IR::Program program;
@@ -155,7 +160,7 @@ std::vector<u32> EmitProgram(Stage stage, bool as_compute, bool with_task,
         ir.IsbeWriteAttribute(ir.Imm32(0), index);
         ir.IsbeWriteMapU8(ir.Imm32(4), ir.Imm32(0));
         ir.IsbeWriteMapU32(ir.Imm32(3), ir.Imm32(1));
-    } else {
+    } else if (!culled) {
         ir.IsbeWriteAttribute(ir.Imm32(4), ir.Imm32(1)); // one mesh workgroup
     }
     ir.Epilogue();
@@ -194,6 +199,67 @@ TEST_CASE("Mesh fallback leaves native task and mesh programs as mesh shaders",
     Dump(task, "native-task");
     REQUIRE(Model(task) == spv::ExecutionModel::TaskEXT);
     REQUIRE(UsesStorageClass(task, spv::StorageClass::TaskPayloadWorkgroupEXT));
+}
+
+TEST_CASE("Native task programs zero the mesh workgroup count before the guest runs",
+          "[video_core][spirv][mesh_fallback]") {
+    // A task that culls every thread never writes payload word 1, which OpEmitMeshTasksEXT reads.
+    const std::vector<u32> task{EmitProgram(Stage::Task, false, false, MakeProfile(), false, true)};
+    Dump(task, "native-task-culled");
+    std::unordered_map<u32, u32> constants;
+    std::unordered_set<u32> payload_variables;
+    std::unordered_map<u32, std::pair<u32, u32>> umins;
+    std::unordered_map<u32, u32> payload_indices;
+    const auto value_of = [&](u32 id) -> std::optional<u32> {
+        if (const auto it{constants.find(id)}; it != constants.end()) {
+            return it->second;
+        }
+        if (const auto it{umins.find(id)}; it != umins.end()) {
+            const auto a{constants.find(it->second.first)};
+            const auto b{constants.find(it->second.second)};
+            if (a != constants.end() && b != constants.end()) {
+                return (std::min)(a->second, b->second);
+            }
+        }
+        return std::nullopt;
+    };
+    bool zeroed{};
+    for (const Instruction& inst : Instructions(task)) {
+        if (inst.op == spv::Op::OpControlBarrier) {
+            break;
+        }
+        switch (inst.op) {
+        case spv::Op::OpConstant:
+            constants[inst.operands[1]] = inst.operands[2];
+            break;
+        case spv::Op::OpVariable:
+            if (inst.operands[2] == static_cast<u32>(spv::StorageClass::TaskPayloadWorkgroupEXT)) {
+                payload_variables.insert(inst.operands[1]);
+            }
+            break;
+        case spv::Op::OpExtInst:
+            if (inst.operands[3] == 38) { // GLSL.std.450 UMin
+                umins[inst.operands[1]] = {inst.operands[4], inst.operands[5]};
+            }
+            break;
+        case spv::Op::OpAccessChain:
+            if (inst.operands.size() == 4 && payload_variables.contains(inst.operands[2])) {
+                payload_indices[inst.operands[1]] = inst.operands[3];
+            }
+            break;
+        case spv::Op::OpStore:
+            if (const auto index{payload_indices.find(inst.operands[0])};
+                index != payload_indices.end() &&
+                value_of(index->second) == std::optional<u32>{1} &&
+                value_of(inst.operands[1]) == std::optional<u32>{0}) {
+                zeroed = true;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    REQUIRE(zeroed);
 }
 
 TEST_CASE("Mesh fallback emits mesh programs as compute shaders writing storage buffers",
@@ -243,6 +309,50 @@ TEST_CASE("Mesh fallback vertex shader pulls the compute output",
     Dump(after_task, "fallback-vertex-after-task");
     REQUIRE(Model(after_task) == spv::ExecutionModel::Vertex);
     REQUIRE(Bindings(after_task) == std::vector<u32>{OUTPUT_BINDING, ARGS_BINDING});
+}
+
+namespace {
+bool HasBuiltIn(const std::vector<u32>& code, spv::BuiltIn builtin) {
+    return std::ranges::any_of(Instructions(code), [&](const Instruction& inst) {
+        return inst.op == spv::Op::OpDecorate &&
+               inst.operands[1] == static_cast<u32>(spv::Decoration::BuiltIn) &&
+               inst.operands[2] == static_cast<u32>(builtin);
+    });
+}
+} // Anonymous namespace
+
+TEST_CASE("Mesh fallback blocks hold one index per point and two per line",
+          "[video_core][spirv][mesh_fallback]") {
+    MeshInfo mesh{TriangleMesh()};
+    mesh.max_primitives = 8;
+    const u32 vertex_words{mesh.max_vertices * static_cast<u32>(mesh.vertex_lines.size())};
+    REQUIRE(SPIRV::MeshEmulationBlockWords(mesh) == vertex_words + 8 * 3);
+    mesh.topology = 1;
+    REQUIRE(SPIRV::MeshEmulationBlockWords(mesh) == vertex_words + 8 * 2);
+    mesh.topology = 0;
+    REQUIRE(SPIRV::MeshEmulationBlockWords(mesh) == vertex_words + 8);
+}
+
+TEST_CASE("Mesh fallback vertex shader gives points a size and culls unused points and lines",
+          "[video_core][spirv][mesh_fallback]") {
+    MeshInfo mesh{TriangleMesh()};
+    REQUIRE_FALSE(HasBuiltIn(
+        SPIRV::EmitMeshEmulationVertex(MakeProfile(), mesh, OUTPUT_BINDING, ~0U, false),
+        spv::BuiltIn::PointSize));
+    mesh.topology = 1;
+    const std::vector<u32> lines{
+        SPIRV::EmitMeshEmulationVertex(MakeProfile(), mesh, OUTPUT_BINDING, ~0U, false)};
+    Dump(lines, "fallback-vertex-lines");
+    REQUIRE_FALSE(HasBuiltIn(lines, spv::BuiltIn::PointSize));
+    REQUIRE(HasBuiltIn(lines, spv::BuiltIn::ClipDistance));
+    mesh.topology = 0;
+    const std::vector<u32> points{
+        SPIRV::EmitMeshEmulationVertex(MakeProfile(), mesh, OUTPUT_BINDING, ARGS_BINDING, false,
+                                       2.0f)};
+    Dump(points, "fallback-vertex-points");
+    REQUIRE(Model(points) == spv::ExecutionModel::Vertex);
+    REQUIRE(HasBuiltIn(points, spv::BuiltIn::PointSize));
+    REQUIRE(HasBuiltIn(points, spv::BuiltIn::ClipDistance));
 }
 
 TEST_CASE("Mesh fallback distribution pass binds its buffers and constants",

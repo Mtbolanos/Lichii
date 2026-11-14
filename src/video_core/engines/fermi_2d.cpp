@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <mutex>
@@ -88,7 +87,6 @@ void Fermi2D::Blit() {
     UNIMPLEMENTED_IF_MSG(regs.operation != Operation::SrcCopy, "Operation is not copy");
     UNIMPLEMENTED_IF_MSG(regs.src.layer != 0, "Source layer is not zero");
     UNIMPLEMENTED_IF_MSG(regs.dst.layer != 0, "Destination layer is not zero");
-    UNIMPLEMENTED_IF_MSG(regs.src.depth != 1, "Source depth is not one");
     UNIMPLEMENTED_IF_MSG(regs.clip_enable != 0, "Clipped blit enabled");
 
     const auto& args = regs.pixels_from_memory;

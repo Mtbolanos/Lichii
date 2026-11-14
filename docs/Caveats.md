@@ -61,13 +61,13 @@ export LIBGL_ALWAYS_SOFTWARE=1
 ```
 
 - Modify the generated ffmpeg.make (in build dir) if using multiple threads (base system `make` doesn't use `-j4`, so change for `gmake`).
-- System OpenSSL generally does not work. Instead, use `-DYUZU_USE_BUNDLED_OPENSSL=ON` to use a bundled static OpenSSL, or build a system dependency from source.
+- System OpenSSL generally does not work. Instead, use `-DLICHII_USE_BUNDLED_OPENSSL=ON` to use a bundled static OpenSSL, or build a system dependency from source.
 
 ## OmniOS
 
 Install `developer/gcc14` on OmniOS using pkgsrc.
 
-Since so many dependencies are missing on `OmniOS`, you may wish to use `-DCPMUTIL_FORCE_BUNDLED=ON` and `-DYUZU_USE_BUNDLED_OPENSSL=OFF`.
+Since so many dependencies are missing on `OmniOS`, you may wish to use `-DCPMUTIL_FORCE_BUNDLED=ON` and `-DLICHII_USE_BUNDLED_OPENSSL=OFF`.
 
 For OmniOS you are required to build glslang yourself:
 ```sh
@@ -108,7 +108,7 @@ If you have `quazip1_qt6_devel`, uninstall it. It may call `Core5Compat` on CMak
 
 ## OpenBSD
 
-System boost doesn't have `context` (as of 7.8); so you may need to specify `-DYUZU_USE_CPM=ON -DBoost_FORCE_BUNDLED=ON`.
+System boost doesn't have `context` (as of 7.8); so you may need to specify `-DLICHII_USE_CPM=ON -DBoost_FORCE_BUNDLED=ON`.
 
 After configuration, you may need to modify `externals/ffmpeg/CMakeFiles/ffmpeg-build/build.make` to use `-j$(nproc)` instead of just `-j`.
 
@@ -120,7 +120,7 @@ If clang has errors, try using `g++11`.
 
 Eden is not currently available as a port on FreeBSD, though it is in the works. For now, the recommended method of usage is to compile it yourself.
 
-The available OpenSSL port (3.0.17) is out-of-date, and using a bundled static library instead is recommended; to do so, add `-DYUZU_USE_BUNDLED_OPENSSL=ON` to your CMake configure command.
+The available OpenSSL port (3.0.17) is out-of-date, and using a bundled static library instead is recommended; to do so, add `-DLICHII_USE_BUNDLED_OPENSSL=ON` to your CMake configure command.
 
 Gamepad/controllers may not work on 15.0, this is due to an outdated SDL not responding well to the new `usbhid(2)` driver. To workaround this simply disable `usbhid(2)` (add the following to `/boot/loader.conf`):
 

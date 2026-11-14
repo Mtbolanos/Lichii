@@ -453,3 +453,48 @@ TEST_CASE("Compute SPIR-V emitted by a job matches the GPU thread's", "[stage_tr
     }
     CHECK(compute_fixtures > 0);
 }
+
+TEST_CASE("Texture descriptor pools up to 4 MiB are flushed for translation on workers",
+          "[stage_translation]") {
+    using VideoCommon::CanFlushTexturePool;
+    using VideoCommon::MaxFlushedTexturePoolBytes;
+    using VideoCommon::TexturePoolBytes;
+
+    // Pools under the old 1 MiB cap still flush
+    CHECK(TexturePoolBytes(0) == 32);
+    CHECK(CanFlushTexturePool(0));
+    CHECK(TexturePoolBytes(32767) == (u64{1} << 20));
+    CHECK(CanFlushTexturePool(32767));
+
+    // Ocarina of Time's pool of 33,068 descriptors, just over 1 MiB
+    CHECK(TexturePoolBytes(33067) == 1'058'176);
+    CHECK(CanFlushTexturePool(33067));
+
+    // The cap is 4 MiB, it is inclusive, and the largest limit does not overflow
+    CHECK(MaxFlushedTexturePoolBytes == (u64{4} << 20));
+    constexpr u32 last_index = static_cast<u32>(MaxFlushedTexturePoolBytes / 32 - 1);
+    CHECK(TexturePoolBytes(last_index) == MaxFlushedTexturePoolBytes);
+    CHECK(CanFlushTexturePool(last_index));
+    CHECK_FALSE(CanFlushTexturePool(last_index + 1));
+    CHECK(TexturePoolBytes(0xFFFFFFFF) == (u64{1} << 37));
+    CHECK_FALSE(CanFlushTexturePool(0xFFFFFFFF));
+}
+
+TEST_CASE("A texture descriptor pool's last byte is found without wrapping",
+          "[stage_translation]") {
+    using VideoCommon::TexturePoolLastAddress;
+
+    // A 2 MiB pool starting 1 MiB before the end of a 40-bit address space ends past it
+    constexpr u64 space_end = u64{1} << 40;
+    constexpr u32 two_mib_limit = (u32{2} << 20) / 32 - 1;
+    CHECK(TexturePoolLastAddress(space_end - (u64{1} << 20), two_mib_limit) ==
+          space_end + (u64{1} << 20) - 1);
+    CHECK(TexturePoolLastAddress(space_end - (u64{2} << 20), two_mib_limit) == space_end - 1);
+
+    // One descriptor at address 0 ends at byte 31
+    CHECK(TexturePoolLastAddress(0, 0) == 31);
+
+    // The last byte of the 64-bit range is reachable, one past it wraps
+    CHECK(TexturePoolLastAddress(~u64{0} - 31, 0) == ~u64{0});
+    CHECK_FALSE(TexturePoolLastAddress(~u64{0} - 30, 0).has_value());
+}

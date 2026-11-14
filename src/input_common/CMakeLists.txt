@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# SPDX-FileCopyrightText: 2018 yuzu Emulator Project
 # SPDX-License-Identifier: GPL-2.0-or-later
 
 add_library(input_common STATIC
@@ -59,8 +58,12 @@ else()
         drivers/joycon.h
         drivers/sdl_driver.cpp
         drivers/sdl_driver.h
+        helpers/dualsense_haptics.cpp
+        helpers/dualsense_haptics.h
         helpers/joycon_driver.cpp
         helpers/joycon_driver.h
+        helpers/rumble_mapping.cpp
+        helpers/rumble_mapping.h
         helpers/joycon_protocol/calibration.cpp
         helpers/joycon_protocol/calibration.h
         helpers/joycon_protocol/common_protocol.cpp

@@ -106,14 +106,14 @@ jfieldID GetPlayerInputButtonColorRightField();
 jfieldID GetPlayerInputProfileNameField();
 jfieldID GetPlayerInputUseSystemVibratorField();
 
-jclass GetYuzuInputDeviceInterface();
-jmethodID GetYuzuDeviceGetName();
-jmethodID GetYuzuDeviceGetGUID();
-jmethodID GetYuzuDeviceGetPort();
-jmethodID GetYuzuDeviceGetSupportsVibration();
-jmethodID GetYuzuDeviceVibrate();
-jmethodID GetYuzuDeviceGetAxes();
-jmethodID GetYuzuDeviceHasKeys();
+jclass GetLichiiInputDeviceInterface();
+jmethodID GetLichiiDeviceGetName();
+jmethodID GetLichiiDeviceGetGUID();
+jmethodID GetLichiiDeviceGetPort();
+jmethodID GetLichiiDeviceGetSupportsVibration();
+jmethodID GetLichiiDeviceVibrate();
+jmethodID GetLichiiDeviceGetAxes();
+jmethodID GetLichiiDeviceHasKeys();
 jmethodID GetAddNetPlayMessage();
 jmethodID ClearChat();
 

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "core/hle/service/services.h"
@@ -88,15 +87,17 @@ Services::Services(std::shared_ptr<SM::ServiceManager>& sm, Core::System& system
 
     // BEGONE cold clones of lambdas, for I have merged you all into a SINGLE lambda instead of
     // spamming lambdas like it's some kind of lambda calculus class
+    // audio and vi wait in sm for services from the guest cores: they are kept, and joined before
+    // the service manager is destroyed (see ~Services).
+    audio_worker = kernel.RunOnHostCoreProcess("audio", [&system] { Audio::LoopProcess(system); });
     for (auto const& e : std::vector<std::pair<std::string_view, void (*)(Core::System&)>>{
-        {"audio",      &Audio::LoopProcess},
         {"FS",         &FileSystem::LoopProcess},
         {"ldn",        &LDN::LoopProcess},
         {"nvservices", &Nvidia::LoopProcess},
         {"bsdsocket",  &Sockets::LoopProcess},
     })
         kernel.RunOnHostCoreProcess(std::string(e.first), [&system, f = e.second] { f(system); }).detach();
-    kernel.RunOnHostCoreProcess("vi",         [&, token] { VI::LoopProcess(system, token); }).detach();
+    vi_worker = kernel.RunOnHostCoreProcess("vi", [&, token] { VI::LoopProcess(system, token); });
     // Avoid cold clones of lambdas -- succintly
     for (auto const& e : std::vector<std::pair<std::string_view, void (*)(Core::System&)>>{
         {"sm",         &SM::LoopProcess},

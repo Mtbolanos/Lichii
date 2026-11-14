@@ -122,9 +122,16 @@ EnvironmentInfo DetectEnvironment(const VideoCore::RendererBase& renderer) {
 void LoadOverrides(std::uint64_t program_id, const VideoCore::RendererBase& renderer) {
     const auto env = DetectEnvironment(renderer);
 
+    Settings::values.force_reactive_flushing = false;
     switch (static_cast<TitleID>(program_id)) {
         case TitleID::NinjaGaidenRagebound:
             Settings::values.use_squashed_iterated_blend = true;
+            break;
+        case TitleID::DuskbloodsNetworkTest:
+            // The game reads values its GPU passes wrote (the tone pass's exposure among them)
+            // back on the CPU. Without reactive flushing it reads stale ones and the whole picture
+            // brightens and darkens every few frames.
+            Settings::values.force_reactive_flushing = true;
             break;
         default:
             break;

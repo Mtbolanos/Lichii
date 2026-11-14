@@ -291,6 +291,15 @@ struct InputSubsystem::Impl {
         return false;
     }
 
+    std::string GetDeviceWarning([[maybe_unused]] const Common::ParamPackage& params) const {
+#ifdef HAVE_SDL3
+        if (params.Get("engine", "") == sdl->GetEngineName()) {
+            return sdl->GetSilenceWarning(params);
+        }
+#endif
+        return {};
+    }
+
     void BeginConfiguration() {
         keyboard->BeginConfiguration();
         mouse->BeginConfiguration();
@@ -467,6 +476,10 @@ bool InputSubsystem::IsStickInverted(const Common::ParamPackage& params) const {
         return impl->IsStickInverted(params);
     }
     return false;
+}
+
+std::string InputSubsystem::GetDeviceWarning(const Common::ParamPackage& device) const {
+    return impl->GetDeviceWarning(device);
 }
 
 void InputSubsystem::ReloadInputDevices() {

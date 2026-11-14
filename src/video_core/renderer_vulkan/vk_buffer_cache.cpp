@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2019 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -28,6 +27,10 @@
 
 namespace Vulkan {
 namespace {
+// Zero-filled space after each buffer on MoltenVK. Shaders declare every constant buffer at its
+// full 64 KiB and Metal validates that length from the binding offset.
+constexpr VkDeviceSize MOLTENVK_BUFFER_TAIL = 65536;
+
 void HostReadBarrier(vk::CommandBuffer cmdbuf) {
     const VkMemoryBarrier barrier{
         .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
@@ -92,7 +95,7 @@ vk::Buffer CreateBuffer(const Device& device, const MemoryAllocator& memory_allo
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .size = size,
+        .size = size + (device.IsMoltenVK() ? MOLTENVK_BUFFER_TAIL : 0),
         .usage = flags,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
@@ -127,6 +130,20 @@ Buffer::Buffer(BufferCacheRuntime& runtime, DAddr cpu_addr_, u64 size_bytes_,
                           runtime.SparseAlignmentFor(sparse_compatible_))},
       tracker{SizeBytes()} {
     sparse_compatible = sparse_compatible_;
+    if (device->IsMoltenVK()) {
+        runtime.scheduler.RequestOutsideRenderPassOperationContext();
+        runtime.scheduler.Record([handle = *buffer, offset = SizeBytes()](vk::CommandBuffer cmdbuf) {
+            cmdbuf.FillBuffer(handle, offset, MOLTENVK_BUFFER_TAIL, 0);
+            const VkMemoryBarrier barrier{
+                .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+                .pNext = nullptr,
+                .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+                .dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT,
+            };
+            cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                                   0, barrier);
+        });
+    }
     if (runtime.device.HasDebuggingToolAttached()) {
         buffer.SetObjectNameEXT(fmt::format("Buffer {:#x}", CpuAddr()).c_str());
     }
@@ -451,6 +468,10 @@ bool BufferCacheRuntime::CanReportMemoryUsage() const {
     return device.CanReportMemoryUsage();
 }
 
+u64 BufferCacheRuntime::GetBufferAllocationTail() const {
+    return device.IsMoltenVK() ? MOLTENVK_BUFFER_TAIL : 0;
+}
+
 u32 BufferCacheRuntime::GetUniformBufferAlignment() const {
     return static_cast<u32>(device.GetUniformBufferAlignment());
 }
@@ -598,6 +619,13 @@ void BufferCacheRuntime::CopyBuffer(VkBuffer dst_buffer, VkBuffer src_buffer,
     }
 
     scheduler.RequestOutsideRenderPassOperationContext();
+    if (barrier && src_buffer == staging_pool.StreamBuf() && !vk_copies.empty()) {
+        // Only in-order stream uploads share barriers. Dedicated staging buffers retain their
+        // normal recording path and tick-based reuse.
+        scheduler.RecordUpload(src_buffer, dst_buffer,
+                               std::span<const VkBufferCopy>{vk_copies.data(), vk_copies.size()});
+        return;
+    }
     scheduler.Record([src_buffer, dst_buffer, vk_copies, barrier](vk::CommandBuffer cmdbuf) {
         if (barrier) {
             cmdbuf.PipelineBarrier(vk::PIPELINE_STAGE_GRAPHICS_COMPUTE_TRANSFER,
@@ -605,8 +633,10 @@ void BufferCacheRuntime::CopyBuffer(VkBuffer dst_buffer, VkBuffer src_buffer,
         }
         cmdbuf.CopyBuffer(src_buffer, dst_buffer, vk_copies);
         if (barrier) {
+            // Later transfers too: a reordered upload of the same bytes in a later submission
+            // has no barrier of its own before it.
             cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT,
-                                   vk::PIPELINE_STAGE_GRAPHICS_COMPUTE, 0, WRITE_BARRIER);
+                                   vk::PIPELINE_STAGE_GRAPHICS_COMPUTE_TRANSFER, 0, WRITE_BARRIER);
         }
     });
 }
@@ -634,8 +664,9 @@ void BufferCacheRuntime::PostCopyBarrier() {
     };
     scheduler.RequestOutsideRenderPassOperationContext();
     scheduler.Record([](vk::CommandBuffer cmdbuf) {
-        cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, vk::PIPELINE_STAGE_GRAPHICS_COMPUTE,
-                               0, WRITE_BARRIER);
+        // Copies bracketed explicitly need the same ordering as CopyBuffer(barrier = true).
+        cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT,
+                               vk::PIPELINE_STAGE_GRAPHICS_COMPUTE_TRANSFER, 0, WRITE_BARRIER);
     });
 }
 
@@ -904,14 +935,21 @@ void BufferCacheRuntime::ReserveNullBuffer() {
     }
 }
 
+VkDeviceSize BufferCacheRuntime::NullBufferSize() const {
+    return device.IsMoltenVK() ? MOLTENVK_BUFFER_TAIL : 4;
+}
+
 vk::Buffer BufferCacheRuntime::CreateNullBuffer() {
     VkBufferCreateInfo create_info{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .size = 4,
+        .size = NullBufferSize(),
         .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-                 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                 VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+                 VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
+                 VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices = nullptr,
@@ -930,6 +968,16 @@ vk::Buffer BufferCacheRuntime::CreateNullBuffer() {
     scheduler.RequestOutsideRenderPassOperationContext();
     scheduler.Record([buffer = *ret](vk::CommandBuffer cmdbuf) {
         cmdbuf.FillBuffer(buffer, 0, VK_WHOLE_SIZE, 0);
+        const VkMemoryBarrier barrier{
+            .sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER,
+            .pNext = nullptr,
+            .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+            .dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT | VK_ACCESS_INDEX_READ_BIT |
+                             VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT | VK_ACCESS_UNIFORM_READ_BIT |
+                             VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_TRANSFER_READ_BIT,
+        };
+        cmdbuf.PipelineBarrier(VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                               0, barrier);
     });
 
     return ret;

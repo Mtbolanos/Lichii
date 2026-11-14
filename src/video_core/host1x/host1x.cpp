@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "core/core.h"
@@ -24,13 +23,13 @@ Host1x::~Host1x() = default;
 void Host1x::StartDevice(s32 fd, ChannelType type, u32 syncpt) {
     switch (type) {
     case ChannelType::NvDec:
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
         std::call_once(nvdec_first_init, []() {std::this_thread::sleep_for(std::chrono::milliseconds{500});}); // HACK: For Astroneer
 #endif
         devices[fd].emplace<Tegra::Host1x::Nvdec>(*this, fd, syncpt);
         break;
     case ChannelType::VIC:
-#ifdef YUZU_LEGACY
+#ifdef LICHII_LEGACY
         std::call_once(vic_first_init, []() {std::this_thread::sleep_for(std::chrono::milliseconds{500});}); // HACK: For Astroneer
 #endif
         devices[fd].emplace<Tegra::Host1x::Vic>(*this, fd, syncpt);

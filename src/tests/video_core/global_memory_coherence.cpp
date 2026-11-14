@@ -10,9 +10,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "shader_recompiler/backend/spirv/emit_spirv.h"
+#ifdef HAS_OPENGL
 #include "shader_recompiler/backend/glasm/emit_glasm.h"
 #include "shader_recompiler/backend/glsl/emit_glsl.h"
-#include "shader_recompiler/backend/spirv/emit_spirv.h"
+#endif
 #include "shader_recompiler/frontend/ir/ir_emitter.h"
 #include "shader_recompiler/frontend/maxwell/translate/impl/impl.h"
 #include "shader_recompiler/frontend/maxwell/translate_program.h"
@@ -90,6 +92,34 @@ std::vector<std::vector<u32>> Instructions(const std::vector<u32>& code, u32 opc
         i += count;
     }
     return result;
+}
+
+// Whether a function returns id, directly or through the OpPhis that merge its branches.
+bool ReturnsValue(const std::vector<u32>& code, u32 id) {
+    std::map<u32, std::vector<u32>> incoming;
+    for (const auto& op : Instructions(code, 245)) {
+        for (size_t i = 2; i + 1 < op.size(); i += 2) {
+            incoming[op[1]].push_back(op[i]);
+        }
+    }
+    std::vector<u32> pending;
+    for (const auto& op : Instructions(code, 254)) {
+        if (op.size() == 1) {
+            pending.push_back(op[0]);
+        }
+    }
+    std::set<u32> seen;
+    while (!pending.empty()) {
+        const u32 value = pending.back();
+        pending.pop_back();
+        if (value == id) {
+            return true;
+        }
+        if (seen.insert(value).second && incoming.contains(value)) {
+            pending.insert(pending.end(), incoming[value].begin(), incoming[value].end());
+        }
+    }
+    return false;
 }
 
 struct GlobalAtomicProgram : Program {
@@ -239,6 +269,7 @@ TEST_CASE("Coherent storage aliases and barrier semantics are emitted in SPIR-V"
     }
 }
 
+#ifdef HAS_OPENGL
 TEST_CASE("GLSL and GLASM emit coherent storage and barrier operations",
           "[video_core][coherence]") {
     for (const bool coherent : {false, true}) {
@@ -291,6 +322,7 @@ TEST_CASE("GLSL and GLASM emit coherent storage and barrier operations",
         }
     }
 }
+#endif
 
 TEST_CASE("Joining vertex storage preserves coherent memory requirement", "[video_core][coherence]") {
     for (const bool a : {false, true}) {
@@ -306,7 +338,12 @@ TEST_CASE("Joining vertex storage preserves coherent memory requirement", "[vide
 
 TEST_CASE("Global fallback backends address sparse guest slots through compact bindings",
           "[shader][storage_buffer][nvn]") {
-    for (const u32 backend : {0U, 1U, 2U}) {
+#ifdef HAS_OPENGL
+    constexpr std::array<u32, 3> backends{0U, 1U, 2U};
+#else
+    constexpr std::array<u32, 1> backends{0U};
+#endif
+    for (const u32 backend : backends) {
         CAPTURE(backend);
         Program fixture;
         auto& info = fixture.program.info;
@@ -364,7 +401,9 @@ TEST_CASE("Global fallback backends address sparse guest slots through compact b
                 expected_bindings.insert(first_storage_binding + binding);
             }
             CHECK(accessed_bindings == expected_bindings);
-        } else if (backend == 1) {
+        }
+#ifdef HAS_OPENGL
+        else if (backend == 1) {
             const auto code = Backend::GLSL::EmitGLSL(fixture.profile, fixture.program);
             CHECK(code.find("uint64_t ssbo_addr1=") != std::string::npos);
             CHECK(code.find("uint64_t ssbo_addr2=") != std::string::npos);
@@ -381,6 +420,7 @@ TEST_CASE("Global fallback backends address sparse guest slots through compact b
             CHECK(code.find("ssbo1[RC.x]") != std::string::npos);
             CHECK(code.find("ssbo2[RC.x]") != std::string::npos);
         }
+#endif
     }
 }
 
@@ -468,18 +508,34 @@ TEST_CASE("Global atomic add preserves native candidate selection and atomic old
         for (const auto& op : Instructions(code, 71)) {
             if (op.size() == 3 && op[1] == 33) bindings[op[0]] = op[2];
         }
-        const auto returns = Instructions(code, 254);
         std::set<u32> atomic_bindings;
         for (const auto& op : atomics) {
             REQUIRE(op.size() == 6);
             CHECK(constants.at(op[3]) == 1);
             CHECK(constants.at(op[4]) == 0);
-            CHECK(std::ranges::any_of(returns, [&](const auto& returned) {
-                return returned.size() == 1 && returned[0] == op[1];
-            }));
+            CHECK(ReturnsValue(code, op[1]));
             atomic_bindings.insert(bindings.at(pointer_bases.at(op[2])));
         }
         CHECK(atomic_bindings == (native ? std::set<u32>{2, 3, 4} : std::set<u32>{3, 4}));
+    }
+}
+
+TEST_CASE("Native global routing helpers stay inlinable and route with a branch per buffer",
+          "[shader][spirv][global_atomic][oot]") {
+    // Marked DontInline and routed through one OpSwitch, these helpers made Ocarina of Time's
+    // foliage compute programs draw the far forest unculled and at wrong heights on NVIDIA.
+    for (const bool atomic : {false, true}) {
+        CAPTURE(atomic);
+        GlobalAtomicProgram fixture{true, 4, atomic};
+        REQUIRE(fixture.program.info.native_global_bounds);
+        const auto code = Backend::SPIRV::EmitSPIRV(fixture.profile, fixture.program);
+        CHECK(Instructions(code, 251).empty());
+        const auto functions = Instructions(code, 54);
+        REQUIRE(functions.size() > 1);
+        for (const auto& function : functions) {
+            REQUIRE(function.size() == 4);
+            CHECK(function[2] == 0);
+        }
     }
 }
 
@@ -505,12 +561,9 @@ TEST_CASE("Global unsigned atomic max routes buffers and returns the old value",
             const auto atomics = Instructions(code, 239);
             REQUIRE(atomics.size() == (native ? 3U : 2U));
             CHECK(Instructions(code, 234).empty());
-            const auto returns = Instructions(code, 254);
             for (const auto& atomic : atomics) {
                 REQUIRE(atomic.size() == 6);
-                CHECK(std::ranges::any_of(returns, [&](const auto& returned) {
-                    return returned.size() == 1 && returned[0] == atomic[1];
-                }));
+                CHECK(ReturnsValue(code, atomic[1]));
             }
         }
     }
@@ -524,11 +577,8 @@ TEST_CASE("Global atomic routing works without descriptor aliases",
         const auto code = Backend::SPIRV::EmitSPIRV(fixture.profile, fixture.program);
         const auto atomics = Instructions(code, 234);
         REQUIRE(atomics.size() == (native ? 3U : 2U));
-        const auto returns = Instructions(code, 254);
         for (const auto& op : atomics) {
-            CHECK(std::ranges::any_of(returns, [&](const auto& returned) {
-                return returned.size() == 1 && returned[0] == op[1];
-            }));
+            CHECK(ReturnsValue(code, op[1]));
         }
     }
 }

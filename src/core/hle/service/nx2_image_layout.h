@@ -7,8 +7,30 @@
 
 #include "common/alignment.h"
 #include "common/common_types.h"
+#include "video_core/framebuffer_config.h"
 
 namespace Service {
+
+// Pixel format IDs in InterModuleUserImagePreference word 6.
+enum class Nx2NativeImageFormat : u32 {
+    Rgba8 = 1,
+    Rgb10A2 = 4,
+    Rgba16Float = 5,
+};
+
+// The colour space of a presented native image. FP16 is linear scRGB by its format. RGB10A2 holds
+// PQ BT.2020 only while the game was told the display is HDR: Fire Emblem: Fortune's Weave
+// presents SDR in RGB10A2.
+inline Tegra::ColorSpace Nx2NativeImageColorSpace(Nx2NativeImageFormat format, bool told_hdr) {
+    switch (format) {
+    case Nx2NativeImageFormat::Rgba16Float:
+        return Tegra::ColorSpace::RGB709_Linear;
+    case Nx2NativeImageFormat::Rgb10A2:
+        return told_hdr ? Tegra::ColorSpace::RGB2020_PQ : Tegra::ColorSpace::RGB709;
+    default:
+        return Tegra::ColorSpace::RGB709;
+    }
+}
 
 struct Nx2ImageLayout {
     u32 width;
@@ -25,12 +47,14 @@ inline Nx2ImageLayout Nx2CalculateImageLayout(const u32* preference) {
     layout.height = (preference[2] >> 16) + 1;
     const u64 pitch_gobs = preference[5];
     const u32 block_height_log2 = preference[4];
-    if (block_height_log2 <= 8 && pitch_gobs >= (u64{layout.width} * 4 + 63) / 64 &&
+    const u32 bytes_per_pixel =
+        static_cast<Nx2NativeImageFormat>(preference[6]) == Nx2NativeImageFormat::Rgba16Float ? 8 : 4;
+    if (block_height_log2 <= 8 && pitch_gobs >= (u64{layout.width} * bytes_per_pixel + 63) / 64 &&
         pitch_gobs <= 4096) {
         layout.pitch = pitch_gobs * 64;
         layout.block_height_log2 = block_height_log2;
     } else {
-        layout.pitch = Common::AlignUp(u64{layout.width} * 4, 64);
+        layout.pitch = Common::AlignUp(u64{layout.width} * bytes_per_pixel, 64);
         layout.block_height_log2 = 7;
     }
     const u64 block_rows = u64{1} << layout.block_height_log2;

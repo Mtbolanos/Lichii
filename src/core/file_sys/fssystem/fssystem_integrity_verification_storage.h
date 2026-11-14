@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -17,8 +16,8 @@
 namespace FileSys {
 
 class IntegrityVerificationStorage : public IReadOnlyStorage {
-    YUZU_NON_COPYABLE(IntegrityVerificationStorage);
-    YUZU_NON_MOVEABLE(IntegrityVerificationStorage);
+    LICHII_NON_COPYABLE(IntegrityVerificationStorage);
+    LICHII_NON_MOVEABLE(IntegrityVerificationStorage);
 
 public:
     static constexpr s64 HashSize = 256 / 8;

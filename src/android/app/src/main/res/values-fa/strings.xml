@@ -317,8 +317,8 @@
     <string name="install_game_content_success_overwrite">%1$dبا موفقیت بازنویسی شد</string>
     <string name="custom_driver_not_supported">درایورهای سفارشی پشتیبانی نمی‌شوند</string>
     <string name="custom_driver_not_supported_description">بارگیری درایور سفارشی در حال حاضر برای این دستگاه پشتیبانی نمی‌شود.\nاین گزینه را دوباره در آینده بررسی کنید تا ببینید آیا پشتیبانی اضافه شده است یا خیر!</string>
-    <string name="manage_yuzu_data">مدیریت داده‌های Eden</string>
-    <string name="manage_yuzu_data_description">وارد کردن/صادر کردن ثابت‌افزار، کلیدها، داده‌های کاربر، و موارد دیگر!</string>
+    <string name="manage_lichii_data">مدیریت داده‌های Eden</string>
+    <string name="manage_lichii_data_description">وارد کردن/صادر کردن ثابت‌افزار، کلیدها، داده‌های کاربر، و موارد دیگر!</string>
     <string name="game_folders">پوشه‌های بازی</string>
     <string name="deep_scan">بررسی عمیق</string>
     <string name="add_game_folder">افزودن پوشه بازی</string>
@@ -350,7 +350,7 @@
     <string name="applets_description">برنامک‌های سیستم را با استفاده از ثابت‌افزار نصب شده راه اندازی کنید</string>
     <string name="applets_error_firmware">فریمور نصب نشده یا نسخه نامعتبر است</string>
     <string name="applets_error_applet">برنامک در دسترس نیست</string>
-    <string name="applets_error_description"><![CDATA[لطفاً مطمئن شوید که فایل <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> و <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-system-firmware\">فریمور</a> شما نصب شده است و دوباره امتحان کنید.<br>همچنین مطمئن شوید که فریمور شما نسخه 19.0.1 یا قدیمی‌تر است.]]></string>
+    <string name="applets_error_description"><![CDATA[لطفاً مطمئن شوید که فایل prod.keys و فریمور شما نصب شده است و دوباره امتحان کنید.<br>همچنین مطمئن شوید که فریمور شما نسخه 19.0.1 یا قدیمی‌تر است.]]></string>
     <string name="album_applet">آلبوم</string>
     <string name="album_applet_description">تصاویر ذخیره شده در پوشه اسکرین شات‌های کاربر را با نمایشگر عکس سیستم مشاهده کنید</string>
     <string name="mii_edit_applet">ویرایش Mii</string>
@@ -375,7 +375,7 @@
     <string name="user_data_description">همه داده‌های برنامه را وارد/صادر کنید.\n\nهنگام وارد کردن داده‌های کاربر، همه داده‌های کاربر موجود حذف خواهند شد!</string>
     <string name="exporting_user_data">در حال صادر کردن داده‌های کاربر...</string>
     <string name="importing_user_data">در حال وارد کردن داده‌های کاربر...</string>
-    <string name="invalid_yuzu_backup">پشتیبان نامعتبر Eden</string>
+    <string name="invalid_lichii_backup">پشتیبان نامعتبر Eden</string>
     <string name="user_data_export_success">داده‌های کاربر با موفقیت صادر شد</string>
     <string name="user_data_import_success">داده‌های کاربر با موفقیت وارد شد</string>
     <string name="user_data_export_cancelled">صدور لغو شد</string>
@@ -616,13 +616,12 @@
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">رام شما رمزگذاری شده است</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[لطفا راهنماهای دامپ مجدد <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">کارت‌های بازی</a> یا <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">عنوان‌های دیجیتال</a> را دنبال کنید.]]></string>
     <string name="loader_error_encrypted_keys_description"><![CDATA[لطفاً مطمئن شوید که فایل prod.keys شما نصب شده است تا بازی‌ها رمزگشایی شوند.]]></string>
     <string name="loader_error_video_core">در راه‌اندازی اولیه هسته ویدیو خطایی رخ داد</string>
     <string name="loader_error_video_core_description">این مورد معمولاً توسط یک درایور گرافیکی ناسازگار ایجاد می‌شود. نصب درایور گرافیکی سفارشی ممکن است این مشکل را حل کند.</string>
     <string name="loader_error_file_not_found">فایل رام وجود ندارد</string>
     <string name="loader_requires_firmware">بازی نیاز به فیرمور دارد</string>
-    <string name="loader_requires_firmware_description"><![CDATA[بازی که می‌خواهید اجرا کنید برای بوت شدن یا عبور از منوی شروع نیاز به فیرمور دارد. لطفا <a href=\"https://yuzu-mirror.github.io/help/quickstart\"> فیرمور را دامپ و نصب کنید</a> یا برای ادامه کار \"تایید\" را فشار دهید.]]></string>
+    <string name="loader_requires_firmware_description"><![CDATA[بازی که می‌خواهید اجرا کنید برای بوت شدن یا عبور از منوی شروع نیاز به فیرمور دارد. لطفا  فیرمور را دامپ و نصب کنید یا برای ادامه کار \"تایید\" را فشار دهید.]]></string>
 
     <!-- Intent Launch strings -->
     <string name="searching_for_game">در حال جستجوی بازی...</string>

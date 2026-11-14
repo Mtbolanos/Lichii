@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -41,8 +40,8 @@ public:
     explicit SocketBase(SOCKET fd_) : fd{fd_} {}
     virtual ~SocketBase() = default;
 
-    YUZU_NON_COPYABLE(SocketBase);
-    YUZU_NON_MOVEABLE(SocketBase);
+    LICHII_NON_COPYABLE(SocketBase);
+    LICHII_NON_MOVEABLE(SocketBase);
 
     virtual Errno Initialize(Domain domain, Type type, Protocol protocol) = 0;
 
@@ -242,6 +241,8 @@ private:
 
     /// The mode SetNonBlock gave the socket.
     std::atomic_bool is_non_blocking{false};
+    /// The type Initialize gave the socket (Unspecified for an accepted one).
+    Type socket_type = Type::Unspecified;
 };
 
 std::pair<s32, Errno> Poll(std::vector<PollFD>& poll_fds, s32 timeout);

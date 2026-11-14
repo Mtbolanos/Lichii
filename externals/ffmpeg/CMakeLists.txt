@@ -9,7 +9,7 @@ set(FFmpeg_HWACCEL_FLAGS)
 set(FFmpeg_HWACCEL_INCLUDE_DIRS)
 set(FFmpeg_HWACCEL_LDFLAGS)
 
-if (NOT YUZU_USE_BUNDLED_FFMPEG)
+if (NOT LICHII_USE_BUNDLED_FFMPEG)
     set(FFmpeg_CROSS_COMPILE_FLAGS "")
     if (ANDROID)
         # TODO: Maybe use CMAKE_SYSROOT? and probably provide a toolchain file for android
@@ -178,7 +178,7 @@ elseif (MANAGARM)
     )
 endif()
 
-if (YUZU_USE_BUNDLED_FFMPEG)
+if (LICHII_USE_BUNDLED_FFMPEG)
     # Windows (MSVC and MinGW) and Linux x86_64 get the same FFmpeg with libdav1d, for Switch 2
     # titles' AV1 movies; crueter-ci's packages, used elsewhere, have no AV1 decoder.
     if ((MSVC OR LINUX) AND CPMUTIL_AMD64)

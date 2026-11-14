@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -147,8 +146,17 @@ public:
 
     void Reset();
 
-    /// Waits on `event` until next_time, sleeping in the OS for most of it.
-    void WaitForEvent(s64 next_time);
+    struct NextEvents {
+        std::optional<s64> next;
+        /// The first event that does not loop. Looping events keep their own schedule however late
+        /// they run; a one-shot event's lateness shifts what the guest schedules after it.
+        std::optional<s64> one_shot;
+    };
+    NextEvents AdvanceEvents();
+
+    /// Waits on `event` until next_time: sleeps in the OS, except within the host wait margin of
+    /// a one-shot event, where it waits in hardware.
+    void WaitForEvent(s64 next_time, std::optional<s64> one_shot_time);
 
     using heap_t = boost::heap::fibonacci_heap<CoreTiming::Event, boost::heap::compare<std::greater<>>>;
     heap_t event_queue;

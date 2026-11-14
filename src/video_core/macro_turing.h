@@ -92,7 +92,7 @@ public:
         reread_data_ram = false;
         data_ram_reads.clear();
         data_ram_writes.clear();
-        for (Word steps = 0; steps < 1000000; ++steps) {
+        for (Word steps = 0; steps < step_limit; ++steps) {
             if (static_cast<std::size_t>(pc) * 3 + 2 >= code.size()) {
                 fail("instruction outside uploaded RAM");
                 break;
@@ -261,6 +261,7 @@ public:
         std::vector<Word> methods; ///< Ascending, each once
         bool methods_known{true};
         bool data_ram{};
+        std::vector<Word> instructions; ///< The PCs a call can run, ascending
     };
 
     static Effects AnalyzeEffects(std::span<const Word> code, Word start) {
@@ -516,9 +517,36 @@ public:
         std::ranges::sort(effects.methods);
         effects.methods.erase(std::unique(effects.methods.begin(), effects.methods.end()),
                               effects.methods.end());
+        for (const auto& reached : states) {
+            effects.instructions.push_back(reached.first / 2);
+        }
+        std::ranges::sort(effects.instructions);
+        effects.instructions.erase(
+            std::unique(effects.instructions.begin(), effects.instructions.end()),
+            effects.instructions.end());
         return effects;
     }
 
+    /// A macro's identity wherever its code was uploaded: the instructions a call from `start`
+    /// can run (AnalyzeEffects), each by its place after `start` (FNV-1a).
+    static std::uint64_t CodeHash(std::span<const Word> code, Word start, const Effects& effects) {
+        std::uint64_t hash = 0xcbf29ce484222325ULL;
+        const auto add = [&hash](Word word) {
+            for (Word shift = 0; shift < 32; shift += 8) {
+                hash = (hash ^ ((word >> shift) & 0xff)) * 0x100000001b3ULL;
+            }
+        };
+        for (const Word pc : effects.instructions) {
+            add(pc - start);
+            add(code[pc * 3]);
+            add(code[pc * 3 + 1]);
+            add(code[pc * 3 + 2]);
+        }
+        return hash;
+    }
+
+    /// Instructions a call may run before it fails.
+    Word step_limit{1000000};
     using DataRam = std::array<Word, 0xc00>;
     DataRam dram{};
     // The data RAM DREAD/DWRITE use: a channel's own copy when the caller sets one. Macro code is

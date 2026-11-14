@@ -20,6 +20,8 @@
 #include <softpub.h>
 #include <wincrypt.h>
 #include <wintrust.h>
+#elif defined(__linux__) && !defined(__ANDROID__)
+#include <dlfcn.h>
 #endif
 
 namespace Vulkan::FfxRuntime {
@@ -203,9 +205,82 @@ bool HasSha256(const std::filesystem::path&, std::string_view) {
     return false;
 }
 
+#if defined(__linux__) && !defined(__ANDROID__)
+
+std::filesystem::path PortLibrary() {
+    std::error_code ec;
+    const std::filesystem::path exe = std::filesystem::read_symlink("/proc/self/exe", ec);
+    if (!ec) {
+        const std::filesystem::path bundled =
+            exe.parent_path().parent_path() / "lib" / PORT_LIBRARY;
+        if (std::filesystem::is_regular_file(bundled, ec)) {
+            return bundled;
+        }
+    }
+    const std::filesystem::path user = Folder() / PORT_LIBRARY;
+    return std::filesystem::is_regular_file(user, ec) ? user : std::filesystem::path{};
+}
+
+namespace {
+
+struct Loaded : Api {
+    void* module{};
+};
+
+std::mutex mutex;
+std::weak_ptr<const Loaded> current;
+
+} // Anonymous namespace
+
+std::shared_ptr<const Api> Acquire() {
+    std::scoped_lock lock{mutex};
+    if (auto existing = current.lock()) {
+        return existing;
+    }
+    const std::filesystem::path path = PortLibrary();
+    if (path.empty()) {
+        LOG_INFO(Render_Vulkan, "FSR 4: {} is not in this build or in {}; using FSR 3.1",
+                 PORT_LIBRARY, Common::FS::PathToUTF8String(Folder()));
+        return nullptr;
+    }
+    void* const module = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+    if (!module) {
+        LOG_WARNING(Render_Vulkan, "FSR 4: {} doesn't load ({}); using FSR 3.1",
+                    Common::FS::PathToUTF8String(path), dlerror());
+        return nullptr;
+    }
+    auto loaded = std::make_unique<Loaded>();
+    loaded->module = module;
+    loaded->create_context =
+        reinterpret_cast<PfnFfxCreateContext>(dlsym(module, "ffxCreateContext"));
+    loaded->destroy_context =
+        reinterpret_cast<PfnFfxDestroyContext>(dlsym(module, "ffxDestroyContext"));
+    loaded->query = reinterpret_cast<PfnFfxQuery>(dlsym(module, "ffxQuery"));
+    loaded->dispatch = reinterpret_cast<PfnFfxDispatch>(dlsym(module, "ffxDispatch"));
+    if (!loaded->create_context || !loaded->destroy_context || !loaded->query ||
+        !loaded->dispatch) {
+        LOG_WARNING(Render_Vulkan, "FSR 4: {} lacks the FFX API exports; using FSR 3.1",
+                    Common::FS::PathToUTF8String(path));
+        dlclose(module);
+        return nullptr;
+    }
+    LOG_INFO(Render_Vulkan, "FSR 4: loaded the fsr4-vk community Vulkan port from {}",
+             Common::FS::PathToUTF8String(path));
+    std::shared_ptr<const Loaded> shared{loaded.release(), [](const Loaded* l) {
+                                             dlclose(l->module);
+                                             delete l;
+                                         }};
+    current = shared;
+    return shared;
+}
+
+#else
+
 std::shared_ptr<const Api> Acquire() {
     return nullptr;
 }
+
+#endif
 
 #endif
 

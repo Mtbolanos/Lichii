@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <bit>
@@ -46,8 +45,8 @@ s64 GetBodySize(const std::shared_ptr<NcaReader>& reader) {
 }
 
 class SharedNcaBodyStorage : public IReadOnlyStorage {
-    YUZU_NON_COPYABLE(SharedNcaBodyStorage);
-    YUZU_NON_MOVEABLE(SharedNcaBodyStorage);
+    LICHII_NON_COPYABLE(SharedNcaBodyStorage);
+    LICHII_NON_MOVEABLE(SharedNcaBodyStorage);
 
 private:
     VirtualFile m_storage;

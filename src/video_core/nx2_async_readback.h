@@ -70,6 +70,8 @@ inline constexpr std::array<const char*, static_cast<size_t>(Landing::Count)> la
 
 /// Set on a guest thread while GPU::OnCPURead writes its downloads to guest memory.
 inline thread_local bool t_reading{};
+/// The reads this thread waited for (EDEN_NX2_GUEST_THREAD_STATS tells read-backs apart by it).
+inline thread_local u64 t_reads{};
 
 [[nodiscard]] inline u64 Now() {
     return static_cast<u64>(std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -132,6 +134,7 @@ inline void Add(std::atomic<u64>& counter, u64 amount) {
 }
 
 inline void CountRead(Read kind, u64 ns) {
+    ++t_reads;
     Add(g_counters.reads[static_cast<size_t>(kind)], 1);
     Add(g_counters.read_ns[static_cast<size_t>(kind)], ns);
 }

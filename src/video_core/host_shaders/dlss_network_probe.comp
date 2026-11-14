@@ -13,6 +13,13 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(binding = 0) uniform sampler2D input_image;
 layout(binding = 1) uniform sampler2D output_image;
 
+// The part of the input the game rendered, from its top-left corner ({0, 0}: the whole image).
+// A dynamic resolution network (The Duskbloods) renders a region of a larger input and upscales
+// that region to the whole output, so the blocks of the region are compared with the output's.
+layout(push_constant) uniform PushConstants {
+    uvec2 input_region;
+};
+
 // Per block: input mean, output mean (finite samples only), non-finite output samples, unused.
 layout(binding = 2, std430) writeonly buffer Results {
     vec4 blocks[];
@@ -39,7 +46,10 @@ void main() {
     const ivec2 grid = ivec2(gl_NumWorkGroups.xy);
     const ivec2 block = ivec2(gl_WorkGroupID.xy);
     const ivec2 local = ivec2(gl_LocalInvocationID.xy);
-    const ivec2 input_size = textureSize(input_image, 0);
+    const ivec2 input_texture_size = textureSize(input_image, 0);
+    const ivec2 input_size = input_region.x == 0u || input_region.y == 0u
+                                 ? input_texture_size
+                                 : min(ivec2(input_region), input_texture_size);
     const ivec2 output_size = textureSize(output_image, 0);
     const ivec2 input_begin = block * input_size / grid;
     const ivec2 input_end = (block + 1) * input_size / grid;

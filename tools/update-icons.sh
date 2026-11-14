@@ -39,12 +39,12 @@ EDEN_ANDROID_BG_COLOR=$(cat $EDEN_BG_COLOR)
 echo "<?xml version='1.0' encoding='utf-8'?><resources><color name='ic_launcher_background'>${EDEN_ANDROID_BG_COLOR}</color></resources>" > "$EDEN_ANDROID_RES/values/colors.xml"
 
 magick -size 1080x1080 -background transparent "$EDEN_BASE_SVG" -gravity center -resize 660x660 -extent 1080x1080 "$EDEN_ANDROID_FG" || exit
-magick -background transparent "$EDEN_BASE_SVG" -gravity center -resize 512x512 "$EDEN_ANDROID_RES/drawable/ic_yuzu.png" || exit
-magick -size 512x512 -background transparent "$EDEN_BASE_SVG" -gravity center -resize 338x338 -extent 512x512 "$EDEN_ANDROID_RES/drawable/ic_yuzu_splash.png" || exit
+magick -background transparent "$EDEN_BASE_SVG" -gravity center -resize 512x512 "$EDEN_ANDROID_RES/drawable/ic_lichii.png" || exit
+magick -size 512x512 -background transparent "$EDEN_BASE_SVG" -gravity center -resize 338x338 -extent 512x512 "$EDEN_ANDROID_RES/drawable/ic_lichii_splash.png" || exit
 
 optipng -o7 "$EDEN_ANDROID_FG"
-optipng -o7 "$EDEN_ANDROID_RES/drawable/ic_yuzu.png"
-optipng -o7 "$EDEN_ANDROID_RES/drawable/ic_yuzu_splash.png"
+optipng -o7 "$EDEN_ANDROID_RES/drawable/ic_lichii.png"
+optipng -o7 "$EDEN_ANDROID_RES/drawable/ic_lichii_splash.png"
 
 # Android legacy launcher icon (API <= 24)
 

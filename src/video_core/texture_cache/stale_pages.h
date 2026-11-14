@@ -15,7 +15,7 @@ namespace VideoCommon {
 /// Mark and Clear call on_run(addr, size) for every run of pages whose state they changed.
 class StalePages {
 public:
-    /// Device memory pages (Core::Memory::YUZU_PAGEBITS), not the texture cache's lookup pages.
+    /// Device memory pages (Core::Memory::LICHII_PAGEBITS), not the texture cache's lookup pages.
     static constexpr u64 PAGE_BITS = 12;
     static constexpr u64 PAGE_SIZE = u64{1} << PAGE_BITS;
 

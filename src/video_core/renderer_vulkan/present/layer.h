@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -16,6 +15,7 @@
 #include "video_core/renderer_vulkan/present/fsr3.h"
 #include "video_core/renderer_vulkan/present/sgsr.h"
 #include "video_core/renderer_vulkan/present/fxaa.h"
+#include "video_core/renderer_vulkan/present/hdr_convert.h"
 #ifdef HAS_RESHADE
 #include "video_core/renderer_vulkan/present/post_process.h"
 #endif
@@ -56,11 +56,13 @@ public:
                    const PresentFilters& filters);
     ~Layer();
 
+    /// Prepares layer descriptors and push constants. The layer is converted to the frame's
+    /// encoding (output); an HDR frame bypasses anti-aliasing, post-processing and upscaling.
     void ConfigureDraw(const Device& device, PresentPushConstants* out_push_constants,
                        VkDescriptorSet* out_descriptor_set, RasterizerVulkan& rasterizer,
                        VkSampler sampler, size_t image_index,
                        const Tegra::FramebufferConfig& framebuffer,
-                       const Layout::FramebufferLayout& layout);
+                       const Layout::FramebufferLayout& layout, const HdrPresent& output);
 
 private:
     void CreateDescriptorPool(const Device& device);
@@ -101,6 +103,7 @@ private:
 
     Settings::AntiAliasing anti_alias_setting{};
     std::variant<std::monostate, FXAA, SMAA> anti_alias{};
+    std::optional<HdrConvert> hdr_convert{};
     std::variant<std::monostate, SGSR, FSR, FSR3> sr_filter{};
 #ifdef HAS_RESHADE
     std::optional<PostProcessChain> post_process{};

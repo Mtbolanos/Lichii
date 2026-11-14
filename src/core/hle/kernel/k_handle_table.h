@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -24,8 +23,8 @@ namespace Kernel {
 class KernelCore;
 
 class KHandleTable {
-    YUZU_NON_COPYABLE(KHandleTable);
-    YUZU_NON_MOVEABLE(KHandleTable);
+    LICHII_NON_COPYABLE(KHandleTable);
+    LICHII_NON_MOVEABLE(KHandleTable);
 
 public:
     static constexpr size_t MaxTableSize = 1024;

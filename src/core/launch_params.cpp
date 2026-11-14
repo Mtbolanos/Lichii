@@ -144,7 +144,7 @@ LaunchParams ParseLaunchParams(Core::System& system, int argc, char *argv[], wch
                     // try to look it up by username, only finds the first username that matches.
                     auto const user_idx = system.GetProfileManager().GetUserIndex(optarg);
                     if (user_idx != std::nullopt) {
-                        p.selected_user = user_idx.value();
+                        p.selected_user = static_cast<int>(user_idx.value());
                     } else {
                         LOG_ERROR(Frontend, "Invalid user argument '{}'", optarg);
                         break;

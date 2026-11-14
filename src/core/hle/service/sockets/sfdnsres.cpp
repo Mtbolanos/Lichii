@@ -1,20 +1,23 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <string_view>
 #include <utility>
 #include <vector>
 
+#include "common/nextendo.h"
 #include "common/string_util.h"
 #include "common/swap.h"
 #include "core/core.h"
 #include "core/hle/service/ipc_helpers.h"
+#include "core/hle/service/sockets/nextendo_redirect.h"
+#include "core/hle/service/sockets/numeric_name_info.h"
 #include "core/hle/service/sockets/sfdnsres.h"
 #include "core/hle/service/sockets/sockets.h"
 #include "core/hle/service/sockets/sockets_translate.h"
+#include "core/internal_network/local_redirect.h"
 #include "core/internal_network/network.h"
 #include "core/memory.h"
 
@@ -35,7 +38,7 @@ SFDNSRES::SFDNSRES(Core::System& system_) : ServiceFramework{system_, "sfdnsres"
         {10, &SFDNSRES::GetHostByNameRequestWithOptions, "GetHostByNameRequestWithOptions"},
         {11, nullptr, "GetHostByAddrRequestWithOptions"},
         {12, &SFDNSRES::GetAddrInfoRequestWithOptions, "GetAddrInfoRequestWithOptions"},
-        {13, nullptr, "GetNameInfoRequestWithOptions"},
+        {13, &SFDNSRES::GetNameInfoRequestWithOptions, "GetNameInfoRequestWithOptions"},
         {14, &SFDNSRES::ResolverSetOptionRequest, "ResolverSetOptionRequest"},
         {15, nullptr, "ResolverGetOptionRequest"},
     };
@@ -97,9 +100,19 @@ static const constexpr std::array blockedDomains = {
 };
 
 static bool IsBlockedHost(const std::string& host) {
+    if (Network::LocalRedirect::Matches(host)) {
+        return false; // Sent to the user's server (online_redirect_hosts).
+    }
     return std::any_of(
         blockedDomains.begin(), blockedDomains.end(),
         [&host](const std::string& domain) { return host.find(domain) != std::string::npos; });
+}
+
+static void RememberRedirectedHost(const std::vector<Network::AddrInfo>& addresses,
+                                   const std::string& host) {
+    for (const auto& addrinfo : addresses) {
+        Nextendo::RememberHost(Network::IPv4AddressToString(addrinfo.addr.ip), host);
+    }
 }
 
 static NetDbError GetAddrInfoErrorToNetDbError(GetAddrInfoError result) {
@@ -182,7 +195,8 @@ static std::vector<u8> SerializeAddrInfoAsHostEnt(const std::vector<Network::Add
     return data;
 }
 
-static std::pair<u32, GetAddrInfoError> GetHostByNameRequestImpl(HLERequestContext& ctx) {
+static std::pair<u32, GetAddrInfoError> GetHostByNameRequestImpl(HLERequestContext& ctx,
+                                                                  u64 program_id) {
     struct InputParameters {
         u8 use_nsd_resolve;
         u32 cancel_handle;
@@ -199,17 +213,24 @@ static std::pair<u32, GetAddrInfoError> GetHostByNameRequestImpl(HLERequestConte
         parameters.use_nsd_resolve, parameters.cancel_handle, parameters.process_id);
 
     const auto host_buffer = ctx.ReadBuffer(0);
-    const std::string host = Common::StringFromBuffer(host_buffer);
+    std::string host = Common::StringFromBuffer(host_buffer);
+    if (Common::Nextendo::OnlinePlayActive()) {
+        host = Nextendo::ExpandNsdHost(std::move(host));
+    }
     // For now, ignore options, which are in input buffer 1 for GetHostByNameRequestWithOptions.
+    const auto redirect = Nextendo::RedirectAddress(host, program_id);
 
     // Prevent resolution of Nintendo servers
-    if (IsBlockedHost(host)) {
+    if (!redirect && IsBlockedHost(host)) {
         LOG_WARNING(Network, "Resolution of hostname {} requested, returning EAI_AGAIN", host);
         return {0, GetAddrInfoError::AGAIN};
     }
 
-    auto res_v = Network::GetAddressInfo(host, /*service*/ std::nullopt);
+    auto res_v = Network::GetAddressInfo(redirect.value_or(host), /*service*/ std::nullopt);
     if (auto* res = std::get_if<std::vector<Network::AddrInfo>>(&res_v)) {
+        if (redirect) {
+            RememberRedirectedHost(*res, host);
+        }
         const std::vector<u8> data = SerializeAddrInfoAsHostEnt(*res, host);
         const u32 data_size = u32(data.size());
         ctx.WriteBuffer(data, 0);
@@ -220,7 +241,8 @@ static std::pair<u32, GetAddrInfoError> GetHostByNameRequestImpl(HLERequestConte
 }
 
 void SFDNSRES::GetHostByNameRequest(HLERequestContext& ctx) {
-    auto [data_size, emu_gai_err] = GetHostByNameRequestImpl(ctx);
+    auto [data_size, emu_gai_err] =
+        GetHostByNameRequestImpl(ctx, system.GetApplicationProcessProgramID());
 
     struct OutputParameters {
         NetDbError netdb_error;
@@ -239,7 +261,8 @@ void SFDNSRES::GetHostByNameRequest(HLERequestContext& ctx) {
 }
 
 void SFDNSRES::GetHostByNameRequestWithOptions(HLERequestContext& ctx) {
-    auto [data_size, emu_gai_err] = GetHostByNameRequestImpl(ctx);
+    auto [data_size, emu_gai_err] =
+        GetHostByNameRequestImpl(ctx, system.GetApplicationProcessProgramID());
 
     struct OutputParameters {
         u32 data_size;
@@ -296,7 +319,8 @@ static std::vector<u8> SerializeAddrInfo(const std::vector<Network::AddrInfo>& v
     return data;
 }
 
-static std::pair<u32, GetAddrInfoError> GetAddrInfoRequestImpl(HLERequestContext& ctx) {
+static std::pair<u32, GetAddrInfoError> GetAddrInfoRequestImpl(HLERequestContext& ctx,
+                                                                u64 program_id) {
     struct InputParameters {
         u8 use_nsd_resolve;
         u32 cancel_handle;
@@ -316,10 +340,14 @@ static std::pair<u32, GetAddrInfoError> GetAddrInfoRequestImpl(HLERequestContext
     // before looking up.
 
     const auto host_buffer = ctx.ReadBuffer(0);
-    const std::string host = Common::StringFromBuffer(host_buffer);
+    std::string host = Common::StringFromBuffer(host_buffer);
+    if (Common::Nextendo::OnlinePlayActive()) {
+        host = Nextendo::ExpandNsdHost(std::move(host));
+    }
+    const auto redirect = Nextendo::RedirectAddress(host, program_id);
 
     // Prevent resolution of Nintendo servers
-    if (IsBlockedHost(host)) {
+    if (!redirect && IsBlockedHost(host)) {
         LOG_WARNING(Network, "Resolution of hostname {} requested, returning EAI_AGAIN", host);
         return {0, GetAddrInfoError::AGAIN};
     }
@@ -332,8 +360,11 @@ static std::pair<u32, GetAddrInfoError> GetAddrInfoRequestImpl(HLERequestContext
 
     // Serialized hints are also passed in a buffer, but are ignored for now.
 
-    auto res_v = Network::GetAddressInfo(host, service);
+    auto res_v = Network::GetAddressInfo(redirect.value_or(host), service);
     if (auto* res = std::get_if<std::vector<Network::AddrInfo>>(&res_v)) {
+        if (redirect) {
+            RememberRedirectedHost(*res, host);
+        }
         const std::vector<u8> data = SerializeAddrInfo(*res, host);
         const u32 data_size = u32(data.size());
         ctx.WriteBuffer(data, 0);
@@ -344,7 +375,8 @@ static std::pair<u32, GetAddrInfoError> GetAddrInfoRequestImpl(HLERequestContext
 }
 
 void SFDNSRES::GetAddrInfoRequest(HLERequestContext& ctx) {
-    auto [data_size, emu_gai_err] = GetAddrInfoRequestImpl(ctx);
+    auto [data_size, emu_gai_err] =
+        GetAddrInfoRequestImpl(ctx, system.GetApplicationProcessProgramID());
 
     struct OutputParameters {
         Errno bsd_errno;
@@ -378,7 +410,8 @@ void SFDNSRES::GetGaiStringErrorRequest(HLERequestContext& ctx) {
 
 void SFDNSRES::GetAddrInfoRequestWithOptions(HLERequestContext& ctx) {
     // Additional options are ignored
-    auto [data_size, emu_gai_err] = GetAddrInfoRequestImpl(ctx);
+    auto [data_size, emu_gai_err] =
+        GetAddrInfoRequestImpl(ctx, system.GetApplicationProcessProgramID());
 
     struct OutputParameters {
         u32 data_size;
@@ -396,6 +429,43 @@ void SFDNSRES::GetAddrInfoRequestWithOptions(HLERequestContext& ctx) {
         .netdb_error = GetAddrInfoErrorToNetDbError(emu_gai_err),
         .bsd_errno = GetAddrInfoErrorToErrno(emu_gai_err),
     });
+}
+
+void SFDNSRES::GetNameInfoRequestWithOptions(HLERequestContext& ctx) {
+    NumericNameInfoResult result{GetAddrInfoError::FAIL, {}, {}};
+    const auto parameters = GetNumericNameInfoParameters(
+        {ctx.CommandBuffer(), IPC::COMMAND_BUFFER_LENGTH}, ctx.GetDataPayloadOffset());
+    const auto& inputs = ctx.BufferDescriptorA();
+    const auto& pointers = ctx.BufferDescriptorX();
+    const auto& outputs = ctx.BufferDescriptorB();
+
+    // SDK13: A0 sockaddr, B0 host, B1 service; options are A1 OR X0, not X1.
+    // Reject unsupported options by metadata before reading any of their contents.
+    if (!parameters.empty() && !inputs.empty() && inputs.size() <= 2 && pointers.size() <= 1 &&
+        outputs.size() == 2 && ctx.BufferDescriptorC().empty() && inputs[0].Size() >= 16 &&
+        inputs[0].Size() <= 256 && inputs[0].Address() != 0 &&
+        (inputs.size() < 2 || inputs[1].Size() == 0) &&
+        (pointers.empty() || pointers[0].Size() == 0) &&
+        (outputs[0].Size() == 0 || outputs[0].Address() != 0) &&
+        (outputs[1].Size() == 0 || outputs[1].Address() != 0)) {
+        result = ResolveNumericNameInfoRequest(parameters, ctx.ReadBufferA(0), {},
+                                               outputs[0].Size(), outputs[1].Size());
+    }
+
+    if (result.error == GetAddrInfoError::SUCCESS) {
+        if (!result.host.empty()) {
+            ctx.WriteBufferB(result.host.data(), result.host.size(), 0);
+        }
+        if (!result.service.empty()) {
+            ctx.WriteBufferB(result.service.data(), result.service.size(), 1);
+        }
+    }
+
+    // This SDK caller ignores IPC Result. Resolver failures must be nonzero in
+    // the normal ret/EAI field, never a zero-filled success or IPC-only error.
+    IPC::ResponseBuilder rb{ctx, 5};
+    rb.Push(ResultSuccess);
+    rb.PushRaw(MakeNumericNameInfoResponse(result.error));
 }
 
 void SFDNSRES::ResolverSetOptionRequest(HLERequestContext& ctx) {

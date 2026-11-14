@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(binding = 0) uniform sampler2D scene;
+layout(binding = 1, rgba16f) uniform writeonly image2D effects_base;
+
+void main() {
+    ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(pixel, imageSize(effects_base)))) {
+        return;
+    }
+    // An exact copy: ocarina_dlss_effects.comp compares it with the unclamped live scene.
+    imageStore(effects_base, pixel, vec4(texelFetch(scene, pixel, 0).rgb, 1.0));
+}

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -34,6 +33,15 @@ NSP::NSP(VirtualFile file_, u64 title_id_, std::size_t program_index_)
 
     const auto files = pfs->GetFiles();
 
+    // Reject unsupported compressed entries before importing tickets or opening any NCAs.
+    for (const auto& entry : files) {
+        if (entry->GetName().ends_with(".ncz") && !Core::Crypto::IsSupportedNCZ(entry)) {
+            LOG_ERROR(Service_FS, "Unsupported NCZ entry header (solid window limit: 128 MiB)");
+            status = Loader::ResultStatus::ErrorBadNCAHeader;
+            return;
+        }
+    }
+
     if (IsDirectoryExeFS(pfs)) {
         extracted = true;
         InitializeExeFSAndRomFS(files);
@@ -45,6 +53,28 @@ NSP::NSP(VirtualFile file_, u64 title_id_, std::size_t program_index_)
 }
 
 NSP::~NSP() = default;
+
+VirtualFile NSP::GetNCAFileById(const std::array<u8, 16>& id) const {
+    std::scoped_lock lock{resolved_nca_files_mutex};
+    if (const auto found = resolved_nca_files.find(id); found != resolved_nca_files.end()) {
+        // A solid NCZ reader that failed (disk full, decoder budget) stays failed: reopen it.
+        if (found->second->IsReadable()) {
+            return found->second;
+        }
+        resolved_nca_files.erase(found);
+    }
+    const auto name = Common::HexToString(id, false);
+    auto result = pfs->GetFile(fmt::format("{}.nca", name));
+    if (!result) {
+        if (auto compressed = pfs->GetFile(fmt::format("{}.ncz", name))) {
+            result = Core::Crypto::DecompressNCZ(compressed, fmt::format("{}.nca", name));
+        }
+    }
+    if (result) {
+        resolved_nca_files.emplace(id, result);
+    }
+    return result;
+}
 
 Loader::ResultStatus NSP::GetStatus() const {
     return status;
@@ -245,18 +275,7 @@ void NSP::ReadNCAs(const std::vector<VirtualFile>& files) {
 
             for (const auto& rec : cnmt.GetContentRecords()) {
                 const auto id_string = Common::HexToString(rec.nca_id, false);
-                auto next_file = pfs->GetFile(fmt::format("{}.nca", id_string));
-
-                if (next_file == nullptr) {
-                    auto ncz_file = pfs->GetFile(fmt::format("{}.ncz", id_string));
-                    if (ncz_file != nullptr) {
-                        next_file = Core::Crypto::DecompressNCZ(ncz_file, fmt::format("{}.nca", id_string));
-                        if (next_file == nullptr) {
-                            LOG_DEBUG(Service_FS, "Skipping solid or unsupported NCZ content {}.ncz", id_string);
-                            continue;
-                        }
-                    }
-                }
+                auto next_file = GetNCAFileById(rec.nca_id);
 
                 if (next_file == nullptr) {
                     if (rec.type != ContentRecordType::DeltaFragment) {

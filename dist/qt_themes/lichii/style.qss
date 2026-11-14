@@ -1,0 +1,1653 @@
+/*
+* SPDX-FileCopyrightText: Copyright 2026 Lichii Project
+* SPDX-License-Identifier: GPL-3.0-or-later
+*/
+
+/* Lichii Dark. Tokens, from the design's component sheet:
+   window #17181b  chrome #131416  sunken #141518  header #1b1c20
+   surface #202125  raised #232429  hover #2a2c31  pressed #303238
+   border #34363c  border-subtle #2a2b30  divider #212226
+   text #ececef  secondary #c4c5ca  muted #9b9da4  faint #6f7178  disabled #55575d
+   accent #f0386b  accent-hover #f45a85  accent-pressed #d42c5a  accent-soft rgba(240,56,107,0.16)
+   success #5cb87a  warning #d9a441  danger #c95d5d
+   radius 5 / 7 / 10, row height 30 */
+
+QWidget {
+    color: #ececef;
+    background-color: #17181b;
+    selection-background-color: rgba(240, 56, 107, 0.35);
+    selection-color: #ffffff;
+    border: 0;
+    outline: 0;
+}
+
+QWidget:disabled {
+    color: #55575d;
+}
+
+QToolTip {
+    color: #ececef;
+    background-color: #232429;
+    border: 1px solid #34363c;
+    border-radius: 7px;
+    padding: 6px 8px;
+}
+
+QMainWindow::separator {
+    background-color: #2a2b30;
+    width: 1px;
+    height: 1px;
+}
+
+QLabel {
+    background-color: transparent;
+}
+
+QLabel:disabled {
+    color: #55575d;
+}
+
+/* Menus ----------------------------------------------------------------- */
+
+QMenuBar {
+    background-color: #131416;
+    border-bottom: 1px solid #2a2b30;
+    padding: 3px 6px;
+}
+
+QMenuBar::item {
+    background: transparent;
+    color: #d6d7db;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+QMenuBar::item:selected,
+QMenuBar::item:pressed {
+    background-color: #2a2c31;
+    color: #ffffff;
+}
+
+QMenu {
+    background-color: #202125;
+    border: 1px solid #34363c;
+    border-radius: 10px;
+    padding: 6px;
+}
+
+QMenu::item {
+    background: transparent;
+    color: #dcdde1;
+    padding: 6px 28px 6px 12px;
+    border-radius: 6px;
+}
+
+QMenu::item:selected {
+    background-color: #f0386b;
+    color: #ffffff;
+}
+
+QMenu::item:disabled {
+    color: #55575d;
+}
+
+QMenu::icon {
+    padding-left: 8px;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #2f3137;
+    margin: 4px 6px;
+}
+
+QMenu::indicator {
+    width: 14px;
+    height: 14px;
+    padding-left: 6px;
+}
+
+QMenu::indicator:non-exclusive:checked,
+QMenu::indicator:exclusive:checked {
+    image: url(:/lichii/icons/check_on.png);
+}
+
+QMenu::right-arrow {
+    image: url(:/lichii/icons/chevron_right.png);
+    width: 12px;
+    height: 12px;
+    padding-right: 6px;
+}
+
+/* Buttons --------------------------------------------------------------- */
+
+QPushButton {
+    background-color: #232429;
+    color: #ececef;
+    border: 1px solid #34363c;
+    border-radius: 7px;
+    padding: 0 16px;
+    min-height: 30px;
+}
+
+QPushButton:hover {
+    background-color: #2a2c31;
+}
+
+QPushButton:pressed,
+QPushButton:checked {
+    background-color: #303238;
+}
+
+QPushButton:focus {
+    border-color: rgba(240, 56, 107, 0.55);
+}
+
+QPushButton:default {
+    background-color: #f0386b;
+    border-color: #f0386b;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+QPushButton:default:hover {
+    background-color: #f45a85;
+    border-color: #f45a85;
+}
+
+QPushButton:default:pressed {
+    background-color: #d42c5a;
+    border-color: #d42c5a;
+}
+
+QPushButton:disabled,
+QPushButton:default:disabled {
+    background-color: #1d1e22;
+    border-color: #2a2b30;
+    color: #55575d;
+}
+
+QPushButton::menu-indicator {
+    image: url(:/lichii/icons/chevron_down.png);
+    subcontrol-position: right center;
+    subcontrol-origin: padding;
+    right: 6px;
+    width: 12px;
+    height: 12px;
+}
+
+QToolButton {
+    background-color: transparent;
+    color: #ececef;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 3px;
+}
+
+QToolButton:hover {
+    background-color: #2a2c31;
+}
+
+QToolButton:pressed,
+QToolButton:checked {
+    background-color: #303238;
+}
+
+QDialogButtonBox {
+    background-color: transparent;
+    dialogbuttonbox-buttons-have-icons: 0;
+}
+
+QDialogButtonBox QPushButton {
+    min-width: 72px;
+}
+
+/* Inputs ---------------------------------------------------------------- */
+
+QLineEdit,
+QAbstractSpinBox,
+QComboBox,
+QDateTimeEdit,
+QPlainTextEdit,
+QTextEdit {
+    background-color: #202125;
+    color: #ececef;
+    border: 1px solid #34363c;
+    border-radius: 7px;
+    selection-background-color: rgba(240, 56, 107, 0.45);
+}
+
+QLineEdit,
+QAbstractSpinBox,
+QComboBox,
+QDateTimeEdit {
+    min-height: 28px;
+    padding: 0 10px;
+}
+
+QLineEdit:hover,
+QAbstractSpinBox:hover,
+QComboBox:hover {
+    border-color: #44464d;
+}
+
+QLineEdit:focus,
+QAbstractSpinBox:focus,
+QComboBox:focus,
+QComboBox:on,
+QPlainTextEdit:focus,
+QTextEdit:focus {
+    border-color: #f0386b;
+}
+
+QLineEdit:disabled,
+QAbstractSpinBox:disabled,
+QComboBox:disabled,
+QDateTimeEdit:disabled {
+    background-color: #1b1c20;
+    border-color: #2a2b30;
+    color: #55575d;
+}
+
+QLineEdit:read-only {
+    background-color: #1b1c20;
+}
+
+QComboBox {
+    padding-right: 28px;
+}
+
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 26px;
+    border: 0;
+    background: transparent;
+}
+
+QComboBox::down-arrow {
+    image: url(:/lichii/icons/chevron_down.png);
+    width: 12px;
+    height: 12px;
+}
+
+QComboBox::down-arrow:disabled {
+    image: url(:/lichii/icons/chevron_down_disabled.png);
+}
+
+QComboBox QAbstractItemView {
+    background-color: #202125;
+    border: 1px solid #34363c;
+    border-radius: 7px;
+    padding: 4px;
+    outline: 0;
+    selection-background-color: #2a2c31;
+    selection-color: #ffffff;
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 26px;
+    padding: 0 8px;
+    border-radius: 5px;
+}
+
+QComboBox QAbstractItemView::item:selected,
+QComboBox QAbstractItemView::item:hover {
+    background-color: #2a2c31;
+    color: #ffffff;
+}
+
+QComboBox[global="true"] {
+    color: #9b9da4;
+}
+
+QAbstractSpinBox {
+    padding-right: 22px;
+}
+
+QAbstractSpinBox::up-button,
+QAbstractSpinBox::down-button {
+    subcontrol-origin: border;
+    width: 20px;
+    border: 0;
+    background: transparent;
+}
+
+QAbstractSpinBox::up-button {
+    subcontrol-position: top right;
+}
+
+QAbstractSpinBox::down-button {
+    subcontrol-position: bottom right;
+}
+
+QAbstractSpinBox::up-arrow {
+    image: url(:/lichii/icons/chevron_up.png);
+    width: 10px;
+    height: 10px;
+}
+
+QAbstractSpinBox::down-arrow {
+    image: url(:/lichii/icons/chevron_down.png);
+    width: 10px;
+    height: 10px;
+}
+
+QAbstractSpinBox::up-arrow:disabled,
+QAbstractSpinBox::up-arrow:off {
+    image: url(:/lichii/icons/chevron_up_disabled.png);
+}
+
+QAbstractSpinBox::down-arrow:disabled,
+QAbstractSpinBox::down-arrow:off {
+    image: url(:/lichii/icons/chevron_down_disabled.png);
+}
+
+QCalendarWidget QWidget {
+    alternate-background-color: #1b1c20;
+}
+
+/* Check boxes, toggles, radios ------------------------------------------ */
+
+QCheckBox,
+QRadioButton {
+    background-color: transparent;
+    spacing: 10px;
+    min-height: 24px;
+}
+
+QCheckBox::indicator,
+QGroupBox::indicator,
+QTreeView::indicator,
+QListView::indicator,
+QTableView::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QCheckBox::indicator:unchecked,
+QGroupBox::indicator:unchecked,
+QAbstractItemView::indicator:unchecked {
+    image: url(:/lichii/icons/check_off.png);
+}
+
+QCheckBox::indicator:unchecked:hover,
+QGroupBox::indicator:unchecked:hover {
+    image: url(:/lichii/icons/check_off_hover.png);
+}
+
+QCheckBox::indicator:checked,
+QGroupBox::indicator:checked,
+QAbstractItemView::indicator:checked {
+    image: url(:/lichii/icons/check_on.png);
+}
+
+QCheckBox::indicator:indeterminate,
+QAbstractItemView::indicator:indeterminate {
+    image: url(:/lichii/icons/check_mixed.png);
+}
+
+QCheckBox::indicator:unchecked:disabled,
+QGroupBox::indicator:unchecked:disabled {
+    image: url(:/lichii/icons/check_off_disabled.png);
+}
+
+QCheckBox::indicator:checked:disabled,
+QGroupBox::indicator:checked:disabled {
+    image: url(:/lichii/icons/check_on_disabled.png);
+}
+
+/* A setting that switches a feature on or off. ConfigurationShared::UseToggles marks them. */
+QCheckBox[toggle="true"]::indicator {
+    width: 34px;
+    height: 20px;
+}
+
+QCheckBox[toggle="true"]::indicator:unchecked {
+    image: url(:/lichii/icons/toggle_off.png);
+}
+
+QCheckBox[toggle="true"]::indicator:unchecked:hover {
+    image: url(:/lichii/icons/toggle_off_hover.png);
+}
+
+QCheckBox[toggle="true"]::indicator:checked {
+    image: url(:/lichii/icons/toggle_on.png);
+}
+
+QCheckBox[toggle="true"]::indicator:unchecked:disabled {
+    image: url(:/lichii/icons/toggle_off_disabled.png);
+}
+
+QCheckBox[toggle="true"]::indicator:checked:disabled {
+    image: url(:/lichii/icons/toggle_on_disabled.png);
+}
+
+QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+}
+
+QRadioButton::indicator:unchecked {
+    image: url(:/lichii/icons/radio_off.png);
+}
+
+QRadioButton::indicator:unchecked:hover {
+    image: url(:/lichii/icons/radio_off_hover.png);
+}
+
+QRadioButton::indicator:checked {
+    image: url(:/lichii/icons/radio_on.png);
+}
+
+QRadioButton::indicator:unchecked:disabled {
+    image: url(:/lichii/icons/radio_off_disabled.png);
+}
+
+QRadioButton::indicator:checked:disabled {
+    image: url(:/lichii/icons/radio_on_disabled.png);
+}
+
+/* Per-game settings: a value changed for this game, and its reset button. */
+ConfigurationShared--Widget[custom="true"] QLabel,
+ConfigurationShared--Widget[custom="true"] QCheckBox {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+ConfigurationShared--Widget[custom="true"] QComboBox,
+ConfigurationShared--Widget[custom="true"] QLineEdit,
+ConfigurationShared--Widget[custom="true"] QAbstractSpinBox {
+    border-color: rgba(240, 56, 107, 0.55);
+}
+
+QPushButton[restore="true"] {
+    background-color: #2c1a21;
+    border: 0;
+    border-radius: 6px;
+    padding: 0;
+    min-width: 28px;
+    max-width: 28px;
+    min-height: 28px;
+    max-height: 28px;
+}
+
+QPushButton[restore="true"]:hover {
+    background-color: #3a2230;
+}
+
+/* Sliders and progress -------------------------------------------------- */
+
+QSlider {
+    background-color: transparent;
+}
+
+QSlider::groove:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #34363c;
+}
+
+QSlider::sub-page:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background-color: #f0386b;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background-color: #5a2f3d;
+}
+
+QSlider::handle:horizontal {
+    width: 16px;
+    height: 16px;
+    margin: -6px 0;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #6b6d73;
+}
+
+QSlider::groove:vertical {
+    width: 4px;
+    border-radius: 2px;
+    background-color: #34363c;
+}
+
+QSlider::add-page:vertical {
+    width: 4px;
+    border-radius: 2px;
+    background-color: #f0386b;
+}
+
+QSlider::handle:vertical {
+    width: 16px;
+    height: 16px;
+    margin: 0 -6px;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+QProgressBar {
+    background-color: #2a2c31;
+    border: 0;
+    border-radius: 3px;
+    color: #c4c5ca;
+    text-align: center;
+    min-height: 6px;
+}
+
+QProgressBar::chunk {
+    background-color: #f0386b;
+    border-radius: 3px;
+}
+
+/* Scroll bars ----------------------------------------------------------- */
+
+QScrollArea,
+QScrollArea > QWidget > QWidget {
+    background-color: transparent;
+}
+
+QAbstractScrollArea::corner {
+    background: transparent;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #4a4c53;
+    min-height: 32px;
+    border-radius: 3px;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: #4a4c53;
+    min-width: 32px;
+    border-radius: 3px;
+}
+
+QScrollBar::handle:hover {
+    background-color: #6a6c73;
+}
+
+QScrollBar::add-line,
+QScrollBar::sub-line,
+QScrollBar::add-page,
+QScrollBar::sub-page {
+    background: transparent;
+    width: 0;
+    height: 0;
+    border: 0;
+}
+
+/* Tabs ------------------------------------------------------------------ */
+
+QTabWidget::pane {
+    border: 0;
+    border-top: 1px solid #2a2b30;
+    background-color: #17181b;
+    top: -1px;
+}
+
+QTabWidget::tab-bar {
+    left: 12px;
+}
+
+QTabBar {
+    background-color: transparent;
+    qproperty-drawBase: 0;
+}
+
+QTabBar::tab {
+    background: transparent;
+    color: #9b9da4;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 10px 10px 9px 10px;
+    margin-right: 2px;
+    font-weight: 500;
+}
+
+QTabBar::tab:hover {
+    color: #ececef;
+}
+
+QTabBar::tab:selected {
+    color: #ffffff;
+    border-bottom: 2px solid #f0386b;
+    font-weight: 600;
+}
+
+QTabBar::tab:disabled {
+    color: #55575d;
+}
+
+QTabBar QToolButton {
+    background-color: #232429;
+    border: 1px solid #2a2b30;
+    border-radius: 6px;
+    width: 24px;
+    margin: 6px 1px;
+}
+
+QTabBar QToolButton:disabled {
+    background-color: #17181b;
+}
+
+QTabBar::scroller {
+    width: 56px;
+}
+
+QTabBar QToolButton::left-arrow {
+    image: url(:/lichii/icons/chevron_left.png);
+}
+
+QTabBar QToolButton::left-arrow:disabled {
+    image: url(:/lichii/icons/chevron_left_disabled.png);
+}
+
+QTabBar QToolButton::right-arrow {
+    image: url(:/lichii/icons/chevron_right.png);
+}
+
+QTabBar QToolButton::right-arrow:disabled {
+    image: url(:/lichii/icons/chevron_right_disabled.png);
+}
+
+/* Group boxes become section headers ------------------------------------ */
+
+QGroupBox {
+    background-color: transparent;
+    border: 0;
+    border-top: 1px solid #212226;
+    margin-top: 26px;
+    padding-top: 6px;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    left: 2px;
+    top: 4px;
+    color: #6f7178;
+    background-color: transparent;
+}
+
+/* Item views: game list, category list, trees --------------------------- */
+
+QAbstractItemView {
+    background-color: #17181b;
+    alternate-background-color: #1b1c20;
+    border: 0;
+    selection-background-color: #3a1d28;
+    selection-color: #ffffff;
+    show-decoration-selected: 1;
+}
+
+QAbstractItemView::item {
+    border: 0;
+}
+
+QAbstractItemView::item:hover {
+    background-color: #1f2024;
+}
+
+QAbstractItemView::item:selected,
+QAbstractItemView::item:selected:active,
+QAbstractItemView::item:selected:!active {
+    background-color: #3a1d28;
+    color: #ffffff;
+}
+
+QTreeView::branch {
+    background: transparent;
+}
+
+QTreeView::branch:selected {
+    background-color: #3a1d28;
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    image: url(:/lichii/icons/chevron_right.png);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+    image: url(:/lichii/icons/chevron_down.png);
+}
+
+QHeaderView {
+    background-color: #17181b;
+    border: 0;
+}
+
+QHeaderView::section {
+    background-color: #17181b;
+    color: #9b9da4;
+    border: 0;
+    border-bottom: 1px solid #2a2b30;
+    padding: 0 8px;
+    min-height: 32px;
+}
+
+QHeaderView::section:hover {
+    color: #ececef;
+}
+
+QHeaderView::down-arrow {
+    image: url(:/lichii/icons/chevron_down.png);
+    width: 10px;
+    height: 10px;
+}
+
+QHeaderView::up-arrow {
+    image: url(:/lichii/icons/chevron_up.png);
+    width: 10px;
+    height: 10px;
+}
+
+QTableView {
+    gridline-color: #212226;
+}
+
+QTableCornerButton::section {
+    background-color: #17181b;
+    border: 0;
+}
+
+QScrollArea QListWidget {
+    background-color: #141518;
+    border: 1px solid #2a2b30;
+    border-radius: 8px;
+}
+
+/* Configure: category list on the left */
+QListWidget#selectorList {
+    background-color: #141518;
+    border: 0;
+    border-right: 1px solid #2a2b30;
+    padding: 12px 8px;
+    outline: 0;
+}
+
+QListWidget#selectorList::item {
+    color: #d6d7db;
+    min-height: 34px;
+    padding: 0 10px;
+    border-radius: 7px;
+    margin-bottom: 2px;
+}
+
+QListWidget#selectorList::item:hover {
+    background-color: #2a2c31;
+}
+
+QListWidget#selectorList::item:selected {
+    background-color: rgba(240, 56, 107, 0.16);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Per-game Properties: the game's info column */
+QDialog#ConfigurePerGame QGroupBox#gameInfo {
+    background-color: #141518;
+    border: 0;
+    border-right: 1px solid #2a2b30;
+    margin-top: 0;
+    padding: 16px 12px;
+}
+
+QDialog#ConfigurePerGame QGroupBox#gameInfo::title {
+    color: transparent;
+}
+
+QDialog#ConfigurePerGame QGroupBox#gameInfo QLineEdit {
+    background-color: transparent;
+    border: 0;
+    border-bottom: 1px solid #212226;
+    border-radius: 0;
+    padding: 0 2px;
+    color: #ececef;
+}
+
+QDialog#ConfigurePerGame QGraphicsView {
+    border-radius: 10px;
+    background-color: #202125;
+}
+
+QDialog#ConfigureDialog QLabel#label,
+QDialog#ConfigurePerGame QLabel#label_8 {
+    color: #6f7178;
+}
+
+/* About ---------------------------------------------------------------- */
+
+QDialog#AboutDialog QLabel#labelAbout {
+    color: #c4c5ca;
+}
+
+QDialog#AboutDialog QLabel#labelBuildInfo,
+QDialog#AboutDialog QLabel#labelLiability {
+    color: #8b8d94;
+}
+
+/* What's new ------------------------------------------------------------ */
+
+QDialog#WhatsNewDialog QLabel#WhatsNewText {
+    color: #9b9da4;
+}
+
+QDialog#WhatsNewDialog QLabel#WhatsNewBadge {
+    background-color: rgba(240, 56, 107, 0.16);
+    border-radius: 8px;
+}
+
+QDialog#WhatsNewDialog QWidget#WhatsNewItem {
+    border-bottom: 1px solid #212226;
+}
+
+QDialog#WhatsNewDialog QWidget#WhatsNewFooter {
+    background-color: #141518;
+    border-top: 1px solid #2a2b30;
+}
+
+/* Status bar: setting chips on the left, stats on the right ------------- */
+
+QStatusBar {
+    background-color: #131416;
+    border-top: 1px solid #2a2b30;
+    color: #9b9da4;
+}
+
+QStatusBar::item {
+    border: 0;
+}
+
+QStatusBar QLabel {
+    color: #9b9da4;
+    padding: 0 4px;
+}
+
+QPushButton#TogglableStatusBarButton,
+QPushButton#RendererStatusBarButton,
+QPushButton#GPUStatusBarButton,
+QPushButton#DockingStatusBarButton {
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0 4px;
+    margin: 0;
+    border: 0;
+    border-radius: 5px;
+    background-color: #202125;
+    color: #c4c5ca;
+    font-size: 11px;
+}
+
+/* One color per chip category; the :!checked rule below greys out chips that are off. */
+
+/* GPU accuracy */
+QPushButton#GPUStatusBarButton[chip="gpu"] {
+    background-color: rgba(245, 185, 66, 0.14);
+    color: #f5b942;
+}
+
+/* dock mode */
+QPushButton#DockingStatusBarButton[chip="dock"] {
+    background-color: rgba(96, 165, 250, 0.14);
+    color: #60a5fa;
+}
+
+/* scaling filter */
+QPushButton#TogglableStatusBarButton[chip="filter"] {
+    background-color: rgba(167, 139, 250, 0.14);
+    color: #a78bfa;
+}
+
+/* anti-aliasing */
+QPushButton#TogglableStatusBarButton[chip="aa"] {
+    background-color: rgba(34, 211, 238, 0.14);
+    color: #22d3ee;
+}
+
+/* post effects */
+QPushButton#TogglableStatusBarButton[chip="fx"] {
+    background-color: rgba(163, 217, 94, 0.14);
+    color: #a3d95e;
+}
+
+/* frame generation */
+QPushButton#TogglableStatusBarButton[chip="fg"] {
+    background-color: rgba(255, 138, 76, 0.14);
+    color: #ff8a4c;
+}
+
+/* volume */
+QPushButton#TogglableStatusBarButton[chip="volume"] {
+    background-color: rgba(232, 121, 249, 0.14);
+    color: #e879f9;
+}
+
+QPushButton#TogglableStatusBarButton:!checked {
+    background-color: transparent;
+    color: #55575d;
+}
+
+QPushButton#RendererStatusBarButton {
+    background-color: rgba(240, 56, 107, 0.16);
+    color: #f0386b;
+}
+
+QPushButton#TogglableStatusBarButton:hover,
+QPushButton#RendererStatusBarButton:hover,
+QPushButton#GPUStatusBarButton:hover,
+QPushButton#DockingStatusBarButton:hover {
+    background-color: #2a2c31;
+    color: #ececef;
+}
+
+QPushButton#RefreshButton {
+    min-height: 20px;
+    max-height: 20px;
+    padding: 0 4px;
+    border: 0;
+    background-color: transparent;
+    color: #6f7178;
+}
+
+QPushButton#RefreshButton:hover {
+    color: #ececef;
+}
+
+QPushButton#buttonRefreshDevices {
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0;
+}
+
+QPushButton#button_reset_defaults {
+    padding: 0 12px;
+}
+
+/* Controller applet, input pages and software keyboard (from qdarkstyle) ----- */
+
+/* Set by the Configure dialog on a page that is wider than the screen. */
+QWidget[compactPage="true"] QPushButton {
+    padding: 0 6px;
+}
+
+QSpinBox#spinboxLStickRange,
+QSpinBox#spinboxRStickRange,
+QSpinBox#vibrationSpinPlayer1,
+QSpinBox#vibrationSpinPlayer2,
+QSpinBox#vibrationSpinPlayer3,
+QSpinBox#vibrationSpinPlayer4,
+QSpinBox#vibrationSpinPlayer5,
+QSpinBox#vibrationSpinPlayer6,
+QSpinBox#vibrationSpinPlayer7,
+QSpinBox#vibrationSpinPlayer8,
+QSpinBox#spinTriggerRumble {
+    min-width: 68px;
+}
+
+QDialog#ConfigureVibration QGroupBox::indicator,
+QGroupBox#motionGroup::indicator,
+QGroupBox#vibrationGroup::indicator {
+    margin-left: 0px;
+}
+
+QDialog#ConfigureVibration QGroupBox::title,
+QGroupBox#motionGroup::title,
+QGroupBox#vibrationGroup::title {
+    spacing: 2px;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+QWidget#bottomPerGameInput,
+QWidget#topControllerApplet,
+QWidget#bottomControllerApplet,
+QGroupBox#groupPlayer1Connected:checked,
+QGroupBox#groupPlayer2Connected:checked,
+QGroupBox#groupPlayer3Connected:checked,
+QGroupBox#groupPlayer4Connected:checked,
+QGroupBox#groupPlayer5Connected:checked,
+QGroupBox#groupPlayer6Connected:checked,
+QGroupBox#groupPlayer7Connected:checked,
+QGroupBox#groupPlayer8Connected:checked {
+    background-color: #232629;
+}
+
+QWidget#topPerGameInput,
+QWidget#middleControllerApplet {
+    background-color: #31363b;
+}
+
+QWidget#topPerGameInput QComboBox,
+QWidget#middleControllerApplet QComboBox {
+    width: 120px;
+}
+
+QWidget#connectedControllers {
+    background: transparent;
+}
+
+QWidget#closeButtons {
+    background: transparent;
+}
+
+QWidget#playersSupported,
+QWidget#controllersSupported,
+QWidget#controllerSupported1,
+QWidget#controllerSupported2,
+QWidget#controllerSupported3,
+QWidget#controllerSupported4,
+QWidget#controllerSupported5,
+QWidget#controllerSupported6 {
+    border: none;
+    background: transparent;
+}
+
+QGroupBox#groupPlayer1Connected,
+QGroupBox#groupPlayer2Connected,
+QGroupBox#groupPlayer3Connected,
+QGroupBox#groupPlayer4Connected,
+QGroupBox#groupPlayer5Connected,
+QGroupBox#groupPlayer6Connected,
+QGroupBox#groupPlayer7Connected,
+QGroupBox#groupPlayer8Connected {
+    border: 1px solid #76797c;
+    border-radius: 3px;
+    padding: 0px;
+    min-height: 98px;
+    max-height: 98px;
+    margin-top: 0px;
+}
+
+QGroupBox#groupPlayer1Connected:unchecked,
+QGroupBox#groupPlayer2Connected:unchecked,
+QGroupBox#groupPlayer3Connected:unchecked,
+QGroupBox#groupPlayer4Connected:unchecked,
+QGroupBox#groupPlayer5Connected:unchecked,
+QGroupBox#groupPlayer6Connected:unchecked,
+QGroupBox#groupPlayer7Connected:unchecked,
+QGroupBox#groupPlayer8Connected:unchecked {
+    border: 1px solid #54575b;
+}
+
+QGroupBox#groupPlayer1Connected::title,
+QGroupBox#groupPlayer2Connected::title,
+QGroupBox#groupPlayer3Connected::title,
+QGroupBox#groupPlayer4Connected::title,
+QGroupBox#groupPlayer5Connected::title,
+QGroupBox#groupPlayer6Connected::title,
+QGroupBox#groupPlayer7Connected::title,
+QGroupBox#groupPlayer8Connected::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 1px;
+    margin-left: -2px;
+    margin-right: -4px;
+    margin-bottom: 6px;
+}
+
+QCheckBox#checkboxPlayer1Connected,
+QCheckBox#checkboxPlayer2Connected,
+QCheckBox#checkboxPlayer3Connected,
+QCheckBox#checkboxPlayer4Connected,
+QCheckBox#checkboxPlayer5Connected,
+QCheckBox#checkboxPlayer6Connected,
+QCheckBox#checkboxPlayer7Connected,
+QCheckBox#checkboxPlayer8Connected {
+    spacing: 0px;
+}
+
+QWidget#Player1LEDs,
+QWidget#Player2LEDs,
+QWidget#Player3LEDs,
+QWidget#Player4LEDs,
+QWidget#Player5LEDs,
+QWidget#Player6LEDs,
+QWidget#Player7LEDs,
+QWidget#Player8LEDs {
+    background: transparent;
+}
+
+QWidget#Player1LEDs QCheckBox,
+QWidget#Player2LEDs QCheckBox,
+QWidget#Player3LEDs QCheckBox,
+QWidget#Player4LEDs QCheckBox,
+QWidget#Player5LEDs QCheckBox,
+QWidget#Player6LEDs QCheckBox,
+QWidget#Player7LEDs QCheckBox,
+QWidget#Player8LEDs QCheckBox {
+    spacing: 0px;
+    margin-bottom: 0px;
+    margin-right: 0px;
+}
+
+QWidget#Player1LEDs QCheckBox::indicator,
+QWidget#Player2LEDs QCheckBox::indicator,
+QWidget#Player3LEDs QCheckBox::indicator,
+QWidget#Player4LEDs QCheckBox::indicator,
+QWidget#Player5LEDs QCheckBox::indicator,
+QWidget#Player6LEDs QCheckBox::indicator,
+QWidget#Player7LEDs QCheckBox::indicator,
+QWidget#Player8LEDs QCheckBox::indicator {
+    width: 6px;
+    height: 6px;
+    margin-left: 0px;
+}
+
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer1Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer2Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer3Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer4Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer5Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer6Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer7Connected::indicator,
+QWidget#bottomPerGameInput QCheckBox#checkboxPlayer8Connected::indicator {
+    width: 12px;
+    height: 12px;
+}
+
+QCheckBox#checkboxPlayer1Connected::indicator,
+QCheckBox#checkboxPlayer2Connected::indicator,
+QCheckBox#checkboxPlayer3Connected::indicator,
+QCheckBox#checkboxPlayer4Connected::indicator,
+QCheckBox#checkboxPlayer5Connected::indicator,
+QCheckBox#checkboxPlayer6Connected::indicator,
+QCheckBox#checkboxPlayer7Connected::indicator,
+QCheckBox#checkboxPlayer8Connected::indicator {
+    width: 14px;
+    height: 14px;
+}
+
+QGroupBox#groupPlayer1Connected::indicator,
+QGroupBox#groupPlayer2Connected::indicator,
+QGroupBox#groupPlayer3Connected::indicator,
+QGroupBox#groupPlayer4Connected::indicator,
+QGroupBox#groupPlayer5Connected::indicator,
+QGroupBox#groupPlayer6Connected::indicator,
+QGroupBox#groupPlayer7Connected::indicator,
+QGroupBox#groupPlayer8Connected::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+QWidget#Player1LEDs QCheckBox::indicator:checked,
+QWidget#Player2LEDs QCheckBox::indicator:checked,
+QWidget#Player3LEDs QCheckBox::indicator:checked,
+QWidget#Player4LEDs QCheckBox::indicator:checked,
+QWidget#Player5LEDs QCheckBox::indicator:checked,
+QWidget#Player6LEDs QCheckBox::indicator:checked,
+QWidget#Player7LEDs QCheckBox::indicator:checked,
+QWidget#Player8LEDs QCheckBox::indicator:checked,
+QGroupBox#groupPlayer1Connected::indicator:checked,
+QGroupBox#groupPlayer2Connected::indicator:checked,
+QGroupBox#groupPlayer3Connected::indicator:checked,
+QGroupBox#groupPlayer4Connected::indicator:checked,
+QGroupBox#groupPlayer5Connected::indicator:checked,
+QGroupBox#groupPlayer6Connected::indicator:checked,
+QGroupBox#groupPlayer7Connected::indicator:checked,
+QGroupBox#groupPlayer8Connected::indicator:checked,
+QCheckBox#checkboxPlayer1Connected::indicator:checked,
+QCheckBox#checkboxPlayer2Connected::indicator:checked,
+QCheckBox#checkboxPlayer3Connected::indicator:checked,
+QCheckBox#checkboxPlayer4Connected::indicator:checked,
+QCheckBox#checkboxPlayer5Connected::indicator:checked,
+QCheckBox#checkboxPlayer6Connected::indicator:checked,
+QCheckBox#checkboxPlayer7Connected::indicator:checked,
+QCheckBox#checkboxPlayer8Connected::indicator:checked,
+QGroupBox#groupConnectedController::indicator:checked {
+    border-radius: 2px;
+    border: 1px solid #929192;
+    background: #39ff14;
+    image: none;
+}
+
+QWidget#Player1LEDs QCheckBox::indicator:unchecked,
+QWidget#Player2LEDs QCheckBox::indicator:unchecked,
+QWidget#Player3LEDs QCheckBox::indicator:unchecked,
+QWidget#Player4LEDs QCheckBox::indicator:unchecked,
+QWidget#Player5LEDs QCheckBox::indicator:unchecked,
+QWidget#Player6LEDs QCheckBox::indicator:unchecked,
+QWidget#Player7LEDs QCheckBox::indicator:unchecked,
+QWidget#Player8LEDs QCheckBox::indicator:unchecked,
+QGroupBox#groupPlayer1Connected::indicator:unchecked,
+QGroupBox#groupPlayer2Connected::indicator:unchecked,
+QGroupBox#groupPlayer3Connected::indicator:unchecked,
+QGroupBox#groupPlayer4Connected::indicator:unchecked,
+QGroupBox#groupPlayer5Connected::indicator:unchecked,
+QGroupBox#groupPlayer6Connected::indicator:unchecked,
+QGroupBox#groupPlayer7Connected::indicator:unchecked,
+QGroupBox#groupPlayer8Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer1Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer2Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer3Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer4Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer5Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer6Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer7Connected::indicator:unchecked,
+QCheckBox#checkboxPlayer8Connected::indicator:unchecked,
+QGroupBox#groupConnectedController::indicator:unchecked {
+    border-radius: 2px;
+    border: 1px solid #929192;
+    background: transparent;
+    image: none;
+}
+
+QWidget#controllerPlayer1,
+QWidget#controllerPlayer2,
+QWidget#controllerPlayer3,
+QWidget#controllerPlayer4,
+QWidget#controllerPlayer5,
+QWidget#controllerPlayer6,
+QWidget#controllerPlayer7,
+QWidget#controllerPlayer8 {
+    background: transparent;
+}
+
+QDialog#QtSoftwareKeyboardDialog,
+QStackedWidget#topOSK {
+    background: rgba(41, 41, 41, .9);
+}
+
+
+QDialog#OverlayDialog,
+QStackedWidget#stackedDialog {
+    background: rgba(41, 41, 41, .7);
+}
+
+QWidget#boxOSK,
+QWidget#lineOSK,
+QWidget#richDialog,
+QWidget#lineDialog {
+    background: transparent;
+}
+
+QStackedWidget#bottomOSK,
+QWidget#contentDialog,
+QWidget#contentRichDialog {
+    background: rgba(71, 69, 71, 1);
+}
+
+QWidget#contentDialog,
+QWidget#contentRichDialog {
+    margin: 5px;
+    border-radius: 6px;
+}
+
+QWidget#buttonsDialog,
+QWidget#buttonsRichDialog {
+    margin: 5px;
+    border-top: 2px solid rgba(255, 255, 255, .9);
+}
+
+QWidget#legendOSKnum {
+    border-top: 1px solid rgba(255, 255, 255, 1);
+}
+
+QStackedWidget#stackedDialog QTextBrowser QWidget {
+    background: transparent;
+}
+
+QStackedWidget#stackedDialog QTextBrowser QScrollBar {
+    background: #2a2929;
+}
+
+QStackedWidget#stackedDialog QTextBrowser QScrollBar::sub-line,
+QStackedWidget#stackedDialog QTextBrowser QScrollBar::add-line {
+    border-image: none;
+}
+
+QWidget#inputOSK {
+    border-bottom: 3px solid rgba(255, 255, 255, .9);
+}
+
+QWidget#inputOSK QLineEdit {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    padding: 0px;
+}
+
+QWidget#inputBoxOSK {
+    border: 2px solid rgba(255, 255, 255, .9);
+}
+
+QWidget#inputBoxOSK QTextEdit {
+    background: transparent;
+    border: none;
+    color: #ccc;
+}
+
+QWidget#richDialog QTextBrowser {
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 35px 65px;
+}
+
+QWidget#lineOSK QLabel#label_header {
+    color: #f0f0f0;
+}
+
+QWidget#lineOSK QLabel#label_sub,
+QWidget#lineOSK QLabel#label_characters,
+QWidget#contentDialog QLabel#label_title,
+QWidget#contentRichDialog QLabel#label_title_rich,
+QWidget#boxOSK QLabel#label_characters_box {
+    color: #ccc;
+}
+
+QWidget#buttonsDialog,
+QWidget#buttonsRichDialog,
+QWidget#mainOSK,
+QWidget#headerOSK,
+QWidget#normalOSK,
+QWidget#shiftOSK,
+QWidget#numOSK,
+QWidget#subOSK,
+QWidget#inputOSK,
+QWidget#inputBoxOSK,
+QWidget#charactersOSK,
+QWidget#charactersBoxOSK,
+QWidget#legendOSK,
+QWidget#legendOSK QWidget,
+QWidget#legendOSKshift,
+QWidget#legendOSKshift QWidget,
+QWidget#legendOSKnum,
+QWidget#legendOSKnum QWidget {
+    background: transparent;
+}
+
+QWidget#contentDialog QLabel,
+QWidget#legendOSK QLabel,
+QWidget#legendOSKshift QLabel,
+QWidget#legendOSKnum QLabel {
+    color: rgba(255, 255, 255, 1);
+}
+
+QWidget#contentDialog QLabel#label_dialog {
+    padding: 20px 65px;
+}
+
+QWidget#contentDialog QLabel#label_title,
+QWidget#contentRichDialog QLabel#label_title_rich {
+    padding: 0px 65px;
+}
+
+QDialog#OverlayDialog QPushButton {
+    color: rgba(1, 253, 201, 1);
+    background: transparent;
+    border: none;
+    padding: 0px;
+    min-width: 0px;
+}
+
+QDialog#OverlayDialog QPushButton:focus,
+QDialog#OverlayDialog QPushButton:hover {
+    color: rgba(1, 253, 201, 1);
+    background: rgba(58, 61, 66, 1);
+    border: 5px solid rgba(56, 189, 225, 1);
+    border-radius: 6px;
+    outline: none;
+}
+
+QDialog#OverlayDialog QPushButton:pressed {
+    color: rgba(240, 240, 240, 1);
+    background: rgba(150, 150, 150, 1);
+    border: 5px solid rgba(56, 189, 225, 1);
+    border-radius: 6px;
+    outline: none;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(80, 79, 80, 1);
+    border: 2px solid rgba(71, 69, 71, 1);
+    padding: 0px;
+    min-width: 0px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift {
+    background: rgba(95, 94, 95, 1);
+    border: 2px solid rgba(71, 69, 71, 1);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num {
+    color: rgba(240, 240, 240, 1);
+    background: rgba(255, 255, 255, 1);
+    border: 2px solid rgba(71, 69, 71, 1);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num {
+    color: rgba(0, 0, 0, 1);
+    background: rgba(1, 253, 201, 1);
+    border: 2px solid rgba(71, 69, 71, 1);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num:focus,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num:focus,
+
+QDialog#QtSoftwareKeyboardDialog QPushButton:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num:hover,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(58, 61, 66, 1);
+    border: 5px solid rgba(56, 189, 225, 1);
+    border-radius: 6px;
+    outline: none;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num:pressed,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num:pressed {
+    color: rgba(240, 240, 240, 1);
+    background: rgba(150, 150, 150, 1);
+    border: 5px solid rgba(56, 189, 225, 1);
+    border-radius: 6px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num {
+    image: url(:/overlay/osk_button_B_dark.png);
+    image-position: right;
+    qproperty-icon: url(:/overlay/osk_button_backspace_dark.png);
+    qproperty-iconSize: 36px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift {
+    image: url(:/overlay/osk_button_Y_dark.png);
+    image-position: right;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num {
+    color: rgba(44, 44, 44, 1);
+    image: url(:/overlay/osk_button_plus_dark.png);
+    image-position: right;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift {
+    image: url(:/overlay/osk_button_shift_lock_off.png);
+    image-position: left;
+    qproperty-icon: url(:/overlay/osk_button_shift_dark.png);
+    qproperty-iconSize: 36px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_shift_shift {
+    image: url(:/overlay/osk_button_shift_lock_off.png);
+    image-position: left;
+    qproperty-icon: url(:/overlay/osk_button_shift_on_dark.png);
+    qproperty-iconSize: 36px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_left_bracket,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_right_bracket,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_left_parenthesis,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_right_parenthesis {
+    padding-bottom: 7px;
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#titleOSK QLabel {
+    background: transparent;
+    color: #ccc;
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#button_L,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_L_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_L_num {
+    image: url(:/overlay/button_L_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_left,
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_left_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_left_num {
+    image: url(:/overlay/arrow_left_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#button_R,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_R_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_R_num {
+    image: url(:/overlay/button_R_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_right,
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_right_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#arrow_right_num {
+    image: url(:/overlay/arrow_right_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#button_press_stick,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_press_stick_shift {
+    image: url(:/overlay/button_press_stick_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#button_X,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_X_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_X_num {
+    image: url(:/overlay/button_X_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QWidget#button_A,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_A_shift,
+QDialog#QtSoftwareKeyboardDialog QWidget#button_A_num {
+    image: url(:/overlay/button_A_dark.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num:disabled {
+    color: rgba(144, 144, 144, 1);
+    background-color: rgba(95, 94, 95, 1);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_at:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_slash:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_percent:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_1:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_2:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_3:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_4:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_5:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_6:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_7:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_8:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_9:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_0:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_return:disabled {
+    color: rgba(144, 144, 144, 1);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_ok_num:disabled {
+    image: url(:/overlay/osk_button_plus_dark_disabled.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_shift:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_backspace_num:disabled {
+    image: url(:/overlay/osk_button_B_dark_disabled.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space:disabled,
+QDialog#QtSoftwareKeyboardDialog QPushButton#button_space_shift:disabled {
+    image: url(:/overlay/osk_button_Y_dark_disabled.png);
+}
+
+QDialog#QtSoftwareKeyboardDialog QFrame,
+QDialog#QtSoftwareKeyboardDialog QFrame[frameShape="0"],
+QDialog#OverlayDialog QFrame,
+QDialog#OverlayDialog QFrame[frameShape="0"] {
+    border-radius: 0px;
+    border: none;
+}

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #pragma once
@@ -31,6 +30,8 @@ public:
     [[nodiscard]] bool HasPendingChannels() const {
         return !pending_channels.empty();
     }
+    /// Whether a suspended channel waits for the host GPU's copy of a command list.
+    [[nodiscard]] bool WaitsForListCopy() const;
     /// HasPendingChannels for threads other than the GPU thread.
     [[nodiscard]] bool HasPendingChannelsAnyThread() const {
         return any_pending.load(std::memory_order_acquire);

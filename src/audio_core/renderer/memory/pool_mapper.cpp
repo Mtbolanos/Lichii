@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "audio_core/renderer/memory/address_info.h"
@@ -185,8 +184,8 @@ MemoryPoolInfo::ResultState PoolMapper::Update(MemoryPoolInfo& pool,
     }
 
     if (in_params.address == 0 || in_params.size == 0
-    || !Common::IsAligned(in_params.address, Core::Memory::YUZU_PAGESIZE)
-    || !Common::IsAligned(in_params.size, Core::Memory::YUZU_PAGESIZE)) {
+    || !Common::IsAligned(in_params.address, Core::Memory::LICHII_PAGESIZE)
+    || !Common::IsAligned(in_params.size, Core::Memory::LICHII_PAGESIZE)) {
         return MemoryPoolInfo::ResultState::BadParam;
     }
 

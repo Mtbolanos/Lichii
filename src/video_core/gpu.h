@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -158,6 +157,9 @@ public:
 
     std::shared_ptr<Control::ChannelState> AllocateChannel();
 
+    /// Every channel allocated so far.
+    [[nodiscard]] std::vector<std::shared_ptr<Control::ChannelState>> Channels() const;
+
     void InitChannel(Control::ChannelState& to_init, u64 program_id);
 
     void BindChannel(s32 channel_id);
@@ -259,8 +261,10 @@ public:
     /// Notify rasterizer that any caches of the specified region should be flushed to Switch memory
     void FlushRegion(DAddr addr, u64 size);
 
-    /// Runs func on the GPU thread after the command lists submitted so far.
-    void RunInOrder(std::function<void()>&& func);
+    /// Runs func on the GPU thread after the command lists submitted so far. With
+    /// before_later_reads, also before the GPU thread reads the lists submitted later (the GPU
+    /// split drains), for a func that changes what they read.
+    void RunInOrder(std::function<void()>&& func, bool before_later_reads = false);
 
     /// RunInOrder for GPU memory maps: also done before the GPU thread reads the command lists
     /// submitted later (with the GPU split, on its front rather than its back).

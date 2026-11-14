@@ -452,7 +452,7 @@ bool PostProcessChain::BuildEffects(const Device& device, MemoryAllocator& alloc
                 .addressModeU = ToAddressMode(sampler.address_u),
                 .addressModeV = ToAddressMode(sampler.address_v),
                 .addressModeW = ToAddressMode(sampler.address_w),
-                .mipLodBias = sampler.lod_bias,
+                .mipLodBias = device.SupportsSamplerMipLodBias() ? sampler.lod_bias : 0.0f,
                 .anisotropyEnable = VK_FALSE,
                 .maxAnisotropy = 1.0f,
                 .compareEnable = VK_FALSE,

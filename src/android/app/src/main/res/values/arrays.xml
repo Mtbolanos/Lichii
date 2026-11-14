@@ -302,6 +302,16 @@
         <item>15</item>
     </integer-array>
 
+    <string-array name="ootAntiAliasingNames">
+        <item>@string/oot_anti_aliasing_game</item>
+        <item>@string/oot_anti_aliasing_no_sharpening</item>
+    </string-array>
+
+    <integer-array name="ootAntiAliasingValues">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
+
     <string-array name="rendererAntiAliasingNames">
         <item>@string/anti_aliasing_none</item>
         <item>@string/anti_aliasing_fxaa</item>

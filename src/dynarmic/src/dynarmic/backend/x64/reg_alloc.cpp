@@ -185,9 +185,27 @@ bool Argument::IsInMemory(RegAlloc& reg_alloc) const noexcept {
     return HostLocIsSpill(*reg_alloc.ValueLocation(value.GetInst()));
 }
 
-RegAlloc::RegAlloc(std::bitset<32> gpr_order, std::bitset<32> xmm_order) noexcept
-    : gpr_order(gpr_order), xmm_order(xmm_order)
-{}
+void RegAlloc::Reset(std::bitset<32> new_gpr_order, std::bitset<32> new_xmm_order, bool new_spill_to_gpr, bool new_scratch_copy,
+                     std::optional<s32> new_spill_jit_offset) noexcept {
+    u32 regs = touched_regs;
+    touched_regs = 0;
+    while (regs) {
+        const size_t i = std::countr_zero(regs);
+        regs &= regs - 1;
+        hostloc_info[i].lru_counter = 0;
+    }
+    gpr_order = new_gpr_order;
+    xmm_order = new_xmm_order;
+    spill_to_gpr = new_spill_to_gpr;
+    scratch_copy = new_scratch_copy;
+    spill_jit_offset = new_spill_jit_offset;
+    reserved_stack_space = 0;
+    dirty_lo = 0;
+    dirty_hi = 0;
+    occupied_lo = 0;
+    occupied_hi = 0;
+    DEBUG_ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& h) noexcept { return h.IsEmpty(); }));
+}
 
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(const IR::Inst* inst) noexcept {
     ArgumentInfo ret{
@@ -203,6 +221,7 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(const IR::Inst* inst) noexcept 
             auto const loc = ValueLocation(arg.GetInst());
             ASSERT(loc && "argument must already been defined");
             LocInfo(*loc).AddArgReference();
+            MarkDirty(*loc);
         }
     }
     return ret;
@@ -216,6 +235,7 @@ void RegAlloc::RegisterPseudoOperation(const IR::Inst* inst) noexcept {
             if (auto const loc = ValueLocation(arg.GetInst())) {
                 // May not necessarily have a value (e.g. CMP variant of Sub32).
                 LocInfo(*loc).AddArgReference();
+                MarkDirty(*loc);
             }
         }
     }
@@ -255,6 +275,7 @@ void RegAlloc::Release(const Xbyak::Reg& reg) noexcept {
     ASSERT(reg.getKind() == Xbyak::Operand::XMM || reg.getKind() == Xbyak::Operand::REG);
     const auto hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(reg.getKind() == Xbyak::Operand::XMM ? HostLoc::XMM0 : HostLoc::RAX));
     LocInfo(hostloc).ReleaseOne();
+    SetOccupied(hostloc, !LocInfo(hostloc).values.empty());
 }
 
 HostLoc RegAlloc::UseImpl(BlockOfCode& code, IR::Value use_value, std::bitset<32> desired_locations) noexcept {
@@ -267,6 +288,7 @@ HostLoc RegAlloc::UseImpl(BlockOfCode& code, IR::Value use_value, std::bitset<32
 
     if (HostLocIsRegister(current_location) && desired_locations.test(size_t(current_location))) {
         LocInfo(current_location).ReadLock();
+        MarkDirty(current_location);
         return current_location;
     }
 
@@ -285,6 +307,7 @@ HostLoc RegAlloc::UseImpl(BlockOfCode& code, IR::Value use_value, std::bitset<32
         Move(code, destination_location, current_location);
     }
     LocInfo(destination_location).ReadLock();
+    MarkDirty(destination_location);
     return destination_location;
 }
 
@@ -300,9 +323,21 @@ HostLoc RegAlloc::UseScratchImpl(BlockOfCode& code, IR::Value use_value, std::bi
         if (LocInfo(current_location).IsLastUse()) {
             LocInfo(current_location).is_set_last_use = true;
         } else {
+            if (scratch_copy) {
+                // The value is still needed: write into a copy in a free register and leave the
+                // original where it is, instead of evicting the original (often to the stack).
+                const HostLoc copy_location = SelectARegister(desired_locations);
+                if (LocInfo(copy_location).IsEmpty()) {
+                    CopyToScratch(code, bit_width, copy_location, current_location);
+                    LocInfo(copy_location).WriteLock();
+                    MarkDirty(copy_location);
+                    return copy_location;
+                }
+            }
             MoveOutOfTheWay(code, current_location);
         }
         LocInfo(current_location).WriteLock();
+        MarkDirty(current_location);
         return current_location;
     }
 
@@ -310,6 +345,7 @@ HostLoc RegAlloc::UseScratchImpl(BlockOfCode& code, IR::Value use_value, std::bi
     MoveOutOfTheWay(code, destination_location);
     CopyToScratch(code, bit_width, destination_location, current_location);
     LocInfo(destination_location).WriteLock();
+    MarkDirty(destination_location);
     return destination_location;
 }
 
@@ -317,6 +353,7 @@ HostLoc RegAlloc::ScratchImpl(BlockOfCode& code, std::bitset<32> desired_locatio
     const HostLoc location = SelectARegister(desired_locations);
     MoveOutOfTheWay(code, location);
     LocInfo(location).WriteLock();
+    MarkDirty(location);
     return location;
 }
 
@@ -356,6 +393,7 @@ void RegAlloc::HostCall(
         if (other_caller_save[i]) {
             MoveOutOfTheWay(code, HostLoc(i));
             LocInfo(HostLoc(i)).WriteLock();
+            MarkDirty(i);
         }
     }
     for (size_t i = 0; i < args.size(); i++) {
@@ -452,16 +490,27 @@ HostLoc RegAlloc::SelectARegister(std::bitset<32> desired_locations) const noexc
     ASSERT(it_final != HostLoc::FirstSpill && "All candidate registers have already been allocated");
     // Evil magic - increment LRU counter (will wrap at 256)
     const_cast<RegAlloc*>(this)->LocInfo(HostLoc(it_final)).lru_counter++;
+    touched_regs |= u32(1) << size_t(it_final);
     return HostLoc(it_final);
 }
 
 std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const noexcept {
-    for (size_t i = 0; i < hostloc_info.size(); i++)
+    u64 lo = occupied_lo;
+    while (lo) {
+        const size_t i = std::countr_zero(lo);
+        lo &= lo - 1;
         if (hostloc_info[i].ContainsValue(value)) {
-            //for (size_t j = 0; j < hostloc_info.size(); ++j)
-            //    ASSERT((i == j || !hostloc_info[j].ContainsValue(value)) && "duplicate defs");
             return HostLoc(i);
         }
+    }
+    u64 hi = occupied_hi;
+    while (hi) {
+        const size_t i = 64 + std::countr_zero(hi);
+        hi &= hi - 1;
+        if (hostloc_info[i].ContainsValue(value)) {
+            return HostLoc(i);
+        }
+    }
     return std::nullopt;
 }
 
@@ -470,6 +519,8 @@ std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const noex
 void RegAlloc::DefineValueImpl(BlockOfCode& code, IR::Inst* def_inst, HostLoc host_loc) noexcept {
     DEBUG_ASSERT(!ValueLocation(def_inst) && "def_inst has already been defined");
     LocInfo(host_loc).AddValue(host_loc, def_inst);
+    MarkDirty(host_loc);
+    SetOccupied(host_loc, true);
     DEBUG_ASSERT(*ValueLocation(def_inst) == host_loc);
 }
 
@@ -493,6 +544,11 @@ void RegAlloc::Move(BlockOfCode& code, HostLoc to, HostLoc from) noexcept {
     ASSERT(!LocInfo(from).IsEmpty() && "Mov eliminated");
     EmitMove(code, bit_width, to, from);
     LocInfo(to) = std::exchange(LocInfo(from), {});
+    MarkDirty(to);
+    SetOccupied(to, !LocInfo(to).values.empty());
+    SetOccupied(from, false);
+    if (size_t(to) < 32)
+        touched_regs |= u32(1) << size_t(to);
 }
 
 void RegAlloc::CopyToScratch(BlockOfCode& code, size_t bit_width, HostLoc to, HostLoc from) noexcept {
@@ -512,6 +568,14 @@ void RegAlloc::Exchange(BlockOfCode& code, HostLoc a, HostLoc b) noexcept {
     } else {
         EmitExchange(code, a, b);
         std::swap(LocInfo(a), LocInfo(b));
+        MarkDirty(a);
+        MarkDirty(b);
+        SetOccupied(a, !LocInfo(a).values.empty());
+        SetOccupied(b, !LocInfo(b).values.empty());
+        if (size_t(a) < 32)
+            touched_regs |= u32(1) << size_t(a);
+        if (size_t(b) < 32)
+            touched_regs |= u32(1) << size_t(b);
     }
 }
 
@@ -526,6 +590,19 @@ void RegAlloc::SpillRegister(BlockOfCode& code, HostLoc loc) noexcept {
     ASSERT(HostLocIsRegister(loc) && "Only registers can be spilled");
     ASSERT(!LocInfo(loc).IsEmpty() && "There is no need to spill unoccupied registers");
     ASSERT(!LocInfo(loc).IsLocked() && "Registers that have been allocated must not be spilt");
+    if (spill_to_gpr && HostLocIsGPR(loc)) {
+        // Park the value in a free callee-saved GPR (survives host calls) instead of the stack.
+        for (size_t i = 0; i < 16; ++i) {
+            const auto candidate = HostLoc(i);
+            if (candidate == loc || candidate == HostLoc::RSP || candidate == HostLoc::RBP ||
+                (candidate >= HostLoc::R13 && candidate <= HostLoc::R15) || !gpr_order.test(i) ||
+                !ABI_ALL_CALLEE_SAVE.test(i) || !LocInfo(candidate).IsEmpty()) {
+                continue;
+            }
+            Move(code, candidate, loc);
+            return;
+        }
+    }
     auto const new_loc = FindFreeSpill(HostLocIsXMM(loc));
     Move(code, new_loc, loc);
 }
@@ -548,9 +625,17 @@ HostLoc RegAlloc::FindFreeSpill(bool is_xmm) const noexcept {
     // TODO: Doing this would mean saving XMM on each call... need to benchmark the benefits
     // of spilling on XMM versus the potential cost of using XMM registers.....
     // Otherwise go to stack spilling
-    for (size_t i = size_t(HostLoc::FirstSpill); i < hostloc_info.size(); ++i)
-        if (const auto loc = HostLoc(i); LocInfo(loc).IsEmpty())
-            return loc;
+    constexpr u64 spill_lo_mask = ~((u64(1) << size_t(HostLoc::FirstSpill)) - 1);
+    const u64 free_lo = (~occupied_lo) & spill_lo_mask;
+    if (free_lo) {
+        return HostLoc(std::countr_zero(free_lo));
+    }
+    constexpr size_t hi_count = NonSpillHostLocCount + SpillCount - 64;
+    constexpr u64 spill_hi_mask = (u64(1) << hi_count) - 1;
+    const u64 free_hi = (~occupied_hi) & spill_hi_mask;
+    if (free_hi) {
+        return HostLoc(64 + std::countr_zero(free_hi));
+    }
     UNREACHABLE();
 }
 
@@ -589,6 +674,9 @@ void RegAlloc::EmitMove(BlockOfCode& code, const size_t bit_width, const HostLoc
         ASSERT(HostLocIsSpill(loc));
         size_t i = size_t(loc) - size_t(HostLoc::FirstSpill);
         ASSERT(i < SpillCount && "Spill index greater than number of available spill locations");
+        if (spill_jit_offset) {
+            return Xbyak::util::r15 + *spill_jit_offset + i * sizeof(StackLayout::spill[0]);
+        }
         return Xbyak::util::rsp + reserved_stack_space + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(StackLayout::spill[0]);
     };
     auto const spill_xmm_to_op = [&](const HostLoc loc) {

@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "video_core/framebuffer_config.h"
@@ -154,7 +153,7 @@ FramebufferTextureInfo Layer::LoadFBToScreenInfo(const Tegra::FramebufferConfig&
     // Update existing texture
     // TODO: Test what happens on hardware when you change the framebuffer dimensions so that
     //       they differ from the LCD resolution.
-    // TODO: Applications could theoretically crash yuzu here by specifying too large
+    // TODO: Applications could theoretically crash Lichii here by specifying too large
     //       framebuffer sizes. We should make sure that this cannot happen.
     glTextureSubImage2D(framebuffer_texture.resource.handle, 0, 0, 0, framebuffer.width,
                         framebuffer.height, framebuffer_texture.gl_format,
@@ -187,6 +186,11 @@ void Layer::ConfigureFramebufferTexture(const Tegra::FramebufferConfig& framebuf
         internal_format = GL_RGB10_A2;
         framebuffer_texture.gl_format = GL_RGBA;
         framebuffer_texture.gl_type = GL_UNSIGNED_INT_2_10_10_10_REV;
+        break;
+    case Service::android::PixelFormat::RgbaFp16:
+        internal_format = GL_RGBA16F;
+        framebuffer_texture.gl_format = GL_RGBA;
+        framebuffer_texture.gl_type = GL_HALF_FLOAT;
         break;
     case Service::android::PixelFormat::Rgb565:
         internal_format = GL_RGB565;

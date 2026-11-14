@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <cstddef>
@@ -45,8 +44,15 @@ namespace {
     Core::Frontend::WindowSystemType window_type, bool enable_validation) {
     std::vector<const char*> extensions;
     extensions.reserve(6);
+    // Headless presents to VK_EXT_headless_surface where the driver has it (GPU trace replay).
+    const bool headless_surface =
+        window_type == Core::Frontend::WindowSystemType::Headless &&
+        AreExtensionsSupported(dld, properties, std::array{VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME});
     switch (window_type) {
     case Core::Frontend::WindowSystemType::Headless:
+        if (headless_surface) {
+            extensions.push_back(VK_EXT_HEADLESS_SURFACE_EXTENSION_NAME);
+        }
         break;
 #ifdef _WIN32
     case Core::Frontend::WindowSystemType::Windows:
@@ -76,8 +82,14 @@ namespace {
         LOG_ERROR(Render_Vulkan, "Presentation not supported on this platform");
         break;
     }
-    if (window_type != Core::Frontend::WindowSystemType::Headless) {
+    if (window_type != Core::Frontend::WindowSystemType::Headless || headless_surface) {
         extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+        if (std::ranges::any_of(properties, [](const VkExtensionProperties& property) {
+                return std::strcmp(property.extensionName,
+                                   VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME) == 0;
+            })) {
+            extensions.push_back(VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME);
+        }
     }
     // Probe optional extensions against the same snapshot the caller verifies against, so the
     // check here and the verification in CreateInstance can never disagree (see TOCTOU note below).

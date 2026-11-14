@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
 // SPDX-FileCopyrightText: Copyright 2023 merryhime <https://mary.rs>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -150,7 +149,11 @@ u128 InterpreterVisitor::GetVec(Vec v) {
     return m_fpsimd_regs[static_cast<u32>(v)];
 }
 
+// Register 31 is the zero register here; callers handle SP as a base register separately.
 u64 InterpreterVisitor::GetReg(Reg r) {
+    if (r == Reg::R31) {
+        return 0;
+    }
     return m_regs[static_cast<u32>(r)];
 }
 
@@ -167,6 +170,9 @@ void InterpreterVisitor::SetVec(Vec v, u128 value) {
 }
 
 void InterpreterVisitor::SetReg(Reg r, u64 value) {
+    if (r == Reg::R31) {
+        return;
+    }
     m_regs[static_cast<u32>(r)] = value;
 }
 

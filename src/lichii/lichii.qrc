@@ -1,0 +1,11 @@
+<!--
+SPDX-License-Identifier: GPL-2.0-or-later
+-->
+
+<RCC>
+    <qresource prefix="/img">
+        <file alias="lichii.ico">../../dist/lichii.ico</file>
+        <file alias="lichii_wordmark.png">../../dist/lichii_wordmark.png</file>
+        <file alias="lichii_wordmark@2x.png">../../dist/lichii_wordmark@2x.png</file>
+    </qresource>
+</RCC>

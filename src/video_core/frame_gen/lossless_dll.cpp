@@ -45,7 +45,7 @@ constexpr u32 PERFORMANCE_SHADER_ID_FIRST = 280;
 constexpr u32 PERFORMANCE_SHADER_ID_LAST = 302;
 
 constexpr u32 CACHE_MAGIC = 0x4746534C;
-constexpr u32 CACHE_VERSION = 3;
+constexpr u32 CACHE_VERSION = 4;
 
 struct CacheHeader {
     u32 magic;
@@ -53,6 +53,7 @@ struct CacheHeader {
     u64 source_size;
     u64 source_hash;
     u32 module_count;
+    u32 variant;
 };
 
 struct Section {
@@ -284,11 +285,13 @@ template <typename Map>
     });
 }
 
-[[nodiscard]] LosslessStatus TranslateAll(const ResourceSpans& resources,
+[[nodiscard]] LosslessStatus TranslateAll(const ResourceSpans& resources, ShaderVariant variant,
                                           ShaderModules& out_modules) {
+    const u32 offset = variant == ShaderVariant::NativeFp16 ? PerformanceShader::NATIVE_FP16_OFFSET
+                                                            : PerformanceShader::NATIVE_FP32_OFFSET;
     out_modules.clear();
     for (const u32 id : PerformanceShaderIds()) {
-        const auto hit = resources.find(id + PerformanceShader::NATIVE_FP16_OFFSET);
+        const auto hit = resources.find(id + offset);
         if (hit == resources.end()) {
             return LosslessStatus::MissingShaders;
         }
@@ -320,7 +323,8 @@ template <typename Map>
 }
 
 [[nodiscard]] bool ReadShaderCache(const std::filesystem::path& path, u64 source_size,
-                                   u64 source_hash, ShaderModules& out_modules) {
+                                   u64 source_hash, ShaderVariant variant,
+                                   ShaderModules& out_modules) {
     if (!Common::FS::Exists(path)) {
         return false;
     }
@@ -332,7 +336,8 @@ template <typename Map>
         return false;
     }
     if (header.magic != CACHE_MAGIC || header.version != CACHE_VERSION ||
-        header.source_size != source_size || header.source_hash != source_hash) {
+        header.source_size != source_size || header.source_hash != source_hash ||
+        header.variant != static_cast<u32>(variant)) {
         return false;
     }
 
@@ -461,7 +466,7 @@ LosslessStatus GetInstalledLosslessStatus() {
     return ValidateLosslessDll(GetLosslessDllPath());
 }
 
-LosslessStatus LoadShaderModules(ShaderModules& out_modules) {
+LosslessStatus LoadShaderModules(ShaderVariant variant, ShaderModules& out_modules) {
     std::vector<u8> image;
     const LosslessStatus read_status = ReadImageFile(GetLosslessDllPath(), image);
     if (read_status != LosslessStatus::Ok) {
@@ -479,11 +484,11 @@ LosslessStatus LoadShaderModules(ShaderModules& out_modules) {
         return parse_status;
     }
 
-    if (ReadShaderCache(cache_path, source_size, source_hash, out_modules)) {
+    if (ReadShaderCache(cache_path, source_size, source_hash, variant, out_modules)) {
         return LosslessStatus::Ok;
     }
 
-    const LosslessStatus translate_status = TranslateAll(spans, out_modules);
+    const LosslessStatus translate_status = TranslateAll(spans, variant, out_modules);
     if (translate_status != LosslessStatus::Ok) {
         return translate_status;
     }
@@ -494,6 +499,7 @@ LosslessStatus LoadShaderModules(ShaderModules& out_modules) {
         .source_size = source_size,
         .source_hash = source_hash,
         .module_count = static_cast<u32>(out_modules.size()),
+        .variant = static_cast<u32>(variant),
     };
     if (!WriteShaderCache(cache_path, header, out_modules)) {
         void(Common::FS::RemoveFile(cache_path));
@@ -505,7 +511,7 @@ LosslessStatus LoadShaderModules(ShaderModules& out_modules) {
 
 LosslessStatus BuildShaderCache() {
     ShaderModules modules;
-    return LoadShaderModules(modules);
+    return LoadShaderModules(ShaderVariant::NativeFp16, modules);
 }
 
 bool RemoveInstalledLosslessDll() {

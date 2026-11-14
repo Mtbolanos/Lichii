@@ -8,21 +8,25 @@
 TEST_CASE("OoT temporal backend selection is opt-in and vendor neutral", "[video_core][ocarina]") {
     using enum VideoCommon::OcarinaUpscaleBackend;
     using VideoCommon::SelectOcarinaUpscaler;
-    CHECK(SelectOcarinaUpscaler(false, false, false, "") == Native);
-    CHECK(SelectOcarinaUpscaler(false, false, true, "") == Native);
-    CHECK(SelectOcarinaUpscaler(true, false, false, "") == Fsr);
-    CHECK(SelectOcarinaUpscaler(true, false, true, "") == Fsr);
-    CHECK(SelectOcarinaUpscaler(false, true, false, "") == Native);
-    CHECK(SelectOcarinaUpscaler(false, true, true, "") == Dlss);
-    CHECK(SelectOcarinaUpscaler(true, true, false, "") == Fsr);
-    CHECK(SelectOcarinaUpscaler(true, true, true, "") == Dlss);
-    CHECK(SelectOcarinaUpscaler(true, true, true, "native") == Native);
-    CHECK(SelectOcarinaUpscaler(false, true, true, "fsr") == Fsr);
-    CHECK(SelectOcarinaUpscaler(false, false, false, "fsr") == Fsr);
-    CHECK(SelectOcarinaUpscaler(false, false, false, "dlss") == Native);
-    CHECK(SelectOcarinaUpscaler(false, false, true, "dlss") == Dlss);
-    CHECK(SelectOcarinaUpscaler(false, true, true, "dlss") == Dlss);
-    CHECK(SelectOcarinaUpscaler(false, false, false, "garbage") == Native);
+    CHECK(SelectOcarinaUpscaler(false, false, false, false, "") == Native);
+    CHECK(SelectOcarinaUpscaler(false, false, true, false, "") == Native);
+    CHECK(SelectOcarinaUpscaler(true, false, false, false, "") == Fsr);
+    CHECK(SelectOcarinaUpscaler(true, false, true, false, "") == Fsr);
+    CHECK(SelectOcarinaUpscaler(false, true, false, false, "") == Native);
+    CHECK(SelectOcarinaUpscaler(false, true, true, false, "") == Dlss);
+    CHECK(SelectOcarinaUpscaler(true, true, false, false, "") == Fsr);
+    CHECK(SelectOcarinaUpscaler(true, true, true, false, "") == Dlss);
+    CHECK(SelectOcarinaUpscaler(true, true, true, false, "native") == Native);
+    CHECK(SelectOcarinaUpscaler(false, true, true, false, "fsr") == Fsr);
+    CHECK(SelectOcarinaUpscaler(false, false, false, false, "fsr") == Fsr);
+    CHECK(SelectOcarinaUpscaler(false, false, false, false, "dlss") == Native);
+    CHECK(SelectOcarinaUpscaler(false, false, true, false, "dlss") == Dlss);
+    CHECK(SelectOcarinaUpscaler(false, true, true, false, "dlss") == Dlss);
+    CHECK(SelectOcarinaUpscaler(false, false, false, false, "garbage") == Native);
+    // The DLSS render scale shrank the scene: FSR 3.1 reconstructs it when DLSS can't run.
+    CHECK(SelectOcarinaUpscaler(false, true, false, true, "") == Fsr);
+    CHECK(SelectOcarinaUpscaler(false, true, true, true, "") == Dlss);
+    CHECK(SelectOcarinaUpscaler(false, true, false, true, "native") == Native);
 }
 
 TEST_CASE("OoT FSR texture LOD bias follows the upscaler, the console mode and failure",

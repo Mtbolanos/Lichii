@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!--
-SPDX-FileCopyrightText: 2023 yuzu Emulator Project
 SPDX-License-Identifier: GPL-3.0-or-later
 
 SPDX-FileCopyrightText: 2025 Eden Emulator Project
@@ -34,7 +33,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
     <application
-        android:name="org.yuzu.yuzu_emu.YuzuApplication"
+        android:name="io.github.zortos293.lichii.LichiiApplication"
         android:label="${appNameBase}${appNameSuffix}"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -56,9 +55,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
         <meta-data android:name="android.game_mode_config" android:resource="@xml/game_mode_config" />
 
         <activity
-            android:name="org.yuzu.yuzu_emu.ui.main.MainActivity"
+            android:name="io.github.zortos293.lichii.ui.main.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Yuzu.Splash.Main">
+            android:theme="@style/Theme.Lichii.Splash.Main">
             <intent-filter>
                 <action android:name="com.miui.gamecenter.GAME_BOOSTER_LAUNCH"/>
                 <action android:name="android.intent.action.MAIN" />
@@ -69,18 +68,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
         </activity>
 
         <activity
-            android:name="org.yuzu.yuzu_emu.features.settings.ui.SettingsActivity"
-            android:theme="@style/Theme.Yuzu.Main"
+            android:name="io.github.zortos293.lichii.features.settings.ui.SettingsActivity"
+            android:theme="@style/Theme.Lichii.Main"
             android:label="@string/preferences_settings"/>
 
         <activity
-            android:name="org.yuzu.yuzu_emu.features.settings.ui.SettingsSubscreenActivity"
-            android:theme="@style/Theme.Yuzu.Main"
+            android:name="io.github.zortos293.lichii.features.settings.ui.SettingsSubscreenActivity"
+            android:theme="@style/Theme.Lichii.Main"
             android:label="@string/preferences_settings"/>
 
         <activity
-            android:name="org.yuzu.yuzu_emu.activities.EmulationActivity"
-            android:theme="@style/Theme.Yuzu.Main"
+            android:name="io.github.zortos293.lichii.activities.EmulationActivity"
+            android:theme="@style/Theme.Lichii.Main"
             android:launchMode="singleTop"
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|uiMode"
@@ -102,7 +101,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
             <meta-data android:name="android.nfc.action.TECH_DISCOVERED" android:resource="@xml/nfc_tech_filter" />
         </activity>
 
-        <service android:name="org.yuzu.yuzu_emu.utils.ForegroundService" android:foregroundServiceType="specialUse">
+        <service android:name="io.github.zortos293.lichii.utils.ForegroundService" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keep emulation running in background"/>
         </service>
 

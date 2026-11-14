@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2022 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <mutex>
@@ -10,7 +9,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
-#if BOOST_VERSION > 108400 && (!defined(_WINDOWS) && !defined(__ANDROID__)) || defined(YUZU_BOOST_v1)
+#if BOOST_VERSION > 108400 && (!defined(_WINDOWS) && !defined(__ANDROID__)) || defined(LICHII_BOOST_v1)
 #define USE_BOOST_v1
 #endif
 #ifdef USE_BOOST_v1

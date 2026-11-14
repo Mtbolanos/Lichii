@@ -83,7 +83,7 @@ Both the scheme-preparation job and the publishing job check out CI helper scrip
 | Windows x86_64      | clang-cl + ThinLTO `.zip`    | clang-cl + ThinLTO + PGO `.zip` |
 | macOS Apple Silicon | App bundle `.zip` and `.dmg` | Not built              |
 
-The existing build steps use the repository's current CMake targets (`yuzu` and `yuzu-cmd`) and package the produced `eglantine` and `eden-cli` binaries. Linux AppImages require glibc 2.39 or newer. Linux tarballs use system Qt and other shared libraries. The standard Windows build uses clang-cl from a pinned LLVM release (`tools/windows/install-llvm.ps1`, shared with the Windows build-check job) in Release mode with ThinLTO, against the MSVC headers, runtime and SDK. MSVC itself still builds the project for development but is not used for releases. Windows archives contain the deployed runtime dependencies. macOS artifacts are ad-hoc signed, not notarized; Gatekeeper may require the user to approve the app on first launch.
+The existing build steps use the repository's current CMake targets (`lichii` and `lichii-cmd`) and package the produced `eglantine` and `eden-cli` binaries. Linux AppImages require glibc 2.39 or newer. Linux tarballs hold the same files as the AppImage, unpacked, with `lichii` and `eden-cli` links at the top. The standard Windows build uses clang-cl from a pinned LLVM release (`tools/windows/install-llvm.ps1`, shared with the Windows build-check job) in Release mode with ThinLTO, against the MSVC headers, runtime and SDK. MSVC itself still builds the project for development but is not used for releases. Windows archives contain the deployed runtime dependencies. macOS artifacts are ad-hoc signed, not notarized; Gatekeeper may require the user to approve the app on first launch.
 
 Build artifacts are retained for seven days. Published GitHub Release assets remain available until a release is deleted. Daily releases are pruned to approximately the seven most recent; branch releases are rolling and are cleaned up when no longer needed.
 
@@ -95,7 +95,7 @@ A profile older than the source only produces warnings. Functions whose code cha
 
 To retrain:
 
-1. Configure a Release build as the `windows-x86_64` job does, adding `-fprofile-generate=<dir> -fprofile-update=atomic` to `CMAKE_C_FLAGS` and `CMAKE_CXX_FLAGS`, and build `yuzu`.
+1. Configure a Release build as the `windows-x86_64` job does, adding `-fprofile-generate=<dir> -fprofile-update=atomic` to `CMAKE_C_FLAGS` and `CMAKE_CXX_FLAGS`, and build `lichii`.
 2. Run `lichii.exe` with `LLVM_PROFILE_FILE=<dir>/lichii-%m-%p.profraw`, play the scenes the profile should cover, and exit normally. Counters are written only at exit.
 3. Merge with that LLVM: `llvm-profdata merge -o lichii-windows.profdata <dir>/*.profraw`.
 4. Check that `llvm-profdata show --all-functions lichii-windows.profdata` lists names starting with `?`, then replace the file in the repository root.

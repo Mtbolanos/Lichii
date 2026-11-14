@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -91,7 +90,7 @@ public:
                          std::array<f32, 2> jitter,
                          std::array<f32, 2> motion_scale, f32 current_weight,
                          f32 kernel_scale, f32 clip_width, f32 clip_motion,
-                         f32 kernel_motion);
+                         f32 kernel_motion, std::array<u32, 2> render_size);
 
     /// RCAS (temporal_sharpen.frag) of source into dst_framebuffer; sharpness in stops as
     /// FsrRcasCon takes it (0 is the strongest).

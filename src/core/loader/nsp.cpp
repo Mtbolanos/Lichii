@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <vector>
@@ -239,6 +238,20 @@ ResultStatus AppLoader_NSP::ReadIcon(std::vector<u8>& buffer) {
     }
 
     buffer = icon_file->ReadAllBytes();
+    return ResultStatus::Success;
+}
+
+ResultStatus AppLoader_NSP::ReadOriginalIcon(std::vector<u8>& buffer) const {
+    const auto control =
+        nsp->GetNCA(FileSys::GetBaseTitleID(nsp->GetProgramTitleID()), FileSys::ContentRecordType::Control);
+    if (control == nullptr || control->GetStatus() != ResultStatus::Success) {
+        return ResultStatus::ErrorNoControl;
+    }
+    const auto [nacp, icon] = FileSys::PatchManager::ParseControlRomFS(control->GetRomFS());
+    if (icon == nullptr) {
+        return ResultStatus::ErrorNoIcon;
+    }
+    buffer = icon->ReadAllBytes();
     return ResultStatus::Success;
 }
 

@@ -4,7 +4,6 @@
 // SPDX-FileCopyrightText: Copyright 2024 Torzu Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2018 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <vulkan/vulkan_core.h>
@@ -13,6 +12,7 @@
 #include "video_core/present.h"
 #include "video_core/renderer_vulkan/present/filters.h"
 #include "video_core/renderer_vulkan/present/layer.h"
+#include "video_core/renderer_vulkan/present/util.h"
 #include "video_core/renderer_vulkan/vk_blit_screen.h"
 #include "video_core/renderer_vulkan/vk_present_manager.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
@@ -41,6 +41,20 @@ void BlitScreen::WaitIdle(const Device& device) {
 void BlitScreen::SetWindowAdaptPass(const Device& device) {
     layers.clear();
     scaling_filter = filters.get_scaling_filter();
+
+    hdr10_encode.reset();
+    hdr10_composite.clear();
+    if (swapchain_view_format == VK_FORMAT_A2B10G10R10_UNORM_PACK32) {
+        // Layers are blended in linear light (scRGB) and the composite encoded to PQ, as alpha
+        // blending PQ code values darkens translucent layers far beyond their alpha.
+        window_adapt = MakeBilinear(device, VK_FORMAT_R16G16B16A16_SFLOAT);
+        hdr10_encode.emplace(device, image_count, swapchain_view_format);
+        return;
+    }
+    if (swapchain_view_format == VK_FORMAT_R16G16B16A16_SFLOAT) {
+        window_adapt = MakeBilinear(device, swapchain_view_format);
+        return;
+    }
 
     switch (scaling_filter) {
     case Settings::ScalingFilter::NearestNeighbor:
@@ -93,21 +107,23 @@ void BlitScreen::PrepareFrame(const Device& device, Frame* frame,
         return;
     }
 
-    if (frame->width != layout.width || frame->height != layout.height) {
+    if (frame->width != layout.width || frame->height != layout.height ||
+        frame->format != swapchain_view_format ||
+        frame->image_format != present_manager.GetFrameImageFormat(swapchain_view_format)) {
         WaitIdle(device);
     } else if (!present_manager.NeedsStorage(frame, true)) {
         return;
     }
 
     present_manager.RecreateFrame(frame, layout.width, layout.height, swapchain_view_format,
-                                  window_adapt->GetRenderPass(), true);
+                                  FrameRenderPass(), true);
 }
 
 void BlitScreen::DrawToFrame(const Device& device, RasterizerVulkan& rasterizer, Frame* frame,
                              std::span<const Tegra::FramebufferConfig> framebuffers,
                              const Layout::FramebufferLayout& layout,
                              size_t current_swapchain_image_count,
-                             VkFormat current_swapchain_view_format) {
+                             VkFormat current_swapchain_view_format, const HdrPresent& output) {
     bool resource_update_required = false;
     bool presentation_recreate_required = false;
 
@@ -121,6 +137,8 @@ void BlitScreen::DrawToFrame(const Device& device, RasterizerVulkan& rasterizer,
     }
 
     if (swapchain_view_format != current_swapchain_view_format ||
+        frame->format != current_swapchain_view_format ||
+        frame->image_format != present_manager.GetFrameImageFormat(current_swapchain_view_format) ||
         layout.width != frame->width || layout.height != frame->height) {
         resource_update_required = true;
         presentation_recreate_required = true;
@@ -134,13 +152,13 @@ void BlitScreen::DrawToFrame(const Device& device, RasterizerVulkan& rasterizer,
 
         if (presentation_recreate_required) {
             present_manager.RecreateFrame(frame, layout.width, layout.height, swapchain_view_format,
-                                          window_adapt->GetRenderPass(), storage_required);
+                                          FrameRenderPass(), storage_required);
         }
 
         image_index = 0;
     } else if (present_manager.NeedsStorage(frame, storage_required)) {
         present_manager.RecreateFrame(frame, layout.width, layout.height, swapchain_view_format,
-                                      window_adapt->GetRenderPass(), true);
+                                      FrameRenderPass(), true);
     }
 
     const VkExtent2D window_size{
@@ -156,7 +174,12 @@ void BlitScreen::DrawToFrame(const Device& device, RasterizerVulkan& rasterizer,
         }
     }
 
-    window_adapt->Draw(device, rasterizer, scheduler, image_index, layers, framebuffers, layout, frame);
+    if (hdr10_encode) {
+        DrawHdr10(device, rasterizer, frame, framebuffers, layout, output);
+    } else {
+        window_adapt->Draw(device, rasterizer, scheduler, image_index, layers, framebuffers, layout,
+                           *frame->framebuffer, VkExtent2D{frame->width, frame->height}, output);
+    }
 
     if (++image_index >= image_count) {
         image_index = 0;
@@ -180,7 +203,52 @@ vk::Framebuffer BlitScreen::CreateFramebuffer(const Device& device, const Layout
         .height = layout.height,
     };
 
-    return CreateFramebuffer(device, image_view, extent, window_adapt->GetRenderPass());
+    return CreateFramebuffer(device, image_view, extent, FrameRenderPass());
+}
+
+VkRenderPass BlitScreen::FrameRenderPass() const {
+    return hdr10_encode ? hdr10_encode->RenderPass() : window_adapt->GetRenderPass();
+}
+
+void BlitScreen::DrawHdr10(const Device& device, RasterizerVulkan& rasterizer, Frame* frame,
+                           std::span<const Tegra::FramebufferConfig> framebuffers,
+                           const Layout::FramebufferLayout& layout, const HdrPresent& output) {
+    const VkExtent2D extent{frame->width, frame->height};
+    if (hdr10_composite.size() != image_count || hdr10_composite_extent.width != extent.width ||
+        hdr10_composite_extent.height != extent.height) {
+        for (const auto& composite : hdr10_composite) {
+            scheduler.Wait(composite.tick);
+        }
+        hdr10_composite.clear();
+        hdr10_composite_extent = extent;
+        for (size_t i = 0; i < image_count; ++i) {
+            auto& composite = hdr10_composite.emplace_back();
+            composite.image =
+                CreateWrappedImage(memory_allocator, extent, VK_FORMAT_R16G16B16A16_SFLOAT);
+            composite.image_view =
+                CreateWrappedImageView(device, composite.image, VK_FORMAT_R16G16B16A16_SFLOAT);
+            composite.framebuffer = CreateFramebuffer(device, *composite.image_view, extent,
+                                                      window_adapt->GetRenderPass());
+        }
+    }
+    auto& composite = hdr10_composite[image_index];
+    scheduler.Wait(composite.tick);
+
+    HdrPresent linear{output};
+    linear.color_space = VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT;
+    window_adapt->Draw(device, rasterizer, scheduler, image_index, layers, framebuffers, layout,
+                       *composite.framebuffer, extent, linear);
+    hdr10_encode->Record(device, scheduler, image_index,
+                         {
+                             .input = HdrEncoding::Scrgb,
+                             .output = HdrEncoding::Pq,
+                             .reference_white = output.reference_white,
+                             .peak = output.peak,
+                             .nits_per_unit = 80.0f,
+                         },
+                         *composite.image, *composite.image_view, *frame->image,
+                         *frame->framebuffer, extent);
+    composite.tick = scheduler.CurrentTick();
 }
 
 vk::Framebuffer BlitScreen::CreateFramebuffer(const Device& device, const VkImageView& image_view, VkExtent2D extent,

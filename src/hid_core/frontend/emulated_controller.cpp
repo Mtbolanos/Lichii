@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -1215,7 +1214,7 @@ bool EmulatedController::SetVibration(bool should_vibrate) {
         vibration_value.high_amplitude = 1.0f;
         vibration_value.low_amplitude = 1.0f;
     }
-    return SetVibration(DeviceIndex::Left, vibration_value);
+    return SetVibration(DeviceIndex::Left, vibration_value, Common::Input::VibrationSide::Both);
 }
 
 bool EmulatedController::SetVibration(u32 slot, Core::HID::VibrationGcErmCommand erm_command) {
@@ -1224,10 +1223,17 @@ bool EmulatedController::SetVibration(u32 slot, Core::HID::VibrationGcErmCommand
         vibration_value.high_amplitude = 1.0f;
         vibration_value.low_amplitude = 1.0f;
     }
-    return SetVibration(DeviceIndex::Left, vibration_value);
+    return SetVibration(DeviceIndex::Left, vibration_value, Common::Input::VibrationSide::Both);
 }
 
 bool EmulatedController::SetVibration(DeviceIndex device_index, const VibrationValue& vibration) {
+    return SetVibration(device_index, vibration,
+                        device_index == DeviceIndex::Left ? Common::Input::VibrationSide::Left
+                                                          : Common::Input::VibrationSide::Right);
+}
+
+bool EmulatedController::SetVibration(DeviceIndex device_index, const VibrationValue& vibration,
+                                      Common::Input::VibrationSide side) {
     if (!is_initialized) {
         return false;
     }
@@ -1258,7 +1264,8 @@ bool EmulatedController::SetVibration(DeviceIndex device_index, const VibrationV
         return false;
     }
 
-    if (!Settings::values.enable_accurate_vibrations.GetValue()) {
+    if (!Settings::values.enable_accurate_vibrations.GetValue() &&
+        !output_devices[index]->IsVibrationStreamed()) {
         using std::chrono::duration_cast;
         using std::chrono::milliseconds;
         using std::chrono::steady_clock;
@@ -1286,6 +1293,7 @@ bool EmulatedController::SetVibration(DeviceIndex device_index, const VibrationV
         .high_amplitude = (std::min)(vibration.high_amplitude * strength, 1.0f),
         .high_frequency = vibration.high_frequency,
         .type = type,
+        .side = side,
     };
 
     // Send vibrations to Android's input overlay

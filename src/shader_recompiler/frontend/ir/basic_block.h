@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2025 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -87,6 +86,23 @@ public:
     }
     const Value& SsaRegValue(IR::Reg reg) const noexcept {
         return ssa_reg_values[RegIndex(reg)];
+    }
+
+    void SetSsaPredValue(IR::Pred pred, const Value& value) noexcept {
+        ssa_pred_values[PredIndex(pred)] = value;
+    }
+    const Value& SsaPredValue(IR::Pred pred) const noexcept {
+        return ssa_pred_values[PredIndex(pred)];
+    }
+
+    /// The SSA pass's other fixed-count variables, stored in blocks like registers and predicates.
+    enum class SsaVariable : u32 { ZeroFlag, SignFlag, CarryFlag, OverflowFlag, IndirectBranch };
+
+    void SetSsaValue(SsaVariable variable, const Value& value) noexcept {
+        ssa_values[static_cast<size_t>(variable)] = value;
+    }
+    const Value& SsaValue(SsaVariable variable) const noexcept {
+        return ssa_values[static_cast<size_t>(variable)];
     }
 
     void SsaSeal() noexcept {
@@ -182,6 +198,10 @@ private:
 
     /// Intrusively store the value of a register in the block.
     std::array<Value, NUM_REGS> ssa_reg_values;
+    /// Intrusively store the value of a predicate in the block.
+    std::array<Value, NUM_USER_PREDS> ssa_pred_values;
+    /// Intrusively store the value of the other fixed-count SSA variables in the block.
+    std::array<Value, static_cast<size_t>(SsaVariable::IndirectBranch) + 1> ssa_values;
     /// Intrusively store if the block is sealed in the SSA pass.
     bool is_ssa_sealed{false};
 

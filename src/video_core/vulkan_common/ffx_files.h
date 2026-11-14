@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // AMD's FidelityFX runtime (FSR 4), as signed Windows DLLs from AMD's FidelityFX SDK release on
-// GitHub. Nothing of AMD's ships with the emulator: the user downloads the files into the user
+// GitHub. Nothing of AMD's ships with the Windows build: the user downloads the files into the user
 // folder's "fidelityfx" folder from the Graphics settings. Before loading, every file must match
-// the pinned size and SHA-256 and carry AMD's Authenticode signature.
+// the pinned size and SHA-256 and carry AMD's Authenticode signature. On Linux, the packages ship
+// the fsr4-vk port instead (PortLibrary).
 
 #pragma once
 
@@ -56,5 +57,15 @@ inline constexpr std::array FILES{
 
 /// Whether a file has the pinned SHA-256. Always false outside Windows.
 [[nodiscard]] bool HasSha256(const std::filesystem::path& path, std::string_view sha256);
+
+#if defined(__linux__) && !defined(__ANDROID__)
+/// fsr4-vk (github.com/Astyyyyy/fsr4-vk), the community Vulkan port of FSR 4 the Linux packages
+/// ship.
+inline constexpr std::string_view PORT_LIBRARY = "amd_fidelityfx_upscaler_vk.so";
+
+/// Where the port is: in the package's lib folder (<exe dir>/../lib), else in Folder() for builds
+/// without it. Empty when in neither.
+[[nodiscard]] std::filesystem::path PortLibrary();
+#endif
 
 } // namespace Vulkan::FfxRuntime

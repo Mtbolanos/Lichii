@@ -11,6 +11,7 @@
 
 #include "common/common_types.h"
 #include "video_core/macro_turing.h"
+#include "video_core/nx2_list_macro_trace.h"
 
 namespace {
 
@@ -115,6 +116,87 @@ TEST_CASE("Turing macro effects: what keeps a macro's writes unknown", "[video_c
     const Mme dwrite{.op = {31, 0}};
     CHECK(Analyze({Fifo(0x158, true), dwrite}).data_ram);
     CHECK_FALSE(Analyze({Fifo(0x158, true), Fifo(0x100), dwrite}).data_ram);
+}
+
+TEST_CASE("Turing macro code hash: the same macro anywhere, only the code a call can run",
+          "[video_core][macro]") {
+    const std::vector<Mme> macro{Fifo(0x154), Fifo(0x155), Fifo(0x158, true), Fifo(0x556)};
+    const auto hash = [](std::vector<Mme> before, const std::vector<Mme>& body,
+                         std::vector<Mme> after) {
+        const u32 start = static_cast<u32>(before.size());
+        before.insert(before.end(), body.begin(), body.end());
+        before.insert(before.end(), after.begin(), after.end());
+        const auto code = Code(before);
+        const auto effects = Tegra::TuringMacroInterpreter::AnalyzeEffects(code, start);
+        CHECK(effects.instructions ==
+              std::vector<u32>{start, start + 1, start + 2, start + 3});
+        return Tegra::TuringMacroInterpreter::CodeHash(code, start, effects);
+    };
+    const u64 alone = hash({}, macro, {});
+    // Uploaded after other code, and followed by code it never runs (past END's delay slot).
+    CHECK(hash({Fifo(0x700), Fifo(0x701, true)}, macro, {Fifo(0x999)}) == alone);
+    // One method of the macro changed.
+    std::vector<Mme> other = macro;
+    other[3] = Fifo(0x557);
+    CHECK(hash({}, other, {}) != alone);
+}
+
+TEST_CASE("List macro verify: which calls only forward their GPU-written words",
+          "[video_core][macro]") {
+    using VideoCommon::ListMacroTrace::CheckForwarding;
+    using VideoCommon::ListMacroTrace::Forwarding;
+    using Writes = std::vector<std::pair<u32, u32>>;
+    const std::vector<u32> data_ram(0xc00);
+    // Each parameter to its own method; the last two came from a GPU-written entry.
+    const auto forwarder = Code(std::vector<Mme>{Fifo(0x5f8), Fifo(0x5f9, true), Fifo(0x5fa)});
+    const std::vector<u32> parameters{1, 100, 7};
+    const Writes written{{0x5f8, 1}, {0x5f9, 100}, {0x5fa, 7}};
+    const auto forwards = CheckForwarding(forwarder, 0, parameters, std::vector<u32>{1, 2}, {}, written,
+                                          data_ram);
+    CHECK(forwards.result == Forwarding::Forwards);
+    using Word = VideoCommon::ListMacroTrace::ForwardedWord;
+    CHECK(forwards.map == std::vector<Word>{{1, 1, 0x5f9}, {2, 2, 0x5fa}});
+    // Writes the call did not make: the run cannot stand for it.
+    CHECK(CheckForwarding(forwarder, 0, parameters, std::vector<u32>{1, 2}, {}, Writes{{0x5f8, 1}},
+                          data_ram)
+              .result == Forwarding::Unreproduced);
+
+    // r1 = parameter + 1, written to 0x5f8.
+    const Mme load{.dst = {0, 24}, .src_a = {28, 24}};
+    const Mme add_one{.dst = {1, 24}, .src_a = {0, 24}, .src_b = {25, 24}, .imm = {1, 0}};
+    const Mme write_r1{.end = true, .src_a = {1, 24}, .imm = {0x5f8, 0}, .out_method = {5, 0},
+                       .out_emit = {1, 0}};
+    const auto adder = Code(std::vector<Mme>{load, add_one, write_r1, Mme{}});
+    CHECK(CheckForwarding(adder, 0, std::vector<u32>{41}, std::vector<u32>{0}, {},
+                          Writes{{0x5f8, 42}}, data_ram)
+              .result == Forwarding::Transforms);
+    // The same through a register: the word to 0x100, read back (MME_READ), plus 1 to 0x101.
+    const Mme read_back{.op = {22, 0}, .dst = {0, 24}, .src_a = {25, 24}, .imm = {0x100, 0}};
+    const Mme write_r1_to_101{.end = true, .src_a = {1, 24}, .imm = {0x101, 0},
+                              .out_method = {5, 0}, .out_emit = {1, 0}};
+    const auto feedback =
+        Code(std::vector<Mme>{Fifo(0x100), read_back, add_one, write_r1_to_101, Mme{}});
+    CHECK(CheckForwarding(feedback, 0, std::vector<u32>{5}, std::vector<u32>{0},
+                          Writes{{0x100, 5}}, Writes{{0x100, 5}, {0x101, 6}}, data_ram)
+              .result == Forwarding::Transforms);
+
+    // A branch on the first parameter skips the write of 0x300.
+    const Mme skip{.op = {29, 0}, .src_a = {0, 24}, .imm = {0x8000 | 2, 0}};
+    const auto brancher = Code(
+        std::vector<Mme>{load, skip, Fifo(0x300), Fifo(0x301, true), Fifo(0x302)});
+    CHECK(CheckForwarding(brancher, 0, std::vector<u32>{0, 5, 6}, std::vector<u32>{0, 1, 2}, {},
+                          Writes{{0x301, 5}, {0x302, 6}}, data_ram)
+              .result == Forwarding::Steers);
+
+    // A loop on the parameter, writing r0 - 1 to 0x5f8 until it is 0: a tag loops until its run
+    // writes more than the real one.
+    const Mme decrement{.op = {2, 0}, .dst = {0, 24}, .src_a = {0, 24}, .src_b = {25, 24},
+                        .imm = {1, 0x5f8}, .out_method = {6, 0}, .out_emit = {1, 0}};
+    const Mme again{.op = {29, 0}, .src_a = {0, 24}, .imm = {0x1fff, 0}};
+    const auto looper = Code(std::vector<Mme>{load, decrement, again, Mme{.end = true}, Mme{}});
+    CHECK(CheckForwarding(looper, 0, std::vector<u32>{2}, std::vector<u32>{0}, {},
+                          Writes{{0x5f8, 1}, {0x5f8, 0}}, data_ram)
+              .result == Forwarding::Steers);
 }
 
 TEST_CASE("Turing macro effects cover every write Execute makes on random code",

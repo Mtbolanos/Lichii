@@ -54,7 +54,7 @@ namespace {
 
 struct CodeBlockInfo {
     u64 code_begin, code_end;
-    std::function<FakeCall(u64)> cb;
+    std::function<std::optional<FakeCall>(u64)> cb;
 };
 
 struct MachMessage {
@@ -140,11 +140,15 @@ kern_return_t MachHandler::HandleRequest(x86_thread_state64_t* ts) {
         return KERN_FAILURE;
     }
 
-    FakeCall fc = iter->cb(ts->__rip);
+    const auto fc = iter->cb(ts->__rip);
+    if (!fc) {
+        fmt::print(stderr, "EXC_BAD_ACCESS in JIT code at rip {:#016x} is not a fastmem access\n", ts->__rip);
+        return KERN_FAILURE;
+    }
 
     ts->__rsp -= sizeof(u64);
-    *std::bit_cast<u64*>(ts->__rsp) = fc.ret_rip;
-    ts->__rip = fc.call_rip;
+    *std::bit_cast<u64*>(ts->__rsp) = fc->ret_rip;
+    ts->__rip = fc->call_rip;
 
     return KERN_SUCCESS;
 }
@@ -158,10 +162,14 @@ kern_return_t MachHandler::HandleRequest(arm_thread_state64_t* ts) {
         return KERN_FAILURE;
     }
 
-    FakeCall fc = iter->cb(ts->__pc);
+    const auto fc = iter->cb(ts->__pc);
+    if (!fc) {
+        fmt::print(stderr, "EXC_BAD_ACCESS in JIT code at pc {:#016x} is not a fastmem access\n", ts->__pc);
+        return KERN_FAILURE;
+    }
 
     // TODO: Sign with ptrauth_sign_unauthenticated if pointer authentication is enabled.
-    ts->__pc = fc.call_pc;
+    ts->__pc = fc->call_pc;
 
     return KERN_SUCCESS;
 }
@@ -247,7 +255,7 @@ struct ExceptionHandler::Impl final {
         RegisterHandler();
     }
 
-    void SetCallback(std::function<FakeCall(u64)> cb) {
+    void SetCallback(std::function<std::optional<FakeCall>(u64)> cb) {
         CodeBlockInfo cbi;
         cbi.code_begin = code_begin;
         cbi.code_end = code_end;
@@ -286,7 +294,7 @@ bool ExceptionHandler::SupportsFastmem() const noexcept {
     return static_cast<bool>(impl);
 }
 
-void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
+void ExceptionHandler::SetFastmemCallback(std::function<std::optional<FakeCall>(u64)> cb) {
     impl->SetCallback(cb);
 }
 

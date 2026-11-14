@@ -49,14 +49,14 @@ Note: Even though the site isn't Codeberg, it uses the same Forgejo/Gitea backen
 <!-- Standard aka. normal release -->
 <emulator name="EDEN">
     <rule type="androidpackage">
-        <entry>dev.eden.eden_emulator/org.yuzu.yuzu_emu.activities.EmulationActivity</entry>
+        <entry>dev.eden.eden_emulator/io.github.zortos293.lichii.activities.EmulationActivity</entry>
     </rule>
 </emulator>
 
 <!-- Optimized -->
 <emulator name="EDEN">
     <rule type="androidpackage">
-        <entry>com.miHoYo.Yuanshen/org.yuzu.yuzu_emu.activities.EmulationActivity</entry>
+        <entry>com.miHoYo.Yuanshen/io.github.zortos293.lichii.activities.EmulationActivity</entry>
     </rule>
 </emulator>
 ```

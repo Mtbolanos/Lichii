@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
@@ -108,6 +107,7 @@ struct TemporalUpscalePushConstants {
     float clip_motion;
     float kernel_motion;
     float padding;
+    std::array<s32, 2> render_size;
 };
 
 // The vertex stage's PushConstants first, then temporal_sharpen.frag's FsrRcasCon.
@@ -820,7 +820,8 @@ void BlitImageHelper::TemporalUpscale(const Framebuffer* dst_framebuffer,
                                       const Region2D& dst_region,
                                       std::array<f32, 2> jitter, std::array<f32, 2> motion_scale,
                                       f32 current_weight, f32 kernel_scale, f32 clip_width,
-                                      f32 clip_motion, f32 kernel_motion) {
+                                      f32 clip_motion, f32 kernel_motion,
+                                      std::array<u32, 2> render_size) {
     const VkPipelineLayout layout = *temporal_upscale_pipeline_layout;
     const VkPipeline pipeline = FindOrEmplaceTemporalUpscalePipeline(dst_framebuffer->RenderPass());
     const VkSampler sampler = *linear_sampler;
@@ -837,6 +838,7 @@ void BlitImageHelper::TemporalUpscale(const Framebuffer* dst_framebuffer,
         .clip_motion = clip_motion,
         .kernel_motion = kernel_motion,
         .padding = 0.0f,
+        .render_size = {static_cast<s32>(render_size[0]), static_cast<s32>(render_size[1])},
     };
     RecordShaderReadBarrier(scheduler, input_color);
     RecordShaderReadBarrier(scheduler, motion_vectors);

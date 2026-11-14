@@ -3,10 +3,12 @@
 
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <thread>
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "video_core/engines/puller.h"
 #include "video_core/nx2.h"
 
 using Tegra::Nx2SemaphoreWaiters;
@@ -111,4 +113,109 @@ TEST_CASE("Semaphore waiters see what the writer wrote before the latch",
             waiters.Remove(&owners[word]);
         }
     }
+}
+
+TEST_CASE("Pending wakes end hardware and OS waits", "[video_core][nx2_waiters]") {
+    using namespace std::chrono_literals;
+    Tegra::Nx2PendingWake wake;
+    wake.Arm();
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now() + 1ms));
+    CHECK_FALSE(wake.Sleep(1ms));
+
+    // A wake between Arm and the wait is not lost.
+    wake.Notify();
+    CHECK(wake.Poll(std::chrono::steady_clock::now()));
+    CHECK(wake.Sleep(5s));
+    wake.Arm();
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now()));
+
+    for (int i = 0; i < 20; ++i) {
+        const bool sleep = i % 2 != 0;
+        wake.Arm();
+        std::jthread notifier([&] {
+            std::this_thread::sleep_for(1ms);
+            wake.Notify();
+        });
+        const auto start = std::chrono::steady_clock::now();
+        CHECK((sleep ? wake.Sleep(5s) : wake.Poll(start + 5s)));
+        CHECK(std::chrono::steady_clock::now() - start < 1s);
+    }
+}
+
+TEST_CASE("Semaphore waiters see stores to the words they wait on", "[video_core][nx2_waiters]") {
+    Nx2SemaphoreWaiters waiters;
+    std::array<u32, 2> words{3, 3};
+    const int watched{}, unwatched{};
+    REQUIRE(waiters.Add(&watched, 0x1000, 5, Nx2SemaphoreWaiters::AcquireGequal, &words[0]));
+    REQUIRE(waiters.Add(&unwatched, 0x1004, 5, Nx2SemaphoreWaiters::AcquireGequal));
+    CHECK_FALSE(waiters.WordStored());
+
+    // Any store that changes the word, met or not, and once per change.
+    std::jthread([&] { std::atomic_ref<u32>{words[0]}.store(4); }).join();
+    CHECK(waiters.WordStored());
+    CHECK_FALSE(waiters.WordStored());
+    words[1] = 9;
+    CHECK_FALSE(waiters.WordStored());
+    words[0] = 5;
+    CHECK(waiters.WordStored());
+
+    // A stored word is no longer watched once its waiter leaves or moves to another word.
+    REQUIRE(waiters.Add(&watched, 0x1004, 9, Nx2SemaphoreWaiters::AcquireGequal, &words[1]));
+    words[0] = 6;
+    CHECK_FALSE(waiters.WordStored());
+    waiters.Remove(&watched);
+    words[1] = 10;
+    CHECK_FALSE(waiters.WordStored());
+    waiters.Remove(&unwatched);
+}
+
+TEST_CASE("The GPU tick a list copy waits for wakes the GPU thread", "[video_core][nx2_waiters]") {
+    Tegra::Nx2PendingWake wake;
+    wake.Arm();
+    wake.OnGpuTick(100);
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now()));
+
+    wake.WaitForGpuTick(12);
+    wake.WaitForGpuTick(10);
+    wake.OnGpuTick(9);
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now()));
+    wake.OnGpuTick(10);
+    CHECK(wake.Poll(std::chrono::steady_clock::now()));
+
+    // Woken once: the waiter asks again for a tick it still waits for.
+    wake.Arm();
+    wake.OnGpuTick(12);
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now()));
+    wake.WaitForGpuTick(12);
+    wake.OnGpuTick(12);
+    CHECK(wake.Poll(std::chrono::steady_clock::now()));
+}
+
+TEST_CASE("Latching writes wake the GPU thread", "[video_core][nx2_waiters]") {
+    Nx2SemaphoreWaiters waiters;
+    auto& wake = Tegra::Nx2PendingWake::Get();
+    const int owner{};
+    REQUIRE(waiters.Add(&owner, 0x1000, 5, Nx2SemaphoreWaiters::AcquireGequal));
+    wake.Arm();
+    waiters.OnWrite(0x1000, 4);
+    waiters.OnWrite(0x2000, 9);
+    CHECK_FALSE(wake.Poll(std::chrono::steady_clock::now()));
+    waiters.OnWrite(0x1000, 5);
+    CHECK(wake.Poll(std::chrono::steady_clock::now()));
+    waiters.Remove(&owner);
+}
+
+TEST_CASE("A puller torn down while it waits leaves the semaphore waiters", "[video_core][nx2_waiters]") {
+    // The waiters outlive an emulation session: a channel stopped mid-wait must not leave its
+    // slot, whose word points into the session's freed guest memory, to the next GPU thread.
+    auto& waiters = Nx2SemaphoreWaiters::Get();
+    u32 word = 3;
+    {
+        Tegra::Engines::Puller puller;
+        REQUIRE(waiters.Add(&puller, 0x1000, 5, Nx2SemaphoreWaiters::AcquireGequal, &word));
+        word = 4;
+        CHECK(waiters.WordStored());
+    }
+    word = 5;
+    CHECK_FALSE(waiters.WordStored());
 }

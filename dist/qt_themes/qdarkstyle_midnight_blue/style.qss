@@ -2205,7 +2205,8 @@ QSpinBox#vibrationSpinPlayer4,
 QSpinBox#vibrationSpinPlayer5,
 QSpinBox#vibrationSpinPlayer6,
 QSpinBox#vibrationSpinPlayer7,
-QSpinBox#vibrationSpinPlayer8 {
+QSpinBox#vibrationSpinPlayer8,
+QSpinBox#spinTriggerRumble {
   min-width: 68px;
 }
 

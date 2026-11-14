@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2020 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once
@@ -11,6 +10,7 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <span>
 #include "video_core/page_filter.h"
 #include "common/container/unordered_map.h"
@@ -47,9 +47,23 @@ struct ShaderInfo {
     std::shared_ptr<const LoweredNativeCode> lowered_native;
 };
 
+/// A program of the current draw or dispatch, read back from GPU memory for a frame dump.
+struct CapturedProgram {
+    /// Maxwell program slot, or 6 for compute
+    u32 slot{};
+    u64 unique_hash{};
+    /// NativeProgramKey of a native program, 0 for a guest Maxwell program
+    u64 native_key{};
+    GPUVAddr address{};
+    /// The 128-byte header of a native graphics program, empty otherwise (a Maxwell program's
+    /// header is the start of its code)
+    std::vector<u8> header;
+    std::vector<u8> code;
+};
+
 class ShaderCache : public VideoCommon::ChannelSetupCaches<VideoCommon::ChannelInfo> {
-    static constexpr u64 YUZU_PAGEBITS = 14;
-    static constexpr u64 YUZU_PAGESIZE = u64(1) << YUZU_PAGEBITS;
+    static constexpr u64 LICHII_PAGEBITS = 14;
+    static constexpr u64 LICHII_PAGESIZE = u64(1) << LICHII_PAGEBITS;
 
     static constexpr size_t NUM_PROGRAMS = 6;
 
@@ -89,6 +103,13 @@ public:
     /// them again (and fails); after an un-reject, forgets every rejection so they are retried.
     /// Runs on the thread that owns the cache, between frames.
     void RefreshDebugRejections(bool unrejected);
+
+    /// The programs of the current draw, for the stages with a hash in unique_hashes (the
+    /// pipeline's, after RefreshStages). On the thread that owns the cache, for frame dumps.
+    [[nodiscard]] std::vector<CapturedProgram> CaptureGraphicsPrograms(
+        const std::array<u64, NUM_PROGRAMS>& unique_hashes) const;
+    /// The program of the dispatch about to run, or nothing when it is not cached.
+    [[nodiscard]] std::optional<CapturedProgram> CaptureComputeProgram() const;
 
 protected:
     struct GraphicsEnvironments {
@@ -193,6 +214,10 @@ private:
     /// Bounds of every address ever rejected (never shrinks): a quick test for invalidations.
     std::atomic<VAddr> rejected_lowest{~VAddr{}};
     std::atomic<VAddr> rejected_highest{};
+    /// Removals that freed programs; RefreshStages looks the stages up again after each one, since
+    /// shader_infos may point at a freed program.
+    std::atomic<u64> removal_serial{};
+    u64 seen_removal_serial{};
 };
 
 } // namespace VideoCommon

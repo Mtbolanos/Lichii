@@ -240,21 +240,18 @@
     <string name="select_games_folder_description">Дозволяє Eden заповнити список ігор</string>
     <string name="add_games_warning">Пропустити вибір теки з іграми?</string>
     <string name="add_games_warning_description">Ігри не відображатимуться у списку Ігри, якщо теку не вибрано.</string>
-    <string name="add_games_warning_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-games</string>
     <string name="home_search_games">Знайти ігри</string>
     <string name="search_settings">Пошук налаштувань</string>
     <string name="install_prod_keys">Встановити prod.keys</string>
     <string name="install_prod_keys_description">Потрібно для розшифровки роздрібних ігор</string>
     <string name="install_prod_keys_warning">Пропустити додавання ключів?</string>
     <string name="install_prod_keys_warning_description">Для емуляції роздрібних ігор потрібні дійсні ключі. Якщо ви продовжите, працюватимуть тільки homebrew додатки.</string>
-    <string name="install_prod_keys_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="install_firmware_warning">Пропустити додавання прошивки?</string>
     <string name="emulator_data">Налаштувати дані емулятора</string>
     <string name="emulator_data_description">Для роботи емулятора потрібні ключі, а для використання аплета QLaunch рекомендується і необхідна прошивка.</string>
     <string name="permissions">Надати дозволи</string>
     <string name="permissions_description">Надати додаткові дозволи для використання деяких функцій емулятора</string>
     <string name="install_firmware_warning_description">Багато ігор вимагають доступу до прошивки для правильної роботи.</string>
-    <string name="install_firmware_warning_help">https://yuzu-mirror.github.io/help/quickstart/#guide-introduction</string>
     <string name="notifications">Сповіщення</string>
     <string name="notifications_description">Надайте дозвіл сповіщень за допомогою кнопки нижче.</string>
     <string name="permission_denied">У дозволі відмовлено</string>
@@ -330,11 +327,10 @@
     <string name="install_game_content_success">Вміст гри успішно встановлено</string>
     <string name="install_game_content_success_install">%1$d успішно встановлено</string>
     <string name="install_game_content_success_overwrite">%1$d перезаписано</string>
-    <string name="install_game_content_help_link">https://yuzu-mirror.github.io/help/quickstart/#dumping-installed-updates</string>
     <string name="custom_driver_not_supported">Спеціальні драйвери не підтримуються</string>
     <string name="custom_driver_not_supported_description">Завантаження спеціальних драйверів цим пристроєм наразі не підтримується.\nПідтримку може бути додано пізніше, тож час від часу перевіряйте цей параметр!</string>
-    <string name="manage_yuzu_data">Керування даними eden</string>
-    <string name="manage_yuzu_data_description">Імпорт/експорт прошивки, ключів, даних користувача та іншого.</string>
+    <string name="manage_lichii_data">Керування даними eden</string>
+    <string name="manage_lichii_data_description">Імпорт/експорт прошивки, ключів, даних користувача та іншого.</string>
     <string name="game_folders">Тека з іграми</string>
     <string name="deep_scan">Глибоке сканування</string>
     <string name="add_game_folder">Додати теку з іграми</string>
@@ -358,7 +354,6 @@
 
     <string name="keys_missing">Відсутні ключі</string>
     <string name="keys_missing_description">Прошивку та роздрібні ігри не вдасться розшифрувати.</string>
-    <string name="keys_missing_help">https://yuzu-mirror.github.io/help/quickstart/#dumping-decryption-keys</string>
 
     <string name="uninstall_firmware">Видалити прошивку</string>
     <string name="uninstall_firmware_description">Видалення прошивки з пристрою може вплинути на сумісність ігор.</string>
@@ -379,7 +374,7 @@
     <string name="applets_description">Запуск системних аплетів за допомогою прошивки.</string>
     <string name="applets_error_firmware">Прошивку не встановлено</string>
     <string name="applets_error_applet">Аплет недоступний</string>
-    <string name="applets_error_description"><![CDATA[Переконайтеся, що файл <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-system-firmware\">прошивка</a> встановлені та спробуйте ще раз.]]></string>
+    <string name="applets_error_description"><![CDATA[Переконайтеся, що файл prod.keys прошивка встановлені та спробуйте ще раз.]]></string>
     <string name="album_applet">Альбом</string>
     <string name="album_applet_description">Перегляд зображень у папці скріншотів.</string>
     <string name="mii_edit_applet">Редактор Mii</string>
@@ -404,7 +399,7 @@
     <string name="user_data_description">Імпортувати/експортувати всі дані програми.\n\nПри імпорті даних користувача всі наявні користувацькі дані буде видалено!\n\nЗавантаження даних із Citron може викликати проблеми. Рекомендується імпортувати всі необхідні дані звідти вручну.</string>
     <string name="exporting_user_data">Експорт даних користувача…</string>
     <string name="importing_user_data">Імпорт даних користувача…</string>
-    <string name="invalid_yuzu_backup">Некоректна резервна копія Eden</string>
+    <string name="invalid_lichii_backup">Некоректна резервна копія Eden</string>
     <string name="user_data_export_success">Дані користувача успішно експортовано</string>
     <string name="user_data_import_success">Дані користувача успішно імпортовано</string>
     <string name="user_data_export_cancelled">Експорт скасовано</string>
@@ -820,8 +815,7 @@
 
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">Ваш ROM зашифрований</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[Будь ласка, дотримуйтесь інструкцій для повторного дампу ваших <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">ігрових картриджів</a> або <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">цифрових назв</a>.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[Будь ласка, переконайтеся, що ваш файл <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> встановлено, щоб ігри можна було розшифрувати.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[Будь ласка, переконайтеся, що ваш файл prod.keys встановлено, щоб ігри можна було розшифрувати.]]></string>
     <string name="loader_error_video_core">Сталася помилка під час ініціалізації відеоядра.</string>
     <string name="loader_error_video_core_description">Зазвичай це спричинено несумісним драйвером GPU. Встановлення користувацького драйвера GPU може вирішити цю проблему.</string>
     <string name="loader_error_file_not_found">ROM файлу не існує</string>

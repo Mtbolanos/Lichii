@@ -11,8 +11,8 @@ scope for this pass.
   (C1041), so the build moved to a short path.
 - Toolchain: VS 2026 (MSVC 14.51) via `vcvars64.bat`, Ninja from VS, CMake 4.4.
 - Configure:
-  `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INTERMEDIATE_DIR_STRATEGY=SHORT -DENABLE_QT=OFF -DYUZU_CMD=ON -DENABLE_WEB_SERVICE=OFF -DYUZU_ROOM=OFF -DYUZU_TESTS=OFF -DENABLE_WERROR=OFF -DENABLE_UPDATE_CHECKER=OFF`
-- Build: `cmake --build build --target yuzu-cmd` -> `build/bin/eden-cli.exe`.
+  `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INTERMEDIATE_DIR_STRATEGY=SHORT -DENABLE_QT=OFF -DLICHII_CMD=ON -DENABLE_WEB_SERVICE=OFF -DLICHII_ROOM=OFF -DLICHII_TESTS=OFF -DENABLE_WERROR=OFF -DENABLE_UPDATE_CHECKER=OFF`
+- Build: `cmake --build build --target lichii-cmd` -> `build/bin/eden-cli.exe`.
 - Run (portable mode, `build/bin/user/` holds config/logs; no keys or firmware installed):
   `eden-cli.exe -g "<title>\exefs\main"`
 - Debug helpers:
@@ -215,8 +215,8 @@ With the patched decoder, games 1/3/4 only leave ~60-110 rare SIMD encodings in 
 
 Run settings used (in `build/bin/user/config/sdl2-config.ini`): `memory_layout_mode=4`
 (12 GB). Debug knobs: `EDEN_NX2_TC_EXPECTED_MIB` / `EDEN_NX2_TC_CRITICAL_MIB` (collector thresholds),
-`EDEN_NX2_ASTC_FLUSH=1` (GPU ASTC decode without the full wait), `EDEN_NX2_CRASH_DUMP=<dir>` (prints the
-faulting stack as module+offset, then a minidump), `EDEN_NX2_AUTO_STUB`, `EDEN_NX2_IPC_TRACE`, `EDEN_NX2_SVC_TRACE`,
+`EDEN_NX2_ASTC_FLUSH=1` (GPU ASTC decode without the full wait), `EDEN_NX2_CRASH_DUMP=<dir>` (the CLI's
+`eden_crash.dmp` goes there instead of the log directory), `EDEN_NX2_AUTO_STUB`, `EDEN_NX2_IPC_TRACE`, `EDEN_NX2_SVC_TRACE`,
 `EDEN_NX2_PULLER_TRACE`, `EDEN_NX2_METHOD_TRACE`, `EDEN_NX2_HIDE_WINDOW`,
 `EDEN_NX2_GPU_PROFILE` (GPU-thread zone timers every 10 s), `EDEN_NX2_SAMPLE=<threads>` with
 `_START`/`_SECONDS`/`_OUT` (sampling profiler; `C:\dev\nx2work\folded.py` reads its .folded stacks),

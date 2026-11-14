@@ -242,8 +242,8 @@
     <string name="install_game_content_success_install">%1$d sikeresen telepítve</string>
     <string name="install_game_content_success_overwrite">%1$d sikeresen felülírva</string>
     <string name="custom_driver_not_supported">Egyéni illesztőprogramok nem támogatottak</string>
-    <string name="manage_yuzu_data">Eden adatok kezelése</string>
-    <string name="manage_yuzu_data_description">Firmware, kulcsok, felhasználói adatok és egyebek importálása/exportálása</string>
+    <string name="manage_lichii_data">Eden adatok kezelése</string>
+    <string name="manage_lichii_data_description">Firmware, kulcsok, felhasználói adatok és egyebek importálása/exportálása</string>
     <string name="game_folders">Játékmappák</string>
     <string name="deep_scan">Mély szkennelés</string>
     <string name="add_game_folder">Játékmappa hozzáadása</string>
@@ -302,7 +302,7 @@
     <string name="user_data">Felhasználói adatok</string>
     <string name="exporting_user_data">Felhasználói adatok exportálása...</string>
     <string name="importing_user_data">Felhasználói adatok importálása...</string>
-    <string name="invalid_yuzu_backup">Érvénytelen Eden biztonsági másolat</string>
+    <string name="invalid_lichii_backup">Érvénytelen Eden biztonsági másolat</string>
     <string name="user_data_export_success">Felhasználói adatok sikeresen exportálva</string>
     <string name="user_data_import_success">Felhasználói adatok sikeresen importálva</string>
     <string name="user_data_export_cancelled">Exportálás megszakítva</string>
@@ -591,8 +591,7 @@
     <string name="verify_no_result_description">A fájltartalom érvényessége nem lett ellenőrizve</string>
     <!-- ROM loading errors -->
     <string name="loader_error_encrypted">ROM titkosítva</string>
-    <string name="loader_error_encrypted_roms_description"><![CDATA[Kérjük, kövesse az útmutatót a <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-physical-titles-game-cards\">játékkártyák</a> vagy <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-digital-titles-eshop\">digitális címek</a> újradumpolásához.]]></string>
-    <string name="loader_error_encrypted_keys_description"><![CDATA[Győződj meg róla, hogy a <a href=\"https://yuzu-mirror.github.io/help/quickstart/#dumping-prodkeys-and-titlekeys\">prod.keys</a> fájl telepítve van, hogy a játékok visszafejthetők legyenek.]]></string>
+    <string name="loader_error_encrypted_keys_description"><![CDATA[Győződj meg róla, hogy a prod.keys fájl telepítve van, hogy a játékok visszafejthetők legyenek.]]></string>
     <string name="loader_error_video_core">Hiba lépett fel a videómag inicializása során</string>
     <string name="loader_error_video_core_description">Ezt általában egy nem kompatibilis GPU illesztő okozza. Egyéni GPU illesztőprogram telepítése megoldhatja a problémát.</string>
     <string name="loader_error_file_not_found">ROM fájl nem létezik</string>

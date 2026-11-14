@@ -17,11 +17,3 @@ TEST_CASE("Page table block ids do not wrap", "[common]") {
     REQUIRE(Entry::BlockIdForMapping((std::numeric_limits<u64>::max)()) ==
             Entry::INVALID_BLOCK_ID);
 }
-
-TEST_CASE("Page table fast spans reject exhausted block ids", "[common]") {
-    using Entry = Common::PageTable::PageEntryData;
-
-    REQUIRE(Entry::CanFastSpan(7, 7));
-    REQUIRE_FALSE(Entry::CanFastSpan(7, 8));
-    REQUIRE_FALSE(Entry::CanFastSpan(Entry::INVALID_BLOCK_ID, Entry::INVALID_BLOCK_ID));
-}

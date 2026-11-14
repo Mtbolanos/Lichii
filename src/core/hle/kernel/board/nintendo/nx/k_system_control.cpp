@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: Copyright 2026 Eden Emulator Project
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// SPDX-FileCopyrightText: Copyright 2021 yuzu Emulator Project
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <random>
@@ -112,6 +111,26 @@ bool KSystemControl::Init::ShouldIncreaseThreadResourceLimit() {
     return true;
 }
 
+namespace {
+u64 g_application_program_id{};
+
+// The Duskbloods network test's CSMemory heap "M" asks for more than the 12 GB arrangement
+// leaves (playDB-CNT issue 2). playDB-CNT measured the growth it needs, 1152 MiB, and the
+// game also asks for remote memory (InfoType 31), which the application pool backs.
+constexpr u64 DuskbloodsNetworkTestProgramId = 0x0400D1D02399A000ULL;
+constexpr size_t DuskbloodsPoolGrowth = 1152_MiB;
+constexpr size_t DuskbloodsRemoteMemorySize = 512_MiB;
+} // Anonymous namespace
+
+void KSystemControl::SetApplicationProgramId(u64 program_id) {
+    g_application_program_id = program_id;
+}
+
+size_t KSystemControl::Nx2RemoteMemorySize() {
+    return g_application_program_id == DuskbloodsNetworkTestProgramId ? DuskbloodsRemoteMemorySize
+                                                                      : 0;
+}
+
 std::size_t KSystemControl::Init::GetApplicationPoolSize() {
     // Get the base pool size.
     const size_t base_pool_size = []() -> size_t {
@@ -138,7 +157,14 @@ std::size_t KSystemControl::Init::GetApplicationPoolSize() {
     }();
 
     // Return (possibly) adjusted size.
-    return base_pool_size;
+    return base_pool_size + GetApplicationPoolGrowth();
+}
+
+std::size_t KSystemControl::Init::GetApplicationPoolGrowth() {
+    if (g_application_program_id != DuskbloodsNetworkTestProgramId) {
+        return 0;
+    }
+    return DuskbloodsPoolGrowth + KSystemControl::Nx2RemoteMemorySize();
 }
 
 size_t KSystemControl::Init::GetAppletPoolSize() {

@@ -405,11 +405,11 @@ bool Patcher::RelocateAndCopy(Common::ProcessAddress load_base, const Kernel::Co
 }
 
 size_t Patcher::GetSectionSize() const noexcept {
-    return Common::AlignUp(m_patch_instructions.size() * sizeof(u32), Core::Memory::YUZU_PAGESIZE);
+    return Common::AlignUp(m_patch_instructions.size() * sizeof(u32), Core::Memory::LICHII_PAGESIZE);
 }
 
 size_t Patcher::GetPreSectionSize() const noexcept {
-    return Common::AlignUp(m_patch_instructions_pre.size() * sizeof(u32), Core::Memory::YUZU_PAGESIZE);
+    return Common::AlignUp(m_patch_instructions_pre.size() * sizeof(u32), Core::Memory::LICHII_PAGESIZE);
 }
 
 void Patcher::WriteLoadContext(oaknut::VectorCodeGenerator& cg) {

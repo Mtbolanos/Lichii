@@ -5,11 +5,22 @@ layout(local_size_x = 8, local_size_y = 8) in;
 layout(binding = 0) uniform sampler2D guest_color;
 layout(binding = 1, rgba16f) uniform writeonly image2D dlss_color;
 
+bool IsFinite(vec3 value) {
+    const uvec3 exponent = floatBitsToUint(value) & 0x7f800000u;
+    return all(notEqual(exponent, uvec3(0x7f800000u)));
+}
+
 void main() {
     ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
     if (any(greaterThanEqual(pixel, imageSize(dlss_color)))) {
         return;
     }
     // The guest has already tonemapped this square-root-encoded color for LDR.
-    imageStore(dlss_color, pixel, vec4(texelFetch(guest_color, pixel, 0).rgb, 1.0));
+    vec3 color = texelFetch(guest_color, pixel, 0).rgb;
+    // DLSS spreads a NaN or infinite texel, or LDR input outside [0, 1], into a black block.
+    // The exponent test is used because drivers may fold isnan/isinf away.
+    if (!IsFinite(color)) {
+        color = vec3(0.0);
+    }
+    imageStore(dlss_color, pixel, vec4(clamp(color, vec3(0.0), vec3(1.0)), 1.0));
 }
