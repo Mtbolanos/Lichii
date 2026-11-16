@@ -321,7 +321,7 @@ jobs:
         shell: bash
         run: |
           if command -v ccache > /dev/null; then ccache --zero-stats; else sccache --zero-stats; fi
-          cmake --build build/release --target yuzu yuzu-cmd --parallel
+          cmake --build build/release --target lichii lichii-cmd --parallel
           if command -v ccache > /dev/null; then ccache --show-stats; else sccache --show-stats; fi
 
       - name: Build MinGW PGO
@@ -329,7 +329,7 @@ jobs:
         shell: msys2 {0}
         run: |
           ccache --zero-stats
-          cmake --build build/release --target yuzu yuzu-cmd --parallel
+          cmake --build build/release --target lichii lichii-cmd --parallel
           ccache --show-stats
 
       - name: Stop sccache on Windows
